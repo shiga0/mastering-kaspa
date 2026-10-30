@@ -1,0 +1,16 @@
+# mdBook
+/book/
+
+# Rust
+**/target/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
