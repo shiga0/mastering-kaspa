@@ -15,15 +15,17 @@ Kaspaの基礎から、BlockDAG、GHOSTDAG、コンセンサス、Rustによる�
 
 ## 書籍構成
 
-| Part       | テーマ                         | 章     |
-| ---------- | ------------------------------ | ------ |
-| I          | Foundations                    | 1〜8   |
-| II         | Consensus                      | 9〜14  |
-| III        | Transactions & Mining          | 15〜20 |
-| IV         | Development & Implementation   | 21〜28 |
-| V          | Advanced Kaspa Topics          | 29〜34 |
-| VI         | Building & Contributing        | 35〜36 |
-| Appendices | 環境構築・用語集・参考文献など | A〜H   |
+| Part | テーマ | 章 |
+| --- | --- | --- |
+| I | Foundations | 1〜8 |
+| II | Consensus | 9〜14 |
+| III | Transactions & Mining | 15〜20 |
+| IV | Development & Implementation | 21〜28 |
+| V | Advanced Kaspa Topics（SilverScript・Argentを含む） | 29〜34 ＋ 独立ページ「Argent」 |
+| VI | Building & Contributing | 35〜36 |
+| Appendices | 環境構築・用語集・参考文献など | A〜H |
+
+Part Vでは、Covenants、SilverScript、**Argent（Actorベースのアプリケーション言語）**、Layer 2、vProgsなどを扱います。Argentは独立ページとして掲載し、既存のChapter 01〜36の番号は変更しません。
 
 詳細な目次は `src/SUMMARY.md` を参照してください。
 
@@ -57,14 +59,15 @@ mdbook build
 - **Reviewed**：一次資料との照合済み。
 - **Verified**：掲載コードや実験の検証済み。
 
-初稿があることは、技術的な正確性やコードの動作を保証するものではありません。
+初稿があることは、技術的な正確性やコードの動作を保証するものではありません。特に開発中の技術は、仕様・実装・メインネットでの利用可否を区別して記載します。
 
 ## 一次資料
 
-- Kaspa公式サイト
-- Kaspa Wiki
-- Kaspa Improvement Proposals（KIPs）
-- rusty-kaspa
+- [Kaspa公式サイト](https://kaspa.org/)
+- [Kaspa Wiki](https://wiki.kaspa.org/)
+- [Kaspa Improvement Proposals（KIPs）](https://github.com/kaspanet/kips)
+- [rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
+- [Argent](https://github.com/argent-lang/argent)
 
 ## ライセンス・コントリビューション
 

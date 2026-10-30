@@ -37,19 +37,19 @@ Kaspaの**L1プロトコル**、その上で動く**アプリケーション**�
          DAGKnight* / vProgs* / other KIPs*
 ```
 
-`*` はプロジェクト・提案・研究などを含む領域。**図中の配置は機能分類であり、L1への統合、稼働、公式認定を意味しない。** 特にSilverScriptとArgentは実装リポジトリを特定してから技術的関係を確定する。
+`*` はプロジェクト・提案・研究などを含む領域。**図中の配置は機能分類であり、L1への統合、稼働、公式認定を意味しない。** SilverScriptとArgentの技術的関係は、公開リポジトリの説明に基づいて整理している。
 
 ## 混同しやすい概念
 
-| 項目               | 位置づけ                                                   | 本書での扱い                                 |
-| ------------------ | ---------------------------------------------------------- | -------------------------------------------- |
-| **Kaspa Script**   | UTXOの支出条件を検証するL1の仕組み                         | [第16章](part-03-transactions/chapter-16.md) |
-| **Covenants**      | 支出先や後続トランザクションなどへの制約を表す概念・機能群 | [第31章](part-05-advanced/chapter-31.md)     |
-| **SilverScript**   | 高水準のスクリプト／コントラクト記述を扱う開発者向け技術   | [第32章](part-05-advanced/chapter-32.md)     |
-| **Argent**         | 同名プロジェクトの対象・機能・Kaspaとの関係を要調査        | 第32章の調査候補（位置づけ未確定）           |
-| **Igra / Kasplex** | L1外部の実行環境やエコシステム関連プロジェクト             | [第33章](part-05-advanced/chapter-33.md)     |
-| **vProgs**         | 検証可能なプログラム実行に関する研究・構想                 | [第34章](part-05-advanced/chapter-34.md)     |
-| **DAGKnight**      | コンセンサスの研究・発展                                   | [第29章](part-05-advanced/chapter-29.md)     |
+| 項目 | 位置づけ | 本書での扱い |
+| --- | --- | --- |
+| **Kaspa Script** | UTXOの支出条件を検証するL1の仕組み | [第16章](part-03-transactions/chapter-16.md) |
+| **Covenants** | 支出先や後続トランザクションなどへの制約を表す概念・機能群 | [第31章](part-05-advanced/chapter-31.md) |
+| **SilverScript** | 高水準のスクリプト／コントラクト記述を扱う開発者向け技術 | [第32章](part-05-advanced/chapter-32.md) |
+| **Argent** | SilverScriptを基盤とする、複数コントラクト・複数アプリの状態遷移を記述するActorベースの言語・コンパイラ。開発中 | [第32章の補足](part-05-advanced/argent.md) |
+| **Igra / Kasplex** | L1外部の実行環境やエコシステム関連プロジェクト | [第33章](part-05-advanced/chapter-33.md) |
+| **vProgs** | 検証可能なプログラム実行に関する研究・構想 | [第34章](part-05-advanced/chapter-34.md) |
+| **DAGKnight** | コンセンサスの研究・発展 | [第29章](part-05-advanced/chapter-29.md) |
 
 **注意：** Covenantという考え方を説明できることと、任意のCovenantがKaspaメインネットで有効であることは同義ではない。また、開発言語の存在は基盤プロトコルの機能追加を保証しない。
 
@@ -66,7 +66,7 @@ UTXOとKaspa Script（第15〜16章）
         ↓
 RPC / SDK / ノード開発（第22〜28章）
         ↓
-Covenants → SilverScript → L2 → vProgs（第31〜34章）
+Covenants → SilverScript → Argent → L2 → vProgs（第31〜34章）
         ↓
 アプリケーション構築と貢献（第35〜36章）
 ```
@@ -86,5 +86,7 @@ Covenants → SilverScript → L2 → vProgs（第31〜34章）
 - [Kaspa Wiki](https://wiki.kaspa.org/en/home)
 - [rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
 - [Kaspa Improvement Proposals](https://github.com/kaspanet/kips)
+- [Silverscript](https://github.com/kaspanet/silverscript)
+- [Argent](https://github.com/argent-lang/argent)
 
 > このページは全体像を掴むための入口であり、個別プロジェクトの採用推奨や安全性評価ではない。
