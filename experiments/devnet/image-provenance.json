@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-10-31",
+  "node_image": "kaspanet/rusty-kaspad@sha256:5bc3195c2cd2d171885781ed55ead9485d93c7bd7b784d46e9e393c96757fe22",
+  "platform": "linux/arm64",
+  "server_version": "1.0.1",
+  "packaging_source": "https://github.com/supertypo/docker-rusty-kaspa",
+  "packaging_revision": "639a036ff577ede2a6e871473a2b47c010b8f0fa",
+  "declared_node_repo": "kaspanet/rusty-kaspa",
+  "declared_node_tag": "v1.0.1",
+  "tag_commit": "fcd9c28f9b211b9872a0c90a8c94f79466ffb063",
+  "tag_source": "https://api.github.com/repos/kaspanet/rusty-kaspa/git/ref/tags/v1.0.1",
+  "packaging_dockerfile": "https://github.com/supertypo/docker-rusty-kaspa/blob/639a036ff577ede2a6e871473a2b47c010b8f0fa/Dockerfile",
+  "binary_source_equivalence": "unverified",
+  "chapter_12_source_commit": "4edcbbccb449f84832afb1ca157904b35f37d006",
+  "amd64_runtime_test": "not performed",
+  "miner_image": "kaspanet/cpuminer@sha256:60f78ab2828ab24b249c99210eee5a2825303a5226154260dd021ff26d46748b"
+}

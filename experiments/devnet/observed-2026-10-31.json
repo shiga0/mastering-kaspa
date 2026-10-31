@@ -1,0 +1,29 @@
+{
+  "getBlockDagInfo": {
+    "blockCount": 0,
+    "difficulty": 248663.3221918869,
+    "headerCount": 0,
+    "network": "devnet",
+    "pastMedianTime": 1231006505000,
+    "pruningPointHash": "4cb48d0b2073b802360145a15ad1abdc01d89b5c2fe4722630ab9b5fe9dfc4f2",
+    "sink": "4cb48d0b2073b802360145a15ad1abdc01d89b5c2fe4722630ab9b5fe9dfc4f2",
+    "tipHashes": [
+      "4cb48d0b2073b802360145a15ad1abdc01d89b5c2fe4722630ab9b5fe9dfc4f2"
+    ],
+    "virtualDaaScore": 0,
+    "virtualParentHashes": [
+      "4cb48d0b2073b802360145a15ad1abdc01d89b5c2fe4722630ab9b5fe9dfc4f2"
+    ]
+  },
+  "getCurrentNetwork": {
+    "network": "devnet"
+  },
+  "getInfo": {
+    "hasMessageId": true,
+    "hasNotifyCommand": true,
+    "isSynced": false,
+    "isUtxoIndexed": true,
+    "mempoolSize": 0,
+    "serverVersion": "1.0.1"
+  }
+}

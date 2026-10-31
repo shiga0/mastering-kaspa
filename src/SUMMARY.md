@@ -1,6 +1,7 @@
 # Summary
 
 [はじめに](introduction.md)
+[技術レビューの進捗](review-status.md)
 [Kaspa 技術・エコシステムマップ](ecosystem-map.md)
 
 ---

@@ -1,7 +1,16 @@
 # Chapter 12 — GHOSTDAG Internals（GHOSTDAGの内部構造）
 
 > **Part II — Kaspa Consensus & Architecture**  
-> 原稿ステータス: v0.1（技術レビュー前）
+> 原稿ステータス: v0.2（GHOSTDAGの主要規則を固定実装と照合、章全体の技術レビューは継続中）
+
+## 照合した実装
+
+2026年10月31日に `rusty-kaspa` のコミット `4edcbbccb449f84832afb1ca157904b35f37d006` を参照した。本章の親選択・merge set・blue判定・score/workの式は、下記の固定ソースを読み取って照合した（Source-checked）。メインネットの稼働リリースとの一致や、公式実装を実行した差分テストは未確認である。
+
+- [親選択・分類・スコア計算](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs)
+- [blue workとハッシュの比較](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/ordering.rs)
+- [merge setの列挙](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/mergeset.rs)
+- [GHOSTDAGメタデータ](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/model/stores/ghostdag.rs)
 
 ## この章で学ぶこと
 
@@ -14,9 +23,9 @@
 3. パラメータ `k` が表す制約と、その設計上の意味を理解する。
 4. 選択された過去と並行ブロックを使って、決定的な順序を構成する考え方を説明できる。
 5. GHOSTDAGの結果とUTXOの受理・拒否が異なるレイヤーに属することを理解する。
-6. 小さなDAGを使って到達可能性・anticone・決定的順序をRustで検証できる。
+6. 小さなDAGを使ってPast・Anticone・k-cluster条件と、追加順による結果の不変性をRustで検証できる。
 
-> **対象範囲:** 本章はGHOSTDAGの概念・データ構造・主要な不変条件を説明する。後半のRustコードは**教育用のDAG解析器**であり、GHOSTDAGそのものの実装ではない。実際の選択規則、merge-set処理、blue-work計算、コンセンサス順序は、対象バージョンの `rusty-kaspa` と原論文を必ず照合する。
+> **対象範囲:** 本章はGHOSTDAGの概念・データ構造・主要な不変条件を説明する。後半のRustコードは**教育用のDAG解析器**であり、GHOSTDAGそのものの実装ではない。照合した規則とソースは冒頭に示し、残る未確認事項は章末にまとめる。
 
 ---
 
@@ -54,10 +63,10 @@ GHOSTDAGは、DAGにあるブロックのうち、ネットワーク遅延によ
 | ブロック検証 | 形式やPoWなどは妥当か | 検証済み候補 |
 | BlockDAG | 親子関係は何か | 有向非巡回グラフ |
 | GHOSTDAG | どのブロックをどのように評価するか | selected parent、blue/redなどのメタデータ |
-| 合意順序 | ブロック・取引をどう並べるか | 決定的な順序 |
-| UTXO状態 | どの取引が適用可能か | Virtual UTXO state |
+| 合意順序 | ブロック・トランザクションをどう並べるか | 決定的な順序 |
+| UTXO状態 | どのトランザクションが適用可能か | Virtual UTXO state |
 
-**DAGに存在すること、blueに分類されること、取引が受理されることは同義ではない。**
+**DAGに存在すること、blueに分類されること、トランザクションが受理されることは同義ではない。**
 
 ---
 
@@ -132,7 +141,13 @@ GHOSTDAGはPHANTOMの考え方に基づく**貪欲（greedy）な近似手法**�
 
 あるブロックが複数の親を参照するとき、selected parentの過去にまだ含まれていない、他の親から新たに取り込まれる過去のブロックが存在する。これらを扱う概念が**merge set**である。
 
-厳密な集合の境界、対象ブロックの包含・除外、列挙順序は実装の定義に従う。一般的な「親集合の和集合」と同一視しない。
+本章では `Past` が自分自身を含まないため、通常のブロック `B` とselected parent `P` について、selected parentを除いた候補集合を次のように表す。
+
+```text
+M = Past(B) \ (Past(P) ∪ {P})
+```
+
+候補には他の親自身も含まれる。確認した実装は `ordered_mergeset_without_selected_parent` でこの候補を列挙する。一方、保存する `mergeset_blues` は先頭に `P` を含む。「merge set」がselected parentを含むかは、関数・データ構造ごとに区別する。根拠は[集合の列挙](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/mergeset.rs)と[初期化処理](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/model/stores/ghostdag.rs)を参照する。
 
 ---
 
@@ -153,7 +168,7 @@ E の親は C と D。
 GHOSTDAGは規則に従い、そのうち一方を selected parent にする。
 ```
 
-この選択は「最初に届いた親」「ブロックIDの小さい親」といった単純な規則ではない。GHOSTDAGが計算する重みなどの情報と、決定的なタイブレーク規則が関係する。
+確認した実装の `find_selected_parent` は、親の `(blue_work, hash)` を比較して最大の親を選ぶ。まずblue workが大きい親を優先し、同じなら `Hash` 型の比較で大きい親を選ぶ。blue scoreや到着順を親選択の比較キーには使わない。ハッシュの大小は実装の型の比較であり、表示文字列の比較へ置き換えない。[親選択](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs)と[比較規則](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/ordering.rs)を参照する。
 
 **selected parentは唯一の有効な親という意味ではない。** selected parentでない親もDAGの一部であり、merge-set処理の対象になる。
 
@@ -165,14 +180,14 @@ GHOSTDAGは規則に従い、そのうち一方を selected parent にする。
 
 ---
 
-## 12.5 BlueとRedをどう理解するか
+## 12.5 blueとredをどう理解するか
 
-GHOSTDAGはブロックをblue/redに分類する。
+GHOSTDAGは、あるブロックを評価する文脈に対してblue/redの分類を構築する。分類を文脈なしの永久的なブロック属性として扱わない。
 
-- **Blue:** 選択した集合における並行性の制約と整合するものとして採用されるブロック。
-- **Red:** その制約のもとでblue集合に含まれなかったブロック。
+- **blue:** 選択した集合における並行性の制約と整合するものとして採用されるブロック。
+- **red:** その制約のもとでblue集合に含まれなかったブロック。
 
-重要なのは、**redは「PoWが無効」「不正ブロック」「破棄されたブロック」を意味しない**こと。redでも構造上有効なブロックはあり、合意順序の扱いと取引の受理判定は別問題である。
+重要なのは、**redは「PoWが無効」「不正ブロック」「破棄されたブロック」を意味しない**こと。redでも構造上有効なブロックはあり、合意順序の扱いとトランザクションの受理判定は別問題である。
 
 ### 12.5.1 なぜ並行性を制限するのか
 
@@ -247,13 +262,40 @@ blue/red分類を更新
 blue score / blue work などのメタデータを導出
 ```
 
-### 12.7.1 なぜ順序が決定的でなければならないのか
+候補の評価順は `(blue_work, hash)` の昇順であり、親選択の最大値取得とは向きが異なる。候補をblueに加えるには、候補自身のblue anticoneサイズだけでなく、候補と並行な既存blueブロックのanticoneサイズも `k` 以下に保つ必要がある。候補だけを検査する実装では不十分である。[候補のソート](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/mergeset.rs)、[比較](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/ordering.rs)、[blue判定](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs)を参照する。
+
+### 12.7.1 小さなDAGを手で追う
+
+Genesis `G` の子として `A`、`B`、`C` が並行に生成され、`X` が3つを親に持つとする。これは教材用の `k = 1` の例であり、メインネットの設定ではない。各ブロックの仕事量を同じ `w`、ハッシュの比較順を `A < B < C` と仮定する。
+
+```text
+         G
+       / | \
+      A  B  C
+       \ | /
+         X
+```
+
+| 手順 | 判断 | 結果 |
+|---|---|---|
+| 1 | A・B・CはいずれもGだけを親に持つ | 各blue scoreは1、blue workはw |
+| 2 | Xの親のblue workが同じなのでハッシュで比較 | selected parentはC |
+| 3 | C以外のmerge set候補を昇順で並べる | A、Bの順に評価 |
+| 4 | Aと並行な既存blueはCだけ | A自身とCのanticoneサイズが1となり、Aをblueに追加 |
+| 5 | Bと並行な既存blueはCとA | 候補のサイズが2になりkを超えるため、Bはred |
+| 6 | Xのmergeset_bluesはCとA | blue score(X) = 1 + 2 = 3、blue work(X) = w + 2w = 3w |
+
+`B` のred判定はXを評価する文脈での分類である。Bを無効ブロックと判断したり、その中のトランザクションの受理可否をこの表だけで決めたりはしない。
+
+この表は上記の固定ソースの比較・分類・加算規則を手で適用したもの。公式実装を実行して得たテストベクトルではなく、公式実装との実行時の差分照合は未実施である。
+
+### 12.7.2 なぜ順序が決定的でなければならないのか
 
 同じDAGを見たノードが、受信順やハッシュマップの走査順に依存して異なる分類を行うと、合意が壊れる。
 
 したがって、同じ有効なDAGと同じプロトコル規則を入力すれば、**ノードの受信順序に依存しない結果**が得られなければならない。
 
-### 12.7.2 擬似コード（概念図）
+### 12.7.3 擬似コード（概念図）
 
 ```text
 function conceptual_ghostdag(block):
@@ -275,24 +317,35 @@ function conceptual_ghostdag(block):
 
 ---
 
-## 12.8 Blue scoreとBlue work
+## 12.8 blue scoreとblue work
 
-### 12.8.1 Blue score
+### 12.8.1 blue score
 
-blue scoreは、GHOSTDAGが選択したblueブロックの累積的な評価を表すメタデータである。単純な「DAG内の全ブロック数」や「トランザクション数」とは異なる。
+通常のブロック `B` では、selected parentを `P`、`B` のメタデータに保存する `mergeset_blues` を `MB(B)` とすると、確認した実装は次の式を使う。
 
-### 12.8.2 Blue work
+```text
+blue_score(B) = blue_score(P) + |MB(B)|
+```
 
-blue workは、選択されたblueブロックに関連する**累積的なPoWの重み**を扱う。ブロックごとの難易度が異なる環境では、ブロック数と累積仕事量は同一ではない。
+`MB(B)` は `P` 自身を含み、`B` 自身は含まない。Genesisのblue scoreは0である。単純な「DAG内の全ブロック数」や「トランザクション数」とは異なる。根拠は[計算処理](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs)と[初期化処理](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/model/stores/ghostdag.rs)。
+
+### 12.8.2 blue work
+
+通常のGHOSTDAG計算では次のように、`MB(B)` に含まれるブロックのヘッダー `bits` から計算した仕事量を加算する。
+
+```text
+blue_work(B) = blue_work(P) + Σ calc_work(bits(X))
+                              X ∈ MB(B)
+```
+
+これは実際にマイナーが試行したハッシュ回数の実測値ではない。ブロックごとの難易度が異なれば、ブロック数と仕事量は一致しない。実装は高レベルsub-DAG用に `max(calc_work(bits(X)), level_work)` という下限も備える。通常の `new` は `level_work = 0` とする。Genesis・ORIGINには特別な初期化がある。[計算と初期化](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs)を参照する。
 
 | 指標 | 概念的に表すもの | 注意点 |
 |---|---|---|
 | Block count | 観測されたブロック数 | 有効性・blue分類を区別しない |
-| Blue score | blueブロックの累積的な数に関する指標 | 全ブロック数ではない |
-| Blue work | blueブロックの累積PoWに関する指標 | 単純な個数比較ではない |
+| blue score | blueブロックの累積的な数に関する指標 | 全ブロック数ではない |
+| blue work | blueブロックの累積PoWに関する指標 | 単純な個数比較ではない |
 | DAA score | 難易度調整等で使われる別の指標 | blue scoreと同一ではない |
-
-> 実際の比較規則、計算対象、型、境界条件は`rusty-kaspa`の該当バージョンを確認する。
 
 ---
 
@@ -309,7 +362,7 @@ C と D は並行している。
 E は C と D の両方を参照する。
 ```
 
-取引処理には、並行ブロックを含めて**全ノードで一致する順序**が必要になる。GHOSTDAG由来のメタデータと順序付け規則は、その決定的な列を構築するために使われる。
+トランザクション処理には、並行ブロックを含めて**全ノードで一致する順序**が必要になる。GHOSTDAG由来のメタデータと順序付け規則は、その決定的な列を構築するために使われる。
 
 ### 12.9.1 トポロジカル順序だけでは不十分
 
@@ -324,7 +377,7 @@ A → B → D → C → E
 
 ### 12.9.2 GHOSTDAGとトランザクション順序
 
-ブロック順序が定まると、各ブロック内の取引を含めて状態を評価できる。ただし、二重支払いがある場合、**ブロックが順序に入ることと、その取引が状態に適用されることは別**である。
+ブロック順序が定まると、各ブロック内のトランザクションを含めて状態を評価できる。ただし、二重支払いがある場合、**ブロックが順序に入ることと、そのトランザクションが状態に適用されることは別**である。
 
 ---
 
@@ -364,7 +417,7 @@ Tx1とTx2が異なる並行ブロックに含まれていても、両方が同�
 
 ## 12.11 Reorganizationと安定性
 
-DAGに新しいブロックが追加されると、selected parentやvirtual側の評価が変わりうる。したがって、現在の先端付近の合意順序を、不可逆な確定履歴と同一視してはいけない。
+既存の通常ブロックについて、その親集合と親のメタデータが同じなら、算出済みのselected parentが新しい子孫の到着だけで変わるわけではない。一方、DAGの先端が更新されると、virtual側のselected parentや合意ビューは変わりうる。したがって、現在の先端付近の合意順序を、不可逆な確定履歴と同一視してはいけない。
 
 ここでは次の区別が重要である。
 
@@ -372,7 +425,7 @@ DAGに新しいブロックが追加されると、selected parentやvirtual側�
 - **検証済み:** ブロックが該当する検証を通過した。
 - **DAG登録済み:** DAGの一部として管理されている。
 - **順序付け済み:** 現時点の合意ビューで順序が定まっている。
-- **状態適用済み:** 対応する取引がUTXO状態の評価に反映された。
+- **状態適用済み:** 対応するトランザクションがUTXO状態の評価に反映された。
 - **十分に安定:** アプリケーションがリスクに応じた確認基準を満たした。
 
 **「何秒で絶対に確定する」という一般化は避ける。** 実際の確定性・確認ポリシーはネットワーク状態、攻撃モデル、利用するアプリケーションのリスク許容度に依存する。
@@ -415,6 +468,8 @@ cd dag-relations
 
 ### 12.13.2 `src/lib.rs`
 
+<!-- example:dag-relations:start -->
+
 ```rust
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -433,7 +488,7 @@ impl Dag {
         if self.parents.contains_key(id) {
             return Err(format!("duplicate block: {id}"));
         }
-        if parents.iter().any(|p| *p == id) {
+        if parents.contains(&id) {
             return Err("self-parent is not allowed".into());
         }
         if parents.iter().any(|p| !self.parents.contains_key(*p)) {
@@ -476,9 +531,7 @@ impl Dag {
         Ok(result)
     }
 
-    pub fn is_k_cluster(&self, selected: &BTreeSet<String>, k: usize)
-        -> Result<bool, String>
-    {
+    pub fn is_k_cluster(&self, selected: &BTreeSet<String>, k: usize) -> Result<bool, String> {
         for id in selected {
             let anticone = self.anticone(id)?;
             let within = anticone.intersection(selected).count();
@@ -507,17 +560,17 @@ mod tests {
     #[test]
     fn past_contains_transitive_ancestors() {
         let dag = sample();
-        assert_eq!(dag.past("E").unwrap(),
-            BTreeSet::from(["A", "B", "C", "D"].map(str::to_owned)));
+        assert_eq!(
+            dag.past("E").unwrap(),
+            BTreeSet::from(["A", "B", "C", "D"].map(str::to_owned))
+        );
     }
 
     #[test]
     fn parallel_blocks_are_in_each_others_anticone() {
         let dag = sample();
-        assert_eq!(dag.anticone("C").unwrap(),
-            BTreeSet::from(["D".to_owned()]));
-        assert_eq!(dag.anticone("D").unwrap(),
-            BTreeSet::from(["C".to_owned()]));
+        assert_eq!(dag.anticone("C").unwrap(), BTreeSet::from(["D".to_owned()]));
+        assert_eq!(dag.anticone("D").unwrap(), BTreeSet::from(["C".to_owned()]));
     }
 
     #[test]
@@ -533,8 +586,24 @@ mod tests {
         let mut dag = Dag::new();
         assert!(dag.insert("B", &["A"]).is_err());
     }
+    #[test]
+    fn parallel_insertion_order_preserves_relations() {
+        let forward = sample();
+        let mut reverse = Dag::new();
+        reverse.insert("A", &[]).unwrap();
+        reverse.insert("B", &["A"]).unwrap();
+        reverse.insert("D", &["B"]).unwrap();
+        reverse.insert("C", &["B"]).unwrap();
+        reverse.insert("E", &["D", "C"]).unwrap();
+        for id in ["A", "B", "C", "D", "E"] {
+            assert_eq!(forward.past(id).unwrap(), reverse.past(id).unwrap());
+            assert_eq!(forward.anticone(id).unwrap(), reverse.anticone(id).unwrap());
+        }
+    }
 }
 ```
+
+<!-- example:dag-relations:end -->
 
 実行:
 
@@ -544,13 +613,13 @@ cargo test
 
 **期待される学び:** `C` と `D` は互いにanticoneに含まれ、`E` の過去には両方が入る。`{C, D}` は `k=0` の条件を満たさず、`k=1` では満たす。
 
-> 本サンプルは未実行の学習用コードである。`insert`が既知の親しか受け取らないため、追加順に制約があり、実ネットワークの孤児ブロック・Pruning・到達可能性インデックス・並行処理には対応していない。
+> 本サンプルは `examples/dag-relations/` に収録し、単体テストを実行している。条件と結果は `experiments/ghostdag-review-2026-10-31.md` に記録した。`insert`が既知の親しか受け取らないため、追加順に制約があり、実ネットワークの孤児ブロック・Pruning・到達可能性インデックス・並行処理には対応していない。
 
 ---
 
 ## 12.14 実験を拡張する
 
-### 実験A：到達可能性の対称性
+### 実験A：到達可能性と非巡回性
 
 任意の異なる `x`, `y` について、`x ∈ Past(y)` なら `y ∉ Past(x)` が成立することをテストする。これはDAGの非巡回性と関係する。
 
@@ -637,43 +706,18 @@ rg -n 'merge_set|anticone|reachability|ordering' .
 
 ---
 
-## 12.16 C4モデルと責務境界
+## 12.16 実装を追うときの責務境界
 
-### 12.16.1 Containerレベルの概念図
+本章で固定した実装では、次の境界を追うと計算と状態反映を混同しにくい。
 
-```text
-┌──────────────────────────────────────────────────┐
-│                    Kaspa Node                    │
-│                                                  │
-│  ┌──────────┐     ┌───────────────────────────┐  │
-│  │ P2P      │────▶│ Block validation          │  │
-│  └──────────┘     └────────────┬──────────────┘  │
-│                                ▼                 │
-│                  ┌───────────────────────────┐   │
-│                  │ DAG / Reachability        │   │
-│                  └────────────┬──────────────┘   │
-│                               ▼                  │
-│                  ┌───────────────────────────┐   │
-│                  │ GHOSTDAG metadata         │   │
-│                  └────────────┬──────────────┘   │
-│                               ▼                  │
-│                  ┌───────────────────────────┐   │
-│                  │ Ordering / Virtual State  │   │
-│                  └────────────┬──────────────┘   │
-│                               ▼                  │
-│                         RPC / Apps               │
-└──────────────────────────────────────────────────┘
-```
+| 対象 | 確認する処理 |
+|---|---|
+| `protocol.rs` | 親選択、候補のblue/red判定、score/workの算出 |
+| `ordering.rs` | blue work、同値時のハッシュによる比較 |
+| `mergeset.rs` | selected parentの過去を除いた候補の列挙 |
+| `GhostdagData` | selected parentを含むblue列と分類結果の保持 |
 
-これは理解のための**論理コンポーネント図**であり、実装のプロセス分割やモジュール境界を正確に表すものではない。
-
-### 12.16.2 設計上の問い
-
-- Reachabilityの知識は、GHOSTDAG計算側に直接埋め込むべきか。
-- GHOSTDAGメタデータの保存と算出は、同じ責務か。
-- 受信順に依存するデータをコンセンサスの判断に使っていないか。
-- Virtual Stateの更新をGHOSTDAG分類の関数に混ぜていないか。
-- Pruningで古い履歴を消した後も、必要な到達可能性判定が成立するか。
+UTXOの適用やvirtualの更新経路は第14章で扱う。本章の分類処理の照合だけで、それらの状態遷移まで検証できたとは扱わない。
 
 ---
 
@@ -687,7 +731,7 @@ rg -n 'merge_set|anticone|reachability|ordering' .
 | selected parentは親の一つ | 関係の整合性 | メタデータ検証 |
 | blue/redの扱いは合意規則に従う | ノード間の一致 | 既知テストベクトル |
 | 合意順序は親子関係に反しない | 過去を未来より後に置かない | トポロジカル検証 |
-| UTXOの同一出力を二重消費しない | 状態の整合性 | 競合取引の評価 |
+| UTXOの同一出力を二重消費しない | 状態の整合性 | 競合トランザクションの評価 |
 
 > 上表は学習上の設計・検証観点であり、現行実装が同じ名称のアサーションを備えていることを意味しない。
 
@@ -698,13 +742,13 @@ rg -n 'merge_set|anticone|reachability|ordering' .
 **Q1. BlockDAGならGHOSTDAGは不要？**  
 いいえ。DAGはブロック間の関係を表すデータ構造であり、どの順序を合意するかは別途決める必要がある。
 
-**Q2. Blueブロックは「有効」、Redブロックは「無効」？**  
+**Q2. blueブロックは「有効」、redブロックは「無効」？**\
 いいえ。blue/redはGHOSTDAGによる分類であり、ブロックの形式・PoW・トランザクションの有効性とは異なる。
 
 **Q3. Selected parent以外の親は無視される？**  
 いいえ。selected parentは評価の基準だが、他の親が導入するブロックもmerge-setの処理などに関係する。
 
-**Q4. Blue scoreが高ければ、必ずトランザクション数も多い？**  
+**Q4. blue scoreが高ければ、必ずトランザクション数も多い？**\
 いいえ。blue scoreはトランザクション数ではない。
 
 **Q5. `k`を大きくすればセキュリティと性能が両方上がる？**  
@@ -727,7 +771,7 @@ GHOSTDAGは合意順序を導く重要な構成要素だが、UTXOの適用可�
 5. `k`-clusterの条件を集合記法で書け。
 6. blue scoreとblue workの違いを説明せよ。
 7. トポロジカルソートだけで全ノードの順序が一致するとは限らないのはなぜか。
-8. 競合する二つの取引が異なるブロックに含まれるとき、どのレイヤーで最終的な適用可否を判断するか。
+8. 競合する二つのトランザクションが異なるブロックに含まれるとき、どのレイヤーで最終的な適用可否を判断するか。
 9. 同じDAGを異なる順番で受信しても結果が変わらないことを、どうテストするか。
 10. 原論文と`rusty-kaspa`を対応づけるとき、コミットハッシュを記録する理由は何か。
 
@@ -748,7 +792,7 @@ GHOSTDAGは合意順序を導く重要な構成要素だが、UTXOの適用可�
 2. GHOSTDAGはselected parentを基準に、並行ブロックをblue/redとして評価する。
 3. `k`-clusterは並行性の制約を考える基礎概念である。
 4. blue scoreとblue workは異なる指標である。
-5. 決定的な順序が得られても、取引の適用可能性は別に検証する。
+5. 決定的な順序が得られても、トランザクションの適用可能性は別に検証する。
 6. 実装を読む際は、DAG・Reachability・GHOSTDAG・Ordering・Virtual Stateの責務を分ける。
 
 次章では **Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）** に進み、PoW難易度がどのようにネットワークのブロック生成状況に適応するかを学ぶ。
@@ -770,4 +814,4 @@ GHOSTDAGは合意順序を導く重要な構成要素だが、UTXOの適用可�
 6. [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — プロトコル変更・提案の調査。
 7. [Kaspa Wiki](https://wiki.kaspa.org/en/home) — 技術用語と関連資料の入口。
 
-> **編集メモ（v0.1）:** 本章は原理理解を目的とする初稿。厳密なアルゴリズムの擬似コード、メインネットの現行パラメータ、blue-workの具体的な計算式、merge-setの定義、コンセンサス順序のタイブレークは、原論文と固定コミットの実装を照合してからv0.2で追記する。図は学習用の模式図であり、実際のネットワークのブロック例を再現したものではない。
+> **未確認事項:** 原論文の証明との完全照合、公式実装との分類結果の差分テスト、メインネットの稼働バージョン・パラメータ、Virtual Stateで使われる最終的な取引処理順序は継続レビューの対象とする。本章の候補列挙順を、そのまま取引の最終処理順と同一視しない。

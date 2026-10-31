@@ -307,7 +307,7 @@ docker compose ps
 docker compose logs --tail=100 kaspa-devnet
 ```
 
-この雛形は実行確認済みの完成設定ではない。実際のDevnet構成は第28章で扱う。
+この雛形は実行確認済みの完成設定ではない。起動・読み取りwRPC・採掘後の状態保持を確認した構成は、リポジトリの `experiments/devnet/` に収録している。第28章の起動から送金までの完成実習は未収録である。進捗は[技術レビューの進捗](../review-status.md)を参照する。
 
 ## A.11 2ノード統合テストの考え方
 
@@ -436,7 +436,7 @@ jobs:
 本書自体をローカルで閲覧する場合：
 
 ```bash
-cargo install mdbook
+cargo install mdbook --version 0.5.4 --locked
 cd mastering-kaspa
 mdbook build
 mdbook serve

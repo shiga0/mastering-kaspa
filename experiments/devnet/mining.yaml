@@ -1,0 +1,23 @@
+services:
+  node:
+    command:
+      - --devnet
+      - --yes
+      - --nologfiles
+      - --disable-upnp
+      - --nodnsseed
+      - --outpeers=0
+      - --maxinpeers=0
+      - --rpclisten=0.0.0.0:16310
+      - --enable-unsynced-mining
+      - --utxoindex
+      - --appdir=/data
+      - --rpclisten-json=0.0.0.0:18310
+  miner:
+    image: kaspanet/cpuminer@sha256:60f78ab2828ab24b249c99210eee5a2825303a5226154260dd021ff26d46748b
+    platform: linux/arm64
+    profiles: [mining]
+    command: ["--kaspad-address=127.0.0.1", "--port=16310", "--threads=1", "--mine-when-not-synced", "--mining-address=kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99"]
+    depends_on: [node]
+    network_mode: service:node
+    cpus: 1.0

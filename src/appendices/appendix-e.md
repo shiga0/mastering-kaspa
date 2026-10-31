@@ -38,8 +38,8 @@ Kaspaのブロック生成速度、GHOSTDAG、難易度調整、UTXO、ブロッ
 | BPS | Blocks per second：目標ブロック数/秒 | 観測値ではない |
 | DAA score | 難易度調整に関係するスコア | 単純な「ブロック高さ」ではない |
 | GHOSTDAG `k` | blue/red分類に関係する許容パラメータ | 「最大同時ブロック数」ではない |
-| Blue Score | GHOSTDAGで得られるスコア | Blue Workと別 |
-| Blue Work | 累積作業量に関係する量 | 単純なブロック数ではない |
+| blue score | GHOSTDAGで得られるスコア | blue workと別 |
+| blue work | 累積作業量に関係する量 | 単純なブロック数ではない |
 | Finality depth | 合意ルールにおける深さ | 決済事業者の承認待ち時間とは別 |
 | Pruning depth | 過去データを整理するための深さ | すべての履歴を消す設定ではない |
 | Mass | トランザクションやブロックの資源コスト | バイト数と同義ではない |
@@ -81,7 +81,7 @@ Kaspaのブロック生成速度、GHOSTDAG、難易度調整、UTXO、ブロッ
 目標BPS  = 1000 ms / 100 ms = 10 blocks/s
 ```
 
-これは**長期平均の目標**であって、任意の1秒に必ず10個のブロックが生成される保証ではない。また、BlockDAGでは「ブロック数」と「取引が最終的に採用される順序」を同一視しない。
+これは**長期平均の目標**であって、任意の1秒に必ず10個のブロックが生成される保証ではない。また、BlockDAGでは「ブロック数」と「トランザクションが最終的に採用される順序」を同一視しない。
 
 ### E.4.2 時間単位とブロック単位
 
@@ -182,7 +182,7 @@ transient mass <= 1,000,000
 
 **注意**：これは`master`にある定義の転記であり、古い資料の「1ブロックのMassは○○」と機械的に比較できない。ルールやフォークが異なる可能性がある。
 
-`mass_per_tx_byte`、`mass_per_script_pub_key_byte`、`mass_per_sig_op` は計算Massの構成要素だが、**取引Massは単なるTxバイト数ではない**。Storage MassもUTXO集合への影響を評価する。詳しい算出経路は [`consensus/core/src/mass/mod.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/mass/mod.rs) を参照。
+`mass_per_tx_byte`、`mass_per_script_pub_key_byte`、`mass_per_sig_op` は計算Massの構成要素だが、**トランザクションMassは単なるTxバイト数ではない**。Storage MassもUTXO集合への影響を評価する。詳しい算出経路は [`consensus/core/src/mass/mod.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/mass/mod.rs) を参照。
 
 ### E.9.1 検証の観点
 
@@ -194,7 +194,7 @@ transient mass <= 1,000,000
 | 複数Txを1ブロックへ追加 | 各Mass次元の上限を越えない |
 | 境界値 | 上限ちょうど／1超過で結果が分かれる |
 
-## E.10 取引・Scriptの制限
+## E.10 トランザクション・Scriptの制限
 
 公開 `MAINNET_PARAMS` から直接読めるもの：
 
@@ -240,7 +240,7 @@ Kaspaでは通常、**1 KAS = 100,000,000 sompi** と表現する。実装で整
 2. 対象ブロックのDAA score
 3. 発行スケジュールの実装
 4. フォーク前後のBPS履歴の扱い
-5. 実際のCoinbase取引と手数料
+5. 実際のCoinbaseトランザクションと手数料
 
 `params.rs` の `bps_history()` は、Crescendo前後のBPS履歴を報酬月の計算に使うと説明している。**現在報酬を単一の定数で掲載しない**。
 
@@ -519,8 +519,8 @@ A. 10 BPSは目標値であり、短時間の実測値とは異なる。
 **Q. GHOSTDAGの `k` は親ブロック数の上限？**  
 A. 違う。`ghostdag_k` と `max_block_parents` は別フィールド。
 
-**Q. Pruningすると過去の取引が無効になる？**  
-A. 違う。Pruningはデータ保持と検証の仕組みに関わる。取引の有効性を消す操作ではない。
+**Q. Pruningすると過去のトランザクションが無効になる？**\
+A. 違う。Pruningはデータ保持と検証の仕組みに関わる。トランザクションの有効性を消す操作ではない。
 
 **Q. Finalityが12時間なら決済も12時間待つ？**  
 A. 同義ではない。プロトコル内部のFinalityと決済アプリケーションのリスク管理を分ける。

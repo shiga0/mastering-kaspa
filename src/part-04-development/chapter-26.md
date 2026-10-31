@@ -6,7 +6,7 @@
 
 ## 26.1 この章の目的
 
-KaspaのコンセンサスをRustで理解するには、アルゴリズムだけでなく、**データの表現・検証順序・永続化・状態更新・並行処理**を一体として捉える必要がある。本章では、実装を読むための責務分解を示し、教育用の小さなRustプログラムでDAGとUTXO状態遷移の基本を確認する。
+KaspaのコンセンサスをRustで理解するには、アルゴリズムだけでなく、**データの表現・検証順序・永続化・状態更新・並行処理**を一体として捉える必要がある。本章では、実装を読むための責務分解を示し、固定した公式実装で親選択からメタデータ算出までを追う。自作モデルの実装は第27章で扱う。
 
 本章を終えたら、次の問いに答えられることを目指す。
 
@@ -15,7 +15,7 @@ KaspaのコンセンサスをRustで理解するには、アルゴリズムだ�
 3. Virtual Stateの再計算とストレージ更新にどんな不変条件が必要か。
 4. `rusty-kaspa`のどこから読み始め、どのように実装の根拠を残すか。
 
-> **重要:** この章のRustコードは**学習用モデル**であり、KaspaのGHOSTDAG、PoW、署名、Difficulty、Pruning、実際のVirtual Stateと互換ではない。メインネットで利用しないこと。
+> **対象範囲:** 26.7は固定した公式ソースの読み取り記録である。その他の型・図は責務を説明する概念モデルであり、公式実装との一対一の対応やノード全体の検証を意味しない。
 
 ## 26.2 コンセンサスの責務を分ける
 
@@ -28,7 +28,7 @@ KaspaのコンセンサスをRustで理解するには、アルゴリズムだ�
 | DAG storage | ブロックと親子関係 | 祖先関係・インデックス・永続化 | DAGの参照可能な状態 |
 | GHOSTDAG | DAGとパラメータ | Selected parent、blue/redなどの計算 | コンセンサス用メタデータ |
 | Ordering | GHOSTDAGの結果 | 処理に用いる順序の決定 | ブロックの順序 |
-| UTXO state | 順序付けられた取引 | 支出可能性・競合・状態遷移の評価 | UTXO集合 |
+| UTXO state | 順序付けられたトランザクション | 支出可能性・競合・状態遷移の評価 | UTXO集合 |
 | Virtual state | DAGの現在のtipsなど | 仮想的な視点での状態の評価 | ノードが参照する現在状態 |
 | Persistence | 状態変更 | 一貫性を保った記録・復旧 | 永続データ |
 
@@ -68,8 +68,8 @@ Block processing ──────► Validation
 
 - `BlockHash`：ブロックの識別子。単なる文字列や整数と区別する。
 - `BlockHeader`：親参照、タイムスタンプ、PoW関連フィールドなど。
-- `Block`：ヘッダーと取引群。
-- `Outpoint`：取引IDと出力インデックスの組。
+- `Block`：ヘッダーとトランザクション群。
+- `Outpoint`：トランザクションIDと出力インデックスの組。
 - `UtxoEntry`：金額、支出条件など。
 - `ValidationError`：無効な入力と一時的な依存不足を区別する。
 
@@ -113,7 +113,7 @@ BlockDAGを保持する部分には、最低限次のような不変条件が必
        C
 ```
 
-矢印を省略した図で、上から下へ親を参照すると考える。`A`と`B`は並行して生成された例であり、`C`は両方を親として参照する。この図は概念図であり、表示方向に普遍的な規約はない。
+矢印を省略した図で、上が親、下が子である。子から親への参照方向は下から上になる。`A`と`B`は並行して生成された例であり、`C`は両方を親として参照する。この図は概念図であり、表示方向に普遍的な規約はない。
 
 ## 26.5 GHOSTDAGは単純なトポロジカルソートではない
 
@@ -125,17 +125,17 @@ KaspaではGHOSTDAGにより、Selected parentやblue/redの分類、blue score/
 
 | 用語 | 意味 | 誤解しやすい点 |
 |---|---|---|
-| DAGの親子関係 | ブロックが参照する先 | それだけで取引順序は確定しない |
+| DAGの親子関係 | ブロックが参照する先 | それだけでトランザクション順序は確定しない |
 | Selected parent | GHOSTDAGの規則に基づく選択 | 「最初に受信した親」ではない |
-| Blue / Red | GHOSTDAGの分類 | Red = 無効なブロック、ではない |
-| Consensus ordering | 規則に従って決まる順序 | 全取引が必ず受理されるわけではない |
+| blue / red | GHOSTDAGの分類 | red = 無効なブロック、ではない |
+| Consensus ordering | 規則に従って決まる順序 | 全トランザクションが必ず受理されるわけではない |
 | Virtual state | DAGの現在の視点から評価する状態 | 永久不変な最終状態とは限らない |
 
-GHOSTDAGの厳密な実装を作るには、論文の定義、ネットワークパラメータ、参照実装を突き合わせる必要がある。ここでは誤った「簡易GHOSTDAG」を提示する代わりに、独立した学習用モデルで不変条件を確かめる。
+GHOSTDAGの厳密な実装を作るには、論文の定義、ネットワークパラメータ、参照実装を突き合わせる必要がある。ここでは第12章で確認した規則を、公式実装の関数・データ構造に対応づける。
 
 ## 26.6 Virtual Stateと状態遷移
 
-コンセンサス上のブロック順序と、UTXOの受理可否は別の段階である。二つの取引が同じUTXOを消費しようとする場合、順序付けの結果に従って一方が適用され、他方は競合として適用されない場合がある。
+コンセンサス上のブロック順序と、UTXOの受理可否は別の段階である。二つのトランザクションが同じUTXOを消費しようとする場合、順序付けの結果に従って一方が適用され、他方は競合として適用されない場合がある。
 
 ```text
 BlockDAG
@@ -155,7 +155,7 @@ UTXO state transition
 
 ### 26.6.1 状態遷移の原子性
 
-複数入力を持つ取引で、最初の入力を消費した後に別の入力で検証が失敗したとする。このとき、最初の入力だけが消費された状態を残してはいけない。
+複数入力を持つトランザクションで、最初の入力を消費した後に別の入力で検証が失敗したとする。このとき、最初の入力だけが消費された状態を残してはいけない。
 
 - **検証段階:** すべての入力と出力を確認する。
 - **コミット段階:** 全検証が成功した場合にのみ状態を変更する。
@@ -163,228 +163,28 @@ UTXO state transition
 
 本番実装ではデータベースのトランザクション、書き込みバッチ、ロールバックなどの設計も重要になる。
 
-## 26.7 実装演習：最小DAGとUTXO状態遷移
+## 26.7 公式実装を追う：親選択からメタデータ保存まで
 
-ここでは**標準ライブラリのみ**を使用する。サンプルはKaspa互換ではないが、責務分離とテストの起点として利用できる。
+この章では公式実装の入力・出力・依存先を読む。教育用DAG・UTXOコードを一から組み立てる作業は第27章にまとめる。第12章のDAG解析器で集合の意味を確認してから、以下の経路を追うとよい。
 
-### 26.7.1 プロジェクト作成
+参照コミットは `4edcbbccb449f84832afb1ca157904b35f37d006`。以下は固定ソースの読み取りによる確認であり、公式ノードの実行結果ではない。
 
-```bash
-cargo new consensus-lab --lib
-cd consensus-lab
-```
+| 読む箇所 | 入力と処理 | 確認する出力 |
+|---|---|---|
+| [`find_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs) | 親一覧を受け、ストアから各親のblue workを取得 | `(blue_work, hash)` が最大の親 |
+| [`ordered_mergeset_without_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/mergeset.rs) | 他の親から過去を探索し、selected parentの過去を除外 | blue work、hashの昇順の候補列 |
+| [`GhostdagData::new_with_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/model/stores/ghostdag.rs) | selected parentを最初のblueとして設定 | 分類計算の初期メタデータ |
+| [`check_blue_candidate`](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs) | 到達可能性と既存blueのanticoneサイズを調べる | 候補のblue/red判定 |
+| [`ghostdag`](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs) | 判定を反映し、score/workを算出 | `GhostdagData` |
 
-`src/lib.rs`を次の内容に置き換える。
+### 26.7.1 読み取りの課題
 
-```rust
-use std::collections::{HashMap, HashSet};
+1. 親一覧の順を変えても同じ親が選ばれる理由を、比較処理から説明する。
+2. `mergeset_blues` の先頭要素がscore/workの式にどう影響するか確認する。
+3. 分類関数のどこがストアの読み取りを行い、何を戻り値として返すか記録する。
+4. 呼び出し元を検索し、戻り値を保存する経路を追う。**分類関数を読んだだけで永続化の原子性まで確認したと扱わない。**
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BlockId(pub u64);
-
-#[derive(Debug, Clone)]
-pub struct Block {
-    pub id: BlockId,
-    pub parents: Vec<BlockId>,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum DagError {
-    Duplicate,
-    MissingParent(BlockId),
-    SelfReference,
-    DuplicateParent,
-}
-
-#[derive(Default)]
-pub struct Dag {
-    blocks: HashMap<BlockId, Block>,
-}
-
-impl Dag {
-    pub fn insert(&mut self, block: Block) -> Result<(), DagError> {
-        if self.blocks.contains_key(&block.id) {
-            return Err(DagError::Duplicate);
-        }
-        let mut seen = HashSet::new();
-        for &parent in &block.parents {
-            if parent == block.id {
-                return Err(DagError::SelfReference);
-            }
-            if !seen.insert(parent) {
-                return Err(DagError::DuplicateParent);
-            }
-            if !self.blocks.contains_key(&parent) {
-                return Err(DagError::MissingParent(parent));
-            }
-        }
-        self.blocks.insert(block.id, block);
-        Ok(())
-    }
-
-    pub fn contains(&self, id: BlockId) -> bool {
-        self.blocks.contains_key(&id)
-    }
-
-    pub fn len(&self) -> usize {
-        self.blocks.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.blocks.is_empty()
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Outpoint(pub u64);
-
-#[derive(Debug, Clone)]
-pub struct Tx {
-    pub inputs: Vec<Outpoint>,
-    pub outputs: Vec<(Outpoint, u64)>,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum TxError {
-    DuplicateInput,
-    MissingInput(Outpoint),
-    DuplicateOutput,
-    OutputAlreadyExists(Outpoint),
-    InsufficientInput,
-    Overflow,
-}
-
-#[derive(Default)]
-pub struct UtxoSet {
-    entries: HashMap<Outpoint, u64>,
-}
-
-impl UtxoSet {
-    pub fn with_genesis(entries: impl IntoIterator<Item = (Outpoint, u64)>) -> Self {
-        Self { entries: entries.into_iter().collect() }
-    }
-
-    pub fn balance_of(&self, outpoint: Outpoint) -> Option<u64> {
-        self.entries.get(&outpoint).copied()
-    }
-
-    pub fn apply(&mut self, tx: &Tx) -> Result<(), TxError> {
-        let mut input_ids = HashSet::new();
-        let mut total_in = 0_u64;
-        for &input in &tx.inputs {
-            if !input_ids.insert(input) {
-                return Err(TxError::DuplicateInput);
-            }
-            let amount = self.entries.get(&input)
-                .copied().ok_or(TxError::MissingInput(input))?;
-            total_in = total_in.checked_add(amount).ok_or(TxError::Overflow)?;
-        }
-
-        let mut output_ids = HashSet::new();
-        let mut total_out = 0_u64;
-        for &(outpoint, amount) in &tx.outputs {
-            if !output_ids.insert(outpoint) {
-                return Err(TxError::DuplicateOutput);
-            }
-            if self.entries.contains_key(&outpoint) && !input_ids.contains(&outpoint) {
-                return Err(TxError::OutputAlreadyExists(outpoint));
-            }
-            total_out = total_out.checked_add(amount).ok_or(TxError::Overflow)?;
-        }
-        if total_out > total_in {
-            return Err(TxError::InsufficientInput);
-        }
-
-        // すべての検証が成功した後にのみ更新する。
-        for input in &tx.inputs {
-            self.entries.remove(input);
-        }
-        for &(outpoint, amount) in &tx.outputs {
-            self.entries.insert(outpoint, amount);
-        }
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn dag_accepts_known_parents() {
-        let mut dag = Dag::default();
-        dag.insert(Block { id: BlockId(0), parents: vec![] }).unwrap();
-        dag.insert(Block { id: BlockId(1), parents: vec![BlockId(0)] }).unwrap();
-        dag.insert(Block { id: BlockId(2), parents: vec![BlockId(0)] }).unwrap();
-        dag.insert(Block { id: BlockId(3), parents: vec![BlockId(1), BlockId(2)] }).unwrap();
-        assert_eq!(dag.len(), 4);
-    }
-
-    #[test]
-    fn dag_rejects_missing_parent_without_mutation() {
-        let mut dag = Dag::default();
-        assert_eq!(
-            dag.insert(Block { id: BlockId(2), parents: vec![BlockId(99)] }),
-            Err(DagError::MissingParent(BlockId(99)))
-        );
-        assert!(dag.is_empty());
-    }
-
-    #[test]
-    fn dag_rejects_duplicate_parent() {
-        let mut dag = Dag::default();
-        dag.insert(Block { id: BlockId(0), parents: vec![] }).unwrap();
-        assert_eq!(
-            dag.insert(Block { id: BlockId(1), parents: vec![BlockId(0), BlockId(0)] }),
-            Err(DagError::DuplicateParent)
-        );
-    }
-
-    #[test]
-    fn utxo_transition_consumes_and_creates() {
-        let mut state = UtxoSet::with_genesis([(Outpoint(1), 100)]);
-        let tx = Tx {
-            inputs: vec![Outpoint(1)],
-            outputs: vec![(Outpoint(2), 70), (Outpoint(3), 25)],
-        };
-        state.apply(&tx).unwrap();
-        assert_eq!(state.balance_of(Outpoint(1)), None);
-        assert_eq!(state.balance_of(Outpoint(2)), Some(70));
-        assert_eq!(state.balance_of(Outpoint(3)), Some(25));
-        // 差額5は、この教育モデルでは手数料に相当する。
-    }
-
-    #[test]
-    fn failed_transaction_does_not_mutate_state() {
-        let mut state = UtxoSet::with_genesis([(Outpoint(1), 100)]);
-        let tx = Tx {
-            inputs: vec![Outpoint(1), Outpoint(99)],
-            outputs: vec![(Outpoint(2), 50)],
-        };
-        assert_eq!(state.apply(&tx), Err(TxError::MissingInput(Outpoint(99))));
-        assert_eq!(state.balance_of(Outpoint(1)), Some(100));
-        assert_eq!(state.balance_of(Outpoint(2)), None);
-    }
-
-    #[test]
-    fn double_spend_is_rejected() {
-        let mut state = UtxoSet::with_genesis([(Outpoint(1), 100)]);
-        let first = Tx { inputs: vec![Outpoint(1)], outputs: vec![(Outpoint(2), 90)] };
-        let second = Tx { inputs: vec![Outpoint(1)], outputs: vec![(Outpoint(3), 90)] };
-        state.apply(&first).unwrap();
-        assert_eq!(state.apply(&second), Err(TxError::MissingInput(Outpoint(1))));
-        assert_eq!(state.balance_of(Outpoint(3)), None);
-    }
-}
-```
-
-実行する。
-
-```bash
-cargo test
-```
-
-**注意:** このコードの`Outpoint(u64)`は、現実のトランザクションIDと出力インデックスを単純化している。また、署名、Script、PoW、Coinbase、手数料ポリシー、コンセンサス順序、並行実行、永続化は実装していない。`with_genesis`はテスト用の初期化APIであり、コンセンサス上のGenesis処理を表さない。
+第12章は規則と集合の意味、本章は関数と依存先、第27章は自作モデルの接続を担当する。公式実装に対応しない教材の型やアルゴリズムを、実装の説明へ混ぜない。
 
 ## 26.8 何がまだ足りないのか
 
@@ -407,7 +207,7 @@ cargo test
 
 Kaspaノードでは、P2P受信、ブロック検証、同期、RPCなどが同時進行する。Rustの所有権・借用・`Send`/`Sync`はデータ競合を減らす助けになるが、**論理的な競合やコンセンサスの誤りを自動で防ぐわけではない**。
 
-例として、二つのタスクが同じUTXOを使う取引を同時に検証すると、どちらも「未使用」と読める可能性がある。したがって、検証とコミットを整合的に扱う設計が必要になる。
+例として、二つのタスクが同じUTXOを使うトランザクションを同時に検証すると、どちらも「未使用」と読める可能性がある。したがって、検証とコミットを整合的に扱う設計が必要になる。
 
 検討事項：
 
@@ -436,7 +236,7 @@ Kaspaノードでは、P2P受信、ブロック検証、同期、RPCなどが同
 ### 26.10.1 Reorganizationの不変条件
 
 - 同じコンセンサス入力からは同じ状態が得られる。
-- 取り消された取引の出力を誤って残さない。
+- 取り消されたトランザクションの出力を誤って残さない。
 - 同じUTXOを二度消費しない。
 - 状態更新の途中でRPCに矛盾した結果を公開しない。
 - 再起動後の状態が、正しく再生した状態と一致する。
@@ -557,17 +357,17 @@ rg -n 'pruning|daa|difficulty' consensus
 
 ### 課題A：DAGの問い合わせを実装する
 
-`Dag`に次のメソッドを追加する。
+第12章の `examples/dag-relations/` にある `Dag` を題材に、次のメソッドを確認・追加する。
 
-- `ancestors(id)`：指定ブロックの祖先集合を返す。
+- `past(id)`：既存メソッドで、指定ブロックの祖先集合を返すことを確認する。
 - `is_ancestor(a, b)`：`a`が`b`の祖先か判定する。
-- `anticone(a, b)`：どちらも他方の祖先ではないか判定する。
+- `is_in_anticone(a, b)`：異なる既知の2ブロックが互いに祖先・子孫でないか判定する。既存の `anticone(id)` は集合を返すため、その名前と区別する。
 
 **確認:** 2本の並行枝を作り、同じ親を共有するブロック同士がAnticoneに入ることをテストする。
 
 ### 課題B：状態差分を実装する
 
-取引の適用結果として`UtxoDiff { removed, added }`を返すよう変更する。差分の逆適用を作り、適用前の状態へ戻せることを検証する。
+第27章の `examples/minimal-node/src/main.rs` にある `UtxoSet::apply` を対象にする。トランザクションの適用結果として `UtxoDiff { removed, added }` を返すよう変更する。差分の逆適用を作り、適用前の状態へ戻せることを検証する。
 
 ### 課題C：参照実装の経路を調査する
 
@@ -589,8 +389,8 @@ A. ならない。Rustはメモリ安全性やデータ競合の防止に役立�
 **Q. トポロジカルソートができればGHOSTDAGを実装したことになる？**  
 A. ならない。GHOSTDAGにはSelected parent、blue/red分類、blue workなどの規則がある。
 
-**Q. ブロックが有効なら中の全取引も受理される？**  
-A. 必ずしもそうではない。ブロックの妥当性と、コンセンサス順序に基づく取引の受理は分けて考える必要がある。
+**Q. ブロックが有効なら中の全トランザクションも受理される？**\
+A. 必ずしもそうではない。ブロックの妥当性と、コンセンサス順序に基づくトランザクションの受理は分けて考える必要がある。
 
 **Q. テストが全部通ればメインネット互換？**  
 A. ならない。網羅性、仕様との一致、敵対的条件、参照実装との比較などが必要だ。
@@ -599,12 +399,12 @@ A. ならない。網羅性、仕様との一致、敵対的条件、参照実�
 
 1. DAGストレージとGHOSTDAG計算の責務をそれぞれ説明せよ。
 2. 「親ブロック未到着」と「無効なPoW」を同じエラーにすべきでない理由は何か。
-3. Blue/Red分類とトランザクションの受理可否を混同すると何が起こるか。
+3. blue/red分類とトランザクションの受理可否を混同すると何が起こるか。
 4. UTXO状態遷移を原子的に行う理由を具体例で説明せよ。
 5. Reorganizationが発生したときに保持すべき不変条件を三つ挙げよ。
 6. Rustの所有権システムが防げる問題と、防げない問題を区別せよ。
 7. `rusty-kaspa`の実装調査でコミットハッシュを記録する理由は何か。
-8. 本章の学習用コードに不足しているKaspa固有の要素を五つ挙げよ。
+8. 第27章の教育用モデルに不足しているKaspa固有の要素を五つ挙げよ。
 
 ## 26.18 まとめ
 

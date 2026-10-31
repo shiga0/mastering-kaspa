@@ -1,0 +1,28 @@
+name: mastering-kaspa-devnet
+services:
+  node:
+    image: kaspanet/rusty-kaspad@sha256:5bc3195c2cd2d171885781ed55ead9485d93c7bd7b784d46e9e393c96757fe22
+    platform: linux/arm64
+    entrypoint: [kaspad]
+    command:
+      - --devnet
+      - --yes
+      - --nologfiles
+      - --disable-upnp
+      - --nodnsseed
+      - --outpeers=0
+      - --maxinpeers=0
+      - --nogrpc
+      - --utxoindex
+      - --appdir=/data
+      - --rpclisten-json=0.0.0.0:18310
+    ports:
+      - "127.0.0.1:18310:18310"
+    volumes:
+      - node-data:/data
+    networks: [lab]
+networks:
+  lab:
+    driver: bridge
+volumes:
+  node-data:

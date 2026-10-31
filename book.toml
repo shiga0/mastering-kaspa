@@ -1,7 +1,7 @@
 [book]
 title = "Mastering Kaspa"
 authors = ["shiga0"]
-language = "en"
+language = "ja"
 
 [output.html]
 additional-css = ["theme/custom.css"]

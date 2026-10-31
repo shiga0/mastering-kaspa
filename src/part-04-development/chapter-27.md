@@ -6,6 +6,8 @@
 
 ## 27.1 この章で作るもの
 
+第26章では公式実装の処理を追い、本章では教育用モデルを自作してコンポーネントを接続する。公式実装の読み取りと教材の動作検証は、別の到達目標として扱う。
+
 ここまでの章では、BlockDAG、トランザクション、コンセンサス、P2P、ストレージを個別に学んだ。本章ではそれらを**小さな実行可能プログラムとして接続する**。実装の目的は、Kaspaと互換なノードを作ることではない。ノードの責務と依存関係を手で追い、失敗時の状態変化をテストできるようにすることだ。
 
 完成する教育用ノードには、次の機能を含める。
@@ -14,7 +16,7 @@
 - Mempoolへの登録と競合検出
 - 複数親を持つブロックの格納
 - 親が未到着の場合の拒否と、再送による受理
-- ブロックに含まれる取引を順番に適用する簡易状態遷移
+- ブロックに含まれるトランザクションを順番に適用する簡易状態遷移
 - ノード間でブロックを受け渡すインメモリのネットワーク実験
 - 失敗時に状態を変更しないことを確認するテスト
 
@@ -49,9 +51,9 @@
 
 | 項目 | 本章の教材 | 実際のKaspaで必要になるもの |
 |---|---|---|
-| ブロック | ID、親ID、取引一覧 | 正式なヘッダー、PoW、コンセンサス規則 |
+| ブロック | ID、親ID、トランザクション一覧 | 正式なヘッダー、PoW、コンセンサス規則 |
 | DAG | 複数親、親存在検証 | GHOSTDAG、到達可能性、順序付け |
-| 取引 | 入力・出力・金額 | 正式なシリアライズ、署名、Script |
+| トランザクション | 入力・出力・金額 | 正式なシリアライズ、署名、Script |
 | 状態 | UTXO集合 | Virtual State、reorg、永続化 |
 | Mempool | 入力予約と重複拒否 | 手数料、依存関係、再検証、容量制御 |
 | P2P | ノード間の関数呼び出し | ハンドシェイク、接続管理、同期、DoS防御 |
@@ -68,13 +70,25 @@
 3. 親IDの重複や自己参照は認めない。
 4. 同じUTXOは、一度の状態遷移で二度消費できない。
 5. 出力額の合計は入力額の合計を超えない。
-6. 検証に失敗した取引・ブロックは、**既存の状態を変更しない**。
-7. Mempool内で同じ入力を複数の取引が予約できない。
+6. 検証に失敗したトランザクション・ブロックは、**既存の状態を変更しない**。
+7. Mempool内で同じ入力を複数のトランザクションが予約できない。
 8. ノード間で受信したデータは、送信元を信用せず再検証する。
 
 **注意:** これらは教材独自の条件を含む。Kaspaの実際のコンセンサス規則を列挙したものではない。
 
 ## 27.5 プロジェクト構成
+
+本書リポジトリの `examples/minimal-node/` に、27.6〜27.12のコードをまとめた実行可能なサンプルを収録している。リポジトリのルートから次のように実行できる。
+
+```bash
+cd examples/minimal-node
+cargo run --locked
+cargo test --locked
+cargo fmt --check
+cargo clippy --locked --all-targets -- -D warnings
+```
+
+以下は、同じ教材を手元で組み立てる手順である。
 
 Rustの標準ライブラリだけで実行できるようにする。
 
@@ -91,6 +105,8 @@ minimal-kaspa-like-node/
 └── src/
     └── main.rs
 ```
+
+<!-- example:minimal-node:start -->
 
 ## 27.6 データモデル
 
@@ -148,14 +164,13 @@ impl UtxoSet {
             if !seen.insert(input.clone()) {
                 return Err("duplicate input".into());
             }
-            let prev = self.entries.get(input)
-                .ok_or("missing input")?;
-            input_sum = input_sum.checked_add(prev.value)
-                .ok_or("input overflow")?;
+            let prev = self.entries.get(input).ok_or("missing input")?;
+            input_sum = input_sum.checked_add(prev.value).ok_or("input overflow")?;
         }
         let mut output_sum = 0u64;
         for output in &tx.outputs {
-            output_sum = output_sum.checked_add(output.value)
+            output_sum = output_sum
+                .checked_add(output.value)
                 .ok_or("output overflow")?;
         }
         if output_sum > input_sum {
@@ -163,7 +178,8 @@ impl UtxoSet {
         }
         for (index, _) in tx.outputs.iter().enumerate() {
             let point = OutPoint {
-                txid: tx.id.clone(), index: index as u32,
+                txid: tx.id.clone(),
+                index: index as u32,
             };
             if self.entries.contains_key(&point) && !seen.contains(&point) {
                 return Err("output collision".into());
@@ -175,7 +191,10 @@ impl UtxoSet {
         }
         for (index, output) in tx.outputs.iter().enumerate() {
             self.entries.insert(
-                OutPoint { txid: tx.id.clone(), index: index as u32 },
+                OutPoint {
+                    txid: tx.id.clone(),
+                    index: index as u32,
+                },
                 output.clone(),
             );
         }
@@ -184,11 +203,11 @@ impl UtxoSet {
 }
 ```
 
-この実装には、**取引IDが一意であることを保証する機構がない**。さらに、入力と出力の同一OutPointを許すと予期しない動作が起こり得る。実際のシステムでは、ID生成・出力衝突・金額・署名・Scriptなどを厳密に扱う必要がある。
+この実装には、**トランザクションIDが一意であることを保証する機構がない**。さらに、入力と出力の同一OutPointを許すと予期しない動作が起こり得る。実際のシステムでは、ID生成・出力衝突・金額・署名・Scriptなどを厳密に扱う必要がある。
 
 ### 失敗時の原子性
 
-取引の適用で失敗しても元の状態を保持するには、複数取引を含むブロック単位でも同じ考え方が必要だ。
+トランザクションの適用で失敗しても元の状態を保持するには、複数トランザクションを含むブロック単位でも同じ考え方が必要だ。
 
 ```rust
 fn apply_block_transactions(
@@ -207,7 +226,7 @@ fn apply_block_transactions(
 
 ## 27.8 Mempoolの最小実装
 
-Mempoolは、コンセンサスで確定した状態ではない。未処理の取引候補を管理する領域だ。
+Mempoolは、コンセンサスで確定した状態ではない。未処理のトランザクション候補を管理する領域だ。
 
 ```rust
 #[derive(Default)]
@@ -247,7 +266,7 @@ impl Mempool {
 }
 ```
 
-これは**競合入力の予約モデル**であり、UTXOの存在や署名を検証していない。親子取引、手数料、期限切れ、Reorganization後の再投入も扱わない。これらを追加する前に、Mempoolの責務を明確にしておく。
+これは**競合入力の予約モデル**であり、UTXOの存在や署名を検証していない。親子トランザクション、手数料、期限切れ、Reorganization後の再投入も扱わない。これらを追加する前に、Mempoolの責務を明確にしておく。
 
 ## 27.9 BlockDAGの最小実装
 
@@ -294,7 +313,7 @@ impl Dag {
            C
 ```
 
-`C`が`A`と`B`を親として参照する。これはDAGの構造を示す図であり、ブロックの優先順位や取引の適用順序を示すものではない。
+`C`が`A`と`B`を親として参照する。これはDAGの構造を示す図であり、ブロックの優先順位やトランザクションの適用順序を示すものではない。
 
 ## 27.10 Nodeでコンポーネントを接続する
 
@@ -315,8 +334,7 @@ impl Node {
             blocks: self.dag.blocks.clone(),
         };
         candidate_dag.insert(block.clone())?;
-        let candidate_utxos =
-            apply_block_transactions(&self.utxos, &block.transactions)?;
+        let candidate_utxos = apply_block_transactions(&self.utxos, &block.transactions)?;
         self.dag = candidate_dag;
         self.utxos = candidate_utxos;
         for tx in &block.transactions {
@@ -327,9 +345,9 @@ impl Node {
 }
 ```
 
-このコードでは、**ブロック受理順に取引を適用する**。そのため、ネットワークの受信順が異なると状態が異なる可能性がある。これは分散コンセンサスとして**成立しない**。実際のKaspaでは、GHOSTDAGとコンセンサス順序、Virtual Stateの仕組みがこの問題を解決する。ここは教材の最大の未実装部分である。
+このコードでは、**ブロック受理順にトランザクションを適用する**。そのため、ネットワークの受信順が異なると状態が異なる可能性がある。これは分散コンセンサスとして**成立しない**。実際のKaspaでは、GHOSTDAGとコンセンサス順序、Virtual Stateの仕組みがこの問題を解決する。ここは教材の最大の未実装部分である。
 
-また、Mempoolからの削除は簡略化している。ブロック受理後に、残存取引の再検証や競合取引の除去が必要になる場合がある。
+また、Mempoolからの削除は簡略化している。ブロック受理後に、残存トランザクションの再検証や競合トランザクションの除去が必要になる場合がある。
 
 ## 27.11 `main`で動かす
 
@@ -346,13 +364,19 @@ fn main() -> Result<(), String> {
 
     // 教材用の初期残高。実際のcoinbaseではない。
     node.utxos.entries.insert(
-        OutPoint { txid: "seed".into(), index: 0 },
+        OutPoint {
+            txid: "seed".into(),
+            index: 0,
+        },
         Output { value: 100 },
     );
 
     let tx = Transaction {
         id: "payment-1".into(),
-        inputs: vec![OutPoint { txid: "seed".into(), index: 0 }],
+        inputs: vec![OutPoint {
+            txid: "seed".into(),
+            index: 0,
+        }],
         outputs: vec![Output { value: 70 }, Output { value: 29 }],
     };
     node.mempool.insert(tx.clone())?;
@@ -400,9 +424,13 @@ mod tests {
             id: "genesis".into(),
             parents: vec![],
             transactions: vec![],
-        }).unwrap();
+        })
+        .unwrap();
         node.utxos.entries.insert(
-            OutPoint { txid: "seed".into(), index: 0 },
+            OutPoint {
+                txid: "seed".into(),
+                index: 0,
+            },
             Output { value: 100 },
         );
         node
@@ -411,7 +439,10 @@ mod tests {
     fn spend(id: &str, amount: u64) -> Transaction {
         Transaction {
             id: id.into(),
-            inputs: vec![OutPoint { txid: "seed".into(), index: 0 }],
+            inputs: vec![OutPoint {
+                txid: "seed".into(),
+                index: 0,
+            }],
             outputs: vec![Output { value: amount }],
         }
     }
@@ -423,10 +454,12 @@ mod tests {
             id: "a".into(),
             parents: vec!["genesis".into()],
             transactions: vec![spend("tx1", 99)],
-        }).unwrap();
-        assert!(!node.utxos.entries.contains_key(
-            &OutPoint { txid: "seed".into(), index: 0 }
-        ));
+        })
+        .unwrap();
+        assert!(!node.utxos.entries.contains_key(&OutPoint {
+            txid: "seed".into(),
+            index: 0
+        }));
         assert_eq!(node.utxos.entries.len(), 1);
     }
 
@@ -434,11 +467,13 @@ mod tests {
     fn invalid_block_does_not_mutate_state() {
         let mut node = seeded_node();
         let before = node.utxos.entries.clone();
-        assert!(node.accept_block(Block {
-            id: "bad".into(),
-            parents: vec!["genesis".into()],
-            transactions: vec![spend("tx1", 101)],
-        }).is_err());
+        assert!(node
+            .accept_block(Block {
+                id: "bad".into(),
+                parents: vec!["genesis".into()],
+                transactions: vec![spend("tx1", 101)],
+            })
+            .is_err());
         assert_eq!(node.utxos.entries, before);
         assert!(!node.dag.blocks.contains_key("bad"));
     }
@@ -446,11 +481,13 @@ mod tests {
     #[test]
     fn unknown_parent_is_rejected() {
         let mut node = seeded_node();
-        assert!(node.accept_block(Block {
-            id: "orphan".into(),
-            parents: vec!["missing".into()],
-            transactions: vec![],
-        }).is_err());
+        assert!(node
+            .accept_block(Block {
+                id: "orphan".into(),
+                parents: vec!["missing".into()],
+                transactions: vec![],
+            })
+            .is_err());
     }
 
     #[test]
@@ -461,13 +498,15 @@ mod tests {
                 id: id.into(),
                 parents: vec!["genesis".into()],
                 transactions: vec![],
-            }).unwrap();
+            })
+            .unwrap();
         }
         node.accept_block(Block {
             id: "c".into(),
             parents: vec!["a".into(), "b".into()],
             transactions: vec![],
-        }).unwrap();
+        })
+        .unwrap();
         assert_eq!(node.dag.blocks["c"].parents.len(), 2);
     }
 
@@ -496,7 +535,9 @@ cargo clippy --all-targets -- -D warnings
 cargo fmt --check
 ```
 
-上記コードは**学習用の掲載例**であり、この原稿作成時点でローカル実行結果を検証したとは主張しない。環境やコンパイラのバージョンによって警告・修正が必要な場合は、テスト結果を付録Gに記録する。
+2026年10月31日、収録サンプルをRust 1.90.0で実行し、期待する表示、6件の単体テスト、書式検査、Clippyの成功を確認した。これは教育用モデルの検証であり、Kaspaのコンセンサス仕様との互換性を確認したものではない。検証記録は `experiments/minimal-node-2026-10-31.md` を参照する。
+
+<!-- example:minimal-node:end -->
 
 ## 27.13 ノード間でブロックを伝播させる
 
@@ -528,7 +569,7 @@ Node A                      Node B
 
 ## 27.14 受信順による不一致を観察する
 
-この教材には意図的な欠点がある。例えば、`a`と`b`が同じUTXOを使う競合取引を含む場合、ノードXが`a`を先に受信し、ノードYが`b`を先に受信すると、採用する取引が異なる。
+この教材には意図的な欠点がある。例えば、`a`と`b`が同じUTXOを使う競合トランザクションを含む場合、ノードXが`a`を先に受信し、ノードYが`b`を先に受信すると、採用するトランザクションが異なる。
 
 ```text
           Genesis
@@ -541,8 +582,8 @@ Node A                      Node B
 
 | ノード | 受信順 | 簡略実装で起きること |
 |---|---|---|
-| X | A → B | Aの取引を適用し、Bの競合取引を拒否 |
-| Y | B → A | Bの取引を適用し、Aの競合取引を拒否 |
+| X | A → B | Aのトランザクションを適用し、Bの競合トランザクションを拒否 |
+| Y | B → A | Bのトランザクションを適用し、Aの競合トランザクションを拒否 |
 
 **同じブロック集合を受信しても、同じ状態になる保証がない。** これが、DAGの保存だけではコンセンサスにならない理由だ。
 
@@ -639,9 +680,9 @@ Stopped
 
 | コンポーネント | 責務 | 責務に含めないもの |
 |---|---|---|
-| `Dag` | ブロック間の参照関係を保存 | 取引の支出権限判定 |
+| `Dag` | ブロック間の参照関係を保存 | トランザクションの支出権限判定 |
 | `UtxoSet` | UTXOの消費・生成 | ピア接続管理 |
-| `Mempool` | 未処理取引候補と入力予約 | コンセンサス上の確定判断 |
+| `Mempool` | 未処理トランザクション候補と入力予約 | コンセンサス上の確定判断 |
 | `Node` | 処理順序と失敗時の整合性 | 個々の暗号アルゴリズム |
 | `ConsensusOrdering` | ブロック順序の決定（将来） | TCPの読み書き |
 
@@ -723,8 +764,8 @@ Tokioで2ノードを接続し、メッセージのシリアライズ、タイ�
 ## 27.24 理解度チェック
 
 1. なぜ複数親のDAGを作るだけではKaspa互換ノードにならないのか。
-2. 取引検証後に状態を更新する設計にはどんな利点があるか。
-3. Mempoolの取引とVirtual Stateで受理された取引は何が違うか。
+2. トランザクション検証後に状態を更新する設計にはどんな利点があるか。
+3. MempoolのトランザクションとVirtual Stateで受理されたトランザクションは何が違うか。
 4. ブロック受信順がノード間で異なると何が起こり得るか。
 5. なぜ一般的なトポロジカルソートはGHOSTDAGの代替にならないのか。
 6. 親が未知のブロックを受信した場合、どのような同期処理が必要か。
@@ -737,7 +778,7 @@ Tokioで2ノードを接続し、メッセージのシリアライズ、タイ�
 
 本章では、Rustの標準ライブラリを使って、**DAG・UTXO・Mempool・Nodeを組み合わせた教育用の最小ノード**を作った。
 
-この実験で得られる最も重要な理解は、**データを保存できることと、分散したノードが同じ状態に合意できることは別**だという点である。BlockDAGは並行して作られたブロックを表現できるが、それだけでは競合取引の扱いを決められない。KaspaではGHOSTDAGによるコンセンサス順序とVirtual Stateがその役割を担う。
+この実験で得られる最も重要な理解は、**データを保存できることと、分散したノードが同じ状態に合意できることは別**だという点である。BlockDAGは並行して作られたブロックを表現できるが、それだけでは競合トランザクションの扱いを決められない。KaspaではGHOSTDAGによるコンセンサス順序とVirtual Stateがその役割を担う。
 
 また、ノードを設計するときは、アルゴリズムだけでなく、検証の境界、状態更新の原子性、同期、永続化、障害回復、DoS耐性を一緒に考える必要がある。
 

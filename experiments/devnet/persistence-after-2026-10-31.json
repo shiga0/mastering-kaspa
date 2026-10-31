@@ -1,0 +1,1960 @@
+{
+  "blockCount": 151,
+  "network": "devnet",
+  "tipHashes": [
+    "3f3dceb48489f0973fc15e2957cb4f47fb61c034507fb85940fd7a4a2eae4408"
+  ],
+  "utxos": [
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "032fc606fd507dbdb04fe35f5deb3655734031d5c0fb5580ab47934cf2f8a8af"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 118,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "03d2326754797ad42775e42e5afbf6e46ecbaa8e2e41fb0e8a1001f20ed671f2"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 33,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "03d65e83990b50edbc6ee1358b7f5046119d7ff043000a2a3721f06d7720b14f"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 41,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "0671085905f649f7df814a53e467f68c0e97652aea2b27e90031a28cad5221b8"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 103,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "07990199b57a8e1105eec30e16af52736ea57a32e9d26ec739b5a5d196769111"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 72,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "081cd2a8f12aee5c60d48be74100146d5f51cbccf8956befa4eca52373a7cf43"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 12,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "0826f2aa064299de0ec10c1a6805a7e120edf39b53b2bd0610e453c4a518c74c"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 146,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "09acd1fb720c7ecf41d039fa12b08acd04197394d424558c5415953dd8cb89e6"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 106,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "0c8a3ac487b5ac5e072eca7e741065665541f7260bb08680e5489f4ec97aa62c"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 82,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "0d862c7acd99028db0b1564c40356f0877b813aeb3425d7212a29e0c0604c64b"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 141,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "10e49fe0d34a48b10bcc567ee82b9599d10a11127357240e2ee25db4064589aa"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 86,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "11915a7352e76a14082005245c095ffba62aaa34c86856f85c3b1cad081c5b05"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 29,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "120cc093a7dfba566663939445e1ed7c66480412bc9d9b865ffa0f9b49e268cd"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 66,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "136022320f12bef8af75c7d885ceaeb79338bdbe745f2fac5f3b1b461cc393d8"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 109,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "1482f9dbed6dff3802630515a4d4e15b09be9571be7a5b98926095d0207cdf2b"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 113,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "14a0d01d6c6344d037452a35281fed1c50cdb16a41e182eabe24d0278a2677d1"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 62,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "15fe862df7c382a17a7471abaea82dd93f1eb69caa555b30af88eb3f27b434c9"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 147,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "197fef5eb03074933fe41d51d50a81190687b6e551f1fac62913d8db915cda66"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 60,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "1b3e858b2dfca7d54e0269bd088a06051526cfa9e14bf8f78e92c97c1884ea6a"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 101,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "1c506da798e6730354e929a600ae1eca48a5884703c812c2f4473a6894cb37cf"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 5,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "24d178736454808f77916f573434c29b42fa7393e64ed4c6b011f2a59563b829"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 46,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "250461a72bc822e152f8703918196fdfb811568ebc7234c4c643eae4c038d57e"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 145,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "256fe05b64b82bfdeb27482d9d9f878a1e28aadb55d01178c8dd8676729cb888"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 71,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "26b1007ebe894072f18cf31b45dac3ad122563a9e45f2968af3cf93ef64f0b23"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 128,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "2a198eccbbc33d77397de8add11c2cb23db6ff8bc6d4f1972ed64e167cbec8e5"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 137,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "2ab09b16640fb2f4f38149763867f523d93ea222764e840eb971320dc655bcbc"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 3,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "2cf5dc7a5e0dfa3e4e276887208817027302d0bbdfb4af43b6666753c3964622"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 17,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "30917cd5d6f741c6c560d8dfca9b7a5e79a1144d6e1c282b79c0102993c801bc"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 92,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "32ecd8cc997a2ab3c2a96b77626a6326664f28b0c5950841bb539daca8351bdd"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 136,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "34627dd2290fa5815108803f5b7283c7e79e71870be198fddfb084829bfe164f"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 83,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "35167927b40c7cc23597997f4f364e3845d61dbfabe8483b6ca027531c5af4da"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 97,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "352410306057c6d16592ad8bc2b64f809a7ad9f39c753f70eabbd0c442080fc0"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 100,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "35b1aaf2e8a2bf6e67cc3f013cb9553334760176d7363043ef0ae1de46561cfb"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 88,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "36ecf68a5dbdc2b1396710a0bfeff02b8dbe996a4097fa5b939653217d9f28a0"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 11,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "3848e6f891c3aec6e5df5af1c4e40f4bbf50b34d74ff4e5963cfea2d612841c2"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 143,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "3a3c2e0797b7c7493dd311c49106fb36423568ab1ae4b0cfc31a1c87f20fbd58"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 43,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "3cc63cb4655294d31dc2a02bfa2c2309a01560ca35f233ee7e19673ca3d07888"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 80,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "3dd571a1a64d8e6a3f52bcff0c836c668dcf4e48f0cbd48d509fda4b585074d3"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 42,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "406b23befe077fe3d80c308721a1a5639f29cb37c0a5f7d9c0780a0dfa52db8f"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 45,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "41f7619bf72c337c8dca2f239fdb5586f571a321600a21e604d526eea358649e"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 87,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "42ee3c6e451ac58b69a14fc1cb379dfcac96450b3bd6359ef18d9c2fbecf0ad2"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 85,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "438af74e885563e4485cafd9c07c33edbe4a58198d2ea3d561f491a10ab586f1"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 79,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "48cf0fa855a4d726081e3955873b1d7327cfc64689647790383272f802a0a4c2"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 37,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "4bb15b65ef1bfea8c34c0e0d1c4e7ee118adb473d380d7caf3bba1e16ff7a48b"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 61,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "4bbf0a3ad5f0db1ecf393207f2c965298aa57b2ad2d67ccde7da3fc487e90858"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 122,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "4bee3b5edcd5e845f0dd7ebb5cfb0bdaf86aaf516ec4fb12e1d0f6448e47b8a8"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 115,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "4c47587ec116edc280468cda5f6080d9dfa1c9086832db1311c64d5d06c41084"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 94,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "4de02098387d15b2f3ff2bc1f30324b2f52390788b0ebb1ca1d71bed56ab49c2"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 53,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "4dfa25967ae40e883d57ec20ef1ff7102ba826f33753fef2d2be33bd5f6f19f8"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 74,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "4ea87bcdc2d5a53e5f68569e6152b55754304ef212701a6a2838b79f5e9d0e6a"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 7,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "4f0c51ab5864b2103a753019b9f197a01bea21e71c746920903dfc8ffb11293d"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 49,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "500f5c2ef9b8b4074694a724e4f4f253840efacad635ee5833511ac600fa8071"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 68,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "50dd35779c041e9bfcc77eab2f8bb16cb48587c0557105d17411ba1671839553"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 20,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "51ed5af6045b6c26425fd1ce956aa5236e6847019c77b063f68b2105ce97a2c7"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 142,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "59e84bdfb56fe2a91b9a77481929f590ef6eefd1604b7ddcc3adf446ace335b0"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 44,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "5a73e96bf92532b474f5f6b169699e8324b279902f278b1433437fa97366ee91"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 73,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "5bc90ef18050eaf0aed1446a17a7e0316ed7407fc7dab887d46bfbccadac9dba"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 150,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "5ca0ce4f4a94a22a19c0cfab8ff589b1c0bd8363f75320721c8a180ee43776e0"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 131,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "62f801885308997a3644e48e36e71663b03e47ca4f7aeb52f34ffe2f7055d3ab"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 119,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "630b09c826af27f77e7a968633bd64acc97f703e4db3c0583c6cd56193f2a777"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 9,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "64acf94ce06d63a31419e70fd32219be7136a05ff1d3d302f7ee1b6ea457ee19"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 98,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "6732e92b6dea55c3911d967913978d03e9d116990984ac08c25f21f915d5a98b"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 104,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "67d72348294796f5581a6e2b15410a49b0983e143c9322a4dfd8842c0da18ccc"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 4,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "6a3b069d58a134c25893cc904ed36c94ccc97db14f433c2f4f1dad790a736381"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 123,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "6b6a9055fb8e1bcbf5370af6103b398980467effc05d3ca19a229103f76af1f2"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 91,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "7011e10182a1351b8bb91ae8853d3049f122b2bf98ee34c0b77f1845ad0dbbe4"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 32,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "705585743b8a6a335a624d451d91169429dd6821f64babb232f4fcc28718a70c"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 125,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "71139a05946fb714f3c07eb0301d6baca2c3367945220d77ff4bb27d72872651"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 18,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "71fa56cf79cb4cb41a3d9d7de20c79079805090109838bee4709713716542b69"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 51,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "72183758e8194597b14854f45e937c5cf5fbb2a9d0bd6bda36b4502558587492"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 111,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "72427c4547b2aba2a8e14839789756831aee3c2805558006f9b152d32c4450a9"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 140,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "746e9b6399291017d7f18fe6476e2a2355649b01ef633fd6e9a6c4fa2888617c"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 132,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "7826dca263f89cd37242fb015dc15ff274567c57ae4dd3a889dd50bb53115982"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 112,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "7954a69d5e86ef87c239d62a75ecdcba37c78ed96aa621e5b98cb96759dc4a03"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 55,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "7b2766112ce62d2b26bfa60bdc26062752542f2e85133535419cd359ff3c70b6"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 24,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "84276de7f4af173f270e3c3a271c81b2b2f9d618e8e953a46bd708ea63aee328"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 133,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "851b552522eff06891870a936c062e85e42ccb32fb1a23c16911ff596b0bf8c9"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 90,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "8662f4bc5c3467532bff8625d8dca17b4aee39e31a94a300e4f3245ec0ee5dfe"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 25,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "8841060b34cce961918fee79c6718f1e95278738c3aab529076af0ffa4079981"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 117,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "8864ae938a4f19804242807f15a02ef624f9aac94015e1717043fbe3d14df097"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 15,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "8b4a9dd80a6f968b44226e6aa40ea03f18ccce09fefdb865e03ffe7dae8aeca8"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 116,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "8b7005ceaf76c1921024fdb4ad857eb857a30230151b3c427be61d34a5ea959c"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 56,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "8bd0988fda17ba7a57e5f8bd131fd364aa537a0640dc1c4041827fae4cd068c7"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 121,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "8c74fd4e79181f7deb9b015bf27f5be01ea51ce364df9be8bf65ef801fe5f59e"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 59,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "8cdfb650023dd9427bd2aeb10ed3337387e9f31911c48a3fcc22d4f9354310cf"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 135,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "907b7de5ef13d1569aed89c21332e4c567878961f5c59cb64d664e20b35cf0e5"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 10,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "90c9aca3ba301ce10ffb54e58940ee03ea81313865adb7051f84e638c7594e99"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 39,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "90e162045e328369f4cb86e93835800adec744af1afd835c7cb2477cdf299d74"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 65,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "925733fccf1d863e9b29296c76949344035da311ff95b0e58c1c17720bf120e1"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 124,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "9464a59e31ba4dec64f353476d1e600ab0a6cb80be0bd2d21b92f3c2a41edfc1"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 2,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "95b0461d676849fb7a683ccf2209051041d6180e58e3edb45f3d6a073ad0f028"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 120,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "9625e02cdabcec828a83676491f4622fc712dc364bf3ac9a2d43ff4253f1ce5a"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 28,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "972df5d07df28d32845fa4d8f0fdd9dc60d60327368b62aef6432ac89755ffe8"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 95,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "9c5053e9092346cf76a8afb7cd521291b0f300b03a7c2ae3ad1f11c63ce23649"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 99,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "9c5d0cc06d394a42c3e672142feae06f6cd3e4e176b2fd0f06017178acf48fcb"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 70,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "9f567ceabfe5ff0c03a219233c203c5c7f7de9965a2a41d253d92624e0d968a1"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 23,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "a2276c49df6947865ce0249904b8430394553c082bae593651fbcee43f3f4215"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 130,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "a66b93787c9a4fa407c7bc94bac60df2a8a3790f754645f1ba048faaf19ab3ff"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 151,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "a82f01672848a677a7dded5852029fe7a9057b77c80aa32e3ec266432a804eb4"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 13,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "aa67325f7e23e2ab0708cac67551121cb1883c4da706f3437f2f8b3d4c67e52d"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 22,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "abafc574ddabd5cf306cdc7a024d24028086d0cd47c13f92016f7a6a53c5166b"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 139,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "ac441b48e7dae68ac51cebc16321a7a3f27d555a36d8fd51dc0469f41dcc4544"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 134,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "ace85a3ca3d056ce44629b2467b8bae97636c6bcc030d9c21acb2d0b9b2494ef"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 19,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "ada0eaea989984cca565c6e565155b00904608038277e3191635671535755e66"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 34,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "b0599034415334dcd1b899366a92f8417e9bac4386baf137538a142087ccab4c"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 89,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "b2599f33276fad1d837e3172c1fc1d914155f8b35995f380975aebec7c753fa6"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 77,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "b2cb52d0f61a3ce037716f8e7e9fa8a1eb5925ab01433decaf118530e596171b"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 84,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "b513722e6792da258f28b8fbe0911b2e2e4e759ed1c58d2a8a0dbe8a3f411f8f"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 67,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "b6ac3bb55db061e78785d826ac09d2e120b0fac1f25d3a3b26461eeaacb12ec9"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 107,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "b8bf737025632d47dd5cb556a7016123270def0e41335e036bcb314896eaa4b2"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 21,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "b9069062faf1306925dd55a7d825028c763caf87c7deec983dbedb0101eb2ed8"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 78,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "b9408b2d2c1e97041ec83e28cc432bd9ed15d6c6340a980d2d63ac8d3cb9eb76"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 93,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "ba4a972112761c796b9189b8890a65932fb984c1ba9a0222eb23465057322aff"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 35,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "bcea6648773b7f5847cdef585d71a348e02e1e4aaecb4a240ef24404c84711b4"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 47,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "c76097c8383102cbd8dd73958d1a7d829d15e86aefc9eafa975766ab50bd51c9"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 114,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "c7c3f541f43e3b8cfcb65f5eb9fed2199dbc3f704321ec99397a779e4e5b542a"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 64,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "cd4b0b6300d528529b67c213c03afeea377314d86eacae90ad9a34225b5b5b43"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 36,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "cd6d2bd4e65d0f078b74af2cfad382eb03339e58d5655f0ae029e92c63576300"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 138,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "ce06f9f6b4ba940ab048be959a762b5103076cf7bbf6de4c70c6136647b37219"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 76,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "d31849a1e75fb3c3ed6f8f104ee80958e4d63388422dd99183a57fe9a5a7e38c"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 14,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "d616f7244b633fcd44119034e2ee7633cdcfda97283c43df9febbd0f92c118f7"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 144,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "d691dded48d548a6eb48ff8d54c8f26831474dbf8105bf88439586542496fe9a"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 30,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "d6cd6348de49511008724a5fda22359e52fc3a310af882f55adcbd70b7faf3d1"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 126,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "d6d64f5d82755b1634ee28168acdf771ff24f05127ec7cd524bf971882e80b65"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 16,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "d88a20f42673b7e4d9557c96db14013a0037b367e184bf6ee8d6f2732ffd2841"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 110,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "daac5e19d2ff59aad024ed84638e4bbd387f150cf2cb29d5dce5990bc251ca6d"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 6,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "db3c479c6ecb4a90cf8fe3f5eb839afd248547a3885c114ae41c6e127de82eba"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 54,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "dd8d4d412587592eaabcc48b91098e4ca472426063938c172f010f93b815d38d"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 69,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "dde547a54394e4d7639c9bc59ee74c18b152b9bef0e08773b0a733466cf75e04"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 75,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "e1b87a1bb9f345379c8b2629d93fc3dfe01dc3e8643e09711be7df751b8c06b4"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 50,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "e3c8f9d775eef08277acc9b7012254f4aa278da4a57e36dc73c6f7caf345a250"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 127,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "e3c9b24dcc15086974867b2a53c747832cb178d6eb88b98c0359d80652b60ab5"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 8,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "e5cbf03ff374943cf6dbf1c4f7a15c8d30007d56c1b1eba77bf822c9d2a358f7"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 48,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "e78ccc23922e6c786523ef8a068fba3bf9603078910a7f58feee6c71349364e4"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 102,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "e8a038df6317cee9a6e600d733af75b980091d55c76b63f72c223c569fe2a169"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 129,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "e9392c08ecff48de3dd379d0f854bf680617e88cb2fc81333e661d1f5f6b7ad4"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 52,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "ea30275b6eff5ec28c3c204cf471abd38b17284b0ba87ed0958537496e743d13"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 149,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "ebba90a50a6afa2704a7a9fc1ca44dcc4c60e6b31abedf99004e80b2b5c0fc5b"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 148,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "ed2f758ce79313bfb707c196cb92fc0f8b67ab5398d7875562ee8554f492a8b4"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 26,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "ed91bc7882a3f4bd4afbc9fae611f6d199bec739cecae9c3bb10379544cd8409"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 31,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "ee778312dfb60bb8486a636d227c630dc62d86e9784586d7f8bd25d78bdeb252"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 108,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "f054700309d105eb97d75869a828b0fa1e3fade5525d7bddb7873ea4b3ab7c1e"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 105,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "f1e45a851a400ab8dd5340f9f222ab235f81337a538c884d0836b0dea7872e08"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 40,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "f669593e7fccd582e3307c41fc30a30f5d5fcf770d64326d5ccfd3670f53bf87"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 27,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "f74de15222a57020b0bc56b48bae74d2eec681a8062b8fa779d6f52c0f444c2d"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 38,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "f7ad2168f7c966d39cc431ad3bc068c1f18f5126fe752abeea243715865d8ccc"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 58,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "f8eb3375c1540cc71a3d679d407bbe0074703c7ec2e428bebba9da95d8615a4b"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 96,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "fc63ceaf6c1d60cc20cff5c647d10acbaebd21956eaff2fd4aad8ca1b5bd88f4"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 63,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "fdd97de84b5ba57b7598707d54da398807c405955f2418f30f732d56a051ec17"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 81,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    },
+    {
+      "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+      "outpoint": {
+        "index": 0,
+        "transactionId": "ff240efcfbd67b0c990ea096d73054fa0c92892100d047254ef1f51419c8df63"
+      },
+      "utxoEntry": {
+        "amount": 50000000000,
+        "blockDaaScore": 57,
+        "isCoinbase": true,
+        "scriptPublicKey": "00002079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac"
+      }
+    }
+  ],
+  "virtualDaaScore": 151
+}

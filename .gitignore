@@ -14,3 +14,22 @@
 .env
 .env.*
 !.env.example
+
+# Python environments and caches
+.venv/
+__pycache__/
+*.py[cod]
+
+# Local credentials, wallets, node data, and raw logs
+.aws/
+.ssh/
+secrets/
+wallets/
+node-data/
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*.seed
+*.log
