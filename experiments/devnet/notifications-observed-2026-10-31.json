@@ -1,0 +1,28 @@
+{
+  "network": "devnet",
+  "initial": {
+    "activeOutpoints": 490,
+    "activeAmountSompi": "24500000000000"
+  },
+  "notificationAdded": 1,
+  "notificationRemoved": 0,
+  "afterOneEvent": {
+    "activeOutpoints": 491,
+    "activeAmountSompi": "24550000000000"
+  },
+  "afterDuplicateEvent": {
+    "activeOutpoints": 491,
+    "activeAmountSompi": "24550000000000"
+  },
+  "processReopen": {
+    "activeOutpoints": 491,
+    "activeAmountSompi": "24550000000000"
+  },
+  "reconciled": {
+    "activeOutpoints": 902,
+    "activeAmountSompi": "45100000000000"
+  },
+  "matchedRpcSnapshot": true,
+  "repeatedSnapshotWasIdempotent": true,
+  "databasePublished": false
+}

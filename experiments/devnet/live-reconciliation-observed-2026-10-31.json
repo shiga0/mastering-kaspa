@@ -1,0 +1,15 @@
+{
+  "network": "devnet",
+  "liveNotificationHints": 160,
+  "liveSnapshotCommits": 13,
+  "lateOldSnapshotRejected": true,
+  "gapObservedWhileDisconnected": true,
+  "resubscribed": true,
+  "recoveredWithoutWaitingForNewHint": true,
+  "outpointsAndAmountsMatched": true,
+  "reconciled": {
+    "activeOutpoints": 1186,
+    "activeAmountSompi": "59300000000000"
+  },
+  "databasePublished": false
+}

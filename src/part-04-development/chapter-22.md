@@ -469,6 +469,14 @@ cargo test
 
 **注意：** ポート番号、APIメソッド名、データ型、通知名はリリースや起動オプションによって異なる可能性がある。本章では固定値を断定せず、使用するバージョンの公式実装を一次情報とする。
 
+### 実測したAPIへの入口
+
+[第28章](chapter-28.md)の28.6〜28.10は、基準版1.0.1で起動・読み取り・送金を再現する手順である。API名と応答の要点は[付録D](../appendices/appendix-d.md)に整理した。
+
+生のJSON wRPCでは `getBlockDagInfo` を使う。公式Node.js/WASM SDKではJSON接続に `Encoding.SerdeJson` を指定し、UTXO購読には `subscribeUtxosChanged([address])` を使う。生RPCとSDKで名前・引数・UTXOエントリの形が同一とは限らない。
+
+実習の `send.cjs --retry-checks` は、ノードが送信を受理した後に成功応答だけを失わせ、TX IDによる照会と同一署名済みTXの再送を検査する。`live-reconciliation.py` は実通知を再照会のヒントとして扱い、欠落補完と古い照会結果の拒否を確認する。これらは単一の観測ストアの検査であり、会計台帳の実装ではない。
+
 ## 22.19 `rusty-kaspa` のコードベースを読む
 
 調査対象の入口：
@@ -514,7 +522,7 @@ rg 'wRPC|wrpc|RpcApi|GetBlockDAGInfo|SubmitTransaction' .
 
 ## 22.21 実践課題：Devnetに接続する
 
-以下は**手順の設計課題**であり、コマンドやAPIの具体値は自分の環境に合わせて確認する。
+以下は**手順の設計課題**である。起動・送金・通知補完の実測手順は第28章と `experiments/devnet/README.md` を参照し、実習で扱わないケースは追加課題として区別する。
 
 1. Devnetノードを起動し、RPCのリッスン設定を確認する。
 2. SDKからノードのネットワーク種別を取得する。

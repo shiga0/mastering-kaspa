@@ -1,0 +1,8 @@
+# Distinct public test reward recipient; no signing key is stored or needed.
+services:
+  miner:
+    cpus: 0.5
+    command: ["--kaspad-address=127.0.0.1", "--port=16310", "--threads=1", "--mine-when-not-synced", "--mining-address=kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99"]
+  miner-b:
+    cpus: 0.5
+    command: ["--kaspad-address=127.0.0.1", "--port=16310", "--threads=1", "--mine-when-not-synced", "--mining-address=kaspadev:qr2tqghdk4tkd36m2squjmch2sdgf3w2tpr3uce3zc2xreknm0z4xhgvjnq8v"]

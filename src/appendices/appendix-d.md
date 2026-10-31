@@ -121,26 +121,16 @@ cargo metadata --no-deps --format-version 1
 
 ## D.6 ノードの起動・停止・ログ
 
-以下は**起動方法を考えるための概念例**である。`--devnet`、`--utxoindex`、`--rpclisten` などの引数の有無や表記は、対象バージョンで `--help` を確認すること。
+本書で実測した起動設定を使う。作業ディレクトリはリポジトリのルート。
 
 ```bash
-# 疑似的な起動イメージ。コピー実行する前に引数を検証する。
-kaspad --devnet --utxoindex --rpclisten 127.0.0.1:<RPC_PORT>
+docker compose -f experiments/devnet/compose.yaml up -d node
+docker compose -f experiments/devnet/compose.yaml logs --tail=30 node
+experiments/devnet/.venv/bin/python experiments/devnet/probe.py
+docker compose -f experiments/devnet/compose.yaml stop node
 ```
 
-`<RPC_PORT>` はプレースホルダーであり、シェルへそのまま入力しない。
-
-Dockerを利用する場合の**確認用コマンド**：
-
-```bash
-docker ps
-docker logs --tail 100 <CONTAINER_NAME>
-docker logs -f <CONTAINER_NAME>
-docker inspect <CONTAINER_NAME>
-docker stop <CONTAINER_NAME>
-```
-
-`<CONTAINER_NAME>` は実在するコンテナ名に置換する。停止操作は実験用コンテナだけを対象にする。
+Python環境は[付録A](appendix-a.md)と[第28章](../part-04-development/chapter-28.md)で準備する。送金時は追加のmining.yamlを指定する。P2P/gRPCのコンテナ内部ポートと、ホストのJSON wRPCポート18310を区別する。
 
 ## D.7 RPC接続の基本
 
@@ -168,29 +158,21 @@ ConnectionConfig {
 
 ## D.8 主要な読み取り系RPC
 
-以下はKaspaのRPCでよく参照される**代表的なメソッド名**である。利用可能性、要求フィールド、応答形式は必ず使用するバージョンのRPC定義を確認する。
+以下は基準版1.0.1の実習で利用した名前と範囲である。wRPCの実メソッド名とSDKの呼び方を区別し、別のAPIの大文字小文字や旧名を流用しない。
 
-| メソッド名 | 主な用途 | 読むべきポイント |
+| メソッド/API | 実習での用途 | 注意点 |
 |---|---|---|
-| `getBlockDAGInfo` | DAGの全体情報 | ネットワーク、スコア、同期の目安 |
-| `getInfo` | ノード情報 | バージョンや動作状態 |
-| `getPeerAddresses` | 接続先候補の調査 | アドレスの取り扱いに注意 |
-| `getConnectedPeerInfo` | 接続ピアの情報 | P2Pの接続状況 |
-| `getBlock` | ブロック取得 | ブロックハッシュ、詳細指定 |
-| `getBlocks` | 複数ブロック取得 | 範囲と取得量の制約 |
-| `getVirtualSelectedParentBlueScore` | 仮想選択親のblue score | ブロック高とは異なる |
-| `getVirtualSelectedParentChainFromBlock` | 選択親チェーンの変化 | 再編成の追跡 |
-| `getUtxosByAddresses` | アドレスのUTXO照会 | UTXO Indexの要件 |
-| `getBalanceByAddress` | アドレス残高の照会 | UTXO Indexの要件 |
-| `getBalancesByAddresses` | 複数アドレスの残高照会 | 大量リクエストに注意 |
-| `getMempoolEntry` | Mempool内のトランザクション確認 | 未確定トランザクションであること |
-| `getMempoolEntries` | Mempool一覧の取得 | 取得量・メモリ使用量 |
-| `getMempoolEntriesByAddresses` | アドレスに関連する未確定トランザクション | 対応状況を確認 |
-| `getFeeEstimate` | 手数料の推定 | 推定値は保証ではない |
-| `getCurrentNetwork` | 接続ネットワークの確認 | 送信前に必須 |
-| `getCoinSupply` | 供給量情報 | 単位と意味を確認 |
+| `getInfo` | ノード版・UTXOインデックス | 生のJSON wRPCで使用 |
+| `getCurrentNetwork` | Devnetの確認 | 送信前の確認にも使用 |
+| `getBlockDagInfo` | sink・tips・DAA score・Pruning point | `DAG` の大文字表記ではなくこの名前を使用 |
+| `getBlock` | sinkヘッダーのblue score | DAGのDAA scoreと区別 |
+| `getConnectedPeerInfo` | 2ノードの接続数 | 生の応答は `peerInfo` |
+| `getUtxosByAddresses` | 特定アドレスの現在UTXO | SDKのエントリ形式と生RPCの形式は異なる |
+| SDKの `getServerInfo` | 版・networkId・同期状態 | Node.js/WASM SDK経由で使用 |
+| SDKの `getMempoolEntry` | 送信済みTX IDの照会 | 実習では `filterTransactionPool: false` を指定 |
+| SDKの `getVirtualChainFromBlock` | virtual chainの受理ID | `includeAcceptedTransactionIds: true` を指定 |
 
-**名称の存在と、特定クライアントから呼べることは別。** 特にgRPC、wRPC、SDKラッパー間で表記や戻り値が変換される場合がある。
+この表は全RPCの網羅表ではない。残高・手数料推定など、ここにないAPIの実測と要求/応答の完全リファレンス化は未完了。
 
 ## D.9 ブロック情報の読み方
 
@@ -265,6 +247,11 @@ Mempoolに存在するトランザクションは、**ネットワーク全体�
 | 通知を受けた | 何らかのイベントを観測した | 一度しか通知されない |
 
 ## D.12 通知系RPCと購読
+
+本書の実習は公式v1.0.1 SDKの `subscribeUtxosChanged([address])` と `utxos-changed` イベントを使う。JSON接続のSDK enumは `Encoding.SerdeJson` であり、`Encoding.Json` ではない。共通RPC APIの名前を生のwRPCへそのまま送る方法では今回購読できなかったため、検証済みSDKの経路を使う。
+
+`watch-once.cjs` はSDK通知のOutpointと金額を正規化する。`live-reconciliation.py` は通知本文を直接適用せず再照会のヒントとして扱う。例の詳細と制約は[第28章](../part-04-development/chapter-28.md)を参照する。
+
 
 通知・購読は、アプリケーションが状態変化を追跡するために利用する。具体的なメソッド名・通知型はSDKのバージョンに依存する。
 

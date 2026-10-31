@@ -1,0 +1,51 @@
+{
+  "network": "devnet",
+  "baselineBlocks": 12,
+  "partitionA": {
+    "blockCount": 31,
+    "virtualDaaScore": 31,
+    "sink": "d2bda3bc33a1f7d58bcac0f13113e29bec166f7e1953d4e98ada8885376a27b0",
+    "tipHashes": [
+      "d2bda3bc33a1f7d58bcac0f13113e29bec166f7e1953d4e98ada8885376a27b0"
+    ],
+    "rewardUtxoCount": 30,
+    "rewardUtxoSha256": "d584f34d4e984c73387251d23209c22a7dfefc58d300d2ba6a1c6e7360578d33"
+  },
+  "partitionB": {
+    "blockCount": 23,
+    "virtualDaaScore": 23,
+    "sink": "31f5b5b8248f7a709c50e11619155dfff74943636f0716046c7b5c8161d33c6d",
+    "tipHashes": [
+      "31f5b5b8248f7a709c50e11619155dfff74943636f0716046c7b5c8161d33c6d"
+    ],
+    "rewardUtxoCount": 12,
+    "rewardUtxoSha256": "6c6c0dcd680e1ab23c258c122066179d23c1ed98474855c4c6e945ddedf5ae1a"
+  },
+  "converged": {
+    "blockCount": 46,
+    "virtualDaaScore": 46,
+    "sink": "21ab5aa8045b134e730e0d2aa76b262872468cadcfe0c3392a1db8a9ca45efb2",
+    "tipHashes": [
+      "21ab5aa8045b134e730e0d2aa76b262872468cadcfe0c3392a1db8a9ca45efb2"
+    ],
+    "rewardUtxoCount": 35,
+    "rewardUtxoSha256": "261d57a1827c5440e29de1044a77402d6e15b08e845460671e7b4cb8221deb7d"
+  },
+  "utxoNotificationCount": 3,
+  "removedOutpoints": 10,
+  "removedOutpointsSeenInNotification": 10,
+  "removedAmountSompi": "500000000000",
+  "beforeRecovery": {
+    "activeOutpoints": 10,
+    "activeAmountSompi": "500000000000"
+  },
+  "afterRecovery": {
+    "activeOutpoints": 0,
+    "activeAmountSompi": "0"
+  },
+  "removedHistoryRetainedInactive": true,
+  "activeRowsMatchedRpc": true,
+  "repeatedRecoveryIdempotent": true,
+  "processReopenMatched": true,
+  "databasePublished": false
+}

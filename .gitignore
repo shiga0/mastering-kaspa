@@ -33,3 +33,8 @@ node-data/
 *.keystore
 *.seed
 *.log
+
+# Local experiment databases (including WAL/journals)
+*.sqlite*
+*.db
+*.db-*

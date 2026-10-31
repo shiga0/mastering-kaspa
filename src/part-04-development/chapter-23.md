@@ -547,6 +547,12 @@ rg 'wasm_bindgen|RpcClient|connect|subscribe' .
 
 > RPCのポート、フラグ、メソッド名は利用するノードのバージョンに合わせて公式ドキュメントで確認する。Mainnetの資金を使って実験しない。
 
+### 公式配布SDKで確認した範囲
+
+[第28章](chapter-28.md)の28.6で、v1.0.1公式Node.js/WASM SDKの取得・SHA-256照合・WebSocket依存の導入を行う。Node.js 20.0.0で単一署名送金とUTXO通知を実測した。JSON接続のenumは `Encoding.SerdeJson`。金額はsompiの整数として扱い、SDKから返る `bigint` をJavaScriptの `number` へ無条件に変換しない。
+
+本章の説明用Rust/WASMモジュールをビルド・ブラウザー実行した結果ではない。公式SDK配布物の利用検証と、独自WASMモジュールの開発・ビルド検証を分ける。HDウォレット復旧と全Scriptへの対応も未検証である。
+
 ### テストの階層
 
 ```text

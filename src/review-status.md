@@ -9,7 +9,7 @@
 - 第12章と第26章のGHOSTDAG主要規則は、公式実装の固定コミット `4edcbbccb449f84832afb1ca157904b35f37d006` と照合した（Source-checked）。原論文の証明との完全照合と公式実装との実行時の差分テストは未完了。
 - 第12章のDAG解析器は5テスト、第27章の最小ノードは6テスト、書式検査・Clippyを確認した。Kaspa互換性の検証ではない。
 - それ以外の掲載コードについて、過去の抜き出し検査の成功を章全体のVerified判定には使わない。継続的なCI検査は収録済みの2教材が対象。
-- 固定digestのkaspad 1.0.1でDevnet起動・読み取りwRPC・採掘と再起動後のDAG/報酬UTXO保持を確認した。単一ノードで公式WASM SDKの署名・送金・virtual受理とUTXO変化も確認した。手数料/お釣りの検算、残高不足・不正署名・競合拒否も実測。応答喪失時の照会復旧・同一TX再送・インメモリの重複計上防止も実測。2ノードのブロック伝播・停止後のDAG/指定報酬先UTXOの追従も実測。双方採掘時の分断・永続台帳・GitHub上のCI実行は未確認。
+- 固定digestのkaspad 1.0.1でDevnet起動・読み取りwRPC・採掘と再起動後のDAG/報酬UTXO保持を確認した。単一ノードで公式WASM SDKの署名・送金・virtual受理とUTXO変化も確認した。手数料/お釣りの検算、残高不足・不正署名・競合拒否も実測。応答喪失時の照会復旧・同一TX再送・インメモリの重複計上防止も実測。2ノードのブロック伝播・停止後のDAG/指定報酬先UTXOの追従も実測。両ノード稼働中のP2P分断・各枝での採掘・再接続後の収束も実測。通知の重複適用・購読停止中の欠落・SQLite再読込・停止状態での照会補完も実測。単一プロセス内で通知をヒントとした稼働中の再照会・旧結果拒否・再購読補完も実測。分岐合流時の実UTXO削除とSQLite観測状態の取り消しも実測。複数ワーカー・会計台帳・Pruning・GitHub上のCI実行は未確認。
 
 ## 章・付録別の状況
 
@@ -37,14 +37,14 @@
 | [Chapter 18 — Mining & Block Template Construction（マイニングとブロックテンプレート構築）](part-03-transactions/chapter-18.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
 | [Chapter 19 — Mining Economics & Network Security（マイニング経済とネットワークセキュリティ）](part-03-transactions/chapter-19.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
 | [Chapter 20 — Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）](part-03-transactions/chapter-20.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
-| [Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）](part-04-development/chapter-21.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
-| [Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）](part-04-development/chapter-22.md) | 未レビュー | 起動・読み取りwRPCの最小構成は検証済み。公式Node.js/WASM SDKで単一署名送金を実測。HDウォレット・異常系・章全体は未完了 |
-| [Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）](part-04-development/chapter-23.md) | 未レビュー | 起動・読み取りwRPCの最小構成は検証済み。公式Node.js/WASM SDKで単一署名送金を実測。HDウォレット・異常系・章全体は未完了 |
-| [Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）](part-04-development/chapter-24.md) | 主要経路のみSource-checked（v1.0.1） | 署名/Script・gen1導出・Generator/Signerの該当範囲を照合。単一署名のDevnet送金・virtual受理を実測。HD復旧・異常系・章全体レビューは未完了 |
+| [Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）](part-04-development/chapter-21.md) | 主要経路のみSource-checked（v1.0.1） | Devnetの進行条件・削減・証明/UTXO検査をソース照合。実測pointはGenesisのまま。実削減とPruning後IBDは未検証 |
+| [Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）](part-04-development/chapter-22.md) | 未レビュー | 固定版の起動・送金・主要な拒否・応答喪失・実通知補完を実測し、第28章と付録へ反映。2ノード/分断/報酬UTXO取り消しは限定条件で実測。章全体レビュー・HD復旧・Pruning後IBDは未完了 |
+| [Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）](part-04-development/chapter-23.md) | 未レビュー | 固定版の起動・送金・主要な拒否・応答喪失・実通知補完を実測し、第28章と付録へ反映。2ノード/分断/報酬UTXO取り消しは限定条件で実測。章全体レビュー・HD復旧・Pruning後IBDは未完了 |
+| [Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）](part-04-development/chapter-24.md) | 主要経路のみSource-checked（v1.0.1） | 署名/Script・gen1導出・Generator/Signerの該当範囲を照合。単一署名のDevnet送金・virtual受理を実測。主要な拒否と応答喪失も実測。HD復旧・全異常系・章全体レビューは未完了 |
 | [Chapter 25 — Exploring the rusty-kaspa Codebase（rusty-kaspaのコードベースを読む）](part-04-development/chapter-25.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
 | [Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）](part-04-development/chapter-26.md) | 26.7の経路のみSource-checked | 永続化・Virtual State・並行処理の経路は未照合 |
 | [Chapter 27 — Building a Minimal Kaspa-like Node in Rust（Rustによる最小Kaspa型ノードの構築）](part-04-development/chapter-27.md) | 未レビュー | 収録サンプル6テスト成功。伝播・受信順の発展課題は未検証 |
-| [Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）](part-04-development/chapter-28.md) | 未レビュー | 起動・読み取りwRPCの最小構成は検証済み。公式Node.js/WASM SDKで単一署名送金を実測。HDウォレット・異常系・章全体は未完了 |
+| [Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）](part-04-development/chapter-28.md) | 未レビュー | 固定版の起動・送金・主要な拒否・応答喪失・実通知補完を実測し、第28章と付録へ反映。2ノード/分断/報酬UTXO取り消しは限定条件で実測。章全体レビュー・HD復旧・Pruning後IBDは未完了 |
 | [Chapter 29 — GHOSTDAG Security & DAGKnight（GHOSTDAGのセキュリティとDAGKnight）](part-05-advanced/chapter-29.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
 | [Chapter 30 — Kaspa Improvement Proposals（Kaspa改善提案・KIP）](part-05-advanced/chapter-30.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
 | [Chapter 31 — Covenants & Advanced Scripting（Covenantsと高度なスクリプティング）](part-05-advanced/chapter-31.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
@@ -74,6 +74,16 @@
 応答喪失時の復旧と重複処理は `experiments/devnet-send-retry-2026-10-31.md` を参照。
 
 2ノードの伝播・片側停止復帰は `experiments/devnet-two-node-2026-10-31.md` を参照。
+
+P2P分断と再接続は `experiments/devnet-partition-2026-10-31.md` を参照。
+
+実通知とSQLite観測ストアの検証は `experiments/devnet-notifications-2026-10-31.md` を参照。
+
+稼働中の再照会と世代管理は `experiments/devnet-live-reconciliation-2026-10-31.md` を参照。
+
+分岐合流後の実UTXO削除と観測補正は `experiments/devnet-reorg-observer-2026-10-31.md` を参照。
+
+Pruningの前提条件と未達の実測は `experiments/devnet-pruning-review-2026-10-31.md` を参照。
 
 ## 検証記録の場所
 

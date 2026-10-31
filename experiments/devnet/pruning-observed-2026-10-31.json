@@ -1,0 +1,16 @@
+{
+  "network": "devnet",
+  "serverVersion": "1.0.1",
+  "referenceSourceCommit": "fcd9c28f9b211b9872a0c90a8c94f79466ffb063",
+  "sourceDeclaredPruningDepth": 185798,
+  "sourceDeclaredFinalityDepth": 86400,
+  "sourceCrescendoActivation": "never",
+  "virtualDaaScore": 5475,
+  "blockCount": 5475,
+  "sinkBlueScore": 4835,
+  "pruningPointHash": "4cb48d0b2073b802360145a15ad1abdc01d89b5c2fe4722630ab9b5fe9dfc4f2",
+  "pointAdvancedFromGenesis": false,
+  "historyRemovalVerified": false,
+  "pruningProofImportVerified": false,
+  "status": "not-exercised"
+}

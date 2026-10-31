@@ -1,5 +1,22 @@
 # Devnetノード起動とwRPCのスモークテスト
 
+## 実習の入口
+
+まず下記のPython環境と単一ノードのprobeを準備する。送金と実通知には「公式SDKでの単一署名送金」のSDK導入も必要。すべてリポジトリのルートで、一つずつ実行する。
+
+| 段階 | 実行入口 | 観測するもの |
+|---|---|---|
+| 起動 | `probe.py` | Devnet・ノード版・読み取りRPC |
+| 状態保持 | `persistence.py` | 短時間採掘後の再起動での保持 |
+| 送金 | `send.cjs`、`--checks`、`--retry-checks` | 単一署名・主要な拒否・応答喪失 |
+| 伝播 | `two-node.py` | 2ノードの停止復帰 |
+| 分断 | `partition.py` | 両側採掘後の収束 |
+| 通知補完 | `notifications.py`、`live-reconciliation.py` | 重複・欠落・古い照会結果の拒否 |
+| UTXO取り消し | `reorg-observer.py` | 枝の報酬の消失と観測ストアの復旧 |
+| Pruning前提 | `pruning-check.py` | pointの確認。実際のPruningは未達 |
+
+単一ノードは18310、2ノードは19310/19320を使う。reorg実習も19310/19320を使うため、2ノード実習を停止してから実行する。現在UTXOの観測ストアは、会計台帳や成熟した利用可能残高ではない。各節末尾の検証記録に成功範囲と未確認事項を記す。
+
 本書の基準版とSDKの方針は[対象バージョン](../../src/baseline.md)を参照。以下は既存イメージで観測した結果であり、ソースからの再ビルド検証ではない。
 
 検証環境：macOS Apple Silicon、Docker Engine 27.4.0、Python 3.11、websockets 14.1。
@@ -44,7 +61,7 @@ docker compose -f experiments/devnet/compose.yaml stop
 ```
 
 データは名前付きボリュームに保存する。停止で削除しない。
-単一ノードでの送金とvirtual受理は末尾の実習で確認済み。2ノードのブロック伝播・停止復帰は末尾の実習で確認済み。分断時の両側採掘やPruning後の同期は未検証。採掘と状態保持の検証は以下を参照。
+単一ノードでの送金とvirtual受理は末尾の実習で確認済み。2ノードのブロック伝播・停止復帰は末尾の実習で確認済み。分断時の両側採掘・通知補完・枝の報酬の取り消しも後述の別実習で確認した。Pruning後の同期は未検証。採掘と状態保持の検証は以下を参照。
 
 ## 短時間採掘と再起動後の状態比較
 
@@ -159,4 +176,84 @@ docker compose -f experiments/devnet/two-node.yaml --profile mining ps -a
 RPCは127.0.0.1:19310/19320だけへ公開。1CPU以内の採掘、段階ごと90秒上限の待機を行う。再実行時もノードIPを取得し直すため、手動で固定IPを埋め込む必要はない。
 
 結果は `two-node-observed-2026-10-31.json`、実測条件と制約は `../devnet-two-node-2026-10-31.md`。
-停止復帰後に27ブロック・指定報酬先の26件のUTXOが一致した。全UTXO集合の照合、2ノードでの送金受理、両側採掘の分断・reorg、Pruning後の同期は未検証。
+停止復帰後に27ブロック・指定報酬先の26件のUTXOが一致した。この停止復帰試験では、全UTXO集合の照合、2ノードでの送金受理、Pruning後の同期は未検証。両側採掘の分断と枝の報酬の取り消しは、後述の別試験を参照する。
+
+## 両ノード稼働中のP2P分断
+
+2ノードのボリュームを使うため、前の2ノード試験を一度実行してから、同時実行を避けて開始する。
+
+```bash
+experiments/devnet/.venv/bin/python experiments/devnet/partition.py
+```
+
+`partition.yaml` と `relay.conf` を追加して、B→relay→AのP2P接続を作る。relayだけ停止し、A/Bが稼働したままピア数0になることを確認する。それぞれで順に短時間採掘し、異なるsinkができた後にrelayを再開して収束を比較する。最大同時1CPU、各段階90秒上限。
+
+中断後の停止確認：
+
+```bash
+docker compose -f experiments/devnet/two-node.yaml -f experiments/devnet/partition.yaml --profile mining stop -t 2
+docker compose -f experiments/devnet/two-node.yaml -f experiments/devnet/partition.yaml --profile mining ps -a
+```
+
+新しいrelayイメージもdigest固定し、ホストへP2Pポートを公開しない。実行時にrelayのIPを取得するため固定IPの編集は不要。データは停止時に削除しない。
+結果は `partition-observed-2026-10-31.json`、条件と制約は `../devnet-partition-2026-10-31.md`。
+今回、分断前27、分断中A=42/B=47、復旧後62ブロックとなり、指定報酬先のUTXO内容も両ノードで一致した。
+
+通知の取りこぼし・重複の復旧は後述の別試験を参照する。競合送金の取り消しを伴う台帳処理、全UTXO集合・Pruning後の同期は未検証。
+
+## 通知欠落・重複とSQLiteの再読込
+
+```bash
+KASPA_SDK_ROOT="$PWD/experiments/devnet/.sdk" experiments/devnet/.venv/bin/python experiments/devnet/notifications.py
+python3 -m unittest discover -s experiments/devnet -p 'test_*.py'
+```
+
+公式SDKで実UTXO通知を1件受け、Outpoint一意制約のあるSQLiteへ2回適用する。その後は購読を終了して採掘を続け、別プロセスで既存DBを再読込し、RPCスナップショットで欠落を補完する。採掘は最大1CPUで、条件待機と通知受信には期限を設け、終了時にノード・マイナー・購読子プロセスを停止する。
+
+DBは一時領域に作成して終了時に削除する。公開結果は `notifications-observed-2026-10-31.json`、実測条件は `../devnet-notifications-2026-10-31.md`。
+現在のUTXO観測ストアであり、会計上の売上や成熟残高ではない。実測ではremoved通知は0件。通知順序の逆転、稼働中の補完との競合、複数ワーカー、再編成の会計処理は未検証。
+
+## 稼働中の再照会と再購読
+
+```bash
+KASPA_SDK_ROOT="$PWD/experiments/devnet/.sdk" experiments/devnet/.venv/bin/python experiments/devnet/live-reconciliation.py
+```
+
+`watch-once.cjs --hints` で実通知を継続して受け、通知本文の差分を直接適用せずに再照会のきっかけとする。`LatestSnapshot` が要求開始順に世代番号を発行し、古い結果や二重コミットによる上書きを拒否する。照会中の通知は次の照会へつなぎ、通知がなくても周期的に照会する。
+購読前後の穴は、購読開始後の完全照会で補完する。実験では購読を止めた間にも採掘し、再購読直後の照会で全Outpointと金額が一致することを確認した。
+
+実測は `live-reconciliation-observed-2026-10-31.json`、詳細は `../devnet-live-reconciliation-2026-10-31.md`。DBは一時領域で削除する。単一プロセス内の観測状態向けで、並行ワーカーや会計上のreorg取り消しは未検証。
+
+## 分岐合流後のUTXO取り消し
+
+```bash
+KASPA_SDK_ROOT="$PWD/experiments/devnet/.sdk" experiments/devnet/.venv/bin/python experiments/devnet/reorg-observer.py
+```
+
+`reorg.yaml` を追加し、Bの報酬先だけ別の公開テスト用アドレスへ変える。専用プロジェクト `mastering-kaspa-reorg-small` を使うが、RPCポート19310/19320は他の2ノード試験と共有するため同時実行しない。
+最大0.5CPUで順に採掘し、再接続後に統合ブロックを作る。Bの実削除通知・再照会・SQLiteの無効化・別プロセス再読込を比較する。DBは一時領域で削除し、キーや生通知は公開しない。
+
+実測ではB固有の報酬UTXO10件が消え、全10件が削除通知にも含まれた。履歴は削除せず無効化し、再適用・再読込でも有効額0を維持した。これは観測UTXOの補正であり、売上や決済済み請求書の取り消しではない。
+
+結果：`reorg-observed-2026-10-31.json`。失敗試行と限界：`../devnet-reorg-observer-2026-10-31.md`。
+停止確認：
+
+```bash
+docker compose -p mastering-kaspa-reorg-small -f experiments/devnet/two-node.yaml -f experiments/devnet/partition.yaml -f experiments/devnet/reorg.yaml --profile mining stop -t 2
+```
+
+再実行は既存のボリュームを使うため、ハッシュ・件数は変わる。条件が成立しなければ成功扱いにせず停止する。Pruning後の同期・競合する送金の勝敗・会計の取り消しは未検証。
+
+## Pruningの前提検査（未達を成功扱いにしない）
+
+ノードを起動した状態で、採掘せずに読む。
+
+```bash
+experiments/devnet/.venv/bin/python experiments/devnet/pruning-check.py --require-advanced
+```
+
+pointがGenesisのままならJSONを表示して終了コード2を返す。今回の実測も未達だった。pointが進んでも、データ削減・Pruning ProofによるIBDの検証済みフラグは立てない。
+基準版Devnetの従来pruning depthは185798、finality depthは86400。深さはblue scoreの規則で扱い、DAA scoreやブロック数をそのまま代用しない。
+
+実測：`pruning-observed-2026-10-31.json`。固定ソースと次の完了条件：`../devnet-pruning-review-2026-10-31.md`。
+長時間の生成、削減後の新規ノード同期、不正な集合の注入は今回実行していない。

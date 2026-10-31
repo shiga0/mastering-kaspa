@@ -23,6 +23,9 @@ jobs:
       - name: Check book examples
         run: python3 scripts/check-book-examples.py
 
+      - name: Test UTXO observation store
+        run: python3 -m unittest discover -s experiments/devnet -p 'test_*.py'
+
       - name: Install mdBook
         run: cargo install mdbook --version 0.5.4 --locked
 

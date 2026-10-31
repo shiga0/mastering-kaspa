@@ -1,7 +1,7 @@
 # Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）
 
 > **Mastering Kaspa / Part IV — Kaspa Development & Implementation**  
-> 原稿バージョン：v0.1（技術レビュー前）  
+> 原稿バージョン：v0.2（実測手順を反映・章全体のレビューは継続中）\
 > 本章の対象：Kaspa Devnetでの再現可能な統合テスト、RPC、障害注入、検証証跡
 
 ## 28.1 本章の目的
@@ -117,67 +117,79 @@ artifacts: logs/, metrics/, test-results/
 
 ## 28.6 ローカル環境の準備
 
-**実行検証の状況（2026年10月31日）：** Docker起動後、固定digestのkaspad 1.0.1（linux/arm64）で、Devnet起動・読み取りwRPC・採掘と再起動後のDAG/報酬UTXO保持を確認した。再現用のCompose設定、Python検査スクリプト、依存バージョン、実測JSONはリポジトリの `experiments/devnet/` に収録している。初回の採掘前は `isSynced: false`、ブロック数0を観測した。追加の採掘プロファイルで151ブロックと150件の報酬UTXOを生成し、再起動後の一致を確認した。実習はARM64専用で、本文の固定ソースコミットとバイナリの同一性は未検証。追加の `send.cjs` で成熟資金の準備、単一署名送金、virtual受理、UTXO変化を確認した。異常系・Mempool/包含の独立観測・2ノード検証は未完了。章別の進捗は[技術レビューの進捗](../review-status.md)を参照する。
+以下のコマンドは本書リポジトリのルートで実行する。基準は[対象バージョン](../baseline.md)を参照する。検証環境はmacOS Apple Silicon、Docker Engine 27.4.0、Python 3.11、Node.js 20.0.0。コンテナはlinux/arm64専用である。
 
-
-必要なものはDocker、Docker Compose、Rustツールチェーン、Git、KaspaのRPCクライアントである。
+### 28.6.1 Python検査環境
 
 ```bash
-rustc --version
-cargo --version
-docker --version
+docker version
 docker compose version
-git --version
+python3 --version
+node --version
+python3 -m venv experiments/devnet/.venv
+experiments/devnet/.venv/bin/python -m pip install -r experiments/devnet/requirements.txt
 ```
 
-Kaspa公式実装：
+`docker version` はClientだけでなくServer情報を取得できることを確認する。Pythonの依存はwebsockets 14.1に固定している。
+
+### 28.6.2 公式Node.js/WASM SDK
+
+送金・実通知の検査には、公式v1.0.1リリースのSDKを使う。配布物はGitへ追加しない。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
-git rev-parse HEAD
+mkdir -p experiments/devnet/.sdk
+curl -fL https://github.com/kaspanet/rusty-kaspa/releases/download/v1.0.1/kaspa-wasm32-sdk-v1.0.1.zip -o experiments/devnet/.sdk/sdk.zip
+shasum -a 256 experiments/devnet/.sdk/sdk.zip
 ```
 
-実行オプションはチェックアウトしたコミットに合わせて確認する。
+SHA-256が `70679fe150689eedd588a475ae93f1135cfb99bd7b205dc2661d104d5db564d0` と一致することを確認してから展開する。
 
 ```bash
-# ビルド方法やバイナリ名は対象リリースのREADMEを参照
-cargo build --release
-
-# 利用可能なフラグを実機で確認
-./target/release/kaspad --help
+unzip -qo experiments/devnet/.sdk/sdk.zip -d experiments/devnet/.sdk
+npm install --prefix experiments/devnet/.sdk --ignore-scripts --no-audit --no-fund websocket@1.0.34
+export KASPA_SDK_ROOT="$PWD/experiments/devnet/.sdk"
 ```
 
-> **注意**：`kaspad` の実際の配置場所やビルドに必要な機能フラグは対象コミットによって異なる。上記のビルドは実行環境での成功を保証しない。
+WebSocketの推移依存までの固定は未完了。ローカルのSDK・仮想環境・DBはGit対象外にしている。SDK配布物とノードイメージの完全な再ビルド一致を確認したものではない。
+
+### 28.6.3 実習の範囲
+
+| 検証したもの | まだ検証していないもの |
+|---|---|
+| 起動・読み取りRPC・採掘・再起動時の保持 | amd64・Linuxホストでの実行 |
+| 単一署名送金、手数料/お釣り、主要な拒否、応答喪失からの復旧 | 全Script・HDウォレット復旧・ハードウェア機器 |
+| 2ノード伝播・停止復帰・P2P分断と再接続 | 任意の大規模ネットワークへの一般化 |
+| 実通知・照会補完・観測UTXOの取り消し | 決済会計台帳・複数ワーカーの取り消し |
+| Pruning前提のソース確認とpointの照会 | 実データ削減・Pruning後の証明付きIBD |
+
+実測条件と結果は `experiments/devnet/README.md` と各検証記録に保存している。章全体の検証完了を示す表ではない。
 
 ## 28.7 Dockerで単一ノードを起動する
 
-実行確認した最小構成は、リポジトリの `experiments/devnet/README.md` と `compose.yaml` を参照する。
-
-以下は**概念的な起動例**である。ポート公開や追加フラグは対象バージョンの公式ドキュメントで確定させる。
+実行確認した設定を使う。Compose内のイメージはdigest固定で、データ保存先は `--appdir=/data` と名前付きボリュームを対応づけている。
 
 ```bash
-docker run --rm \
-  --name kaspa-devnet-a \
-  -v kaspa-devnet-a:/data \
-  kaspanet/rusty-kaspad:<固定したタグ> \
-  --devnet \
-  --utxoindex
+docker compose -f experiments/devnet/compose.yaml config
+docker compose -f experiments/devnet/compose.yaml up -d node
+docker compose -f experiments/devnet/compose.yaml logs --tail=30 node
+experiments/devnet/.venv/bin/python experiments/devnet/probe.py
 ```
 
-`<固定したタグ>` は実際に存在するバージョンに置き換える。RPCをホストから利用する場合は、使用するRPC方式の**正しいlistenフラグとポート**を確認し、`127.0.0.1` に限定して公開する。例示的なポート番号を無検証で本番に転用しない。
+wRPC JSONは `ws://127.0.0.1:18310`。返答のネットワークがdevnet、serverVersionが1.0.1、UTXOインデックス有効であることを検査する。同期状態は観測値として表示し、未同期を成功した同期と読み替えない。既存ボリュームがある場合、ブロック数は0には戻らない。
 
-確認する項目：
+標準entrypointがDNS照会するため、この実習はkaspad本体を直接起動する。外部ピア探索とUPnPは無効化するが、bridgeネットワーク自体は外向き通信を遮断する設定ではない。RPCだけをホストの127.0.0.1へ公開する。
 
-1. プロセスが起動し、異常終了を繰り返さない。
-2. ログにDevnetのネットワーク識別が出ている。
-3. RPCエンドポイントが応答する。
-4. 同期状態を取得できる。
-5. 永続化ディレクトリにデータが生成される。
+終了時：
+
+```bash
+docker compose -f experiments/devnet/compose.yaml stop node
+```
+
+停止ではデータを削除しない。以降の送金試験では、未同期採掘とコンテナ内部gRPCを有効にするため追加設定 `mining.yaml` を使う。
 
 ## 28.8 2ノード構成とピア接続
 
-実行確認した構成は、リポジトリの `experiments/devnet/two-node.yaml` と `two-node.py` に収録している。独立したデータ領域の2ノードで、接続・ブロック伝播・片側停止後の追従を確認した。再開後に27ブロックと指定した報酬先の26件のUTXOが一致したが、全UTXO集合・双方採掘時の分断・Pruning後の同期の検証ではない。実測記録は `experiments/devnet-two-node-2026-10-31.md` を参照する。
+実行確認した構成は、リポジトリの `experiments/devnet/two-node.yaml` と `two-node.py` に収録している。独立したデータ領域の2ノードで、接続・ブロック伝播・片側停止後の追従を確認した。再開後に27ブロックと指定した報酬先の26件のUTXOが一致したが、全UTXO集合・Pruning後の同期の検証ではない。双方採掘時の分断は本章後半の別実習で扱う。実測記録は `experiments/devnet-two-node-2026-10-31.md` を参照する。
 
 ```text
 Node A                     Node B
@@ -197,7 +209,7 @@ Node A                     Node B
 - 起動順を入れ替えて接続が成立するか確認する。
 - 片方を停止し、もう片方が継続して動作するか観察する。
 
-ピア接続用の具体的なCLIフラグはバージョン固定後に決める。P2PポートとRPCポートを混同しない。
+本実習の `two-node.py` は起動したAのIPを取得し、Bの `--connect` に渡す。この基準版は接続先にサービス名を直接指定するとIP構文エラーになる。P2Pの16311と、ホスト向けRPCの19310/19320を混同しない。
 
 ## 28.9 RPCの疎通確認
 
@@ -233,7 +245,22 @@ State observation
 
 ## 28.10 トランザクションのE2Eテスト
 
-実行確認した単一署名の手順は、リポジトリの `experiments/devnet/README.md` の送金実習を参照する。公式SDKはv1.0.1配布物、署名鍵はメモリ内だけの一時鍵を使う。公開記録はTX ID・公開アドレス・受理結果だけに限定している。
+28.6でSDKを用意してから、成熟資金の準備・署名・送信・受理を一続きで実行する。
+
+```bash
+docker compose -f experiments/devnet/compose.yaml -f experiments/devnet/mining.yaml up -d node
+node experiments/devnet/send.cjs
+# 手数料/お釣りの検算と、残高不足・不正署名・競合の拒否
+node experiments/devnet/send.cjs --checks
+# 成功応答の喪失、TX IDでの照会復旧、同一TX再送、重複計上防止
+node experiments/devnet/send.cjs --retry-checks
+docker compose -f experiments/devnet/compose.yaml -f experiments/devnet/mining.yaml stop node
+```
+
+各モードは別々の実験で、実行ごとにメモリ内でランダムな鍵を作る。秘密鍵・シードを保存も表示もしない。終了後の鍵復旧機能はないため、実資産を扱うウォレットとして利用しない。
+送金用マイナーはスクリプトが起動・停止する。既存のminerサービスは先に停止し、モードを同時実行しない。途中失敗した場合も実習READMEの停止手順で残存を確認する。
+
+実測では1 KASの宛先出力、入力消費、Mempool掲載とvirtual受理を確認した。手数料の算術検算は10000 sompiでSDK値と一致。ブロック包含の独立照会や不可逆な決済確定まで検証した結果ではない。
 
 テスト用ウォレットAからウォレットBへDevnet資金を送る例を考える。
 
@@ -278,6 +305,10 @@ Devnetではブロック生成の準備が別途必要な場合がある。ノ�
 
 ## 28.11 非同期イベント購読の検証
 
+追加の `experiments/devnet/live-reconciliation.py` は、通知を差分更新として直接適用せず再照会のヒントとして扱う。要求の世代番号で古い結果の上書きを拒否し、再購読時も新しい通知を待たずに完全照会する。実験では稼働中の通知を受けて再照会し、購読停止中の欠落も補完できた。単一書き込み主体の現在UTXO観測を対象とし、複数ワーカーやreorgの会計処理は未検証。詳細は `experiments/devnet-live-reconciliation-2026-10-31.md` を参照する。
+
+`experiments/devnet/notifications.py` は公式SDKで実UTXO通知を受信し、同じ通知を2回適用してもSQLiteの件数・合計額が変わらないことを確認する。購読停止中に採掘し、別プロセスでDBを再読込した後、採掘停止状態のRPCスナップショットで欠落分を補完できた。これは現在UTXOの観測ストアであり、成熟残高や会計台帳ではない。稼働中の通知と補完の競合・再編成時の会計処理は未検証。実測は `experiments/devnet-notifications-2026-10-31.md` を参照する。
+
 イベント購読はポーリングより低遅延になり得るが、接続断で通知を取りこぼす可能性がある。
 
 **推奨する設計**：
@@ -319,6 +350,8 @@ Client                 Node
 
 ## 28.13 Reorganizationと状態の巻き戻り
 
+`experiments/devnet/reorg-observer.py` では、分断中のBの報酬UTXOをSQLiteへ記録し、再接続・統合ブロック生成後に10件の消失を確認した。全10件を実removed通知でも確認し、再照会に基づく無効化・再適用・別プロセス再読込が一致した。これは観測UTXOの取り消しであり、決済済みの売上や請求書を取り消す実装ではない。失敗試行と条件は `experiments/devnet-reorg-observer-2026-10-31.md` を参照する。
+
 BlockDAGの観測結果は、新たなブロックやコンセンサス状態の変化により更新され得る。
 
 アプリケーション側で保持する状態例：
@@ -345,6 +378,8 @@ APPLICATION_CONFIRMED
 `APPLICATION_CONFIRMED` はアプリケーションの確認ポリシーであり、Kaspaプロトコルの状態名ではない。確認済み表示後の例外対応や補償処理も設計する。
 
 ## 28.14 障害注入テストの計画
+
+両ノード稼働中の分断は、リポジトリの `experiments/devnet/partition.py` で実測した。P2P中継だけ停止し、ピア数0とRPC応答を確認して双方の枝で採掘した。再接続後、両ノードで62ブロック・指定報酬先46件のUTXO内容が一致した。全UTXO集合や、競合送金・台帳の取り消しまで検証した結果ではない。記録は `experiments/devnet-partition-2026-10-31.md` を参照する。
 
 | 故障 | 操作 | 確認すること |
 |---|---|---|
@@ -676,4 +711,4 @@ Stop Containers / Cleanup
 - [Tokio — Asynchronous Rust Runtime](https://tokio.rs/)
 - [Docker Compose ドキュメント](https://docs.docker.com/compose/)
 
-> **技術レビュー時の確認事項**：対象 `rusty-kaspa` コミットでのDevnet起動フラグ、gRPC/wRPCのlistenポート、ピア接続方法、マイニング方法、ウォレットSDK API、同期状態の取得方法、実際のテスト実行結果を検証し、検証済みコマンド・ログ・期待値を追記する。
+> **残る確認**：全トランザクション種別・HD復旧、複数ワーカーと会計台帳、Pruning後のIBD、ノードバイナリのソース一致、別CPU/OSでの実行は未検証。上記実習の成功をこれらへ拡張しない。

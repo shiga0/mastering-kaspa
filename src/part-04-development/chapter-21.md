@@ -1,8 +1,14 @@
 # Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）
 
 > **Part IV — Kaspa Development & Implementation**  
-> 原稿バージョン：v0.1（2026年10月、技術レビュー前）  
+> 原稿バージョン：v0.2（主要経路を基準版と照合・実Pruning検証は未完了）\
 > 対象：Kaspaの仕組みを理解し、`rusty-kaspa` のコード・運用・テストに進む開発者
+
+## 照合した実装と実測範囲
+
+2026年10月31日、[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` のPruningパラメータ、point進行、削減、証明検証、UTXOインポートの主要経路をソースで確認した（Source-checked）。章全体のレビュー・実データ削減・Pruning後の新規ノード同期は未完了。
+
+既存実験のDevnetは5475ブロック、sinkのblue scoreも5475で、Pruning pointはGenesisのままだった。短い実験の再起動・分岐復旧をPruning後の検証へ読み替えない。記録は `experiments/devnet-pruning-review-2026-10-31.md`。
 
 ## この章で学ぶこと
 
@@ -95,6 +101,16 @@ Pruning PointとFinalityの関係も重要だが、両者は同じ概念では�
 
 参考：[`consensus/core/src/config/constants.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/constants.rs)、[`params.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/params.rs)。
 
+### 21.4.1 基準版Devnetの進行条件
+
+[DEVNET_PARAMS](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)はCrescendoを `never` とし、従来のpruning depthを185798、finality depthを86400、目標ブロック時間を1000msとする。Mainnetや後発コミットの値と区別する。
+
+[next_pruning_points_v1_inner](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/pruning.rs)は、現在pointと候補のblue score、sinkのblue score、pruning depth、finality scoreの区間を使って次のpointを選ぶ。DAA scoreや単純なブロック数を深さ判定へそのまま代入しない。185798という数に到達しただけで必ずpointが移動するわけでもない。
+
+目標1 BPSを使った深さの単純換算は約51.6時間分だが、これを実験の所要時間や全データ削除時刻の保証とは扱わない。並行ブロックや難易度、point選択の条件がある。
+
+[PruningProcessor](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/pruning_processor/processor.rs)ではpoint更新、Pruning用UTXO集合の更新、データのpruneを別段階で行う。`is_archival` の場合はデータpruneを実行しない。したがって、RPCでpointが動いたことだけでは、古い本体が削減されたことや、Pruning Proofで新規ノードが同期したことの証拠にはならない。
+
 ## 21.5 Pruning Proofが必要な理由
 
 新しいノードが同期するとき、ネットワーク上の既存ノードは古い履歴をすでに削減しているかもしれない。新規ノードは、単に相手から「現在のUTXOはこれだ」と渡されただけでは、それを信用できない。
@@ -144,9 +160,11 @@ Pruning Point時点のUTXO集合をダウンロードする際、ノードはそ
 
 Kaspaの実装では、UTXO集合のコミットメントに**MuHash**が用いられる。これは、集合の要素を順不同で扱うための暗号学的な集合ハッシュ構成である。通常の `SHA256(UTXOを文字列連結)` とは異なる。
 
-`rusty-kaspa` の実装に関するセキュリティレビューでは、受信したUTXO集合から計算したMuHashがヘッダー内のコミットメントと一致しない場合、インポートを拒否する経路が確認されている。詳細は[該当Issue #1100](https://github.com/kaspanet/rusty-kaspa/issues/1100)を参照。
+基準版の[import_pruning_point_utxo_set](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/processor.rs)は、インポートしたMuHashのfinalize結果を対象ヘッダーの `utxo_commitment` と比較し、不一致なら `ImportedMultisetHashMismatch` を返す。これは固定ソースの読み取りによる確認であり、不正な集合を実際に注入した実行試験ではない。
 
 > **セキュリティ上の注意**：一致するコミットメントがあるからといって、ネットワーク全体の正しいチェーン／DAG選択まで自動的に保証されるわけではない。どのヘッダーを信頼できるものとして採用するかについて、PoWとコンセンサス検証が別途必要である。
+
+証明の構造・各レベルのPoWや仕事量等を調べる経路は [validate_pruning_point_proof](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/pruning_proof/validate.rs)、証明をローカル状態へ取り込む経路は [apply_proof](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/pruning_proof/apply.rs) にある。証明の検証・適用と、別途受信するUTXO集合のコミットメント検査を同じ検査として説明しない。
 
 ## 21.7 IBD（Initial Block Download）とは
 

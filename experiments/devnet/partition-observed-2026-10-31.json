@@ -1,0 +1,48 @@
+{
+  "network": "devnet",
+  "baseline": {
+    "blockCount": 27,
+    "virtualDaaScore": 27,
+    "sink": "234e17526cd7da681c2bc2dabc9cb99bf410c7721b82ebda86c7f789e5454686",
+    "tipHashes": [
+      "234e17526cd7da681c2bc2dabc9cb99bf410c7721b82ebda86c7f789e5454686"
+    ],
+    "rewardUtxoCount": 26,
+    "rewardUtxoSha256": "196a648858ce9b8540dec0a5e0cdcc210b0b8b24cd5375c6f35b485f99c9c06c"
+  },
+  "partitionA": {
+    "blockCount": 42,
+    "virtualDaaScore": 42,
+    "sink": "43070b7b9d34164483d6b22d4abeb845c78aa82729f78de5a4c78f89d6078b82",
+    "tipHashes": [
+      "43070b7b9d34164483d6b22d4abeb845c78aa82729f78de5a4c78f89d6078b82"
+    ],
+    "rewardUtxoCount": 41,
+    "rewardUtxoSha256": "c8b0ac124c1fe732e9f1167935337233be67d5f7e6ca07cd931ffee476788c34"
+  },
+  "partitionB": {
+    "blockCount": 47,
+    "virtualDaaScore": 47,
+    "sink": "7b95066183ee4caecb986633f3295a6be764617c7623156bd44c6f5a51d902aa",
+    "tipHashes": [
+      "7b95066183ee4caecb986633f3295a6be764617c7623156bd44c6f5a51d902aa"
+    ],
+    "rewardUtxoCount": 46,
+    "rewardUtxoSha256": "0493dec69acd4b8ac55a5c93d8b582a399b9a97a8344609b1233dc02ac17e795"
+  },
+  "zeroPeersWhileSeparated": true,
+  "nodesRemainedResponsive": true,
+  "reconnected": true,
+  "converged": {
+    "blockCount": 62,
+    "virtualDaaScore": 62,
+    "sink": "7b95066183ee4caecb986633f3295a6be764617c7623156bd44c6f5a51d902aa",
+    "tipHashes": [
+      "43070b7b9d34164483d6b22d4abeb845c78aa82729f78de5a4c78f89d6078b82",
+      "7b95066183ee4caecb986633f3295a6be764617c7623156bd44c6f5a51d902aa"
+    ],
+    "rewardUtxoCount": 46,
+    "rewardUtxoSha256": "b175114c31269edc6de1499ccbc1c4eb61b98a84108d6b32e93a1c1766b11508"
+  },
+  "rewardUtxosMatched": true
+}

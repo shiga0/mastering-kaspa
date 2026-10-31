@@ -251,63 +251,28 @@ Devnet : 開発・実験向けネットワーク
 
 実験時には、意図したネットワークを明示し、メインネットのウォレット・秘密鍵・データ領域と分離する。
 
-## A.10 DockerでKaspa Devnetを起動する前に
+## A.10 DockerでKaspa Devnetを起動する
 
-公式Dockerイメージと実行オプションは更新されるため、まず使用するタグ・CLIを確認する。
-
-- rusty-kaspa公式：<https://github.com/kaspanet/rusty-kaspa>
-- Docker Hub（Kaspa関連の公開イメージを探す入口）：<https://hub.docker.com/search?q=kaspanet>
-
-以下は**構成例**であり、使用するイメージタグに対して動作確認が必要である。`latest`は再現性に向かないため、実験ではバージョンやdigestに固定する。
+実行確認したARM64向け構成を使う。[第28章](../part-04-development/chapter-28.md)の28.6でPython環境と、必要な場合は公式SDKを準備してから実行する。以下はリポジトリのルートでの操作である。
 
 ```bash
-# 実験用の作業ディレクトリ
-mkdir -p ~/dev/kaspa/devnet-lab
-cd ~/dev/kaspa/devnet-lab
-
-# イメージの存在・タグを確認してから置き換える
-export KASPA_IMAGE='kaspanet/rusty-kaspad:<verified-tag>'
-
-# コンテナが受け付ける起動オプションを確認
-# docker run --rm "$KASPA_IMAGE" --help
+docker compose -f experiments/devnet/compose.yaml config
+docker compose -f experiments/devnet/compose.yaml up -d node
+docker compose -f experiments/devnet/compose.yaml logs --tail=30 node
+experiments/devnet/.venv/bin/python experiments/devnet/probe.py
 ```
 
-`<verified-tag>`は**プレースホルダー**。そのまま実行しないこと。`--devnet`、`--utxoindex`、`--rpclisten`等の正確なサポート状況は、固定したイメージの`--help`で確認する。
+### A.10.1 保存先と終了
 
-### A.10.1 1ノード構成の例
-
-以下のComposeは、Devnet用フラグをサポートするイメージを選んだ場合の**雛形**である。RPCポートの値も実行環境に合わせて確認する。
-
-```yaml
-# compose.yaml（バージョン・フラグ・ポートは実機で確認）
-services:
-  kaspa-devnet:
-    image: ${KASPA_IMAGE}
-    container_name: kaspa-devnet
-    command:
-      - --devnet
-      - --utxoindex
-    volumes:
-      - kaspa-devnet-data:/data
-    restart: unless-stopped
-    # RPCをホストに公開する必要がある場合だけ、
-    # 検証したリッスンポートを127.0.0.1にバインドする。
-    # ports:
-    #   - "127.0.0.1:<host-port>:<container-port>"
-volumes:
-  kaspa-devnet-data:
-```
-
-**重要**：イメージが使うデータディレクトリが`/data`とは限らない。実際の保存先を確認し、必要ならマウント先を変更すること。RPCやP2Pポートの不用意なインターネット公開は避ける。
+設定は公開イメージのdigestを固定し、`--appdir=/data` と名前付きボリュームの保存先を合わせている。JSON wRPCはホストの127.0.0.1:18310だけへ公開する。
 
 ```bash
-docker compose config
-docker compose up -d
-docker compose ps
-docker compose logs --tail=100 kaspa-devnet
+docker compose -f experiments/devnet/compose.yaml stop node
 ```
 
-この雛形は実行確認済みの完成設定ではない。起動・読み取りwRPC・採掘後の状態保持を確認した構成は、リポジトリの `experiments/devnet/` に収録している。第28章の起動から送金までの完成実習は未収録である。進捗は[技術レビューの進捗](../review-status.md)を参照する。
+停止ではデータを削除しない。既存データがあれば、再開時のブロック数やUTXOは初回の値と異なる。送金・通知・2ノードの試験は追加設定と専用スクリプトを使うため、第28章とリポジトリの `experiments/devnet/README.md` を参照する。
+
+この構成はmacOS Apple Siliconで検証済みであり、amd64やLinuxホストで実行確認したものではない。Pruning後の同期も未検証である。
 
 ## A.11 2ノード統合テストの考え方
 
