@@ -29,7 +29,7 @@
 | [Chapter 10 — Kaspa Node & P2P Network（KaspaノードとP2Pネットワーク）](part-02-consensus/chapter-10.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
 | [Chapter 11 — Block Processing & Validation（ブロック処理と検証）](part-02-consensus/chapter-11.md) | 主要経路のみSource-checked（v1.0.1） | 検証順・保存状態・親不足/BadMerkleRootを照合。公式本体テスト2件と教材5テスト成功。P2P全体・全規則・永続化の障害検証は未完了 |
 | [Chapter 12 — GHOSTDAG Internals（GHOSTDAGの内部構造）](part-02-consensus/chapter-12.md) | 主要規則のみSource-checked（v1.0.1再照合） | DAG解析器5テスト成功。別ハーネスで公式分類関数と24ケースの親選択・blue/red・score/workが一致。大規模DAG・章全体は未検証 |
-| [Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）](part-02-consensus/chapter-13.md) | 主要経路のみSource-checked（v1.0.1） | Full/Sampled・整数target計算・DAA scoreを照合。教材5テスト成功。公式数値ベクトル・全境界の実行比較は未完了 |
+| [Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）](part-02-consensus/chapter-13.md) | 主要経路のみSource-checked（v1.0.1） | Full/Sampled・整数target計算・DAA scoreを照合。教材5テスト成功。Full/Sampled算術27ケース・計54回でbits一致。Full窓/non-DAA/DAA scoreは120ケースで一致。Sampled/Dualは288ケースで一致。全ネットワーク・全境界・Pruning後IBDは未完了 |
 | [Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）](part-02-consensus/chapter-14.md) | 主要経路のみSource-checked（v1.0.1） | 合意順序・UTXO処理の主要経路を照合。公式実装との実行時差分検証・章全体レビューは未完了 |
 | [Chapter 15 — UTXO Model & Transaction Processing（UTXOモデルとトランザクション処理）](part-03-transactions/chapter-15.md) | 主要経路のみSource-checked（v1.0.1） | 合意順序・UTXO処理の主要経路を照合。公式実装との実行時差分検証・章全体レビューは未完了 |
 | [Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）](part-03-transactions/chapter-16.md) | 主要経路のみSource-checked（v1.0.1） | 署名/Script・gen1導出・Generator/Signerの該当範囲を照合。単一署名のDevnet送金・virtual受理を実測。HD復旧・異常系・章全体レビューは未完了 |
@@ -99,3 +99,5 @@ GHOSTDAGの固定版再照合は `experiments/ghostdag-baseline-review-2026-10-3
 2. 第14・15・20・21章の状態遷移、トランザクション受理、Finality、Pruningを照合する。
 3. 第22〜24・28章の固定バージョンによるDevnet実習を通す。
 4. 高度な技術について、提案・開発中・ネットワーク有効化の区別を出典で確認する。
+
+DAA算術の27ケースの公式実行比較は `experiments/daa-comparison-2026-10-31.md`、再実行入口は `experiments/daa/README.md`。Full窓/non-DAA/DAA scoreの別検査は `experiments/daa-window-comparison-2026-10-31.md`、実行入口は `experiments/daa-window/README.md`。Sampled/Dualの288ケース比較は `experiments/daa-transition-comparison-2026-10-31.md`、実行入口は `experiments/daa-transition/README.md`。全ネットワーク・中央値時刻窓・Pruning後IBDは未検証。

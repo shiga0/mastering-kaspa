@@ -1,0 +1,239 @@
+{
+  "baselineCommit": "fcd9c28f9b211b9872a0c90a8c94f79466ffb063",
+  "caseCount": 27,
+  "windowInsertionOrders": 2,
+  "allComparisonsMatched": true,
+  "scope": "explicit synthetic windows; no window construction, PoW or network",
+  "officialSourceArchiveSha256": "4585123204609640af4f7482ea8851ced912c2bfae5f36955c808c14210fbe2a",
+  "officialCargoLockSha256": "14108c8c41a84a1a9c8cd8648238047a0620ca390058f9d8a176fefc78beeabf",
+  "filesSha256": {
+    "compare.rs": "f5fcac8694a8bbbbcc6875fa6ff763d928529fcda11a5f0d3350302bf3ad00a1",
+    "oracle.py": "18b0d79ff397b0b75c4fa3a4e9d220c7f913a8f7bd22340bc079a094bbe7dfa0",
+    "vectors.json": "d53542b56e3590f0ab1ba01019ef8d9b10b10834ce27fb70cec3be6dda851df0",
+    "run.py": "1dd0fbdce4f0125ed6b65580e3d284b752f3e576941f9d911f576416338fe4d3"
+  },
+  "sourcePreparationSha256": "962c9802bdc8762d23ca1cd4da02859a7dd0684d65d63e1dbb4ecf1642c1fbee",
+  "environment": {
+    "os": "Darwin",
+    "architecture": "arm64",
+    "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)"
+  },
+  "cases": [
+    {
+      "name": "full-empty",
+      "mode": "full",
+      "expectedBitsHex": "207fffff",
+      "actualBitsHex": "207fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-under-minimum",
+      "mode": "full",
+      "expectedBitsHex": "207fffff",
+      "actualBitsHex": "207fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-at-minimum",
+      "mode": "full",
+      "expectedBitsHex": "1e7fffff",
+      "actualBitsHex": "1e7fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-target-rate",
+      "mode": "full",
+      "expectedBitsHex": "1e7fffff",
+      "actualBitsHex": "1e7fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-fast",
+      "mode": "full",
+      "expectedBitsHex": "1e3fffff",
+      "actualBitsHex": "1e3fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-slow",
+      "mode": "full",
+      "expectedBitsHex": "1f00ffff",
+      "actualBitsHex": "1f00ffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-equal-timestamps",
+      "mode": "full",
+      "expectedBitsHex": "1d0aec33",
+      "actualBitsHex": "1d0aec33",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-one-ms-range",
+      "mode": "full",
+      "expectedBitsHex": "1d0aec33",
+      "actualBitsHex": "1d0aec33",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-mixed-targets",
+      "mode": "full",
+      "expectedBitsHex": "1f064116",
+      "actualBitsHex": "1f064116",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-maximum-target-cap",
+      "mode": "full",
+      "expectedBitsHex": "207fffff",
+      "actualBitsHex": "207fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-drop-earliest-outlier",
+      "mode": "full",
+      "expectedBitsHex": "1e7fffff",
+      "actualBitsHex": "1e7fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-tied-minimum-work-order",
+      "mode": "full",
+      "expectedBitsHex": "1f049713",
+      "actualBitsHex": "1f049713",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-compact-sign-normalization",
+      "mode": "full",
+      "expectedBitsHex": "1e00ffff",
+      "actualBitsHex": "1e00ffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-maximum-u64-timestamps",
+      "mode": "full",
+      "expectedBitsHex": "1e7fffff",
+      "actualBitsHex": "1e7fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "sampled-rate-2",
+      "mode": "sampled",
+      "expectedBitsHex": "1e7fffff",
+      "actualBitsHex": "1e7fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "sampled-rate-40",
+      "mode": "sampled",
+      "expectedBitsHex": "1e7fffff",
+      "actualBitsHex": "1e7fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "sampled-equal-timestamps",
+      "mode": "sampled",
+      "expectedBitsHex": "1c45e7b1",
+      "actualBitsHex": "1c45e7b1",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "sampled-cap",
+      "mode": "sampled",
+      "expectedBitsHex": "207fffff",
+      "actualBitsHex": "207fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "sampled-mixed-rounding",
+      "mode": "sampled",
+      "expectedBitsHex": "1f0215b2",
+      "actualBitsHex": "1f0215b2",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "sampled-insufficient-genesis",
+      "mode": "sampled",
+      "expectedBitsHex": "207fffff",
+      "actualBitsHex": "207fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "sampled-insufficient-before",
+      "mode": "sampled",
+      "expectedBitsHex": "1f04ffff",
+      "actualBitsHex": "1f04ffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "sampled-insufficient-at",
+      "mode": "sampled",
+      "expectedBitsHex": "1e7fffff",
+      "actualBitsHex": "1e7fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "sampled-insufficient-after",
+      "mode": "sampled",
+      "expectedBitsHex": "1e7fffff",
+      "actualBitsHex": "1e7fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "sampled-insufficient-scaling-cap",
+      "mode": "sampled",
+      "expectedBitsHex": "207fffff",
+      "actualBitsHex": "207fffff",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-tied-minimum-hash-order",
+      "mode": "full",
+      "expectedBitsHex": "1e222ade",
+      "actualBitsHex": "1e222ade",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "full-intermediate-average-rounding",
+      "mode": "full",
+      "expectedBitsHex": "01020000",
+      "actualBitsHex": "01020000",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    },
+    {
+      "name": "sampled-intermediate-average-rounding",
+      "mode": "sampled",
+      "expectedBitsHex": "01020000",
+      "actualBitsHex": "01020000",
+      "matched": true,
+      "reversedWindowInsertionMatched": true
+    }
+  ]
+}

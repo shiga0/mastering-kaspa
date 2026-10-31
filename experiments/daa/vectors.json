@@ -1,0 +1,914 @@
+[
+  {
+    "name": "full-empty",
+    "mode": "full",
+    "samples": [],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 545259519
+  },
+  {
+    "name": "full-under-minimum",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 511705087,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 1000,
+        "bits": 511705087,
+        "work": 2
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 545259519
+  },
+  {
+    "name": "full-at-minimum",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 511705087,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 1000,
+        "bits": 511705087,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 2000,
+        "bits": 511705087,
+        "work": 3
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 511705087
+  },
+  {
+    "name": "full-target-rate",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 511705087,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 1000,
+        "bits": 511705087,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 2000,
+        "bits": 511705087,
+        "work": 3
+      },
+      {
+        "id": 13,
+        "timestamp": 3000,
+        "bits": 511705087,
+        "work": 4
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 511705087
+  },
+  {
+    "name": "full-fast",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 511705087,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 500,
+        "bits": 511705087,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 1000,
+        "bits": 511705087,
+        "work": 3
+      },
+      {
+        "id": 13,
+        "timestamp": 1500,
+        "bits": 511705087,
+        "work": 4
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 507510783
+  },
+  {
+    "name": "full-slow",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 511705087,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 2000,
+        "bits": 511705087,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 4000,
+        "bits": 511705087,
+        "work": 3
+      },
+      {
+        "id": 13,
+        "timestamp": 6000,
+        "bits": 511705087,
+        "work": 4
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 520159231
+  },
+  {
+    "name": "full-equal-timestamps",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 7000,
+        "bits": 511705087,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 7000,
+        "bits": 511705087,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 7000,
+        "bits": 511705087,
+        "work": 3
+      },
+      {
+        "id": 13,
+        "timestamp": 7000,
+        "bits": 511705087,
+        "work": 4
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 487255091
+  },
+  {
+    "name": "full-one-ms-range",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 7000,
+        "bits": 511705087,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 7000,
+        "bits": 511705087,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 7000,
+        "bits": 511705087,
+        "work": 3
+      },
+      {
+        "id": 13,
+        "timestamp": 7001,
+        "bits": 511705087,
+        "work": 4
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 487255091
+  },
+  {
+    "name": "full-mixed-targets",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 504509526,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 1001,
+        "bits": 509952801,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 2002,
+        "bits": 521286742,
+        "work": 3
+      },
+      {
+        "id": 13,
+        "timestamp": 3004,
+        "bits": 505628007,
+        "work": 4
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 520503574
+  },
+  {
+    "name": "full-maximum-target-cap",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 545259519,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 100000,
+        "bits": 545259519,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 200000,
+        "bits": 545259519,
+        "work": 3
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 545259519
+  },
+  {
+    "name": "full-drop-earliest-outlier",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 545259519,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 1000,
+        "bits": 511705087,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 2000,
+        "bits": 511705087,
+        "work": 3
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 511705087
+  },
+  {
+    "name": "full-tied-minimum-work-order",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 521286742,
+        "work": 2
+      },
+      {
+        "id": 11,
+        "timestamp": 0,
+        "bits": 509952801,
+        "work": 1
+      },
+      {
+        "id": 12,
+        "timestamp": 1001,
+        "bits": 505628007,
+        "work": 3
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 520394515
+  },
+  {
+    "name": "full-compact-sign-normalization",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 494927871,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 2000,
+        "bits": 494927871,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 4000,
+        "bits": 494927871,
+        "work": 3
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 503382015
+  },
+  {
+    "name": "full-maximum-u64-timestamps",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 18446744073709548615,
+        "bits": 511705087,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 18446744073709549615,
+        "bits": 511705087,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 18446744073709550615,
+        "bits": 511705087,
+        "work": 3
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 511705087
+  },
+  {
+    "name": "sampled-rate-2",
+    "mode": "sampled",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 511705087,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 2000,
+        "bits": 511705087,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 4000,
+        "bits": 511705087,
+        "work": 3
+      },
+      {
+        "id": 13,
+        "timestamp": 6000,
+        "bits": 511705087,
+        "work": 4
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 2,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 511705087
+  },
+  {
+    "name": "sampled-rate-40",
+    "mode": "sampled",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 511705087,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 40000,
+        "bits": 511705087,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 80000,
+        "bits": 511705087,
+        "work": 3
+      },
+      {
+        "id": 13,
+        "timestamp": 120000,
+        "bits": 511705087,
+        "work": 4
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 40,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 511705087
+  },
+  {
+    "name": "sampled-equal-timestamps",
+    "mode": "sampled",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 9,
+        "bits": 511705087,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 9,
+        "bits": 511705087,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 9,
+        "bits": 511705087,
+        "work": 3
+      },
+      {
+        "id": 13,
+        "timestamp": 9,
+        "bits": 511705087,
+        "work": 4
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 40,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 474343345
+  },
+  {
+    "name": "sampled-cap",
+    "mode": "sampled",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 545259519,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 100000,
+        "bits": 545259519,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 200000,
+        "bits": 545259519,
+        "work": 3
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 2,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 545259519
+  },
+  {
+    "name": "sampled-mixed-rounding",
+    "mode": "sampled",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 504509526,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 1001,
+        "bits": 509952801,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 2002,
+        "bits": 521286742,
+        "work": 3
+      },
+      {
+        "id": 13,
+        "timestamp": 3004,
+        "bits": 505628007,
+        "work": 4
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 3,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 520230322
+  },
+  {
+    "name": "sampled-insufficient-genesis",
+    "mode": "sampled",
+    "samples": [],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 40,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": true,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 545259519
+  },
+  {
+    "name": "sampled-insufficient-before",
+    "mode": "sampled",
+    "samples": [],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 100,
+    "sample_rate": 40,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 99,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 520421375
+  },
+  {
+    "name": "sampled-insufficient-at",
+    "mode": "sampled",
+    "samples": [],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 100,
+    "sample_rate": 40,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 511705087
+  },
+  {
+    "name": "sampled-insufficient-after",
+    "mode": "sampled",
+    "samples": [],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 100,
+    "sample_rate": 40,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 101,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 511705087
+  },
+  {
+    "name": "sampled-insufficient-scaling-cap",
+    "mode": "sampled",
+    "samples": [],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 100,
+    "sample_rate": 40,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 545259519,
+    "grandparent_daa": 99,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 545259519
+  },
+  {
+    "name": "full-tied-minimum-hash-order",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 521286742,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 0,
+        "bits": 509952801,
+        "work": 1
+      },
+      {
+        "id": 12,
+        "timestamp": 1001,
+        "bits": 505628007,
+        "work": 3
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 505555678
+  },
+  {
+    "name": "full-intermediate-average-rounding",
+    "mode": "full",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 17367040,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 2000,
+        "bits": 16842752,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 4000,
+        "bits": 16908288,
+        "work": 3
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 1,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 16908288
+  },
+  {
+    "name": "sampled-intermediate-average-rounding",
+    "mode": "sampled",
+    "samples": [
+      {
+        "id": 10,
+        "timestamp": 0,
+        "bits": 17367040,
+        "work": 1
+      },
+      {
+        "id": 11,
+        "timestamp": 6000,
+        "bits": 16842752,
+        "work": 2
+      },
+      {
+        "id": 12,
+        "timestamp": 12000,
+        "bits": 16908288,
+        "work": 3
+      }
+    ],
+    "min_window": 3,
+    "window_size": 8,
+    "target_ms": 1000,
+    "sample_rate": 3,
+    "max_bits": 545259519,
+    "genesis_bits": 545259519,
+    "selected_genesis": false,
+    "selected_bits": 511705087,
+    "grandparent_daa": 100,
+    "activation": 100,
+    "prior_target_ms": 1000,
+    "expected_bits": 16908288
+  }
+]

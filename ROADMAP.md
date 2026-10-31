@@ -15,6 +15,12 @@
 
 2026-10-31：C11/C13/C20の主要経路を基準版へ照合。ヘッダー/GHOSTDAG/本体の実際の順序、BadMerkleRoot等の状態保持、Full/Sampled DAAと整数計算、DevnetとCrescendoのFinality/Pruning定数を本文へ反映。公式本体検証テスト2件・教材14テスト成功。記録は `experiments/core-validation-review-2026-10-31.md`。全規則・公式DAA/Finalityの実行比較・安全性証明・章全体のレビューは継続する。
 
+2026-10-31：C13/G-006の算術部分を実行比較。公式Full/Sampled計算器へ明示した窓を与え、27ケース・計54回でPython整数モデルとbitsが一致。入力・期待値・再実行コード・集計を `experiments/daa/` に収録した。記録は `experiments/daa-comparison-2026-10-31.md`。窓構築・non-DAA集合/DAA score・DualWindowManagerの切り替え・PoW・章全体は継続する。
+
+2026-10-31：C13/G-006のFull窓構築・non-DAA集合・DAA scoreを実行比較。8種類の合成DAG×k/窓サイズの120ケースでモデルと一致し、キャッシュ3条件・親配列2順でも同じ出力。計11700回の公式ブロック比較。コード・入力・集計は `experiments/daa-window/`、範囲は `experiments/daa-window-comparison-2026-10-31.md`。公式GHOSTDAGメタデータを使う条件付き比較で、Sampled窓・Dual切り替え・PoW・実Pruning後IBDは未検証。
+
+2026-10-31：C13/G-006のSampled窓とDual切り替えを288ケースで比較。窓・non-DAA・DAA score・bitsがモデルと一致し、キャッシュ3条件・親配列2順でDual計28080回と直接計算器計28080回の結果も一致。選択親DAAのactivation直前・一致・直後を含む。記録は `experiments/daa-transition-comparison-2026-10-31.md`、コードと集計は `experiments/daa-transition/`。合成設定・公式GHOSTDAGメタデータを使う条件付き比較で、全ネットワーク・全sample rate・中央値時刻窓・PoW・実Pruning後IBD・章全体は継続する。
+
 ## 優先順位と進め方
 
 - **P1**：本書の正確性と実習の前提。最初に進める。

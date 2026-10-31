@@ -1,0 +1,1249 @@
+{
+  "graphs": [
+    {
+      "name": "chain",
+      "nodes": [
+        {
+          "id": 2,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 2026
+        },
+        {
+          "id": 3,
+          "parents": [
+            2
+          ],
+          "bits": 545259519,
+          "timestamp": 3000
+        },
+        {
+          "id": 4,
+          "parents": [
+            3
+          ],
+          "bits": 545259519,
+          "timestamp": 4013
+        },
+        {
+          "id": 5,
+          "parents": [
+            4
+          ],
+          "bits": 545259519,
+          "timestamp": 5026
+        },
+        {
+          "id": 6,
+          "parents": [
+            5
+          ],
+          "bits": 545259519,
+          "timestamp": 6000
+        },
+        {
+          "id": 7,
+          "parents": [
+            6
+          ],
+          "bits": 545259519,
+          "timestamp": 7013
+        },
+        {
+          "id": 8,
+          "parents": [
+            7
+          ],
+          "bits": 545259519,
+          "timestamp": 8026
+        },
+        {
+          "id": 9,
+          "parents": [
+            8
+          ],
+          "bits": 545259519,
+          "timestamp": 9000
+        },
+        {
+          "id": 10,
+          "parents": [
+            9
+          ],
+          "bits": 545259519,
+          "timestamp": 10013
+        },
+        {
+          "id": 11,
+          "parents": [
+            10
+          ],
+          "bits": 545259519,
+          "timestamp": 11026
+        },
+        {
+          "id": 12,
+          "parents": [
+            11
+          ],
+          "bits": 545259519,
+          "timestamp": 12000
+        },
+        {
+          "id": 13,
+          "parents": [
+            12
+          ],
+          "bits": 545259519,
+          "timestamp": 13013
+        }
+      ]
+    },
+    {
+      "name": "forks",
+      "nodes": [
+        {
+          "id": 2,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 2026
+        },
+        {
+          "id": 3,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 3000
+        },
+        {
+          "id": 4,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 4013
+        },
+        {
+          "id": 5,
+          "parents": [
+            2,
+            3,
+            4
+          ],
+          "bits": 545259519,
+          "timestamp": 5026
+        },
+        {
+          "id": 6,
+          "parents": [
+            2
+          ],
+          "bits": 545259519,
+          "timestamp": 6000
+        },
+        {
+          "id": 7,
+          "parents": [
+            5,
+            6
+          ],
+          "bits": 545259519,
+          "timestamp": 7013
+        },
+        {
+          "id": 8,
+          "parents": [
+            7
+          ],
+          "bits": 545259519,
+          "timestamp": 8026
+        },
+        {
+          "id": 9,
+          "parents": [
+            3
+          ],
+          "bits": 545259519,
+          "timestamp": 9000
+        },
+        {
+          "id": 10,
+          "parents": [
+            8,
+            9
+          ],
+          "bits": 545259519,
+          "timestamp": 10013
+        }
+      ]
+    },
+    {
+      "name": "mixed-work",
+      "nodes": [
+        {
+          "id": 2,
+          "parents": [
+            1
+          ],
+          "bits": 511705087,
+          "timestamp": 2026
+        },
+        {
+          "id": 3,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 3000
+        },
+        {
+          "id": 4,
+          "parents": [
+            2
+          ],
+          "bits": 528482303,
+          "timestamp": 4013
+        },
+        {
+          "id": 5,
+          "parents": [
+            3
+          ],
+          "bits": 511705087,
+          "timestamp": 5026
+        },
+        {
+          "id": 6,
+          "parents": [
+            4,
+            5
+          ],
+          "bits": 545259519,
+          "timestamp": 6000
+        },
+        {
+          "id": 7,
+          "parents": [
+            1
+          ],
+          "bits": 528482303,
+          "timestamp": 7013
+        },
+        {
+          "id": 8,
+          "parents": [
+            6,
+            7
+          ],
+          "bits": 511705087,
+          "timestamp": 8026
+        },
+        {
+          "id": 9,
+          "parents": [
+            8
+          ],
+          "bits": 545259519,
+          "timestamp": 9000
+        },
+        {
+          "id": 10,
+          "parents": [
+            5
+          ],
+          "bits": 528482303,
+          "timestamp": 10013
+        },
+        {
+          "id": 11,
+          "parents": [
+            9,
+            10
+          ],
+          "bits": 511705087,
+          "timestamp": 11026
+        }
+      ]
+    },
+    {
+      "name": "wide-fork",
+      "nodes": [
+        {
+          "id": 2,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 2026
+        },
+        {
+          "id": 3,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 3000
+        },
+        {
+          "id": 4,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 4013
+        },
+        {
+          "id": 5,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 5026
+        },
+        {
+          "id": 6,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 6000
+        },
+        {
+          "id": 7,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 7013
+        },
+        {
+          "id": 8,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 8026
+        },
+        {
+          "id": 9,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 9000
+        },
+        {
+          "id": 10,
+          "parents": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "bits": 545259519,
+          "timestamp": 10013
+        },
+        {
+          "id": 11,
+          "parents": [
+            10
+          ],
+          "bits": 545259519,
+          "timestamp": 11026
+        },
+        {
+          "id": 12,
+          "parents": [
+            11
+          ],
+          "bits": 545259519,
+          "timestamp": 12000
+        }
+      ]
+    },
+    {
+      "name": "generated-1",
+      "nodes": [
+        {
+          "id": 2,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 2026
+        },
+        {
+          "id": 3,
+          "parents": [
+            2
+          ],
+          "bits": 545259519,
+          "timestamp": 3000
+        },
+        {
+          "id": 4,
+          "parents": [
+            1,
+            3
+          ],
+          "bits": 545259519,
+          "timestamp": 4013
+        },
+        {
+          "id": 5,
+          "parents": [
+            2,
+            3
+          ],
+          "bits": 545259519,
+          "timestamp": 5026
+        },
+        {
+          "id": 6,
+          "parents": [
+            1,
+            5
+          ],
+          "bits": 545259519,
+          "timestamp": 6000
+        },
+        {
+          "id": 7,
+          "parents": [
+            2,
+            5,
+            6
+          ],
+          "bits": 545259519,
+          "timestamp": 7013
+        },
+        {
+          "id": 8,
+          "parents": [
+            1,
+            4,
+            7
+          ],
+          "bits": 545259519,
+          "timestamp": 8026
+        },
+        {
+          "id": 9,
+          "parents": [
+            2,
+            4,
+            7
+          ],
+          "bits": 545259519,
+          "timestamp": 9000
+        },
+        {
+          "id": 10,
+          "parents": [
+            1,
+            4,
+            9
+          ],
+          "bits": 545259519,
+          "timestamp": 10013
+        },
+        {
+          "id": 11,
+          "parents": [
+            2,
+            7
+          ],
+          "bits": 545259519,
+          "timestamp": 11026
+        },
+        {
+          "id": 12,
+          "parents": [
+            4,
+            6,
+            10
+          ],
+          "bits": 545259519,
+          "timestamp": 12000
+        },
+        {
+          "id": 13,
+          "parents": [
+            6,
+            10,
+            11
+          ],
+          "bits": 545259519,
+          "timestamp": 13013
+        },
+        {
+          "id": 14,
+          "parents": [
+            5,
+            10,
+            13
+          ],
+          "bits": 545259519,
+          "timestamp": 14026
+        },
+        {
+          "id": 15,
+          "parents": [
+            6,
+            13,
+            14
+          ],
+          "bits": 545259519,
+          "timestamp": 15000
+        },
+        {
+          "id": 16,
+          "parents": [
+            9,
+            15
+          ],
+          "bits": 545259519,
+          "timestamp": 16013
+        },
+        {
+          "id": 17,
+          "parents": [
+            2,
+            10,
+            13
+          ],
+          "bits": 545259519,
+          "timestamp": 17026
+        },
+        {
+          "id": 18,
+          "parents": [
+            5,
+            9,
+            17
+          ],
+          "bits": 545259519,
+          "timestamp": 18000
+        },
+        {
+          "id": 19,
+          "parents": [
+            9,
+            18
+          ],
+          "bits": 545259519,
+          "timestamp": 19013
+        },
+        {
+          "id": 20,
+          "parents": [
+            5,
+            6,
+            15
+          ],
+          "bits": 545259519,
+          "timestamp": 20026
+        },
+        {
+          "id": 21,
+          "parents": [
+            6,
+            20
+          ],
+          "bits": 545259519,
+          "timestamp": 21000
+        },
+        {
+          "id": 22,
+          "parents": [
+            11,
+            17,
+            20
+          ],
+          "bits": 545259519,
+          "timestamp": 22013
+        },
+        {
+          "id": 23,
+          "parents": [
+            2,
+            12,
+            17
+          ],
+          "bits": 545259519,
+          "timestamp": 23026
+        }
+      ]
+    },
+    {
+      "name": "generated-2",
+      "nodes": [
+        {
+          "id": 2,
+          "parents": [
+            1
+          ],
+          "bits": 511705087,
+          "timestamp": 2026
+        },
+        {
+          "id": 3,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 3000
+        },
+        {
+          "id": 4,
+          "parents": [
+            1,
+            2
+          ],
+          "bits": 528482303,
+          "timestamp": 4013
+        },
+        {
+          "id": 5,
+          "parents": [
+            1,
+            3,
+            4
+          ],
+          "bits": 511705087,
+          "timestamp": 5026
+        },
+        {
+          "id": 6,
+          "parents": [
+            1,
+            2
+          ],
+          "bits": 545259519,
+          "timestamp": 6000
+        },
+        {
+          "id": 7,
+          "parents": [
+            2,
+            3,
+            6
+          ],
+          "bits": 528482303,
+          "timestamp": 7013
+        },
+        {
+          "id": 8,
+          "parents": [
+            1,
+            2,
+            7
+          ],
+          "bits": 511705087,
+          "timestamp": 8026
+        },
+        {
+          "id": 9,
+          "parents": [
+            3,
+            5,
+            7
+          ],
+          "bits": 545259519,
+          "timestamp": 9000
+        },
+        {
+          "id": 10,
+          "parents": [
+            1,
+            5,
+            8
+          ],
+          "bits": 528482303,
+          "timestamp": 10013
+        },
+        {
+          "id": 11,
+          "parents": [
+            3,
+            4,
+            5
+          ],
+          "bits": 511705087,
+          "timestamp": 11026
+        },
+        {
+          "id": 12,
+          "parents": [
+            3,
+            9
+          ],
+          "bits": 545259519,
+          "timestamp": 12000
+        },
+        {
+          "id": 13,
+          "parents": [
+            3,
+            7,
+            9
+          ],
+          "bits": 528482303,
+          "timestamp": 13013
+        },
+        {
+          "id": 14,
+          "parents": [
+            4,
+            5
+          ],
+          "bits": 511705087,
+          "timestamp": 14026
+        },
+        {
+          "id": 15,
+          "parents": [
+            1,
+            5,
+            7
+          ],
+          "bits": 545259519,
+          "timestamp": 15000
+        },
+        {
+          "id": 16,
+          "parents": [
+            7,
+            10,
+            14
+          ],
+          "bits": 528482303,
+          "timestamp": 16013
+        },
+        {
+          "id": 17,
+          "parents": [
+            3,
+            7,
+            11
+          ],
+          "bits": 511705087,
+          "timestamp": 17026
+        },
+        {
+          "id": 18,
+          "parents": [
+            3,
+            6,
+            10
+          ],
+          "bits": 545259519,
+          "timestamp": 18000
+        },
+        {
+          "id": 19,
+          "parents": [
+            7,
+            17,
+            18
+          ],
+          "bits": 528482303,
+          "timestamp": 19013
+        },
+        {
+          "id": 20,
+          "parents": [
+            3,
+            4,
+            14
+          ],
+          "bits": 511705087,
+          "timestamp": 20026
+        },
+        {
+          "id": 21,
+          "parents": [
+            11,
+            16
+          ],
+          "bits": 545259519,
+          "timestamp": 21000
+        },
+        {
+          "id": 22,
+          "parents": [
+            10,
+            12,
+            21
+          ],
+          "bits": 528482303,
+          "timestamp": 22013
+        },
+        {
+          "id": 23,
+          "parents": [
+            7,
+            11,
+            22
+          ],
+          "bits": 511705087,
+          "timestamp": 23026
+        }
+      ]
+    },
+    {
+      "name": "generated-3",
+      "nodes": [
+        {
+          "id": 2,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 2026
+        },
+        {
+          "id": 3,
+          "parents": [
+            1,
+            2
+          ],
+          "bits": 545259519,
+          "timestamp": 3000
+        },
+        {
+          "id": 4,
+          "parents": [
+            2,
+            3
+          ],
+          "bits": 545259519,
+          "timestamp": 4013
+        },
+        {
+          "id": 5,
+          "parents": [
+            1,
+            3,
+            4
+          ],
+          "bits": 545259519,
+          "timestamp": 5026
+        },
+        {
+          "id": 6,
+          "parents": [
+            3,
+            4,
+            5
+          ],
+          "bits": 545259519,
+          "timestamp": 6000
+        },
+        {
+          "id": 7,
+          "parents": [
+            4,
+            6
+          ],
+          "bits": 545259519,
+          "timestamp": 7013
+        },
+        {
+          "id": 8,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 8026
+        },
+        {
+          "id": 9,
+          "parents": [
+            4,
+            6
+          ],
+          "bits": 545259519,
+          "timestamp": 9000
+        },
+        {
+          "id": 10,
+          "parents": [
+            5,
+            9
+          ],
+          "bits": 545259519,
+          "timestamp": 10013
+        },
+        {
+          "id": 11,
+          "parents": [
+            2,
+            4,
+            10
+          ],
+          "bits": 545259519,
+          "timestamp": 11026
+        },
+        {
+          "id": 12,
+          "parents": [
+            2,
+            7,
+            11
+          ],
+          "bits": 545259519,
+          "timestamp": 12000
+        },
+        {
+          "id": 13,
+          "parents": [
+            7,
+            8
+          ],
+          "bits": 545259519,
+          "timestamp": 13013
+        },
+        {
+          "id": 14,
+          "parents": [
+            3,
+            10,
+            11
+          ],
+          "bits": 545259519,
+          "timestamp": 14026
+        },
+        {
+          "id": 15,
+          "parents": [
+            4,
+            8,
+            10
+          ],
+          "bits": 545259519,
+          "timestamp": 15000
+        },
+        {
+          "id": 16,
+          "parents": [
+            3,
+            11,
+            14
+          ],
+          "bits": 545259519,
+          "timestamp": 16013
+        },
+        {
+          "id": 17,
+          "parents": [
+            4,
+            10
+          ],
+          "bits": 545259519,
+          "timestamp": 17026
+        },
+        {
+          "id": 18,
+          "parents": [
+            1,
+            12,
+            13
+          ],
+          "bits": 545259519,
+          "timestamp": 18000
+        },
+        {
+          "id": 19,
+          "parents": [
+            2,
+            3,
+            12
+          ],
+          "bits": 545259519,
+          "timestamp": 19013
+        },
+        {
+          "id": 20,
+          "parents": [
+            5,
+            10,
+            17
+          ],
+          "bits": 545259519,
+          "timestamp": 20026
+        },
+        {
+          "id": 21,
+          "parents": [
+            13,
+            17,
+            20
+          ],
+          "bits": 545259519,
+          "timestamp": 21000
+        },
+        {
+          "id": 22,
+          "parents": [
+            12,
+            13,
+            20
+          ],
+          "bits": 545259519,
+          "timestamp": 22013
+        },
+        {
+          "id": 23,
+          "parents": [
+            1,
+            4,
+            13
+          ],
+          "bits": 545259519,
+          "timestamp": 23026
+        }
+      ]
+    },
+    {
+      "name": "generated-4",
+      "nodes": [
+        {
+          "id": 2,
+          "parents": [
+            1
+          ],
+          "bits": 511705087,
+          "timestamp": 2026
+        },
+        {
+          "id": 3,
+          "parents": [
+            1
+          ],
+          "bits": 545259519,
+          "timestamp": 3000
+        },
+        {
+          "id": 4,
+          "parents": [
+            2,
+            3
+          ],
+          "bits": 528482303,
+          "timestamp": 4013
+        },
+        {
+          "id": 5,
+          "parents": [
+            1,
+            2,
+            4
+          ],
+          "bits": 511705087,
+          "timestamp": 5026
+        },
+        {
+          "id": 6,
+          "parents": [
+            1,
+            3,
+            5
+          ],
+          "bits": 545259519,
+          "timestamp": 6000
+        },
+        {
+          "id": 7,
+          "parents": [
+            4,
+            5,
+            6
+          ],
+          "bits": 528482303,
+          "timestamp": 7013
+        },
+        {
+          "id": 8,
+          "parents": [
+            2,
+            6,
+            7
+          ],
+          "bits": 511705087,
+          "timestamp": 8026
+        },
+        {
+          "id": 9,
+          "parents": [
+            5,
+            6
+          ],
+          "bits": 545259519,
+          "timestamp": 9000
+        },
+        {
+          "id": 10,
+          "parents": [
+            2,
+            5,
+            9
+          ],
+          "bits": 528482303,
+          "timestamp": 10013
+        },
+        {
+          "id": 11,
+          "parents": [
+            3,
+            7,
+            9
+          ],
+          "bits": 511705087,
+          "timestamp": 11026
+        },
+        {
+          "id": 12,
+          "parents": [
+            6,
+            7,
+            10
+          ],
+          "bits": 545259519,
+          "timestamp": 12000
+        },
+        {
+          "id": 13,
+          "parents": [
+            3,
+            5,
+            11
+          ],
+          "bits": 528482303,
+          "timestamp": 13013
+        },
+        {
+          "id": 14,
+          "parents": [
+            8,
+            9,
+            13
+          ],
+          "bits": 511705087,
+          "timestamp": 14026
+        },
+        {
+          "id": 15,
+          "parents": [
+            1,
+            7,
+            10
+          ],
+          "bits": 545259519,
+          "timestamp": 15000
+        },
+        {
+          "id": 16,
+          "parents": [
+            11,
+            12,
+            14
+          ],
+          "bits": 528482303,
+          "timestamp": 16013
+        },
+        {
+          "id": 17,
+          "parents": [
+            2,
+            5,
+            8
+          ],
+          "bits": 511705087,
+          "timestamp": 17026
+        },
+        {
+          "id": 18,
+          "parents": [
+            3,
+            13,
+            16
+          ],
+          "bits": 545259519,
+          "timestamp": 18000
+        },
+        {
+          "id": 19,
+          "parents": [
+            1,
+            2,
+            11
+          ],
+          "bits": 528482303,
+          "timestamp": 19013
+        },
+        {
+          "id": 20,
+          "parents": [
+            11,
+            15,
+            16
+          ],
+          "bits": 511705087,
+          "timestamp": 20026
+        },
+        {
+          "id": 21,
+          "parents": [
+            9,
+            15,
+            19
+          ],
+          "bits": 545259519,
+          "timestamp": 21000
+        },
+        {
+          "id": 22,
+          "parents": [
+            3,
+            7,
+            16
+          ],
+          "bits": 528482303,
+          "timestamp": 22013
+        },
+        {
+          "id": 23,
+          "parents": [
+            2,
+            19,
+            20
+          ],
+          "bits": 511705087,
+          "timestamp": 23026
+        }
+      ]
+    }
+  ],
+  "kValues": [
+    0,
+    1,
+    2
+  ],
+  "windowSizes": [
+    0,
+    1,
+    2,
+    4,
+    8
+  ]
+}

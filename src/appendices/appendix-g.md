@@ -73,7 +73,7 @@ mastering-kaspa/
 | G-003 | 二重消費の拒否 | 性質テスト | **未実行** |
 | G-004 | DAGのPast・Anticone | 教育用モデル | **未実行** |
 | G-005 | GHOSTDAG分類 | 参照実装比較 | **実行済み：24ケースで一致（G.10の範囲）** |
-| G-006 | 難易度調整 | 参照実装比較 | **未実行** |
+| G-006 | 難易度調整 | 参照実装比較 | **算術27・Full窓120・Sampled/Dual288ケース一致（G.11の範囲）** |
 | G-007 | Devnetのノード同期 | 統合実験 | **未実行** |
 | G-008 | RPC・wRPC再接続 | 障害注入 | **未実行** |
 | G-009 | トランザクション通知の重複 | アプリケーションテスト | **未実行** |
@@ -348,7 +348,7 @@ GHOSTDAGは単純な「DAGのトポロジカルソート」ではない。比較
 | 変化点 | ハードフォーク・パラメータ変更の境界 |
 | 異常系 | 同一時刻、極端な時刻差、境界値 |
 
-**現時点の結果：** `未実行`。固定ベクトルは参照実装から取得後、出典とともに追加する。
+**実行結果（2026-10-31）：** 基準版v1.0.1のFull/Sampled DAA計算器に明示した窓を与え、27ケース・各2通りの挿入順でPython整数モデルとbitsが一致した。入力と期待値は `experiments/daa/vectors.json`、結果は `experiments/daa/observed-2026-10-31.json`、条件は `experiments/daa-comparison-2026-10-31.md` を参照する。履歴不足・同一時刻・整数丸め・target制限・Sampledの標本不足時の分岐を含む。別検査 `experiments/daa-window/` ではFull窓・non-DAA集合・DAA scoreを120ケースで比較し一致した。キャッシュ3条件・親配列2順で計11700回の公式ブロック比較を行った。GHOSTDAGメタデータは公式から供給し、到達可能性は共通DFSで提供する。さらに `experiments/daa-transition/` でSampled窓・Dual切り替えを288ケースで比較し、窓・non-DAA・DAA score・bitsが一致した。選択親DAAのactivation直前・一致・直後を含み、キャッシュ3条件・親配列2順でDualと直接計算器の出力も一致。PoW・全ネットワーク・全sample rate・中央値時刻窓・実際のPruning後IBDは未検証。
 
 ## G.12 G-007：Devnetノード同期
 

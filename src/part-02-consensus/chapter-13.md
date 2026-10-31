@@ -237,7 +237,11 @@ new_target = floor(avg × max(max_ts − min_ts, 1) / (target_time_per_block × 
 
 timestampが同じ要素の順序はblue work、hashで決定する。timestampと目標時間の単位はミリ秒。途中の平均化でも整数除算するため、式の演算順序を変更したり、targetの平均をdifficultyの平均へ置き換えたりしない。Sampled側は通常の分母にsample rateも掛け、Crescendo直後で標本が不足するときにはselected parentのbitsを継承または目標時間比で補正する別経路を持つ。
 
-根拠：[window.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/window.rs)、[difficulty.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/difficulty.rs)、[params.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)。ヘッダー検証では、申告bitsへのPoW検査と、履歴から計算する期待bitsとの照合を分けて行う。[第11章](chapter-11.md)の検証順を参照する。DAAの数値ベクトルを公式計算器へ入力する実行時差分テストは今回未実施。
+根拠：[window.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/window.rs)、[difficulty.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/difficulty.rs)、[params.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)。ヘッダー検証では、申告bitsへのPoW検査と、履歴から計算する期待bitsとの照合を分けて行う。[第11章](chapter-11.md)の検証順を参照する。追加の `experiments/daa/` で、明示した窓に対するFull/Sampled算術を27ケース・各2通りの挿入順で実行比較し、整数モデルとbitsが一致した。履歴不足、同一時刻、丸め、target制限、Sampled標本不足時の境界を含む。続く `experiments/daa-window/` ではFull側の窓構築・non-DAA集合・DAA scoreを120ケースで比較し一致した。キャッシュ3条件と親配列2順も同じ出力。GHOSTDAGメタデータは公式から供給する条件付き比較で、合成DAGの到達可能性はDFSを使う。さらに `experiments/daa-transition/` でSampled窓とDual切り替えを288ケース比較し、Pythonモデルと一致した。選択親DAAのactivation直前・一致・直後を含み、窓・non-DAA・DAA score・bitsを確認。キャッシュ3条件と親配列2順でDual/直接計算器の結果も一致した。記録は `experiments/daa-comparison-2026-10-31.md`。
+
+Sampled側の**窓に含まれないこと**と、**non-DAAであること**は異なる。non-DAAはblue scoreの閾値に基づいて判定し、sample rateによる間引きやactivationのフィルタと分ける。各merge setのDAA indexにはnon-DAA以外を数え、その後にactivationとサンプリング条件を適用する。したがって、窓の要素数だけをDAA scoreへ加算する計算にはしない。キャッシュもFull/Sampledのoriginを区別して利用する。
+
+窓の取り込みでは、標本ブロック自身の有効化と、それを取り込む文脈の有効化の両方を考慮する。条件と実測の詳細は `experiments/daa-transition-comparison-2026-10-31.md`。これらは合成DAGでの関数検査であり、実ネットワークの切り替えやPruning後IBDの成功とは区別する。
 
 ### 13.6.1 過去の情報だけで決まること
 
@@ -679,6 +683,8 @@ FurtherConsensusValidation
 5. [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — コンセンサス変更の提案と議論。提案と採用済み仕様は区別する。
 6. [Kaspa Research Papers](https://kaspa.org/research/) — GHOSTDAGおよびBlockDAGに関する研究資料への入口。
 
-> **残る確認**：今回照合した主要経路を基に、全ネットワークのパラメータ、同一時刻・丸め・フォーク境界の数値ベクトルを公式計算器で実行比較する。Bitcoin比較と関連KIP・論文の全面照合も継続する。
+> **残る確認**：27ケースの算術比較を基に、Full側の窓構築・DAA scoreの120ケース比較も踏まえ、Sampled/Dualの288ケース比較も踏まえ、全ネットワーク・未収録のsample rateや境界・中央値時刻窓・Pruning後IBDを追加検証する。Bitcoin比較と関連KIP・論文の全面照合も継続する。
 
 基準版の主要経路のSource-checked記録と教材5テストの結果は `experiments/core-validation-review-2026-10-31.md`。原論文/KIP・全ネットワーク・フォーク境界の数値比較は継続レビューとする。
+
+Full窓構築の条件と結果は `experiments/daa-window-comparison-2026-10-31.md`。ORIGIN境界を関数単位で検査したことを、実際のPruning後同期と同一視しない。
