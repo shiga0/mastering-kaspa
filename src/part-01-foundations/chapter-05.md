@@ -1,7 +1,8 @@
 # Chapter 05 — Bitcoin Architecture（Bitcoinのアーキテクチャ）
 
 > **Mastering Kaspa** / Part I — Foundations（基礎編）  
-> 原稿バージョン：v0.1（初稿）  
+> 基礎概説・UTXO教材を確認：2026-10-31。Kaspa側は[本書の基準版](../baseline.md)を参照。
+>
 > 本章の位置づけ：KaspaのBlockDAGを学ぶ前に、Bitcoinの構成要素と、それぞれがどのように連携して分散台帳を維持するかを理解する。
 
 ## 1. はじめに
@@ -30,7 +31,7 @@ KaspaはBitcoinと同様にProof of Work（PoW）とUTXOモデルを採用する
 
 ## 3. Bitcoinの全体像
 
-### 3.1 概念的なC4モデル
+### 3.1 役割と接続の概念図
 
 ```text
 ┌────────────────────────────────────────────────────────────┐
@@ -59,7 +60,7 @@ KaspaはBitcoinと同様にProof of Work（PoW）とUTXOモデルを採用する
                       Other Peers
 ```
 
-この図は学習用の論理構成であり、Bitcoin Coreのソースコード上のモジュール境界をそのまま示すものではない。また、ウォレットはフルノードと同じプロセスで動作する場合も、外部に分離される場合もある。
+この図は学習用の論理構成であり、線は呼び出しや処理の厳密な順序を示すものではない。Bitcoin Coreのソースコード上のモジュール境界をそのまま示すものでもない。また、ウォレットはフルノードと同じプロセスで動作する場合も、外部に分離される場合もある。
 
 ### 3.2 主な構成要素
 
@@ -104,11 +105,13 @@ Mempoolへ登録（受理された場合）
 UTXO集合が更新される
 ```
 
+これは一般的な経路の例であり、全ノードのMempoolを順に通る必要はない。自分のMempoolになかったトランザクションを含むブロックも、規則を満たせば受け入れられる。
+
 注意点：**Mempoolへの受理は、コンセンサス上の確定を意味しない。** Mempoolはノードごとのローカルなポリシーにも左右され、ネットワーク全体で完全に同じ内容になるとは限らない。
 
 ### 4.1 ウォレットによる作成
 
-ウォレットは、支出可能なUTXOを選び、送金先と必要に応じてお釣りの出力を作成する。署名に使う秘密鍵は原則としてネットワークへ送信しない。
+ウォレットは、支出可能なUTXOを選び、送金先と必要に応じてお釣りの出力を作成する。署名に使う秘密鍵そのものを支出の証明として送信することはない。
 
 ### 4.2 ノードによる検証
 
@@ -129,12 +132,11 @@ UTXO（Unspent Transaction Output）は、まだ支出されていないトラ�
 ```text
 既存のUTXO
   A: 0.8 BTC ──┐
-               ├── Transaction ──► 受信者: 1.0 BTC
-  B: 0.5 BTC ──┘                 ├► お釣り: 0.299 BTC
-                                 └► 手数料: 0.001 BTC
+               ├── Transaction ──► 受信者への出力: 1.0 BTC
+  B: 0.5 BTC ──┘                 └► お釣りの出力: 0.299 BTC
 ```
 
-この例は説明用であり、実際には出力ごとに支出条件が付く。通常のトランザクションでは、**入力の合計額 = 出力の合計額 + 手数料**となる。Coinbaseトランザクションなどは別の規則で扱う。
+この例の手数料0.001 BTCは独立した出力ではなく、入力合計1.3 BTCと出力合計1.299 BTCの差額である。金額は計算例であり、実際の必要手数料を示すものではない（[Bitcoin開発者ガイド](https://developer.bitcoin.org/devguide/transactions.html#transaction-fees-and-change)）。実際には出力ごとに支出条件が付く。通常のトランザクションでは、**入力の合計額 = 出力の合計額 + 手数料**となる。Coinbaseトランザクションなどは別の規則で扱う。
 
 ### 5.2 Outpoint
 
@@ -153,13 +155,13 @@ Outpoint = (transaction_id, output_index)
 | 操作                 | UTXO集合への影響     |
 | -------------------- | -------------------- |
 | 既存UTXOを入力に使用 | 対象UTXOを削除       |
-| 新しい出力を作成     | 新規UTXOを追加       |
+| 支出可能な新しい出力を作成 | 新規UTXOを追加 |
 | 不正な入力を参照     | トランザクションを拒否           |
 | 同じUTXOを再度使用   | 二重支払いとして拒否 |
 
 **不変条件：有効なチェーン状態において、一つのUTXOが二重に消費されてはならない。**
 
-## 6. スクリプト・署名・所有権
+## 6. スクリプト・署名・支出権限
 
 Bitcoinの出力には、その出力を使うための条件が記録される。多くの場合、署名などの証拠を提示することで支出条件を満たす。
 
@@ -208,14 +210,16 @@ Block
 
 ### 7.2 Merkle root
 
-Merkle rootは、ブロック内のトランザクションをハッシュ木でまとめたコミットメントである。特定のトランザクションがブロックに含まれることを、Merkle proofによって効率よく検証できる。
+ヘッダーのMerkle rootは、順序付けられたトランザクションID（txid）の木へのコミットメントである。[BIP 141](https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki)では、witnessを含まないtxidと、witnessを含むwtxidを区別する。witnessを含む場合、そのコミットメントはCoinbaseの出力を使って別途結び付けるため、ヘッダーのMerkle rootだけでwitnessデータを直接まとめているわけではない。
+
+Merkle proofでは、信頼できるルートに対して特定のtxidの包含を確認できるが、それだけで全取引の有効性を検証したことにはならない。
 
 ```text
                  Merkle Root
                  /         \
              Hash AB      Hash CD
              /   \         /   \
-           Tx A  Tx B     Tx C  Tx D
+           txidA txidB    txidC txidD
 ```
 
 ### 7.3 PoWターゲット
@@ -223,10 +227,12 @@ Merkle rootは、ブロック内のトランザクションをハッシュ木で
 Bitcoinでは、ブロックヘッダーのハッシュ値が難易度に対応するターゲット以下である必要がある。`nBits`はそのターゲットをコンパクトに表現するフィールドである。
 
 ```text
-hash(block_header) <= target
+SHA256(SHA256(serialized_header)) <= target
 ```
 
-マイナーはNonceやブロック内の変更可能な情報を調整し、条件を満たすヘッダーを探索する。ハッシュ値が条件を満たしても、ブロックのほかの規則が満たされていなければ有効とはならない。
+ヘッダーは[規定の80バイト形式](https://developer.bitcoin.org/reference/block_chain.html#block-headers)にシリアライズする。`nBits` が表すtargetにも、有効範囲や親の履歴に応じた期待難易度の検証が必要であり、自由に易しいtargetを指定できるわけではない。
+
+ハッシュ値は規定のバイト順で整数として解釈して比較する。マイナーはNonceやブロック内の変更可能な情報を調整し、条件を満たすヘッダーを探索する。ハッシュ値が条件を満たしても、ブロックのほかの規則が満たされていなければ有効とはならない。
 
 ---
 
@@ -242,7 +248,7 @@ hash(block_header) <= target
 
 ### 8.3 インセンティブ
 
-有効なブロックを生成したマイナーは、規則に従ったブロック補助金とトランザクション手数料を得ることができる。ただし、Coinbase出力には成熟期間などの制約がある。
+採用チェーンに含まれるブロックのCoinbaseでは、ブロック補助金とそのブロックの手数料合計を上限とする額を請求できる。検証を通るブロックでも採用チェーンから外れれば、そのブロックのCoinbase報酬は採用中のUTXO状態には残らない。ただし、Coinbase出力には成熟期間などの制約がある。
 
 ### 8.4 セキュリティ上の意味
 
@@ -281,11 +287,11 @@ Mempoolは各ノードが保持する未承認トランザクションの候補�
        Block D
 ```
 
-Block BとBlock Cが同じ親を参照している場合、ネットワークの一部ではBが、別の一部ではCが先に観測される可能性がある。
+図は上が親、下が子であり、実際の参照は子から親へ向かう。Block BとBlock Cが同じ親を参照している場合、ネットワークの一部ではBが、別の一部ではCが先に観測される可能性がある。
 
 ### 10.2 最も多くの累積PoWを持つ有効チェーン
 
-Bitcoinのチェーン選択は、単純な「ブロック数の長さ」だけではなく、**累積チェーンワーク（chainwork）**に基づく。ノードは検証規則を満たすチェーン候補から、最も多くの累積作業量を持つものを選ぶ。
+Bitcoinのチェーン選択は、単純な「ブロック数の長さ」だけではなく、**累積チェーンワーク（chainwork）**に基づく。ノードは検証規則を満たすチェーン候補から、最も多くの累積作業量を持つものを選ぶ。ここでのworkはtargetから計算する指標であり、マイナーが実際に何回ハッシュを試したかを計測・合算するものではない（[固定版のGetBlockProof](https://github.com/bitcoin/bitcoin/blob/110183746150428e6385880c79f8c5733b1361ba/src/chain.cpp)）。
 
 ### 10.3 再編成（Reorganization）
 
@@ -295,7 +301,7 @@ Bitcoinのチェーン選択は、単純な「ブロック数の長さ」だけ�
 
 ### 10.4 確認数の考え方
 
-トランザクションが含まれたブロックを起点に、その上へ有効なブロックが追加されるにつれて確認数が増える。確認数が増えるほど、通常は履歴を覆すために必要な作業量が増える。ただし安全性は確率的であり、固定の確認数で数学的な絶対保証が得られるわけではない。
+採用チェーン内でトランザクションを含むブロックを1確認と数え、その上へブロックが追加されるにつれて確認数が増える。確認数が増えるほど、通常は履歴を覆すために必要な作業量が増える。ただし安全性は確率的であり、固定の確認数で数学的な絶対保証が得られるわけではない。
 
 ---
 
@@ -320,7 +326,15 @@ Bitcoinのチェーン選択は、単純な「ブロック数の長さ」だけ�
 
 Bitcoin CoreはBitcoinの代表的なフルノード実装であり、主にC++で記述されている。
 
-公式リポジトリ：<https://github.com/bitcoin/bitcoin>
+本章の読み取り対象は **Bitcoin Core v28.0 / `110183746150428e6385880c79f8c5733b1361ba`** とする。これは説明を固定する参照版であり、最新版や運用推奨版という意味ではない。Kaspaの基準版とは別に管理する。
+
+| 入口 | 確認する内容 |
+|---|---|
+| [src/consensus/tx_check.cpp](https://github.com/bitcoin/bitcoin/blob/110183746150428e6385880c79f8c5733b1361ba/src/consensus/tx_check.cpp) | 空の入出力・金額・重複入力などの文脈に依存しない検査 |
+| [src/consensus/tx_verify.cpp](https://github.com/bitcoin/bitcoin/blob/110183746150428e6385880c79f8c5733b1361ba/src/consensus/tx_verify.cpp) | UTXO入力・Coinbase成熟・金額差の検査 |
+| [src/pow.cpp](https://github.com/bitcoin/bitcoin/blob/110183746150428e6385880c79f8c5733b1361ba/src/pow.cpp) | targetの範囲・PoWの比較と難易度計算 |
+| [src/chain.cpp](https://github.com/bitcoin/bitcoin/blob/110183746150428e6385880c79f8c5733b1361ba/src/chain.cpp) | targetから各ブロックのworkを求める処理 |
+| [src/validation.cpp](https://github.com/bitcoin/bitcoin/blob/110183746150428e6385880c79f8c5733b1361ba/src/validation.cpp) | ブロック適用・Coinbase額の上限・チェーン切り替えの入口 |
 
 ### 12.1 調査の順序
 
@@ -336,7 +350,7 @@ Bitcoin CoreはBitcoinの代表的なフルノード実装であり、主にC++�
 ### 12.2 読み方の問い
 
 - この関数はコンセンサス規則を実装しているのか、ローカルポリシーを実装しているのか。
-- このデータはMempoolに属するのか、確定したチェーン状態に属するのか。
+- このデータはMempoolに属するのか、現在採用しているチェーン状態に属するのか。
 - エラーが起きたとき、どこまで状態変更が巻き戻されるのか。
 - 変更の影響はウォレット、P2P、ストレージに波及するのか。
 
@@ -359,9 +373,9 @@ struct OutPoint {
     index: u32,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Output {
-    value: u64, // satoshi
+    value: u64, // 学習用の最小単位（satoshi相当）
 }
 
 #[derive(Debug)]
@@ -373,6 +387,9 @@ struct Transaction {
 
 #[derive(Debug, PartialEq, Eq)]
 enum ApplyError {
+    EmptyInputs,
+    EmptyOutputs,
+    OutputIndexOverflow,
     MissingInput,
     DuplicateInput,
     ValueOverflow,
@@ -384,6 +401,13 @@ fn apply_transaction(
     utxos: &mut HashMap<OutPoint, Output>,
     tx: &Transaction,
 ) -> Result<u64, ApplyError> {
+    if tx.inputs.is_empty() {
+        return Err(ApplyError::EmptyInputs);
+    }
+    if tx.outputs.is_empty() {
+        return Err(ApplyError::EmptyOutputs);
+    }
+
     let mut seen = HashSet::new();
     let mut input_total = 0_u64;
 
@@ -408,43 +432,44 @@ fn apply_transaction(
         return Err(ApplyError::Overspend);
     }
 
-    // 全条件を確認してから状態を変更する。
-    for (index, _) in tx.outputs.iter().enumerate() {
+    // 作成するOutpointも、状態変更前にすべて検査する。
+    let mut new_outputs = Vec::with_capacity(tx.outputs.len());
+    for (index, output) in tx.outputs.iter().enumerate() {
         let outpoint = OutPoint {
             txid: tx.txid,
-            index: index as u32,
+            index: u32::try_from(index).map_err(|_| ApplyError::OutputIndexOverflow)?,
         };
-        if utxos.contains_key(&outpoint) && !seen.contains(&outpoint) {
+        if utxos.contains_key(&outpoint) {
             return Err(ApplyError::OutputAlreadyExists);
         }
+        new_outputs.push((outpoint, *output));
     }
 
     for input in &tx.inputs {
         utxos.remove(input);
     }
-    for (index, output) in tx.outputs.iter().enumerate() {
-        utxos.insert(
-            OutPoint { txid: tx.txid, index: index as u32 },
-            *output,
-        );
-    }
+    utxos.extend(new_outputs);
 
     Ok(input_total - output_total) // 手数料に相当する差額
 }
 ```
 
-このモデルでは`txid`を便宜上の数値とし、実際のハッシュ計算を省略している。また、入力ゼロのトランザクションを拒否する条件や出力インデックスの上限チェックなども省略しているため、**本番の台帳処理に流用してはならない**。
+このモデルでは`txid`を便宜上の数値とし、呼び出し側が新しいトランザクションへ一意に割り当てる前提を置く。過去に完全消費されたtxidの再利用を検出する履歴管理や、実際のハッシュ計算は実装していない。Bitcoinの金額上限・支出不能出力の扱い・署名等の規則も省略しており、**本番の台帳処理に流用してはならない**。
 
 ### 13.2 確認したいテストケース
 
 | ケース                         | 期待結果         |
 | ------------------------------ | ---------------- |
-| 存在するUTXOを一度消費         | 成功             |
+| 存在するUTXOを一度消費         | 成功し、差額を返す |
+| 入力または出力が空 | `EmptyInputs` / `EmptyOutputs` |
+| 既存Outpointと同じ出力を作成 | `OutputAlreadyExists`。同じ入力を消費する場合も拒否 |
 | 同じ入力を一つのトランザクションで二度指定 | `DuplicateInput` |
 | 消費済みUTXOを再利用           | `MissingInput`   |
 | 出力合計が入力合計を超える     | `Overspend`      |
 | 金額加算が`u64`を超える        | `ValueOverflow`  |
 | 失敗時にUTXO集合が変更されない | 状態維持         |
+
+本文のRustコードを抽出し、拒否時の集合の不変性を含むテストを実行した。記録と再実行手順はリポジトリの `experiments/chapter-05-review-2026-10-31.md`、テスト本体は `experiments/chapter-05-utxo-tests.rs` を参照する。標準ライブラリだけを使う教材であり、Bitcoin Coreとの実行時差分テストではない。
 
 **設計上のポイント：検証を完了してから状態を変更する。** これはBitcoinやKaspaに限らず、一般的なバックエンド開発でも重要な原則である。
 
@@ -465,7 +490,7 @@ fn apply_transaction(
 | ------------------- | ------------------ | --------------------- | ------------------------------ |
 | 台帳モデル          | UTXO               | UTXO                  | 支出と検証の基本概念を共有     |
 | コンセンサス資源    | PoW                | PoW                   | マイニングの経済的基盤が共通   |
-| ブロックの参照      | 主に単一の親       | 複数の親を参照可能    | 並行ブロックの扱いが異なる     |
+| ブロックの参照      | Genesis以外は1つの親       | 複数の親を参照可能    | 並行ブロックの扱いが異なる     |
 | 履歴の構造          | Blockchain         | BlockDAG              | 状態と順序の決め方が変わる     |
 | チェーン／DAGの選択 | 累積チェーンワーク | GHOSTDAGなどの規則    | 同じロジックを流用できない     |
 | ブロックの順序      | チェーン上の位置   | DAGから導出される順序 | 順序付けの複雑さが増す         |
@@ -474,7 +499,7 @@ fn apply_transaction(
 
 ### 14.1 Kaspaで再設計が必要になる部分
 
-Bitcoinのブロック検証では、既存の最良チェーンの先端を延長する構造が中心になる。Kaspaでは、複数の親を持つDAG、並行ブロック、GHOSTDAGによる順序付け、Virtual Stateなどを扱う必要がある。
+Bitcoinでも最良チェーン以外の枝を管理する。各ブロックが一つの親を参照し、チェーン切り替えでは旧枝のUTXO変更を戻して新枝を適用する構造を持つ。Kaspaでは、複数の親を持つDAG、並行ブロック、GHOSTDAGによる順序付け、Virtual Stateなどを扱う必要がある。
 
 したがって、**BitcoinのUTXOやPoWの知識は有用だが、Bitcoinのチェーン処理をそのままKaspaに当てはめることはできない。**
 
@@ -532,7 +557,7 @@ Kaspaを学ぶ際にも、この役割分担は土台となる。ただし、Kas
 
 > **本章の核心：Bitcoinの構成要素を理解することは、Kaspaで「変わらない部分」と「根本から変わる部分」を見分けるための準備である。**
 
-**次章：Chapter 06 — Blockchain Limitations（ブロックチェーンの限界）**
+**次章：[Chapter 06 — Blockchain Limitations（ブロックチェーンの限界）](chapter-06.md)**
 
 ---
 
@@ -546,8 +571,6 @@ Kaspaを学ぶ際にも、この役割分担は土台となる。ただし、Kas
 6. Kaspa 公式ドキュメント — <https://docs.kaspa.org/>
 7. rusty-kaspa — <https://github.com/kaspanet/rusty-kaspa>
 
-### 原稿・検証メモ
+### 確認範囲（2026-10-31）
 
-- **状態**：v0.1（学習用初稿）。
-- **未検証**：Rustコードは説明用であり、この原稿作成時点で実行・テストしたものではない。
-- **今後の確認事項**：Bitcoin Coreの対象コミット固定、実装と章内説明の対応確認、Rustコードの単体テスト、図の整備、Kaspa側の比較対象バージョン固定。
+Bitcoin Core v28.0の該当ソースと一次資料で、入出力検査・PoW/chainwork・Coinbase・Merkleの説明を照合した。UTXO教材はRust 1.90.0で実行確認した。Bitcoin Coreのビルド・ノード実行・全規則の監査を行った記録ではない。詳細はリポジトリの `experiments/chapter-05-review-2026-10-31.md` を参照する。

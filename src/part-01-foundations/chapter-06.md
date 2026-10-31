@@ -1,7 +1,7 @@
 # Chapter 06 — Blockchain Limitations（ブロックチェーンの限界）
 
 > **Mastering Kaspa** · Part I — Foundations（基礎編）  
-> 原稿ステータス：v0.1（初稿）
+> 基礎概説・確率計算教材を確認：2026-10-31。Kaspa側は[本書の基準版](../baseline.md)を参照。
 
 ## 1. はじめに
 
@@ -9,7 +9,7 @@ Bitcoinは、中央管理者なしにトランザクション履歴を共有し�
 
 これらは単なる「Bitcoinの欠点」ではない。分散システムにおいて、参加者が異なる情報を異なる時刻に受け取ることから生じる根本的な問題である。
 
-KaspaのBlockDAGとGHOSTDAGを理解するには、まず従来のブロックチェーンがなぜ低いブロック生成頻度を採用するのかを理解する必要がある。
+KaspaのBlockDAGとGHOSTDAGを理解するには、まずBitcoin型のPoWチェーンで生成頻度と安全性がどう関係するのかを理解する必要がある。
 
 **本章の中心的な問い：ブロックをもっと頻繁に作れば、単純に処理性能が上がるのだろうか。**
 
@@ -46,10 +46,10 @@ KaspaのBlockDAGとGHOSTDAGを理解するには、まず従来のブロック�
 
 **学習用の単純化**として、ネットワーク全体のブロック発見をポアソン過程とし、平均ブロック生成間隔を `T` 秒、あるブロックの伝播に要する時間を `d` 秒とする。
 
-伝播中に少なくとも1個の別ブロックが発見される確率は、概算で次のようになる。
+レートを一定の `1/T` とし、長さ `d` の固定した時間窓で追加のブロックが少なくとも1個発見される確率を求める。ポアソン分布の0個の確率を1から引くと、次の式になる。
 
 \[
-P(\text{別ブロック発見}) = 1 - e^{-d/T}
+P(N_d \ge 1) = 1 - P(N_d = 0) = 1 - e^{-d/T}
 \]
 
 | 平均生成間隔 T | 伝播時間 d | 概算確率 |
@@ -59,6 +59,8 @@ P(\text{別ブロック発見}) = 1 - e^{-d/T}
 | 10秒 | 1秒 | 約9.52% |
 | 1秒 | 1秒 | 約63.21% |
 
+この事象には、既に受信したブロックを伸ばす発見も含まれるため、そのまま別枝の発生確率とはいえない。[第4章](chapter-04.md)の未受信マイナー群のモデルでは、その群のレートを別に考える。表の値はすべて仮の条件であり、600秒の行もBitcoinのステール率の測定結果ではない。
+
 この数値は**実ネットワークのステール率を予測するものではない**。伝播時間の分布、マイナー間の接続、ブロックサイズ、複数ブロックの相関などを無視している。ここでは「生成間隔が伝播遅延に近づくと競合が増える」という傾向だけを示している。
 
 ## 4. チェーンの分岐とステールブロック
@@ -66,17 +68,26 @@ P(\text{別ブロック発見}) = 1 - e^{-d/T}
 Bitcoinのようなチェーン型の設計では、同じ親を持つ有効なブロックが複数見つかる場合がある。
 
 ```text
-Genesis → A → B → C → D → F
-                 \
-                  E
+    Genesis
+       |
+       A
+       |
+       B
+       |
+       C
+      / \
+     D   E
+     |
+     F
 ```
 
-`D` と `E` は同じ親 `C` から伸びる競合ブロックである。後続の累積Proof of Workにより `D → F` 側が選ばれると、`E` は最終的な主チェーンに含まれない。
+図は上が親、下が子であり、実際の参照は子から親へ向かう。`D` と `E` は同じ親 `C` から伸びる競合ブロックである。後続の累積Proof of Workにより `D → F` 側が選ばれると、この時点の採用チェーンには `E` が含まれない。その後の状況で再編成され得るため、図だけで永久に選ばれないことを意味しない。
 
 ここで用語を区別する。
 
 - **競合ブロック**：同じ履歴の先端付近で競合する有効なブロック。
-- **ステールブロック**：有効でも、選択された主チェーンに残らなかったブロック。
+- **ステールブロック**：有効でも、現在の採用チェーンに含まれないブロック。
+- **孤立ブロック（orphan）**：ここでは、親がまだ不明なブロックを指す。文献によってはステールの意味にも使うため、出典の定義を確認する（[Bitcoin開発者ガイド](https://developer.bitcoin.org/devguide/block_chain.html#block-height-and-forking)）。
 - **無効ブロック**：コンセンサスルールを満たさないブロック。ステールブロックとは異なる。
 - **再編成（reorganization）**：ノードが選択する主チェーンが切り替わり、以前の履歴の一部が主チェーンから外れること。
 
@@ -97,7 +108,7 @@ Genesis → A → B → C → D → F
 | ノード参加 | 必要資源が増えると参加障壁になり得る |
 | マイニング | 通信条件の良い参加者が有利になり得る |
 
-ブロックを大きくすることは、処理能力とノード運用コストの交換でもある。
+ブロックを大きくすることは、処理能力とノード運用コストの交換でもある。ただし、伝播時間は単純にサイズだけで決まらず、既知の取引を再利用する中継方式や実装にも依存する。Bitcoinでは[コンパクトブロック中継（BIP 152）](https://github.com/bitcoin/bips/blob/master/bip-0152.mediawiki)のような工夫がある。
 
 ## 6. スループット・レイテンシ・確定性は別の指標
 
@@ -112,7 +123,7 @@ Genesis → A → B → C → D → F
 
 ### 6.1 TPSの概算
 
-平均ブロック当たりのトランザクション数を `N`、平均生成間隔を `T` 秒とすれば、理想化した上限の目安は `N/T` TPSとなる。
+採用チェーンのブロック当たり平均取引数を `N`、その平均ブロック間隔を `T` 秒とすれば、長い観測期間での取り込み数の概算は `N/T` TPSとなる。平均値から作る指標であり、プロトコルの容量上限や、不可逆に確定した処理数そのものではない。
 
 ただし実効TPSは、トランザクションサイズ、ブロックの利用率、検証・ネットワーク負荷、プロトコル制限などに左右される。
 
@@ -145,7 +156,7 @@ Genesis → A → B → C → D → F
 |---|---|---|
 | ブロックサイズ拡大 | 1ブロックに多くのトランザクションを格納 | 伝播・検証・保存負荷 |
 | ブロック間隔短縮 | ブロックを頻繁に生成 | 競合ブロックの増加 |
-| Layer 2 | 一部の処理を別レイヤーへ移す | ブリッジ・決済・運用の複雑性 |
+| Layer 2 | 一部の処理を別レイヤーへ移す | 決済・復旧・運用の複雑性。ブリッジの有無や信頼条件は方式による |
 | シャーディング | 状態・処理を分割する | シャード間通信・安全性 |
 | BlockDAG | 並行ブロックをグラフとして扱う | 順序付け・状態管理の複雑性 |
 
@@ -169,7 +180,7 @@ A → B → C → D                     A
                                   G
 ```
 
-チェーン型では、並行ブロックが主履歴から外れることがある。BlockDAGでは、それらの参照関係を保持し、コンセンサスアルゴリズムで扱う。
+図の左の矢印は親から子への成長、右の線は上を親とする親子関係を表す。実際のハッシュ参照はいずれも子から親へ向かう。チェーン型では、並行ブロックが主履歴から外れることがある。BlockDAGでは、それらの参照関係を保持し、コンセンサスアルゴリズムで扱う。
 
 KaspaのGHOSTDAGは、DAGの構造をもとにブロックの分類と順序付けを行う。ここで重要なのは、**並行ブロックを扱えること**と、**すべてのトランザクションが必ず有効になること**は別だという点である。競合する二重支払いを同時に有効化することはできない。
 
@@ -179,7 +190,7 @@ KaspaのGHOSTDAGは、DAGの構造をもとにブロックの分類と順序付�
 
 | 観点 | Bitcoin | Kaspa |
 |---|---|---|
-| 基本構造 | 単一チェーン | BlockDAG |
+| 合意で扱う構造 | 採用チェーン（候補全体には分岐もある） | 複数親のBlockDAG |
 | コンセンサス基盤 | Proof of Work | Proof of Work |
 | 並行ブロック | 主チェーンから外れる場合がある | DAG内の関係として扱う |
 | 順序の導出 | 選択されたチェーンの順序 | GHOSTDAGに基づく順序 |
@@ -188,30 +199,27 @@ KaspaのGHOSTDAGは、DAGの構造をもとにブロックの分類と順序付�
 
 本書では、Bitcoinを「古い技術」、Kaspaを「すべて解決した技術」として扱わない。それぞれが異なる設計上の選択をしていると理解する。
 
-## 12. 実践：ブロック競合の簡易シミュレーション
+## 12. 実践：追加ブロックの発見確率を計算する
 
-以下は、ブロック発見をポアソン過程と仮定した**学習用モデル**である。KaspaやBitcoinの実際のネットワーク挙動を再現するものではない。
+以下は、ブロック発見をポアソン過程と仮定した**学習用モデル**である。KaspaやBitcoinの実際のネットワーク挙動を再現するものではない。乱数で発見イベントを発生させるシミュレーションではなく、上の式を数値計算する。
 
 ### 12.1 Rustコード
 
-`examples/block-propagation/src/main.rs` などに配置する。
+本書とは別の作業用ディレクトリで、`probability.rs` として保存する。Rust 1.90.0で確認しており、標準ライブラリ以外の依存はない。
 
 ```rust
-fn probability_of_competing_block(
-    mean_interval_seconds: f64,
-    propagation_seconds: f64,
-) -> f64 {
-    assert!(mean_interval_seconds > 0.0);
-    assert!(propagation_seconds >= 0.0);
+fn probability_of_additional_block(mean_interval_seconds: f64, propagation_seconds: f64) -> f64 {
+    assert!(mean_interval_seconds.is_finite() && mean_interval_seconds > 0.0);
+    assert!(propagation_seconds.is_finite() && propagation_seconds >= 0.0);
 
-    1.0 - (-propagation_seconds / mean_interval_seconds).exp()
+    -(-propagation_seconds / mean_interval_seconds).exp_m1()
 }
 
 fn main() {
     let propagation_seconds = 1.0;
 
     for interval in [600.0, 60.0, 10.0, 1.0] {
-        let p = probability_of_competing_block(interval, propagation_seconds);
+        let p = probability_of_additional_block(interval, propagation_seconds);
         println!("interval={interval:>6.0}s, probability={:.2}%", p * 100.0);
     }
 }
@@ -222,13 +230,32 @@ mod tests {
 
     #[test]
     fn zero_propagation_means_zero_probability() {
-        assert_eq!(probability_of_competing_block(10.0, 0.0), 0.0);
+        assert_eq!(probability_of_additional_block(10.0, 0.0), 0.0);
     }
 
     #[test]
-    fn shorter_interval_increases_competition() {
-        let slow = probability_of_competing_block(600.0, 1.0);
-        let fast = probability_of_competing_block(1.0, 1.0);
+    fn known_probability_matches() {
+        let p = probability_of_additional_block(1.0, 1.0);
+        assert!((p - 0.632_120_558_828_557_7).abs() < 1e-15);
+    }
+
+    #[test]
+    fn tiny_ratio_keeps_a_positive_probability() {
+        let p = probability_of_additional_block(1e20, 1.0);
+        assert!(p > 0.0);
+        assert!((p / 1e-20 - 1.0).abs() < 1e-12);
+    }
+
+    #[test]
+    #[should_panic]
+    fn rejects_infinite_interval() {
+        probability_of_additional_block(f64::INFINITY, 1.0);
+    }
+
+    #[test]
+    fn shorter_interval_increases_additional_discovery() {
+        let slow = probability_of_additional_block(600.0, 1.0);
+        let fast = probability_of_additional_block(1.0, 1.0);
         assert!(fast > slow);
     }
 }
@@ -237,13 +264,24 @@ mod tests {
 実行例：
 
 ```bash
-cargo new examples/block-propagation --bin
-# 上記コードを examples/block-propagation/src/main.rs に保存
-cargo run --manifest-path examples/block-propagation/Cargo.toml
-cargo test --manifest-path examples/block-propagation/Cargo.toml
+rustc --edition 2021 probability.rs -o probability
+./probability
+rustc --edition 2021 --test probability.rs -o probability-tests
+./probability-tests
 ```
 
-`cargo new` は既存の `examples/block-propagation` ディレクトリがない状態で実行する。
+期待する標準出力：
+
+```text
+interval=   600s, probability=0.17%
+interval=    60s, probability=1.65%
+interval=    10s, probability=9.52%
+interval=     1s, probability=63.21%
+```
+
+`exp_m1(x)` は `exp(x) - 1` を小さい値でも精度よく求めるための関数である（[Rust 1.90.0のAPI資料](https://doc.rust-lang.org/1.90.0/std/primitive.f64.html#method.exp_m1)）。`1 - exp(-x)` を直接計算すると、極めて小さい `x` で桁落ちする場合がある。ここでは有限の正の生成間隔と、有限の非負の伝播時間を受け付ける。
+
+本文から抽出したコードの実行・5テストを確認した。小数の計算には丸めがあるため、表示値やテストは数学的な厳密値を保証するものではない。
 
 ### 12.2 考察課題
 
@@ -293,17 +331,16 @@ PoW型ネットワークでは、履歴が再編成される可能性を考慮�
 
 ブロック生成間隔の短縮やサイズの拡大は、単純な性能改善ではなく、ネットワークとコンセンサスに新たな負荷をもたらす。
 
-Kaspaは、**並行ブロックを主チェーンから排除するのではなく、BlockDAGとして扱う**という設計を採用した。次章では、その基礎となるDAGのデータ構造を詳しく学ぶ。
+Kaspaは、**並行ブロックを主チェーンから排除するのではなく、BlockDAGとして扱う**という設計を採用した。[次章](chapter-07.md)では、その基礎となるDAGのデータ構造を詳しく学ぶ。
 
 ## 参考資料
 
 - Satoshi Nakamoto, *Bitcoin: A Peer-to-Peer Electronic Cash System* — <https://bitcoin.org/bitcoin.pdf>
-- Yonatan Sompolinsky and Aviv Zohar, *Secure High-Rate Transaction Processing in Bitcoin* — <https://eprint.iacr.org/2013/881>
-- Yonatan Sompolinsky and Aviv Zohar, *PHANTOM and GHOSTDAG* — <https://eprint.iacr.org/2018/104>
+- Yonatan Sompolinsky and Aviv Zohar, *Accelerating Bitcoin's Transaction Processing. Fast Money Grows on Trees, Not Chains* — <https://eprint.iacr.org/2013/881>
+- Yonatan Sompolinsky, Shai Wyborski, and Aviv Zohar, *PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus* — <https://eprint.iacr.org/2018/104>
 - Kaspa公式ドキュメント — <https://docs.kaspa.org/>
 - rusty-kaspa — <https://github.com/kaspanet/rusty-kaspa>
 
 ---
 
-> **原稿ステータス：v0.1（初稿）**  
-> 本章の確率モデルは教育目的の単純化であり、ネットワーク性能の実測値ではない。コード例は執筆時点で実行検証していない。
+> **確認範囲（2026-10-31）：** 基礎概説・用語・書誌情報を一次資料と照合し、確率計算教材の実行と5テストを確認した。実ネットワークの性能・ステール率や安全性の証明を検証したものではない。記録はリポジトリの `experiments/chapter-06-review-2026-10-31.md` を参照。

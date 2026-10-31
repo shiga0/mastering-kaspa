@@ -21,6 +21,30 @@
 
 2026-10-31：C13/G-006のSampled窓とDual切り替えを288ケースで比較。窓・non-DAA・DAA score・bitsがモデルと一致し、キャッシュ3条件・親配列2順でDual計28080回と直接計算器計28080回の結果も一致。選択親DAAのactivation直前・一致・直後を含む。記録は `experiments/daa-transition-comparison-2026-10-31.md`、コードと集計は `experiments/daa-transition/`。合成設定・公式GHOSTDAGメタデータを使う条件付き比較で、全ネットワーク・全sample rate・中央値時刻窓・PoW・実Pruning後IBD・章全体は継続する。
 
+2026-10-31：ユーザーの方針に合わせ、以後はSUMMARYの先頭から順にレビューする。「はじめに」の読者案内・基本概説を確認し、前提知識、目次に沿う読み方、教材/部分例/Devnet実習、基準版と現行ネットワークの区別を修正した。記録は `experiments/introduction-review-2026-10-31.md`。次の対象は `src/baseline.md`。章全体の確認と既存の個別実行結果は分ける。
+
+2026-10-31：SUMMARY順の2ページ目 `src/baseline.md` を確認。SDK・ソース/lockの識別値・中継イメージを補い、最低Rust宣言値と実ビルド、ライブラリとDocker実測、CI設定と実行確認を区別した。記録は `experiments/baseline-review-2026-10-31.md`。次は3ページ目の `src/review-status.md`。
+
+2026-10-31：SUMMARY順の3ページ目 `src/review-status.md` を確認。全49ページを目次順に揃え、資料照合と実行結果、CI設定と実ジョブ確認を分けた。G-005/G-006の未実行一括表示などを修正し、実測と記録の参照先を整理。記録は `experiments/review-status-review-2026-10-31.md`。次は4ページ目の `src/ecosystem-map.md`。
+
+2026-10-31：SUMMARY順の4ページ目 `src/ecosystem-map.md` を確認。分類図と技術間の依存関係を分け、全6部への読む順を整理した。SilverScript/Argent/vProgsの固定READMEと公式資料で位置づけ・開発段階を確認し、基準版との差と未実行範囲を明記。記録は `experiments/ecosystem-map-review-2026-10-31.md`。次は第1章 `src/part-01-foundations/chapter-01.md`。
+
+2026-10-31：SUMMARY順の5ページ目、第1章を確認。Blockchainの分岐と選択チェーン、図の親子関係、GHOSTDAGの分類・順序とTX受理、blue score/workを整理。コード閲覧をv1.0.1の取得とSHA確認・workspace探索へ変更した。記録は `experiments/chapter-01-review-2026-10-31.md`。次は第2章 `src/part-01-foundations/chapter-02.md`。
+
+2026-10-31：SUMMARY順の6ページ目、第2章を確認。貨幣の機能に出典を付け、署名・支出権限・二重支払いの関係を整理。UTXO図の手数料を出力ではなく差額として修正し、中央台帳の疑似コードは確認と更新を同じ直列化の範囲にまとめ、再送・競合・失敗の期待結果を追加した。記録は `experiments/chapter-02-review-2026-10-31.md`。次は第3章 `src/part-01-foundations/chapter-03.md`。
+
+2026-10-31：SUMMARY順の7ページ目、第3章を確認。ハッシュの誤解見出し、nonceの区別、Merkle Proofの前提、用途別ハッシュとPoW境界条件を整理。SHA-256教材をsha2 0.10.9に固定し、本文から抽出してRust 1.90.0で実行・書式・2テストを確認。出力はPythonとも一致。記録は `experiments/chapter-03-review-2026-10-31.md`。次は第4章 `src/part-01-foundations/chapter-04.md`。
+
+2026-10-31：SUMMARY順の8ページ目、第4章を確認。分散と管理主体、因果順序、TCPの保証範囲、CAPの定義とPoW確定性を区別し、ポアソン近似の仮定・式・計算例を整理。接続管理とアドレス交換を基準版で照合し、伝播教材の初回/重複受信・書式を実行確認した。記録は `experiments/chapter-04-review-2026-10-31.md`。次は第5章 `src/part-01-foundations/chapter-05.md`。
+
+2026-10-31：SUMMARY順の9ページ目、第5章を確認。Bitcoin Core v28.0の参照SHAを固定し、入出力検査・PoW/chainwork・Coinbase上限の該当箇所と照合。手数料図、witnessコミットメント、側枝・再編成の説明を修正した。UTXO教材の空入出力・既存Outpoint再作成を拒否し、2テストで成功/拒否/状態維持を実行確認。記録は `experiments/chapter-05-review-2026-10-31.md`。次は第6章 `src/part-01-foundations/chapter-06.md`。
+
+2026-10-31：SUMMARY順の10ページ目、第6章を確認。追加ブロック発見と別枝・ステール率を区別し、TPSの平均と容量上限、orphanの用語、図・書誌情報を修正。確率計算をexp_m1へ変更し、教材5テストと表示4行を確認。記録は `experiments/chapter-06-review-2026-10-31.md`。次は第7章 `src/part-01-foundations/chapter-07.md`。
+
+2026-10-31：SUMMARY順の11ページ目、第7章を確認。Anticoneと反鎖を区別し、Past/Futureの自己除外と基準版Reachabilityの自己包含規約を説明。図の親子方向を揃え、教材の未知ID照会をエラー返却・集合表示を整列へ変更した。本文教材5テスト成功。記録は `experiments/chapter-07-review-2026-10-31.md`。次は第8章 `src/part-01-foundations/chapter-08.md`。
+
+2026-10-31：SUMMARY順の12ページ目、第8章を確認し、第1部の目次順レビューを終えた。GHOSTDAGを含むヘッダー処理・本体・Virtualの図、PHANTOMとの関係、用語を整理し、重複していた確率コードは第6章への参照に集約。記録は `experiments/chapter-08-review-2026-10-31.md`。次は第2部・第9章 `src/part-02-consensus/chapter-09.md`。第1部全体の安全性証明・互換性検証が完了したという意味ではない。
+
 ## 優先順位と進め方
 
 - **P1**：本書の正確性と実習の前提。最初に進める。
@@ -28,8 +52,7 @@
 - **P3**：正式版として公開するまでの編集・運用整備。
 - ライセンスと外部貢献の方針は著者が決定する。push・公開などの外部操作は、実行を依頼された段階で行う。
 
-推奨順：V1 → C14/C15 → C16/C24 → E1〜E4 → C22/C23/C28 → その他の章と付録 → 公開判定。
-GHOSTDAGの差分照合（C12）はV1の後に並行して進められる。
+現在のレビュー順は `src/SUMMARY.md` の掲載順。既存の重点レビュー・検証結果を使いながら、各ページの文章・構成・根拠・リンク・実習への導線を確認する。関連する未確認事項は記録し、必要な照合・修正を行ってから次のページへ進む。
 
 ## 完了済みの基盤
 
