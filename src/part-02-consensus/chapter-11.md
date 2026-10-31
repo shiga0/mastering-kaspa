@@ -1,7 +1,7 @@
 # Chapter 11 — Block Processing & Validation（ブロック処理と検証）
 
 > **Part II — Kaspa Consensus & Architecture**  
-> 原稿ステータス: v0.1（技術レビュー前）
+> 原稿ステータス: v0.2（基準版の主要検証経路を照合・章全体はレビュー継続中）
 
 ## この章で学ぶこと
 
@@ -15,7 +15,7 @@
 4. BlockDAGの登録とVirtual Stateの更新を混同せず説明できる。
 5. Rustで簡易検証パイプラインを実装し、不変条件をテストできる。
 
-> **重要:** 本章の処理図とRustコードは学習用モデルであり、`rusty-kaspa` の正確な関数呼び出し順序や現行メインネットの全検証規則を再現したものではない。実装依存の詳細は、対象コミットのソースコードで確認する。
+> **照合範囲:** 通常ブロックの主要検証経路を[基準版](../baseline.md)v1.0.1で照合した。11.11のRustコードと11.12の状態図は教育用モデル。公式本体検証テスト2件の成功は、ネットワーク受信から全コンセンサス規則までの網羅を意味しない。
 
 ---
 
@@ -24,35 +24,28 @@
 P2Pで受信したデータは、すぐに正しいブロックとして確定するわけではない。ノードは信頼できない外部入力として取り扱い、複数の境界で検証する。
 
 ```text
-外部ピア
-   │  ブロックを送信
-   ▼
-┌──────────────────────┐
-│ P2P / メッセージ解析 │  サイズ・形式・リソース制限
-└──────────┬───────────┘
-           ▼
-┌──────────────────────┐
-│ 重複確認・依存関係   │  既知ブロックか？ 親は揃っているか？
-└──────────┬───────────┘
-           ▼
-┌──────────────────────┐
-│ ヘッダーの検証       │  PoW・親参照・時刻・難易度など
-└──────────┬───────────┘
-           ▼
-┌──────────────────────┐
-│ ブロック本体の検証   │  TX構造・Merkle root・各種制約
-└──────────┬───────────┘
-           ▼
-┌──────────────────────┐
-│ DAG / Consensus処理  │  DAGへの登録・GHOSTDAG関連処理
-└──────────┬───────────┘
-           ▼
-┌──────────────────────┐
-│ Virtual State更新    │  受理される取引とUTXO状態の評価
-└──────────────────────┘
+P2P / メッセージ解析・投入
+    ↓
+HeaderProcessor：既知状態確認
+    ↓
+ヘッダー単独検査（申告bitsに対するPoWを含む）
+    ↓
+親の存在・祖先関係 → GHOSTDAG計算
+    ↓
+期待DAA score / bits、blue score/work、時刻等の照合
+    ↓
+ヘッダー・GHOSTDAG・関係データ保存：StatusHeaderOnly
+    ↓
+BlockBodyProcessor：本体単独検査 → ヘッダー文脈の検査
+    ↓
+本体保存：StatusUTXOPendingVerification
+    ↓
+必要なタスクをVirtualProcessorへ送り、UTXO状態を評価
 ```
 
-これは**概念的な責務の並び**である。実際には検証が段階的・並行的に進み、DAG上の順序や過去の状態に依存してトランザクションの受理が判断される。すべてのブロックが単純に「受信→即時UTXO更新」と進むわけではない。
+これは基準版の**通常ブロックを新規に処理する主経路**を要約した図である。既知ブロック、ヘッダーだけの投入、trusted block、Genesisでは分岐する。GHOSTDAG計算とヘッダー保存は本体検証より先であり、ヘッダーが保存済みでも本体やUTXOが検証済みとは限らない。
+
+根拠：[header_processor/processor.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/header_processor/processor.rs)、[body_processor/processor.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/body_processor/processor.rs)。検証記録は `experiments/core-validation-review-2026-10-31.md`。
 
 ### 11.1.1 なぜ段階を分けるのか
 
@@ -188,7 +181,15 @@ PoW(header) <= target
 
 **注意:** KaspaのPoWアルゴリズムとヘッダーハッシュを、単純なSHA-256一回やBitcoinのダブルSHA-256と同一視してはいけない。アルゴリズムの詳細は対象のネットワーク・バージョンの実装を参照する。
 
-### 11.5.2 PoWが証明しないこと
+### 11.5.2 基準版での検証順
+
+`validate_header_in_isolation` は、版・未来時刻の上限・親数の粗い上限・ORIGIN親の禁止を調べ、ヘッダーに申告されたbitsに対してPoWを検査する。その後、親の存在と祖先関係を調べ、GHOSTDAGを計算する。
+
+履歴から得た**期待bitsとの一致**は、後の `pre_pow_validation` 内の `check_difficulty_and_daa_score` で確認する。関数名に `pre_pow` とあることだけから「すべてのPoW検証より前」と読まない。親数のフォーク依存の厳密な上限も、selected parentのDAA scoreを得たこの段階で調べる。
+
+根拠：[pre_ghostdag_validation.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/header_processor/pre_ghostdag_validation.rs)、[pre_pow_validation.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/header_processor/pre_pow_validation.rs)。期待bitsの計算は[第13章](chapter-13.md)を参照する。
+
+### 11.5.3 PoWが証明しないこと
 
 PoWを満たすブロックであっても、次のことは自動的に保証されない。
 
@@ -226,6 +227,10 @@ PoWを満たすブロックであっても、次のことは自動的に保証�
 
 Kaspaでは並行ブロックを扱うため、**あるトランザクションがブロックに含まれていることと、コンセンサス状態で受理されることは同義ではない**。
 
+基準版の本体単独検査は、トランザクションの存在・Hash Merkle Root・先頭に唯一のCoinbase・各TXの単独検査・mass制限・重複TX・同一ブロック内の二重消費・同一ブロック内での出力の連鎖消費を検査する。続く本体の文脈検査は、親の本体・Coinbaseの制約・ヘッダー文脈のlock time等を確認する。ここまでで過去UTXOに対する検証がすべて終わるわけではない。
+
+根拠：[body_validation_in_isolation.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/body_processor/body_validation_in_isolation.rs)、[body_validation_in_context.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/body_processor/body_validation_in_context.rs)。並行ブロック間の競合と、同一ブロック内の二重消費は別の条件である。
+
 ### 11.6.3 競合するトランザクションの例
 
 ```text
@@ -261,6 +266,10 @@ Merkle rootは、トランザクションの集合や順序に関する暗号学
 ```
 
 ノードはブロック本体から必要な値を再計算し、ヘッダーに含まれるコミットメントと照合する。
+
+基準版の `Hash Merkle Root` は本体単独検査で確認する。一方、`UTXO Commitment` と `Accepted ID Merkle Root` の期待値との一致は、VirtualProcessorの `verify_expected_utxo_state` で過去UTXOの文脈を使って検査する。同じヘッダーフィールドでも検証段階は異なる。
+
+根拠：[virtual_processor/utxo_validation.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/utxo_validation.rs)。
 
 ### 11.7.1 なぜ照合するのか
 
@@ -548,35 +557,47 @@ cargo test
 処理フローを状態遷移として捉えると、どこで再試行し、どこで拒否するかを設計しやすい。
 
 ```text
-Received
-   │
-   ▼
-Parsed ────────────────> Rejected
-   │                      ▲
-   ▼                      │
-DependenciesChecked ──────┤
-   │                      │
-   ├──> WaitingForParents │
-   │         │            │
-   │         └──(到着)────┘ ※再検証へ戻る経路を実装
-   ▼
-Validated ────────────────┘
-   │
-   ▼
-RegisteredInDAG
-   │
-   ▼
-ConsensusEvaluated
-   │
-   ▼
-StateEffectsEvaluated
+Received → Parsed → DependenciesChecked
+                           │
+                  ┌────────┴─────────┐
+                  ▼                  ▼
+          WaitingForParents      Validated
+                  │                  │
+        親到着で依存検査へ戻る       ▼
+                              RegisteredInDAG
+                                     │
+                                     ▼
+                              ConsensusEvaluated
+                                     │
+                                     ▼
+                              StateEffectsEvaluated
+
+形式・規則への違反 → Rejected
 ```
 
 図中の `WaitingForParents` は拒否状態ではない。親が揃ったとき、適切な検証段階から処理を再開する。
 
+この図の状態名は教材用であり、公式の永続ステータスとは異なる。基準版には次の区別がある。
+
+| 公式ステータス | 意味 |
+|---|---|
+| `StatusHeaderOnly` | ヘッダーは保持するが本体は未保持またはPruning済み |
+| `StatusUTXOPendingVerification` | 本体を保持し、過去UTXOに対する検証は保留 |
+| `StatusUTXOValid` | UTXO関連の検証を含め検査を通過 |
+| `StatusDisqualifiedFromChain` | selected parentとして不適格 |
+| `StatusInvalid` | 無効として記録 |
+
+`StatusUTXOValid` は送金の不可逆な決済確定を示す状態ではない。根拠：[blockstatus.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/blockstatus.rs)。
+
+本体検証で `MissingParents`・`BadMerkleRoot`・`PrunedBlock` が返っても、`process_body` はブロック全体へ `StatusInvalid` を記録しない。正しい本体の再取得や親の到着などを許すためである。他の本体検証エラーは無効として記録する。ヘッダー側は `post_pow_validation` の失敗を無効として記録するが、それ以前の失敗すべてを同じ保存方針にはしていない。
+
+基準版のv5 relay flowは `MissingParents` を受けると `process_orphan` へ進み、依存を処理できた場合に投入し直す。親不足のエラーを返すコンセンサス層と、取得・再試行するネットワーク側の責務を分ける。根拠：[blockrelay/flow.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/protocol/flows/src/v5/blockrelay/flow.rs)。
+
+`validate_and_insert_block` は `block_task` と `virtual_state_task` を分けて返す。本体側の処理完了を待っただけでVirtual State更新まで完了したと扱わない。trusted blockでは検証の一部を省くため、この通常経路の説明をそのまま当てはめない。
+
 ### 11.12.1 不変条件
 
-- **I1:** 無効と判定されたブロックは、有効ブロックとして登録されない。
+- **I1:** 無効と判定されたブロックを、後続の処理で有効扱いしない。既存のヘッダーや関係データを必ず削除するという意味ではない。
 - **I2:** 既知ブロックの再受信で、ブロック数や状態が不当に増えない。
 - **I3:** 親不足を「規則違反」と混同しない。
 - **I4:** BlockDAGへの登録だけで、すべてのトランザクションが受理されたと見なさない。
@@ -602,7 +623,7 @@ Kaspaの実装を理解するには、特定の関数名を暗記するより、
 2. P2Pでブロック受信を処理する箇所を探す。
 3. コンセンサスへブロックを投入する公開インターフェースを探す。
 4. ヘッダー検証・本体検証・親不足の扱いを分けて読む。
-5. DAG登録後のGHOSTDAG関連処理を追う。
+5. ヘッダー処理内のGHOSTDAG計算と、その後の保存・本体処理への引き渡しを追う。
 6. Virtual State更新とトランザクション受理の処理を追う。
 7. 同じ経路を通るユニットテスト・統合テストを探す。
 
@@ -612,6 +633,7 @@ Kaspaの実装を理解するには、特定の関数名を暗記するより、
 git clone https://github.com/kaspanet/rusty-kaspa.git
 cd rusty-kaspa
 
+git checkout --detach fcd9c28f9b211b9872a0c90a8c94f79466ffb063
 git rev-parse HEAD
 rg -n 'validate.*header|validate.*body|validate.*block' consensus
 rg -n 'missing.*parent|orphan|block.*status' consensus
@@ -825,10 +847,12 @@ Kaspaのブロック処理は、**受信したデータを一回チェックし�
 
 ### 技術レビュー時の確認事項
 
-- [ ] 対象 `rusty-kaspa` コミットの固定
+- [x] 対象 `rusty-kaspa` コミットの固定（v1.0.1基準版）
 - [ ] ヘッダー項目と検証段階の実装照合
 - [ ] 親不足・保留・再試行の実際の処理経路
 - [ ] ブロック本体の検証条件と状態依存の検証条件の照合
 - [ ] GHOSTDAG・Virtual State更新の実際の処理経路
-- [ ] Rustサンプルの `cargo test` 実行記録
+- [x] Rustサンプル5テストの実行記録（本文抽出後 `rustc --test`）
 - [ ] 参考資料のリンク・仕様変更の確認
+
+主要経路の照合と公式テスト2件の実行記録は `experiments/core-validation-review-2026-10-31.md`。上の未チェック項目には全条件・全経路の確認も含むため、部分的な照合だけで完了にしない。

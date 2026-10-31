@@ -9,6 +9,12 @@
 
 2026-10-31：検証済み実習の本文反映として、第22〜24・28章と付録A/D、実習READMEの入口を整理。第28章にSDK取得・起動・送金の具体手順を収録し、古い未検証記述を修正した。C22/C23/C28・A2/A5の部分進捗であり、章全体の照合・新規環境での再実行・Pruning後IBDは継続する。
 
+2026-10-31：C12/C26の主要GHOSTDAG経路を基準版v1.0.1へ再照合。親選択・候補順・blue判定・score/workを確認し、kがselected parentのDAA scoreで切り替わる変更を本文へ反映した。旧/基準ソースのSHA-256と差を `experiments/ghostdag-baseline-review-2026-10-31.md` および対応JSONに記録。公式実装の実行時差分テストと章全体レビューは未完了。
+
+2026-10-31：C12/G-005の実行時差分検査を実施。公式基準版の `GhostdagManager::ghostdag` と別の集合モデルで、24ケース・各親配列順712ブロックの親選択・順序付きblue/red・score/workが一致。コード・再実行手順・集計を `experiments/ghostdag/`、限界を `experiments/ghostdag-comparison-2026-10-31.md` に記録した。小規模合成DAGの関数単位の試験であり、公式Reachability・PoW・任意のDAG・章全体レビューは継続する。
+
+2026-10-31：C11/C13/C20の主要経路を基準版へ照合。ヘッダー/GHOSTDAG/本体の実際の順序、BadMerkleRoot等の状態保持、Full/Sampled DAAと整数計算、DevnetとCrescendoのFinality/Pruning定数を本文へ反映。公式本体検証テスト2件・教材14テスト成功。記録は `experiments/core-validation-review-2026-10-31.md`。全規則・公式DAA/Finalityの実行比較・安全性証明・章全体のレビューは継続する。
+
 ## 優先順位と進め方
 
 - **P1**：本書の正確性と実習の前提。最初に進める。

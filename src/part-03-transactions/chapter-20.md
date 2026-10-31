@@ -1,7 +1,7 @@
 # Chapter 20 — Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）
 
 > **Part III — Transactions, Mining & Security**  
-> 原稿バージョン：v0.1（2026-10-29、技術レビュー前）  
+> 原稿バージョン：v0.2（基準版のFinality主要経路を照合・章全体はレビュー継続中）\
 > 対象読者：Rust・バックエンド開発の経験があり、Kaspaの安全性を設計・実装の観点から理解したい読者
 
 ## この章で学ぶこと
@@ -168,11 +168,21 @@ P2Pネットワークではブロック伝播に時間がかかる。同じ時�
 
 ### 20.9.1 コンセンサス実装上のfinality
 
-`rusty-kaspa`には`finality_depth`や`finality_duration`などのコンセンサスパラメータが存在する。これらは、過去のDAG履歴をどこまで再編成・統合の対象にするかなどのルールと関係する。
+[本書の基準版](../baseline.md)v1.0.1では、`BlockDepthManager::calc_finality_point` がblue scoreによる深さとselected parent chainを使ってfinality pointを求める。適用する `finality_depth` は、selected parentのDAA scoreに応じたフォーク設定から取得する。DAA scoreをそのまま深さとして引く計算ではない。
 
-2026年10月時点で参照したソースの`FINALITY_DURATION`は**43,200秒（12時間）**、`PRUNING_DURATION`は**108,000秒（30時間）**として定義されている。ただし、**これは「送金を受け取るには必ず12時間待つ」という意味ではない**。パラメータの利用箇所・ネットワーク設定・リリースによって正確な意味を確認する必要がある。
+| 対象 | 固定ソースで確認した値・扱い |
+|---|---|
+| 基準版Devnetの既定設定 | Crescendo無効、prior finality depthは86400、prior pruning depthは185798 |
+| Crescendo用定数 | `NEW_FINALITY_DURATION = 43200`秒（12時間）、`NEW_PRUNING_DURATION = 108000`秒（30時間） |
+| Crescendo用depth導出 | finality depthはBPS×duration。pruning depthはBPS×durationと安全性の下限式の大きい方 |
 
-参照：[`consensus/core/src/config/constants.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/constants.rs)、[`params.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/params.rs)。
+12時間・30時間は、基準版Devnetにそのまま適用する待ち時間ではない。depthは実装上の進行尺度で、一定の実時間で到達する保証もない。現在のMainnetの有効設定をこの固定ソースの確認だけで断定しない。
+
+VirtualProcessorはsink候補にfinality pointがselected parent chain上の祖先であることを要求し、UTXO状態も評価する。finalityに違反する候補はVirtual chainから除外する経路を持つ。違反候補が存在したことを、すべて同じ `StatusInvalid` へ記録する説明にはしない。IBD開始時にはpruning pointをvirtual finality pointとして使う分岐もある。
+
+根拠：[block_depth.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/block_depth.rs)、[virtual_processor/processor.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/processor.rs)、[params.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)、[constants.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)、[bps.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/bps.rs)。
+
+Pruning point一覧を検査する `are_pruning_points_violating_finality` は、既知のpruning pointとfinality pointをさらに遡った点の関係を確認する。ソースは浅い違反を見逃す可能性も注記しており、この一関数があらゆる履歴改変を拒否するとは説明しない。
 
 ### 20.9.2 アプリケーション上の決済確定
 
@@ -427,6 +437,7 @@ cargo test
 git clone https://github.com/kaspanet/rusty-kaspa.git
 cd rusty-kaspa
 
+git checkout --detach fcd9c28f9b211b9872a0c90a8c94f79466ffb063
 git rev-parse HEAD
 rg 'finality_depth|FINALITY_DURATION|pruning_depth' consensus
 rg 'virtual|accepted_transaction|reorg' consensus
@@ -443,7 +454,7 @@ rg 'pruning_point|pruning proof' consensus
 6. 該当する単体テスト・統合テストを探す。
 7. 調査したコミットを記録し、本文の説明と照合する。
 
-> **バージョン注意**：2026年の開発ではDAGKnight関連のIssueも存在するが、研究・開発タスクが存在することと、mainnetで稼働するコンセンサスが切り替わったことは別である。リリース・有効化条件・対象ネットワークを必ず区別する。
+> **バージョン注意**：本章の実装照合は固定した基準版を対象にする。別の提案・開発タスクと、ネットワークで有効なコンセンサス規則は、リリース・有効化条件・対象ネットワークを確認して区別する。
 
 ## 20.19 BitcoinとKaspaの比較
 
@@ -524,11 +535,12 @@ Kaspaのネットワークセキュリティは、PoWだけでも、GHOSTDAGだ�
 
 1. [Kaspa — 公式サイト](https://kaspa.org/)
 2. [rusty-kaspa — Rust製フルノード実装](https://github.com/kaspanet/rusty-kaspa)
-3. [rusty-kaspa: Consensus Constants](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/constants.rs)
-4. [rusty-kaspa: Consensus Parameters](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/params.rs)
+3. [rusty-kaspa: Consensus Constants](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)
+4. [rusty-kaspa: Consensus Parameters](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)
 5. [rusty-kaspa: Releases](https://github.com/kaspanet/rusty-kaspa/releases)
 6. [Kaspa Research — GHOSTDAG関連論文・資料](https://github.com/kaspanet/docs)
 7. [Bitcoin: A Peer-to-Peer Electronic Cash System — Satoshi Nakamoto](https://bitcoin.org/bitcoin.pdf)
-8. [rusty-kaspa: DAGKnight開発状況のIssue例](https://github.com/kaspanet/rusty-kaspa/issues/1116)
 
-> **編集メモ（v0.1）**：実装上のfinality判定、Pruning proof、入金確認指標の詳細は、対象バージョンを固定したコードレビューとDevnet実験で検証してから確定稿に反映する。
+> **残る確認**：Finalityの全分岐・攻撃モデルの証明・Pruning後の同期・入金確認指標の実装は、追加のコード照合と実行検証が必要。今回の主要経路の読み取りだけで確定稿とはしない。
+
+基準版のFinality主要経路の照合と教材4テストの記録は `experiments/core-validation-review-2026-10-31.md`。攻撃成功確率の証明・全フォーク境界・公式Finality経路の実行時差分テストは今回未実施。

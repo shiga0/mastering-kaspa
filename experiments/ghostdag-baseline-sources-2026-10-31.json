@@ -1,0 +1,40 @@
+{
+  "previousCommit": "4edcbbccb449f84832afb1ca157904b35f37d006",
+  "baselineCommit": "fcd9c28f9b211b9872a0c90a8c94f79466ffb063",
+  "comparison": "source-review-only",
+  "officialRuntimeExecuted": false,
+  "files": [
+    {
+      "path": "consensus/src/processes/ghostdag/ordering.rs",
+      "previousSha256": "8b6716afbaddd2becd1910e8d80108747daaa97970669cb50c22ff0fca0dc47f",
+      "baselineSha256": "8b6716afbaddd2becd1910e8d80108747daaa97970669cb50c22ff0fca0dc47f",
+      "byteIdentical": true
+    },
+    {
+      "path": "consensus/src/processes/ghostdag/protocol.rs",
+      "previousSha256": "044b12f1941733ce45c5f3a5376e198ef2b4796f5b6f5bda3c4b670a18055e33",
+      "baselineSha256": "97fe5e1db8afae9d6a3074cf6b6e56ed72e453db9edcbf9b539a4469cc2918ee",
+      "byteIdentical": false
+    },
+    {
+      "path": "consensus/src/model/stores/ghostdag.rs",
+      "previousSha256": "9d031f8e587fb7de2015b39ac694d30a6b0c7da0a2e6b5b74a28ce750d328bb4",
+      "baselineSha256": "c23fa656f30227291ee75e17cb0634c71a7a02dcea17fdba435ceef61cea1e18",
+      "byteIdentical": false
+    },
+    {
+      "path": "consensus/src/processes/ghostdag/mergeset.rs",
+      "previousSha256": "8a86df5cf864a17c963be9cd1cf08961c040ea28e4684b238506ec0a51671122",
+      "baselineSha256": "8a86df5cf864a17c963be9cd1cf08961c040ea28e4684b238506ec0a51671122",
+      "byteIdentical": true
+    },
+    {
+      "path": "consensus/core/src/config/params.rs",
+      "baselineSha256": "9b9a88195e530888de6543004a241c136c142a0bf606e27de4c527901b17ffea"
+    },
+    {
+      "path": "consensus/core/src/config/constants.rs",
+      "baselineSha256": "c24c359579264110b4ff89a11fb0dbe8002a22478c68b22f2c0f2c6687d5c653"
+    }
+  ]
+}

@@ -4,16 +4,16 @@
 > 原稿ステータス: v0.2（GHOSTDAGの主要規則を固定実装と照合、章全体の技術レビューは継続中）
 
 
-> 本章の既存照合は[本書の基準版](../baseline.md)と別コミットを対象とする。基準版v1.0.1への再照合は未完了。
+> 主要なGHOSTDAG経路を[本書の基準版](../baseline.md)v1.0.1で再照合した。小規模DAGの24ケースで公式実装との実行時差分を比較した。章全体のレビューは未完了。
 
 ## 照合した実装
 
-2026年10月31日に `rusty-kaspa` のコミット `4edcbbccb449f84832afb1ca157904b35f37d006` を参照した。本章の親選択・merge set・blue判定・score/workの式は、下記の固定ソースを読み取って照合した（Source-checked）。メインネットの稼働リリースとの一致や、公式実装を実行した差分テストは未確認である。
+2026年10月31日に `rusty-kaspa` のコミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` を参照した。本章の親選択・merge set・blue判定・score/workの式は、下記の固定ソースを読み取って照合した（Source-checked）。さらに `experiments/ghostdag/` で公式の `GhostdagManager::ghostdag` と全blue集合のanticoneを直接数えるモデルを比較し、24ケース・各親配列順で712ブロックの親選択、順序付きblue/red、score/workが一致した。到達可能性は共通のDFSアダプターで提供し、公式Reachability・PoW・ヘッダー検証は対象外。詳細は `experiments/ghostdag-comparison-2026-10-31.md`。メインネットの稼働リリースとの一致や章全体の検証を意味しない。
 
-- [親選択・分類・スコア計算](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs)
-- [blue workとハッシュの比較](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/ordering.rs)
-- [merge setの列挙](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/mergeset.rs)
-- [GHOSTDAGメタデータ](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/model/stores/ghostdag.rs)
+- [親選択・分類・スコア計算](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs)
+- [blue workとハッシュの比較](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/ordering.rs)
+- [merge setの列挙](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/mergeset.rs)
+- [GHOSTDAGメタデータ](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/model/stores/ghostdag.rs)
 
 ## この章で学ぶこと
 
@@ -150,7 +150,7 @@ GHOSTDAGはPHANTOMの考え方に基づく**貪欲（greedy）な近似手法**�
 M = Past(B) \ (Past(P) ∪ {P})
 ```
 
-候補には他の親自身も含まれる。確認した実装は `ordered_mergeset_without_selected_parent` でこの候補を列挙する。一方、保存する `mergeset_blues` は先頭に `P` を含む。「merge set」がselected parentを含むかは、関数・データ構造ごとに区別する。根拠は[集合の列挙](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/mergeset.rs)と[初期化処理](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/model/stores/ghostdag.rs)を参照する。
+候補には他の親自身も含まれる。確認した実装は `ordered_mergeset_without_selected_parent` でこの候補を列挙する。一方、保存する `mergeset_blues` は先頭に `P` を含む。「merge set」がselected parentを含むかは、関数・データ構造ごとに区別する。根拠は[集合の列挙](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/mergeset.rs)と[初期化処理](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/model/stores/ghostdag.rs)を参照する。
 
 ---
 
@@ -171,7 +171,7 @@ E の親は C と D。
 GHOSTDAGは規則に従い、そのうち一方を selected parent にする。
 ```
 
-確認した実装の `find_selected_parent` は、親の `(blue_work, hash)` を比較して最大の親を選ぶ。まずblue workが大きい親を優先し、同じなら `Hash` 型の比較で大きい親を選ぶ。blue scoreや到着順を親選択の比較キーには使わない。ハッシュの大小は実装の型の比較であり、表示文字列の比較へ置き換えない。[親選択](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs)と[比較規則](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/ordering.rs)を参照する。
+確認した実装の `find_selected_parent` は、親の `(blue_work, hash)` を比較して最大の親を選ぶ。まずblue workが大きい親を優先し、同じなら `Hash` 型の比較で大きい親を選ぶ。blue scoreや到着順を親選択の比較キーには使わない。ハッシュの大小は実装の型の比較であり、表示文字列の比較へ置き換えない。[親選択](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs)と[比較規則](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/ordering.rs)を参照する。
 
 **selected parentは唯一の有効な親という意味ではない。** selected parentでない親もDAGの一部であり、merge-set処理の対象になる。
 
@@ -215,6 +215,10 @@ PHANTOM/GHOSTDAGを理解するうえで、`k` は重要なパラメータであ
 ```
 
 ここで `Anticone(b)` は評価対象のDAGに対して定義される。
+
+基準版v1.0.1の通常 `GhostdagManager` は、`k` を `ForkedParam<KType>` として保持する。分類に使う値は **selected parentのDAA score** で選び、activation前後で切り替わる。新ブロック自身のDAA scoreやblue scoreで選ぶのではない。[基準版のDevnet設定](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)はCrescendo無効で、既定値はpriorの `k = 18`。値の定義は[constants.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)を参照する。別ネットワークや現在のMainnetの設定へ一般化しない。
+
+上位レベル用の `with_level` はkを定数にする別の構築経路である。既存照合版との主な差はこのフォーク対応であり、固定kだけの説明をすべての版へ当てはめない。照合記録は `experiments/ghostdag-baseline-review-2026-10-31.md`。
 
 ### 12.6.1 直感的な例
 
@@ -265,7 +269,7 @@ blue/red分類を更新
 blue score / blue work などのメタデータを導出
 ```
 
-候補の評価順は `(blue_work, hash)` の昇順であり、親選択の最大値取得とは向きが異なる。候補をblueに加えるには、候補自身のblue anticoneサイズだけでなく、候補と並行な既存blueブロックのanticoneサイズも `k` 以下に保つ必要がある。候補だけを検査する実装では不十分である。[候補のソート](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/mergeset.rs)、[比較](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/ordering.rs)、[blue判定](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs)を参照する。
+候補の評価順は `(blue_work, hash)` の昇順であり、親選択の最大値取得とは向きが異なる。候補をblueに加えるには、候補自身のblue anticoneサイズだけでなく、候補と並行な既存blueブロックのanticoneサイズも `k` 以下に保つ必要がある。候補だけを検査する実装では不十分である。[候補のソート](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/mergeset.rs)、[比較](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/ordering.rs)、[blue判定](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs)を参照する。
 
 ### 12.7.1 小さなDAGを手で追う
 
@@ -330,7 +334,7 @@ function conceptual_ghostdag(block):
 blue_score(B) = blue_score(P) + |MB(B)|
 ```
 
-`MB(B)` は `P` 自身を含み、`B` 自身は含まない。Genesisのblue scoreは0である。単純な「DAG内の全ブロック数」や「トランザクション数」とは異なる。根拠は[計算処理](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs)と[初期化処理](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/model/stores/ghostdag.rs)。
+`MB(B)` は `P` 自身を含み、`B` 自身は含まない。Genesisのblue scoreは0である。単純な「DAG内の全ブロック数」や「トランザクション数」とは異なる。根拠は[計算処理](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs)と[初期化処理](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/model/stores/ghostdag.rs)。
 
 ### 12.8.2 blue work
 
@@ -341,7 +345,7 @@ blue_work(B) = blue_work(P) + Σ calc_work(bits(X))
                               X ∈ MB(B)
 ```
 
-これは実際にマイナーが試行したハッシュ回数の実測値ではない。ブロックごとの難易度が異なれば、ブロック数と仕事量は一致しない。実装は高レベルsub-DAG用に `max(calc_work(bits(X)), level_work)` という下限も備える。通常の `new` は `level_work = 0` とする。Genesis・ORIGINには特別な初期化がある。[計算と初期化](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs)を参照する。
+これは実際にマイナーが試行したハッシュ回数の実測値ではない。ブロックごとの難易度が異なれば、ブロック数と仕事量は一致しない。実装は高レベルsub-DAG用に `max(calc_work(bits(X)), level_work)` という下限も備える。通常の `new` は `level_work = 0` とする。Genesis・ORIGINには特別な初期化がある。[計算と初期化](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs)を参照する。
 
 | 指標 | 概念的に表すもの | 注意点 |
 |---|---|---|
@@ -817,4 +821,4 @@ GHOSTDAGは合意順序を導く重要な構成要素だが、UTXOの適用可�
 6. [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — プロトコル変更・提案の調査。
 7. [Kaspa Wiki](https://wiki.kaspa.org/en/home) — 技術用語と関連資料の入口。
 
-> **未確認事項:** 原論文の証明との完全照合、公式実装との分類結果の差分テスト、メインネットの稼働バージョン・パラメータ、Virtual Stateで使われる最終的な取引処理順序は継続レビューの対象とする。本章の候補列挙順を、そのまま取引の最終処理順と同一視しない。
+> **未確認事項:** 原論文の証明との完全照合、今回の24ケース以外の分類結果、メインネットの稼働バージョン・パラメータ、Virtual Stateで使われる最終的な取引処理順序は継続レビューの対象とする。本章の候補列挙順を、そのまま取引の最終処理順と同一視しない。

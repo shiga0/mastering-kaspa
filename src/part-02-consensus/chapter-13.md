@@ -1,8 +1,8 @@
 # Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）
 
 > **Mastering Kaspa / Part II — Kaspa Consensus & Architecture**  
-> 原稿ステータス：**v0.1（学習用初稿・技術レビュー前）**  
-> 本章の数式・Rust実装は**原理を理解するための簡略モデル**であり、Kaspaメインネットの難易度計算を再現するコンセンサス実装ではない。実装依存の詳細は対象リリースの `rusty-kaspa` とKIPで検証すること。
+> 原稿ステータス：**v0.2（基準版のDAA主要経路を照合・章全体はレビュー継続中）**\
+> 確率モデルとRust教材は原理を理解するための簡略化を含む。13.6の固定ソースに基づく計算説明とは区別する。現在のMainnetの仕様との一致は未確認。
 
 ## この章で学ぶこと
 
@@ -215,6 +215,30 @@ PoWハッシュの条件を検証
 
 この図は**実際の関数呼び出し順序を示すものではない**。コンセンサス処理はキャッシュ、並列処理、親の検証状態、ストレージへのアクセスを含み、コード上の依存関係はさらに複雑になる。
 
+### 基準版で確認した計算経路
+
+基準版v1.0.1の `DualWindowManager` は、selected parentのDAA scoreによるCrescendo activation判定でFull/Sampledの窓と計算器を切り替える。本書のDevnet既定設定はactivationがneverのためFull側。Sampled側の説明をそのままDevnetの実測へ適用しない。
+
+| 段階 | 基準版の処理 |
+|---|---|
+| 窓の構築 | GHOSTDAG・selected parent chain・merge setを使って対象を集める。受信順の全ブロック一覧ではない |
+| DAA score | selected parentのDAA scoreに、merge setのうちnon-DAAでない要素数を加える |
+| Fullで履歴不足 | 要素数がmin window size未満ならGenesisのbitsを返す |
+| 通常のtarget計算 | 最小timestampの要素を1つ除き、残ったtargetを多倍長整数で合計・平均化する |
+| 時間差 | 除く前に得た最大timestamp−最小timestampを使い、最低1ミリ秒とする |
+| 出力 | 時間比を整数演算で適用し、最大targetで制限してcompact bitsへ戻す |
+
+Fullの通常計算を、最小時刻の要素を除いた件数 `n`、そのtarget平均 `avg` として書くと次になる。
+
+```text
+avg = floor(sum(remaining_targets) / n)
+new_target = floor(avg × max(max_ts − min_ts, 1) / (target_time_per_block × n))
+```
+
+timestampが同じ要素の順序はblue work、hashで決定する。timestampと目標時間の単位はミリ秒。途中の平均化でも整数除算するため、式の演算順序を変更したり、targetの平均をdifficultyの平均へ置き換えたりしない。Sampled側は通常の分母にsample rateも掛け、Crescendo直後で標本が不足するときにはselected parentのbitsを継承または目標時間比で補正する別経路を持つ。
+
+根拠：[window.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/window.rs)、[difficulty.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/difficulty.rs)、[params.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)。ヘッダー検証では、申告bitsへのPoW検査と、履歴から計算する期待bitsとの照合を分けて行う。[第11章](chapter-11.md)の検証順を参照する。DAAの数値ベクトルを公式計算器へ入力する実行時差分テストは今回未実施。
+
 ### 13.6.1 過去の情報だけで決まること
 
 ノードごとに難易度が違ってしまうとコンセンサスが成立しない。したがって、候補ブロックに対して期待される難易度は、**プロトコルで認められた決定的な入力と計算手順**から導かれなければならない。
@@ -297,8 +321,8 @@ DAAは単なる性能調整ではなく、ネットワークのセキュリテ�
 ### 13.10.1 モデルの前提
 
 - 目標ブロック間隔は `10秒`。
-- 観測した間隔の合計と期待時間の比でターゲットを更新する。
-- 一度の更新倍率は `0.25〜4.0` に制限する。
+- 観測した間隔の合計と期待時間の比で相対難易度を更新する。
+- 一度の更新倍率は `0.25〜4.0` に制限する。この制限は教材独自であり、上記の公式target計算を再現していない。
 - 整数ターゲット・コンパクト表現・BlockDAG固有のDAA windowは扱わない。
 - 難易度は `f64` で表すが、**実際のコンセンサス実装では浮動小数点の非決定性に注意し、正確な整数演算を使うべき**である。
 
@@ -459,6 +483,7 @@ Limitations:
 git clone https://github.com/kaspanet/rusty-kaspa.git
 cd rusty-kaspa
 
+git checkout --detach fcd9c28f9b211b9872a0c90a8c94f79466ffb063
 git rev-parse HEAD
 rg -n 'difficulty|daa_score|daa_window|target|bits' consensus
 rg -n 'calculate.*difficulty|difficulty.*calculate|difficulty_manager' .
@@ -654,4 +679,6 @@ FurtherConsensusValidation
 5. [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — コンセンサス変更の提案と議論。提案と採用済み仕様は区別する。
 6. [Kaspa Research Papers](https://kaspa.org/research/) — GHOSTDAGおよびBlockDAGに関する研究資料への入口。
 
-> **編集・検証メモ（次版で要確認）**：対象の `rusty-kaspa` タグを固定し、実際のDAA window選択、timestampの処理、ネットワーク別パラメータ、DAA Scoreの定義、ハードフォーク境界、関連テストをコードと照合して追記する。本章では未検証の定数・関数名を断定していない。
+> **残る確認**：今回照合した主要経路を基に、全ネットワークのパラメータ、同一時刻・丸め・フォーク境界の数値ベクトルを公式計算器で実行比較する。Bitcoin比較と関連KIP・論文の全面照合も継続する。
+
+基準版の主要経路のSource-checked記録と教材5テストの結果は `experiments/core-validation-review-2026-10-31.md`。原論文/KIP・全ネットワーク・フォーク境界の数値比較は継続レビューとする。

@@ -1,11 +1,11 @@
 # Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）
 
-> **原稿ステータス:** v0.1（技術レビュー前）  
+> **原稿ステータス:** v0.2（26.7の基準版再照合済み・章全体はレビュー継続中）\
 > **対象:** 『Mastering Kaspa』Part IV — Kaspa Development & Implementation  
 > **前提:** 第7章（BlockDAG）、第12章（GHOSTDAG）、第14章（Virtual State）、第25章（コードベース調査）
 
 
-> 本章の既存照合は[本書の基準版](../baseline.md)と別コミットを対象とする。基準版v1.0.1への再照合は未完了。
+> 主要なGHOSTDAG経路を[本書の基準版](../baseline.md)v1.0.1で再照合した。小規模DAGの24ケースで公式実装との実行時差分を比較した。章全体のレビューは未完了。
 
 ## 26.1 この章の目的
 
@@ -170,15 +170,17 @@ UTXO state transition
 
 この章では公式実装の入力・出力・依存先を読む。教育用DAG・UTXOコードを一から組み立てる作業は第27章にまとめる。第12章のDAG解析器で集合の意味を確認してから、以下の経路を追うとよい。
 
-参照コミットは `4edcbbccb449f84832afb1ca157904b35f37d006`。以下は固定ソースの読み取りによる確認であり、公式ノードの実行結果ではない。
+参照コミットは `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。以下の表は固定ソースの読み取りによる確認である。追加の `experiments/ghostdag/` では公式の分類関数を直接呼び、24ケースで親選択・順序付きblue/red・score/workの差分を検査した。合成ヘッダーとDFS到達可能性を使う関数単位の試験であり、公式ノード全体の実行結果ではない。
 
 | 読む箇所 | 入力と処理 | 確認する出力 |
 |---|---|---|
-| [`find_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs) | 親一覧を受け、ストアから各親のblue workを取得 | `(blue_work, hash)` が最大の親 |
-| [`ordered_mergeset_without_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/mergeset.rs) | 他の親から過去を探索し、selected parentの過去を除外 | blue work、hashの昇順の候補列 |
-| [`GhostdagData::new_with_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/model/stores/ghostdag.rs) | selected parentを最初のblueとして設定 | 分類計算の初期メタデータ |
-| [`check_blue_candidate`](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs) | 到達可能性と既存blueのanticoneサイズを調べる | 候補のblue/red判定 |
-| [`ghostdag`](https://github.com/kaspanet/rusty-kaspa/blob/4edcbbccb449f84832afb1ca157904b35f37d006/consensus/src/processes/ghostdag/protocol.rs) | 判定を反映し、score/workを算出 | `GhostdagData` |
+| [`find_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs) | 親一覧を受け、ストアから各親のblue workを取得 | `(blue_work, hash)` が最大の親 |
+| [`ordered_mergeset_without_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/mergeset.rs) | 他の親から過去を探索し、selected parentの過去を除外 | blue work、hashの昇順の候補列 |
+| [`GhostdagData::new_with_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/model/stores/ghostdag.rs) | selected parentを最初のblueとして設定 | 分類計算の初期メタデータ |
+| [`check_blue_candidate`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs) | 到達可能性と既存blueのanticoneサイズを調べる | 候補のblue/red判定 |
+| [`ghostdag`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs) | 判定を反映し、score/workを算出 | `GhostdagData` |
+
+基準版の通常 `GhostdagManager` は `ForkedParam<KType>` を持ち、`ghostdag` 内でselected parentのDAA scoreからkを取得する。旧照合版の固定kとは異なる。上位レベル用 `with_level` はkを定数化する。選択・候補順・blue判定・score/workの主要規則は再照合したが、任意のk減少まで扱えるという意味ではない。パラメータと適用範囲は[第12章](../part-02-consensus/chapter-12.md)、比較の記録は `experiments/ghostdag-baseline-review-2026-10-31.md` を参照する。
 
 ### 26.7.1 読み取りの課題
 

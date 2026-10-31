@@ -1,0 +1,59 @@
+{
+  "baselineCommit": "fcd9c28f9b211b9872a0c90a8c94f79466ffb063",
+  "filesSha256": {
+    "consensus/src/consensus/mod.rs": "0bbe4c56fa696460fcadb3b431b240d7a5f3186d19c0a1b88438bbbb54eec01c",
+    "consensus/src/pipeline/header_processor/processor.rs": "27d5e5964e41ad4fd47df07a7c02fe5506386a5f91b13d3288578638cfba443c",
+    "consensus/src/pipeline/header_processor/pre_ghostdag_validation.rs": "946a6762302a9b8bdc7b8c782d0fc1470e97ad102d9394ee21663addc14fb58f",
+    "consensus/src/pipeline/header_processor/pre_pow_validation.rs": "09c3d0201f0a384883b2725c432b441e7e0fd52e3c2b97cf2ef2e72181a2b00b",
+    "consensus/src/pipeline/header_processor/post_pow_validation.rs": "bbdbf1dba38e3a17418beebe6dbb690b18796e55b91dc92b3cd744ffd2579de6",
+    "consensus/src/pipeline/body_processor/processor.rs": "5158abde7814277ddab817737b8577073803ea4e0f43faf8c1d05d410c0947c1",
+    "consensus/src/pipeline/body_processor/body_validation_in_isolation.rs": "a292d8eaa6a5748dceba7f93a20b0a93cbe0469d915b4e6e8df689ca0755110a",
+    "consensus/src/pipeline/body_processor/body_validation_in_context.rs": "fe507e98eb42af93d846b353661df10f46e301626a9321c11ef413555a5ad260",
+    "consensus/src/pipeline/virtual_processor/processor.rs": "e1e92b1925016cba6e032b245e42e5e5e41775e4e41ab10f663110e44617511e",
+    "consensus/src/processes/difficulty.rs": "749d4ec53a38ee2cd2e9f25a395ddd69ab019d6f813f6cc3ffb3b988395566ff",
+    "consensus/src/processes/window.rs": "fe553a9a8701a3b0fb3826f0cee6890fe166435c0c9fa871b27ac7f3f0ad182c",
+    "consensus/src/processes/block_depth.rs": "e09e4186b20aec3fedb3dec898000a6f29da690e851a844c35edfdfda06d5111",
+    "consensus/core/src/blockstatus.rs": "4b9ad49593a6f5831b020916e9b58d75b48ef121b76f06a370a6d942d8dd97b3",
+    "consensus/core/src/config/params.rs": "9b9a88195e530888de6543004a241c136c142a0bf606e27de4c527901b17ffea",
+    "consensus/core/src/config/constants.rs": "c24c359579264110b4ff89a11fb0dbe8002a22478c68b22f2c0f2c6687d5c653",
+    "consensus/core/src/config/bps.rs": "1f94cc759a8427160494c50178d5b36848008b339a5f480badf1001588a14fab",
+    "protocol/flows/src/v5/blockrelay/flow.rs": "f6574e5c5b943277660768105f82228b9af1e3c6047d2724fd2e2526d836cabc",
+    "consensus/src/pipeline/virtual_processor/utxo_validation.rs": "06eaec070d3829452b2584aabd58289f5c7c6dac6b7711c91fd8c272d08ea246"
+  },
+  "snippetTests": [
+    {
+      "path": "src/part-02-consensus/chapter-11.md",
+      "rustBlockIndex": 1,
+      "sourceSha256": "bd2c82a3a3544c5f7c703825c46ea896dc438f9e327b8d086d3e576f520e12c8",
+      "testsPassed": 5,
+      "compiler": "rustc --edition 2021 --test",
+      "scope": "educational model only"
+    },
+    {
+      "path": "src/part-02-consensus/chapter-13.md",
+      "rustBlockIndex": 1,
+      "sourceSha256": "37eac600b634a073e6fe93e05abb61489239831ce3544091d37fb8ee1d4f598a",
+      "testsPassed": 5,
+      "compiler": "rustc --edition 2021 --test",
+      "scope": "educational model only"
+    },
+    {
+      "path": "src/part-03-transactions/chapter-20.md",
+      "rustBlockIndex": 1,
+      "sourceSha256": "5f10bc953f97918802ec66038a751e2e8913fd0c29d89e87284664ee7d6d049b",
+      "testsPassed": 4,
+      "compiler": "rustc --edition 2021 --test",
+      "scope": "educational model only"
+    }
+  ],
+  "officialTests": {
+    "package": "kaspa-consensus",
+    "testsPassed": 2,
+    "tests": [
+      "pipeline::body_processor::body_validation_in_isolation::tests::validate_body_in_isolation_test",
+      "pipeline::body_processor::body_validation_in_isolation::tests::merkle_root_missing_parents_known_invalid_test"
+    ],
+    "fullSuiteRun": false,
+    "proofOfWorkDisabledInRegressionTest": true
+  }
+}

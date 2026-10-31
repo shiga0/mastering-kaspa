@@ -6,7 +6,7 @@
 
 ## 現在の確認範囲
 
-- 第12章と第26章のGHOSTDAG主要規則は、公式実装の固定コミット `4edcbbccb449f84832afb1ca157904b35f37d006` と照合した（Source-checked）。原論文の証明との完全照合と公式実装との実行時の差分テストは未完了。
+- 第12章と第26章のGHOSTDAG主要規則は、公式実装の基準コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` へ再照合した（Source-checked）。通常managerのkがselected parentのDAA scoreに依存することを反映した。公式分類関数と集合モデルの差分を24ケース・各親配列順712ブロックで比較し一致。原論文の証明・全ケースの網羅・章全体レビューは未完了。
 - 第12章のDAG解析器は5テスト、第27章の最小ノードは6テスト、書式検査・Clippyを確認した。Kaspa互換性の検証ではない。
 - それ以外の掲載コードについて、過去の抜き出し検査の成功を章全体のVerified判定には使わない。継続的なCI検査は収録済みの2教材が対象。
 - 固定digestのkaspad 1.0.1でDevnet起動・読み取りwRPC・採掘と再起動後のDAG/報酬UTXO保持を確認した。単一ノードで公式WASM SDKの署名・送金・virtual受理とUTXO変化も確認した。手数料/お釣りの検算、残高不足・不正署名・競合拒否も実測。応答喪失時の照会復旧・同一TX再送・インメモリの重複計上防止も実測。2ノードのブロック伝播・停止後のDAG/指定報酬先UTXOの追従も実測。両ノード稼働中のP2P分断・各枝での採掘・再接続後の収束も実測。通知の重複適用・購読停止中の欠落・SQLite再読込・停止状態での照会補完も実測。単一プロセス内で通知をヒントとした稼働中の再照会・旧結果拒否・再購読補完も実測。分岐合流時の実UTXO削除とSQLite観測状態の取り消しも実測。複数ワーカー・会計台帳・Pruning・GitHub上のCI実行は未確認。
@@ -27,22 +27,22 @@
 | [Chapter 08 — From Blockchain to Kaspa（ブロックチェーンからKaspaへ）](part-01-foundations/chapter-08.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
 | [Chapter 09 — Kaspa Architecture（Kaspaのアーキテクチャ）](part-02-consensus/chapter-09.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
 | [Chapter 10 — Kaspa Node & P2P Network（KaspaノードとP2Pネットワーク）](part-02-consensus/chapter-10.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
-| [Chapter 11 — Block Processing & Validation（ブロック処理と検証）](part-02-consensus/chapter-11.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
-| [Chapter 12 — GHOSTDAG Internals（GHOSTDAGの内部構造）](part-02-consensus/chapter-12.md) | 主要規則のみSource-checked | DAG解析器5テスト成功。公式実装との分類結果の差分照合は未実施 |
-| [Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）](part-02-consensus/chapter-13.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
+| [Chapter 11 — Block Processing & Validation（ブロック処理と検証）](part-02-consensus/chapter-11.md) | 主要経路のみSource-checked（v1.0.1） | 検証順・保存状態・親不足/BadMerkleRootを照合。公式本体テスト2件と教材5テスト成功。P2P全体・全規則・永続化の障害検証は未完了 |
+| [Chapter 12 — GHOSTDAG Internals（GHOSTDAGの内部構造）](part-02-consensus/chapter-12.md) | 主要規則のみSource-checked（v1.0.1再照合） | DAG解析器5テスト成功。別ハーネスで公式分類関数と24ケースの親選択・blue/red・score/workが一致。大規模DAG・章全体は未検証 |
+| [Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）](part-02-consensus/chapter-13.md) | 主要経路のみSource-checked（v1.0.1） | Full/Sampled・整数target計算・DAA scoreを照合。教材5テスト成功。公式数値ベクトル・全境界の実行比較は未完了 |
 | [Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）](part-02-consensus/chapter-14.md) | 主要経路のみSource-checked（v1.0.1） | 合意順序・UTXO処理の主要経路を照合。公式実装との実行時差分検証・章全体レビューは未完了 |
 | [Chapter 15 — UTXO Model & Transaction Processing（UTXOモデルとトランザクション処理）](part-03-transactions/chapter-15.md) | 主要経路のみSource-checked（v1.0.1） | 合意順序・UTXO処理の主要経路を照合。公式実装との実行時差分検証・章全体レビューは未完了 |
 | [Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）](part-03-transactions/chapter-16.md) | 主要経路のみSource-checked（v1.0.1） | 署名/Script・gen1導出・Generator/Signerの該当範囲を照合。単一署名のDevnet送金・virtual受理を実測。HD復旧・異常系・章全体レビューは未完了 |
 | [Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）](part-03-transactions/chapter-17.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
 | [Chapter 18 — Mining & Block Template Construction（マイニングとブロックテンプレート構築）](part-03-transactions/chapter-18.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
 | [Chapter 19 — Mining Economics & Network Security（マイニング経済とネットワークセキュリティ）](part-03-transactions/chapter-19.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
-| [Chapter 20 — Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）](part-03-transactions/chapter-20.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
+| [Chapter 20 — Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）](part-03-transactions/chapter-20.md) | 主要経路のみSource-checked（v1.0.1） | finality point・sink候補・Devnet/Crescendo定数を照合。教材4テスト成功。公式Finality実行比較・攻撃モデルの証明は未完了 |
 | [Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）](part-04-development/chapter-21.md) | 主要経路のみSource-checked（v1.0.1） | Devnetの進行条件・削減・証明/UTXO検査をソース照合。実測pointはGenesisのまま。実削減とPruning後IBDは未検証 |
 | [Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）](part-04-development/chapter-22.md) | 未レビュー | 固定版の起動・送金・主要な拒否・応答喪失・実通知補完を実測し、第28章と付録へ反映。2ノード/分断/報酬UTXO取り消しは限定条件で実測。章全体レビュー・HD復旧・Pruning後IBDは未完了 |
 | [Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）](part-04-development/chapter-23.md) | 未レビュー | 固定版の起動・送金・主要な拒否・応答喪失・実通知補完を実測し、第28章と付録へ反映。2ノード/分断/報酬UTXO取り消しは限定条件で実測。章全体レビュー・HD復旧・Pruning後IBDは未完了 |
 | [Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）](part-04-development/chapter-24.md) | 主要経路のみSource-checked（v1.0.1） | 署名/Script・gen1導出・Generator/Signerの該当範囲を照合。単一署名のDevnet送金・virtual受理を実測。主要な拒否と応答喪失も実測。HD復旧・全異常系・章全体レビューは未完了 |
 | [Chapter 25 — Exploring the rusty-kaspa Codebase（rusty-kaspaのコードベースを読む）](part-04-development/chapter-25.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
-| [Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）](part-04-development/chapter-26.md) | 26.7の経路のみSource-checked | 永続化・Virtual State・並行処理の経路は未照合 |
+| [Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）](part-04-development/chapter-26.md) | 26.7の経路のみSource-checked（v1.0.1再照合） | 分類関数を24ケースで実行比較。永続化・Virtual State・並行処理の経路は未照合 |
 | [Chapter 27 — Building a Minimal Kaspa-like Node in Rust（Rustによる最小Kaspa型ノードの構築）](part-04-development/chapter-27.md) | 未レビュー | 収録サンプル6テスト成功。伝播・受信順の発展課題は未検証 |
 | [Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）](part-04-development/chapter-28.md) | 未レビュー | 固定版の起動・送金・主要な拒否・応答喪失・実通知補完を実測し、第28章と付録へ反映。2ノード/分断/報酬UTXO取り消しは限定条件で実測。章全体レビュー・HD復旧・Pruning後IBDは未完了 |
 | [Chapter 29 — GHOSTDAG Security & DAGKnight（GHOSTDAGのセキュリティとDAGKnight）](part-05-advanced/chapter-29.md) | 未レビュー | 出典・対象バージョン・主張を照合する |
@@ -89,9 +89,13 @@ Pruningの前提条件と未達の実測は `experiments/devnet-pruning-review-2
 
 リポジトリの `experiments/minimal-node-2026-10-31.md` と `experiments/ghostdag-review-2026-10-31.md` に、実行条件・コマンド・結果・未確認事項を記録している。教材コードは `examples/`、同期検査は `scripts/check-book-examples.py` を参照する。
 
+GHOSTDAGの固定版再照合は `experiments/ghostdag-baseline-review-2026-10-31.md`、公式分類関数との24ケースの実行比較は `experiments/ghostdag-comparison-2026-10-31.md`、再実行入口は `experiments/ghostdag/README.md` を参照する。
+
+第11・13・20章の主要経路と公式本体検証テスト2件・教材14テストは `experiments/core-validation-review-2026-10-31.md` に記録している。
+
 ## 次のレビュー順
 
-1. 第12章の具体例を公式実装の出力と差分照合する。
+1. 第12章は24ケースの差分一致を基盤に、本文の図との対応と追加ケースを確認する。
 2. 第14・15・20・21章の状態遷移、トランザクション受理、Finality、Pruningを照合する。
 3. 第22〜24・28章の固定バージョンによるDevnet実習を通す。
 4. 高度な技術について、提案・開発中・ネットワーク有効化の区別を出典で確認する。

@@ -1,0 +1,238 @@
+{
+  "allComparisonsMatched": true,
+  "baselineCommit": "fcd9c28f9b211b9872a0c90a8c94f79466ffb063",
+  "candidateRejections": 507,
+  "caseCount": 24,
+  "cases": [
+    {
+      "candidateRejections": 5,
+      "comparedBlocks": 6,
+      "existingBlueRejections": 0,
+      "name": "explicit-k0",
+      "parentWorkTies": 2,
+      "redClassifications": 5,
+      "outcomesSha256": "3f9848f77c4b5cf612be4dad60ce6e1f5c7000ad5e0f7f4626e431a4e633e3f5"
+    },
+    {
+      "candidateRejections": 2,
+      "comparedBlocks": 6,
+      "existingBlueRejections": 0,
+      "name": "explicit-k1",
+      "parentWorkTies": 1,
+      "redClassifications": 2,
+      "outcomesSha256": "dae5ce023f50f575895d1364fc764c2fcb319a88f0cdf8c73b3c71b2d8ee2195"
+    },
+    {
+      "candidateRejections": 1,
+      "comparedBlocks": 6,
+      "existingBlueRejections": 0,
+      "name": "explicit-k2",
+      "parentWorkTies": 1,
+      "redClassifications": 1,
+      "outcomesSha256": "fc04c297646e3a184257563207dca91e7d9275ed50ba097c5f18876926a4d7a9"
+    },
+    {
+      "candidateRejections": 0,
+      "comparedBlocks": 6,
+      "existingBlueRejections": 0,
+      "name": "explicit-k18",
+      "parentWorkTies": 1,
+      "redClassifications": 0,
+      "outcomesSha256": "d78d06cf614d960ab6b27d7c6ccaa22db258e847c655303c240786487a204c8d"
+    },
+    {
+      "candidateRejections": 27,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 0,
+      "name": "generated-1-mixed-false",
+      "parentWorkTies": 1,
+      "redClassifications": 27,
+      "outcomesSha256": "47d2fead4cb8de860740023ac8f5841cfde40b359a47cbc8c7848c043113d707"
+    },
+    {
+      "candidateRejections": 29,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 0,
+      "name": "generated-1-mixed-true",
+      "parentWorkTies": 1,
+      "redClassifications": 29,
+      "outcomesSha256": "f8cc94f5fbe1e1b77b6dcb32ee902a240f4ed2db1100a466a83f5c90d5b837a8"
+    },
+    {
+      "candidateRejections": 35,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 0,
+      "name": "generated-2-mixed-false",
+      "parentWorkTies": 5,
+      "redClassifications": 35,
+      "outcomesSha256": "1bd7a14c895a761d57c9aa300e3f792b01262817a7ee7ab3143090d2387bef24"
+    },
+    {
+      "candidateRejections": 34,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 1,
+      "name": "generated-2-mixed-true",
+      "parentWorkTies": 3,
+      "redClassifications": 35,
+      "outcomesSha256": "325e073f35fb189345fbfbabac663cd95b07a1951cf1c4c529fa1fa29b3d1e7e"
+    },
+    {
+      "candidateRejections": 30,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 6,
+      "name": "generated-3-mixed-false",
+      "parentWorkTies": 1,
+      "redClassifications": 36,
+      "outcomesSha256": "6b554b309805ddfc7a3464b5cbfb100e04a0e42225f15643eaa0a1568a5077af"
+    },
+    {
+      "candidateRejections": 32,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 6,
+      "name": "generated-3-mixed-true",
+      "parentWorkTies": 0,
+      "redClassifications": 38,
+      "outcomesSha256": "b725d48f278bd02e0fab48b272673902f847776c561f43cbf99609bd01d3f76d"
+    },
+    {
+      "candidateRejections": 30,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 0,
+      "name": "generated-4-mixed-false",
+      "parentWorkTies": 6,
+      "redClassifications": 30,
+      "outcomesSha256": "1da5d994456ef843fcbed5f6040f14f5b39bc0aa5f56669137c2a1bbc8eb7f3d"
+    },
+    {
+      "candidateRejections": 32,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 0,
+      "name": "generated-4-mixed-true",
+      "parentWorkTies": 5,
+      "redClassifications": 32,
+      "outcomesSha256": "33f8f9078692319f25d0697b7c1f3e0b8fa44a91353cdc75560362f8055c13e6"
+    },
+    {
+      "candidateRejections": 35,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 0,
+      "name": "generated-5-mixed-false",
+      "parentWorkTies": 3,
+      "redClassifications": 35,
+      "outcomesSha256": "ee60315bfa3aa3178f9bf037201567682c4baade8c92e230722b736413b334ec"
+    },
+    {
+      "candidateRejections": 34,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 0,
+      "name": "generated-5-mixed-true",
+      "parentWorkTies": 2,
+      "redClassifications": 34,
+      "outcomesSha256": "138be1e51ff0f6ab95b1aca8645d53b68e28dab44f49765dbd2365ffe1513f8c"
+    },
+    {
+      "candidateRejections": 16,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 2,
+      "name": "generated-6-mixed-false",
+      "parentWorkTies": 1,
+      "redClassifications": 18,
+      "outcomesSha256": "a6f57870d0b519adf6578b68c0aa7a4af02d1db5b2aa163931e1c6048f1ea6b4"
+    },
+    {
+      "candidateRejections": 16,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 2,
+      "name": "generated-6-mixed-true",
+      "parentWorkTies": 1,
+      "redClassifications": 18,
+      "outcomesSha256": "0772183ec177ec3b8ea09e3bbbdb5c9d21103927c8c55de0df37016519ca16a6"
+    },
+    {
+      "candidateRejections": 23,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 3,
+      "name": "generated-7-mixed-false",
+      "parentWorkTies": 6,
+      "redClassifications": 26,
+      "outcomesSha256": "533824fbfcf848a4bf61d6756ab80275d67bd49eccb6dc2b1f222e826effd802"
+    },
+    {
+      "candidateRejections": 23,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 4,
+      "name": "generated-7-mixed-true",
+      "parentWorkTies": 1,
+      "redClassifications": 27,
+      "outcomesSha256": "fcf73a898ee1288f6083ecaaf4f8af451e0d8dbfeaa437e0df0b2eb4e6d8e6ea"
+    },
+    {
+      "candidateRejections": 43,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 0,
+      "name": "generated-8-mixed-false",
+      "parentWorkTies": 4,
+      "redClassifications": 43,
+      "outcomesSha256": "550e3b6272ae0cf5e1d5b9ff459ae4be60c95513889f6567d95a61ee69c51b00"
+    },
+    {
+      "candidateRejections": 43,
+      "comparedBlocks": 40,
+      "existingBlueRejections": 0,
+      "name": "generated-8-mixed-true",
+      "parentWorkTies": 3,
+      "redClassifications": 43,
+      "outcomesSha256": "9554fbdf6b2a345c2a36e19acc57a1127aa4dff794bb353ad4616f3699c7258a"
+    },
+    {
+      "candidateRejections": 3,
+      "comparedBlocks": 6,
+      "existingBlueRejections": 0,
+      "name": "activation-selected-parent-19",
+      "parentWorkTies": 2,
+      "redClassifications": 3,
+      "outcomesSha256": "933f9f9b5f160ba1b59722a0178cd4bb2586ff72fdbcb04f7235f6b58970166a"
+    },
+    {
+      "candidateRejections": 1,
+      "comparedBlocks": 6,
+      "existingBlueRejections": 0,
+      "name": "activation-selected-parent-20",
+      "parentWorkTies": 1,
+      "redClassifications": 1,
+      "outcomesSha256": "0f877d3e46b3b3d115212346ea3aea696be30701e53fef8db4f1ae09572b008b"
+    },
+    {
+      "candidateRejections": 1,
+      "comparedBlocks": 6,
+      "existingBlueRejections": 0,
+      "name": "activation-selected-parent-21",
+      "parentWorkTies": 1,
+      "redClassifications": 1,
+      "outcomesSha256": "0f877d3e46b3b3d115212346ea3aea696be30701e53fef8db4f1ae09572b008b"
+    },
+    {
+      "candidateRejections": 12,
+      "comparedBlocks": 30,
+      "existingBlueRejections": 2,
+      "name": "level-work-floor",
+      "parentWorkTies": 3,
+      "redClassifications": 14,
+      "outcomesSha256": "3982089c99af11fc8970fdd4523e2c86963ae453f588f846bd25eb67b268f306"
+    }
+  ],
+  "comparedBlocksPerParentOrder": 712,
+  "existingBlueRejections": 26,
+  "network": "synthetic fixtures; no node or PoW validation",
+  "officialFunction": "GhostdagManager::ghostdag",
+  "parentOrdersCompared": 2,
+  "parentWorkTies": 55,
+  "officialSourceArchiveSha256": "4585123204609640af4f7482ea8851ced912c2bfae5f36955c808c14210fbe2a",
+  "harnessSha256": "c0558ded5e4ba83860d6391b0a825902f5a6de77f55900c2eea071e5d197333e",
+  "officialCargoLockSha256": "14108c8c41a84a1a9c8cd8648238047a0620ca390058f9d8a176fefc78beeabf",
+  "environment": {
+    "os": "Darwin",
+    "architecture": "arm64",
+    "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)"
+  }
+}
