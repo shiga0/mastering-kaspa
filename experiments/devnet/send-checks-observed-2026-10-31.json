@@ -1,0 +1,31 @@
+{
+  "network": "devnet",
+  "serverVersion": "1.0.1",
+  "source": "kaspadev:qqvl4jvlfuz0qeken4jhkpcdh0qyjcl8ujjke3ugz5vxldr7xqlkj2cr5ctkn",
+  "destination": "kaspadev:qrh7tq09ralpkkfqc4gdlpjy5c2fg7lk6wyctq7k5auvhhfqa6dfq8ch39mcr",
+  "checks": {
+    "insufficientFunds": "rejected-as-expected",
+    "invalidSignature": "rejected-as-expected",
+    "failedSignaturePreservedInput": true,
+    "mempoolObserved": true,
+    "competingSpend": "rejected-as-expected"
+  },
+  "inputTotalSompi": "50000000000",
+  "outputTotalSompi": "49999990000",
+  "independentFeeSompi": "10000",
+  "sdkFeeSompi": "10000",
+  "expectedChangeSompi": "49899990000",
+  "actualChangeSompi": "49899990000",
+  "transactionId": "ffafa3555c45afc30b24707b459c938e1aef5ba911ab3b2f69a41d7ab1bfbfef",
+  "amountSompi": "100000000",
+  "coinbaseMaturityDaa": "100",
+  "fundingDaaScore": "3683",
+  "inputSpent": true,
+  "destinationUtxoObserved": true,
+  "acceptedByVirtualChain": true,
+  "acceptingBlockHash": "e368f876d08a0aa245e908a21eacee530b202a57ebea792ca8973b83eba198e5",
+  "destinationOutpoint": {
+    "transactionId": "ffafa3555c45afc30b24707b459c938e1aef5ba911ab3b2f69a41d7ab1bfbfef",
+    "index": 0
+  }
+}

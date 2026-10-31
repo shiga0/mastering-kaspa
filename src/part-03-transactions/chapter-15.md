@@ -1,8 +1,12 @@
 # Chapter 15 — UTXO Model & Transaction Processing（UTXOモデルとトランザクション処理）
 
 > **Mastering Kaspa / Part III — Transactions, Mining & Security**  
-> 原稿ステータス：**v0.1（学習用初稿・技術レビュー前）**  
+> 原稿ステータス：**v0.2（主要経路を基準版ソースと照合・章全体のレビューは継続中）**\
 > 本章はKaspaのUTXOモデルとトランザクション処理を理解するための原稿である。Rustの実装例は**教育用の簡略モデル**であり、Kaspaの署名、スクリプト、トランザクション形式、コンセンサス規則を完全再現しない。プロトコル依存の詳細は対象バージョンの`rusty-kaspa`で照合すること。
+
+## 照合した実装
+
+2026年10月31日、[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` のソースを読み取った。以下の具体的な処理はSource-checkedであり、公式ノードを実行した差分テストや章全体のVerified判定ではない。照合ファイルと未確認範囲はリポジトリの `experiments/consensus-state-review-2026-10-31.md` に記録する。
 
 ## この章で学ぶこと
 
@@ -117,7 +121,7 @@ Transaction
 └── Payload
 ```
 
-これは学習用の見取り図である。**実際のフィールドの型、シリアライズ、ハッシュ対象、バージョン別の扱いは実装で確認する**。
+この図は主要項目の見取り図である。基準版の[Transaction](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/tx.rs)は `version: u16`、inputs、outputs、`lock_time: u64`、subnetwork_id、`gas: u64`、payloadを持ち、さらにmassのコミットメントとIDキャッシュを保持する。Inputはprevious_outpoint、signature_script、sequence、sig_op_count、Outputはvalueとscript_public_keyを持つ。メモリ上のフィールド列を、そのままシリアライズやIDのハッシュ対象と見なさない。ハッシュ・署名対象の完全照合は第16章で行う。
 
 ### Inputの責務
 
@@ -140,7 +144,7 @@ UTXO Set:
   Outpoint -> UTXO Entry
 ```
 
-`UTXO Entry`には、金額やロック条件のほか、コンセンサス検証に必要なメタデータが含まれる場合がある。
+基準版の[UtxoEntry](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/tx.rs)は `amount`、`script_public_key`、`block_daa_score`、`is_coinbase` を保持する。Outpointは32バイトのtransaction_idとu32のindexの組である。特にCoinbase成熟の検査には、金額だけでなく受理時のDAA scoreとCoinbaseであるかの情報が必要になる。
 
 ```text
 TxA:0 -> { value: 500000000, script: ... }
@@ -303,6 +307,14 @@ Genesis                 Merge
 
 **原子性**が重要である。途中で失敗したときに「入力だけ消えた」状態を残してはいけない。
 
+### 15.13.1 基準版の検証と教材の差
+
+[UTXO文脈の検証](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/transaction_validator/tx_validation_in_utxo_context.rs)はCoinbase成熟、入力合計、出力合計、手数料、フォーク条件に応じたmass、sequence lock、Script等を検査する。手数料は検査済みの入力合計から出力合計を引いて得る。共通関数内にはMempoolの手数料率ポリシー用の検査もあるため、すべての分岐をコンセンサス規則と同一視しない。
+
+[ブロックbodyの検証](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/body_processor/body_validation_in_isolation.rs)は、同一ブロック内の二重消費と、同じブロック内の出力を入力にする親子トランザクションを拒否する。UTXO文脈では、独立な通常トランザクションを同じviewに対して並列検証できる。後半の教材はこのbody検証を省略しており、先に適用したトランザクションの出力を同じ教材内で続けて消費できることをKaspaの仕様と解釈しない。
+
+merge set全体の処理は第14章14.5.1を参照する。selected parentのCoinbaseを特別に適用した後、通常トランザクションの受理を評価する。ブロック自身のUTXO妥当性の検証と、後続のmerge setでの各トランザクションの受理を区別する。
+
 ## 15.14 Reorganizationと状態の巻き戻し
 
 新しいブロックの到着によって、コンセンサス上の選択や順序が変化することがある。その場合、以前のVirtual Stateから新しいVirtual Stateへの更新が必要になる。
@@ -313,7 +325,7 @@ Genesis                 Merge
 - 状態差分（差分ログ）を用いて巻き戻しと適用を行う。
 - 適切なチェックポイントから状態を再構築する。
 
-これは**一般的な状態管理の考え方**であり、Kaspaの現行実装が必ずこの3方式のいずれかをそのまま採用しているという主張ではない。実際の差分処理は`rusty-kaspa`で確認する。
+この一覧は一般的な選択肢である。基準版は[UtxoDiffの逆差分・合成](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/utxo/utxo_diff.rs)と[virtual processorの相対状態計算](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/processor.rs)を使う。実際の更新・保存経路は第14章14.11.1で扱う。
 
 ### ウォレット側で起きること
 
@@ -754,4 +766,4 @@ Kaspaでは、これにBlockDAG、GHOSTDAG、Virtual Stateという要素が重�
 
 ---
 
-> **編集メモ（v0.1）**：出版前に、対象とする`rusty-kaspa`のコミットを固定し、取引フィールド、UTXOエントリ、サブネットワーク、Coinbase、署名検証、手数料計算、Virtual State更新の説明を一次資料と照合する。Rustコードは教育用のため、コンセンサス互換性・実運用適性を主張しない。
+> **残る確認:** ハッシュ・シリアライズ・署名の完全照合、subnetwork固有の規則、報酬生成の詳細、公式実装との実行時の差分テストは未完了。主要な型と状態計算をソースで確認した範囲を章全体へ拡張しない。

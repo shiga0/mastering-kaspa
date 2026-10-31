@@ -1,0 +1,18 @@
+{
+  "network": "devnet",
+  "serverVersion": "1.0.1",
+  "source": "kaspadev:qqudhpkmv2rlp7yg9lygzlm83q8y6rtlmcpktzvejez63d5ltdq6un6zny8dg",
+  "destination": "kaspadev:qzd2x7q4ppmgypwx3xspvdtyp33xn2w92ywdr8fm9tzvlza5d8f7qkl446j88",
+  "transactionId": "cb03f0071807ad4c509411c1342cbb21f9accbd2043fcecb9b80e6f2ff1f3dee",
+  "amountSompi": "100000000",
+  "coinbaseMaturityDaa": "100",
+  "fundingDaaScore": "371",
+  "inputSpent": true,
+  "destinationUtxoObserved": true,
+  "acceptedByVirtualChain": true,
+  "acceptingBlockHash": "88322e6937084731ebeee8b4efde90e083831c82698252b3cc533f12cc9b65d9",
+  "destinationOutpoint": {
+    "transactionId": "cb03f0071807ad4c509411c1342cbb21f9accbd2043fcecb9b80e6f2ff1f3dee",
+    "index": 0
+  }
+}

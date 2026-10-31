@@ -1,8 +1,12 @@
 # Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）
 
 > **Mastering Kaspa / Part IV — Kaspa Development & Implementation**  
-> 原稿ステータス：v0.1（技術レビュー前）  
+> 原稿ステータス：v0.2（主要経路を基準版ソースと照合・章全体のレビューは継続中）\
 > 対象読者：Rust・バックエンド開発の経験があり、Kaspaウォレットの設計と安全性を理解したい人
+
+## 照合した実装
+
+2026年10月31日、[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要ソースを照合した。以下の固定ソースへの参照はSource-checkedの範囲を示す。別途、ランダム鍵による単一署名のDevnet送金・virtual受理は実測した（`experiments/devnet-send-review-2026-10-31.md`）。HD鍵導出・復旧・異常系と章全体の技術レビューは未完了。記録はリポジトリの `experiments/signing-wallet-review-2026-10-31.md` を参照する。
 
 ## 24.1 この章で学ぶこと
 
@@ -99,7 +103,9 @@ Hierarchical Key Derivation
 | BIP-32 | 階層的な鍵導出 | 導出パスや曲線・鍵形式の互換性を要確認 |
 | BIP-44 | アカウント階層の慣習 | coin type とウォレット実装の対応が必要 |
 
-Kaspaで用いられる具体的な導出方式はウォレット実装ごとに確認すること。**Bitcoin用のパスを推測で流用しない**。
+基準版の[gen1のWalletDerivationManager](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/wallet/keys/src/derivation/gen1/hd.rs)は単一署名のアカウント経路に `m/44'/111111'/account'`、マルチシグにpurpose `45'` を使う。cosigner indexや受取・変更の枝が必要な場合は、その後へ追加する。これはgen1の経路生成を読んだ結果であり、legacy/gen0を含むすべてのKaspaウォレットの共通仕様とは扱わない。復旧では利用した方式・account・cosigner・受取/変更の枝・アドレスindexも記録する。
+
+同じファイルの `create_address` はSchnorr用にはx-only公開鍵、ECDSA用には圧縮公開鍵をpayloadとして使い、指定prefixで符号化する。ニーモニックが一致しても、公開鍵やアドレスの種類を取り違えると期待する復旧結果にはならない。
 
 ### 24.4.3 パスフレーズ
 
@@ -185,6 +191,14 @@ Available -> Reserved -> Broadcast -> Accepted
 ```
 
 状態の戻し方は、再照会したコンセンサス状態と照合して決める。単に通信がタイムアウトしただけなら、**送信が失敗したと断定せず**トランザクションID等で再確認する。
+
+### 24.8.1 基準版のGeneratorとSigner
+
+[Generator](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/wallet/core/src/tx/generator/generator.rs)はUTXOを集め、mass境界に達した場合に中継トランザクションを作り、複数段階のトランザクションへ分割する。送金要求1件が必ず単一のトランザクションになるとは限らない。各段階の入力・手数料と、最終の支払い先を分けて追う。
+
+[SignerT::try_sign](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/wallet/core/src/tx/generator/signer.rs)は `SignableTransaction` とアドレス群を受け、対応する鍵を取得し、`sign_with_multiple_v2` と `fully_signed` を呼ぶ。署名用の一時的な鍵配列をzeroizeする処理はあるが、これだけで全キャッシュの寿命やプロセスメモリ全体の消去を保証したとは扱わない。multisig向けのTODOもあるため、この一般Signerが任意のマルチシグを扱えるとは断定しない。
+
+この経路のソース確認は、生成したトランザクションがノードで受理された実験とは別である。鍵素材を出力・保存せずにローカルで生成するDevnet実習と、その受理確認は後続作業とする。
 
 ## 24.9 オフライン署名とハードウェアウォレット
 
@@ -519,4 +533,4 @@ Kaspaアプリケーションでは、ウォレットが観測する状態とコ
 - [BIP-44: Multi-Account Hierarchy for Deterministic Wallets](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)
 - [OWASP Cryptographic Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html)
 
-> **技術レビュー時の確認事項：** 現行Kaspaウォレットの導出方式・アドレス形式・署名API・Script対応状況・mass/手数料計算・SDK公開インターフェースを、特定コミットとテストネット実験で検証する。一般的なHDウォレットの概念を、Kaspa固有の実装仕様と混同しない。
+> **残る確認：** legacy/gen0を含む導出互換性、バックアップ復旧、実SDKでの署名・手数料・massの実測、鍵キャッシュの寿命、マルチシグ・ハードウェア機器の対応は未検証。基準版のgen1とGenerator/Signerの主要経路の確認に限定する。

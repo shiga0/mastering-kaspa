@@ -1,8 +1,12 @@
 # Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）
 
 > **Mastering Kaspa / Part III — Transactions, Mining & Security**  
-> 原稿ステータス：**v0.1（学習用初稿・技術レビュー前）**  
+> 原稿ステータス：**v0.2（主要経路を基準版ソースと照合・章全体のレビューは継続中）**\
 > 本章では、KaspaのUTXOを支出するための**権限の証明**を、鍵・署名・スクリプト・トランザクション検証という責務に分解する。プロトコル固有のバイト列、署名ハッシュ、opcode、ネットワーク別ルールは変更され得るため、対象バージョンの`rusty-kaspa`で必ず確認する。コードは教育用であり、実際のKaspaトランザクションの署名・検証には使用しない。
+
+## 照合した実装
+
+2026年10月31日、[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要ソースを照合した。以下の固定ソースへの参照はSource-checkedの範囲を示す。別途、ランダム鍵による単一署名のDevnet送金・virtual受理は実測した（`experiments/devnet-send-review-2026-10-31.md`）。HD鍵導出・復旧・異常系と章全体の技術レビューは未完了。記録はリポジトリの `experiments/signing-wallet-review-2026-10-31.md` を参照する。
 
 ## この章で学ぶこと
 
@@ -184,7 +188,15 @@ Transaction B
 - 署名対象入力の位置や署名ハッシュ種別
 - 対象UTXOの情報やScript情報（規則で必要とされる場合）
 
-**この一覧は概念的な観点であり、Kaspaの実際のSighash仕様の完全な列挙ではない。** 実装時には必ず公式のSighash計算処理を参照する。
+### 基準版で確認した署名ハッシュ
+
+[calc_schnorr_signature_hash](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/hashing/sighash.rs)は、version、入力群のOutpoint/sequence/sig_op_countのハッシュ、対象入力のOutpoint、参照UTXOのScriptとamount、対象入力のsequence/sig_op_count、出力ハッシュ、lock_time、subnetwork_id、gas、payloadハッシュ、SIGHASH種別を規定の順でまとめる。
+
+ここで使うUTXO情報は、署名しようとする入力の `signatureScript` 自身ではない。入力だけのJSONやTransaction IDを署名する代用はできない。アドレスのネットワーク接頭辞もこの列挙の署名データではないため、送信先のネットワークはアドレス解釈・接続先の検査でも確認する。
+
+SIGHASH種別により、集約ハッシュの一部はゼロになる。native subnetworkかつ空payloadも専用のゼロハッシュ分岐を持つ。ECDSA用の[calc_ecdsa_signature_hash](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/hashing/sighash.rs)はSchnorr用ダイジェストをさらにECDSA用ハッシュへ通す。同じ入力でも、両方式の署名対象を無条件に同一視しない。
+
+この説明はソースの主要構成の確認であり、ハッシュ用ドメインやエンコードも含めた互換実装・既知値テストの完了を意味しない。
 
 ### 16.7.1 Transaction IDと署名ハッシュは別物
 
@@ -200,7 +212,13 @@ Transaction B
 
 UTXO系プロトコルでは、署名が承認する入力・出力の範囲を変えるSIGHASH種別が設けられることがある。たとえば「すべての出力を承認する」「特定の出力との対応を承認する」といった設計がある。
 
-ただし、**各フラグの数値、組み合わせ、例外条件はプロトコル固有**である。Bitcoinのフラグ名・動作をそのままKaspaの仕様とみなさない。実際の対応は`rusty-kaspa`の署名ハッシュ実装とテストベクトルで確認する。
+基準版の[SigHashType](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/hashing/sighash_type.rs)はALL=`0x01`、NONE=`0x02`、SINGLE=`0x04`、ANYONECANPAY=`0x80`を定義し、前3種類のそれぞれとANYONECANPAYの組み合わせを含む6値を許可する。SINGLEをBitcoinの数値から推測してはならない。
+
+[outputs_hash](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/hashing/sighash.rs)ではNONEは出力の集約をゼロ、SINGLEは入力と同じindexの出力だけを対象とし、対応する出力がなければゼロを返す。ANYONECANPAYでは入力群のOutpoint・sig_op_count等の集約が変わる。これらは検証済みの特定版の規則であり、署名モードを変更する際は承認範囲も見直す。
+
+### 16.7.3 標準アドレスからScriptへの変換
+
+[pay_to_address_script](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/crypto/txscript/src/standard.rs)はアドレスのversionで分岐する。PubKeyは32バイトの公開鍵データと `OpCheckSig`、PubKeyECDSAは33バイトと `OpCheckSigECDSA` を使う。ScriptHashはBLAKE2bによる32バイトのスクリプトハッシュを比較する。任意のアドレスpayloadを同じ署名方式で処理しない。
 
 ## 16.8 トランザクション署名のライフサイクル
 

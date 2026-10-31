@@ -1,8 +1,12 @@
 # Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）
 
 > **Mastering Kaspa / Part II — Kaspa Consensus & Architecture**  
-> 原稿ステータス：**v0.1（学習用初稿・技術レビュー前）**  
+> 原稿ステータス：**v0.2（主要経路を基準版ソースと照合・章全体のレビューは継続中）**\
 > 本章はKaspaの設計概念を解説する。Rustのサンプルは**教育用の状態遷移モデル**であり、`rusty-kaspa` のコンセンサス互換実装ではない。プロトコル上の厳密な順序、受理規則、例外処理は対象バージョンの実装・仕様で確認すること。
+
+## 照合した実装
+
+2026年10月31日、[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` のソースを読み取った。以下の具体的な処理はSource-checkedであり、公式ノードを実行した差分テストや章全体のVerified判定ではない。照合ファイルと未確認範囲はリポジトリの `experiments/consensus-state-review-2026-10-31.md` に記録する。
 
 ## この章で学ぶこと
 
@@ -157,6 +161,23 @@ GHOSTDAGのblue/redは、DAGの並行性を扱うための**ブロックの分�
 
 ---
 
+### 14.5.1 基準版の実際の処理順
+
+[GhostdagDataの合意順序](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/model/stores/ghostdag.rs)では、selected parentを先頭に置き、それ以外のmerge setをblue work、同値時はhashの昇順で並べる。blueとredの列を統合するため、「blueだけのトランザクションを処理する」という意味ではない。
+
+[calculate_utxo_state](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/utxo_validation.rs)はselected parentの過去のUTXO viewを基準とし、次の順に差分を作る。
+
+1. selected parentのCoinbaseを差分とMuHashへ加える。
+2. selected parent、続いて残りのmerge setを合意順に評価する。
+3. ブロックごとに、基準viewとそれまでのmerge set差分を合成する。そのviewに対して通常トランザクションを検証し、成功した分だけ差分・受理情報・手数料へ反映する。
+4. selected parent以外のCoinbase自体はこの通常トランザクションの検証から除く。各ブロックの報酬情報は別に収集する。
+
+selected parentの通常トランザクションでは、同じUTXO文脈で既に検証済みであることを前提にScript再検査を省く。一般の入力が未検証のまま受理される、という規則ではない。
+
+同一ブロック内の通常トランザクションは独立であることを[body検証](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/body_processor/body_validation_in_isolation.rs)で確認し、その後UTXO文脈の検証を並列化する。教材の「1件ずつ入力を消して次のトランザクションへ進む」というモデルを、そのまま実ノードのブロック内処理と見なさない。
+
+受理IDの並びにもフォーク条件がある。Crescendo前はIDをソートし、有効化後はcanonical orderを保持する。これはトランザクションIDのコミットメントに関する処理であり、適用順を後からID順に変えるという意味ではない。
+
 ## 14.6 Virtual Blockとは何か
 
 BlockDAGには、複数の**tip（子を持たない先端ブロック）**が存在し得る。新しいブロックがまだすべてのtipを参照していない時点でも、ノードは現在見えているDAG全体に基づいて合意上の状態を計算する必要がある。
@@ -176,7 +197,7 @@ Kaspaの**Virtual Block**は、この目的で用いる概念的な仮想ブロ�
             (概念的な先端)
 ```
 
-Virtual Blockは、現在のDAG tipsを親として扱う考え方を通じて、ノードが観測しているDAGの先端に対するコンセンサス結果を表現する。
+Virtual BlockはDAGの先端を評価する抽象化である。ただし、基準版は全tipsを無条件に親へ採用するわけではない。[pick_virtual_parents](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/processor.rs)が親数やpruning等の制約を適用し、選ばれた親からvirtualのGHOSTDAGデータを計算する。
 
 **重要：Virtual Blockは、実在するブロックのようにPoWを解いて発行されるものではない。** また、図は概念図であり、仮想ブロックの内部表現を厳密に再現したものではない。
 
@@ -305,11 +326,17 @@ Aliceが所有するUTXO `U` を考える。
 
 `S1` と `S2` が必ず異なるわけではない。また、上記の順序は**説明用の仮想例**であり、実際のGHOSTDAGの順序を計算した結果ではない。
 
-### 14.11.1 全履歴を毎回再実行するのか
+### 14.11.1 基準版の差分処理
+
+[resolve_virtualとcalculate_utxo_state_relatively](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/processor.rs)は、旧virtualの差分を逆にしたものから始め、selected-parent chainの分岐に沿って古い差分を戻し、新しい経路の状態を評価する。[UtxoDiff](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/utxo/utxo_diff.rs)は逆差分と差分の合成を提供する。
+
+[commit_virtual_state](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/processor.rs)では、virtual UTXO集合、virtual state、selected chainの変更を同じRocksDB WriteBatchに入れて書き込む。このソース確認だけで電源断時の耐久性まで検証したとは扱わない。
+
+### 14.11.2 全履歴を毎回再実行するのか
 
 概念上は初期状態から全トランザクションを再適用すれば状態を得られる。しかし実装で毎回それを行うのは非効率である。実際のノードでは過去状態、差分、キャッシュ、ストレージなどを使い、必要な範囲の更新を効率化する。
 
-### 14.11.2 「現在状態」は絶対不変ではない
+### 14.11.3 「現在状態」は絶対不変ではない
 
 新しいブロックの到着やネットワーク分断からの回復によって、観測される合意状態が変わる場合がある。これは**確定性（finality）**を考える動機となる。確定性の厳密な扱いは第20章で学ぶ。
 

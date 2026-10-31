@@ -1,0 +1,35 @@
+{
+  "network": "devnet",
+  "peerConnectionObservedOnBoth": true,
+  "initialPropagation": {
+    "blockCount": 13,
+    "virtualDaaScore": 13,
+    "sink": "16bfd639017427ee4509549d2b635ed4f769c27ab3061d7a3bef734bdb374407",
+    "tipHashes": [
+      "16bfd639017427ee4509549d2b635ed4f769c27ab3061d7a3bef734bdb374407"
+    ],
+    "rewardUtxoCount": 12,
+    "rewardUtxoSha256": "f0aaa6fa3e06e1068eae53d8e22d559b5e557a2731c9aeab38b4069aeeb6a7c0"
+  },
+  "aWhileBStopped": {
+    "blockCount": 27,
+    "virtualDaaScore": 27,
+    "sink": "234e17526cd7da681c2bc2dabc9cb99bf410c7721b82ebda86c7f789e5454686",
+    "tipHashes": [
+      "234e17526cd7da681c2bc2dabc9cb99bf410c7721b82ebda86c7f789e5454686"
+    ],
+    "rewardUtxoCount": 26,
+    "rewardUtxoSha256": "196a648858ce9b8540dec0a5e0cdcc210b0b8b24cd5375c6f35b485f99c9c06c"
+  },
+  "afterBRestart": {
+    "blockCount": 27,
+    "virtualDaaScore": 27,
+    "sink": "234e17526cd7da681c2bc2dabc9cb99bf410c7721b82ebda86c7f789e5454686",
+    "tipHashes": [
+      "234e17526cd7da681c2bc2dabc9cb99bf410c7721b82ebda86c7f789e5454686"
+    ],
+    "rewardUtxoCount": 26,
+    "rewardUtxoSha256": "196a648858ce9b8540dec0a5e0cdcc210b0b8b24cd5375c6f35b485f99c9c06c"
+  },
+  "stateMatchedAfterRestart": true
+}

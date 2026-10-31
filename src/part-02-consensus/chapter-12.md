@@ -3,6 +3,9 @@
 > **Part II — Kaspa Consensus & Architecture**  
 > 原稿ステータス: v0.2（GHOSTDAGの主要規則を固定実装と照合、章全体の技術レビューは継続中）
 
+
+> 本章の既存照合は[本書の基準版](../baseline.md)と別コミットを対象とする。基準版v1.0.1への再照合は未完了。
+
 ## 照合した実装
 
 2026年10月31日に `rusty-kaspa` のコミット `4edcbbccb449f84832afb1ca157904b35f37d006` を参照した。本章の親選択・merge set・blue判定・score/workの式は、下記の固定ソースを読み取って照合した（Source-checked）。メインネットの稼働リリースとの一致や、公式実装を実行した差分テストは未確認である。

@@ -51,6 +51,8 @@ HTMLの生成：
 mdbook build
 ```
 
+基準ソースは `rusty-kaspa` v1.0.1、実習はDevnetです。[対象バージョンと確認範囲](src/baseline.md)に、SDK・Rust・Dockerイメージの対応と既存原稿の版差をまとめています。
+
 ## 実行できるサンプル
 
 [第27章の最小ノード](examples/minimal-node/README.md)を掲載しています。標準ライブラリのみで実行でき、6件の単体テストを含みます。
@@ -61,7 +63,9 @@ mdbook build
 
 章・付録別の確認範囲と残作業は[技術レビューの進捗](src/review-status.md)を参照してください。
 
-Devnetの起動・読み取りwRPC・再起動の検証手順は[Devnet実習](experiments/devnet/README.md)を参照してください。送金のE2E検証は未完了です。
+Devnetの起動・読み取りwRPC・再起動の検証手順は[Devnet実習](experiments/devnet/README.md)を参照してください。公式WASM SDKによる単一署名送金とvirtual受理まで確認済みです。異常系と2ノードでの検証は未完了です。
+
+今後の作業と完了条件は[残作業一覧](ROADMAP.md)にまとめています。
 
 ## 原稿の状態
 

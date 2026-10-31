@@ -1,0 +1,31 @@
+name: mastering-kaspa-two-node
+x-node: &node
+  image: kaspanet/rusty-kaspad@sha256:5bc3195c2cd2d171885781ed55ead9485d93c7bd7b784d46e9e393c96757fe22
+  platform: linux/arm64
+  entrypoint: [kaspad]
+  networks: [lab]
+services:
+  node-a:
+    <<: *node
+    command: [--devnet, --yes, --nologfiles, --disable-upnp, --nodnsseed, --outpeers=0, --maxinpeers=2, --listen=0.0.0.0:16311, --rpclisten=0.0.0.0:16310, --enable-unsynced-mining, --utxoindex, --appdir=/data, --rpclisten-json=0.0.0.0:18310]
+    ports: ["127.0.0.1:19310:18310"]
+    volumes: [a-data:/data]
+  node-b:
+    <<: *node
+    command: [--devnet, --yes, --nologfiles, --disable-upnp, --nodnsseed, --outpeers=0, --maxinpeers=2, "--connect=${KASPA_LAB_NODE_A_IP:-127.0.0.1}:16311", --listen=0.0.0.0:16311, --nogrpc, --utxoindex, --appdir=/data, --rpclisten-json=0.0.0.0:18310]
+    ports: ["127.0.0.1:19320:18310"]
+    volumes: [b-data:/data]
+  miner:
+    image: kaspanet/cpuminer@sha256:60f78ab2828ab24b249c99210eee5a2825303a5226154260dd021ff26d46748b
+    platform: linux/arm64
+    profiles: [mining]
+    command: ["--kaspad-address=127.0.0.1", "--port=16310", "--threads=1", "--mine-when-not-synced", "--mining-address=kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99"]
+    network_mode: service:node-a
+    depends_on: [node-a]
+    cpus: 1.0
+networks:
+  lab:
+    driver: bridge
+volumes:
+  a-data:
+  b-data:

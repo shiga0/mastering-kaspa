@@ -1,0 +1,33 @@
+{
+  "network": "devnet",
+  "serverVersion": "1.0.1",
+  "source": "kaspadev:qqxrnecu4m4ur3c2q2ynak579lcgvf6rentfc4lamef4h2ywyjdh5xnqel5vv",
+  "destination": "kaspadev:qr2tqghdk4tkd36m2squjmch2sdgf3w2tpr3uce3zc2xreknm0z4xhgvjnq8v",
+  "checks": {
+    "clientTimedOutAfterLostReply": true,
+    "recoveredByTransactionId": true,
+    "sameTransactionReplay": "duplicate-rejected",
+    "droppedSubmitReplies": 1,
+    "naiveCreditSompi": "200000000",
+    "idempotentCreditSompi": "100000000",
+    "uniqueCreditedOutpoints": 1
+  },
+  "inputTotalSompi": "50000000000",
+  "outputTotalSompi": "49999990000",
+  "independentFeeSompi": "10000",
+  "sdkFeeSompi": "10000",
+  "expectedChangeSompi": "49899990000",
+  "actualChangeSompi": "49899990000",
+  "transactionId": "75df472f457256eee41636e748d00a217e481b5e639a2a0577b881ebb236d1a9",
+  "amountSompi": "100000000",
+  "coinbaseMaturityDaa": "100",
+  "fundingDaaScore": "4114",
+  "inputSpent": true,
+  "destinationUtxoObserved": true,
+  "acceptedByVirtualChain": true,
+  "acceptingBlockHash": "d63c3c0a3d5875bfe6caf4ea4c83ff5c04ee2bcd3b6e8bdc28d43785efb7b9ce",
+  "destinationOutpoint": {
+    "transactionId": "75df472f457256eee41636e748d00a217e481b5e639a2a0577b881ebb236d1a9",
+    "index": 0
+  }
+}

@@ -117,7 +117,7 @@ artifacts: logs/, metrics/, test-results/
 
 ## 28.6 ローカル環境の準備
 
-**実行検証の状況（2026年10月31日）：** Docker起動後、固定digestのkaspad 1.0.1（linux/arm64）で、Devnet起動・読み取りwRPC・採掘と再起動後のDAG/報酬UTXO保持を確認した。再現用のCompose設定、Python検査スクリプト、依存バージョン、実測JSONはリポジトリの `experiments/devnet/` に収録している。初回の採掘前は `isSynced: false`、ブロック数0を観測した。追加の採掘プロファイルで151ブロックと150件の報酬UTXOを生成し、再起動後の一致を確認した。実習はARM64専用で、本文の固定ソースコミットとバイナリの同一性は未検証。資金準備から送金・受理確認までのE2E検証は未完了。章別の進捗は[技術レビューの進捗](../review-status.md)を参照する。
+**実行検証の状況（2026年10月31日）：** Docker起動後、固定digestのkaspad 1.0.1（linux/arm64）で、Devnet起動・読み取りwRPC・採掘と再起動後のDAG/報酬UTXO保持を確認した。再現用のCompose設定、Python検査スクリプト、依存バージョン、実測JSONはリポジトリの `experiments/devnet/` に収録している。初回の採掘前は `isSynced: false`、ブロック数0を観測した。追加の採掘プロファイルで151ブロックと150件の報酬UTXOを生成し、再起動後の一致を確認した。実習はARM64専用で、本文の固定ソースコミットとバイナリの同一性は未検証。追加の `send.cjs` で成熟資金の準備、単一署名送金、virtual受理、UTXO変化を確認した。異常系・Mempool/包含の独立観測・2ノード検証は未完了。章別の進捗は[技術レビューの進捗](../review-status.md)を参照する。
 
 
 必要なものはDocker、Docker Compose、Rustツールチェーン、Git、KaspaのRPCクライアントである。
@@ -177,6 +177,8 @@ docker run --rm \
 
 ## 28.8 2ノード構成とピア接続
 
+実行確認した構成は、リポジトリの `experiments/devnet/two-node.yaml` と `two-node.py` に収録している。独立したデータ領域の2ノードで、接続・ブロック伝播・片側停止後の追従を確認した。再開後に27ブロックと指定した報酬先の26件のUTXOが一致したが、全UTXO集合・双方採掘時の分断・Pruning後の同期の検証ではない。実測記録は `experiments/devnet-two-node-2026-10-31.md` を参照する。
+
 ```text
 Node A                     Node B
   │                          │
@@ -230,6 +232,8 @@ State observation
 - 送信成功とコンセンサス受理を区別する。
 
 ## 28.10 トランザクションのE2Eテスト
+
+実行確認した単一署名の手順は、リポジトリの `experiments/devnet/README.md` の送金実習を参照する。公式SDKはv1.0.1配布物、署名鍵はメモリ内だけの一時鍵を使う。公開記録はTX ID・公開アドレス・受理結果だけに限定している。
 
 テスト用ウォレットAからウォレットBへDevnet資金を送る例を考える。
 
@@ -292,6 +296,10 @@ Event stream ──▶ Event handler ──▶ Reconciliation
 ```
 
 ## 28.12 タイムアウトと再試行
+
+本書の `experiments/devnet/send.cjs --retry-checks` は、ノードの送信成功応答をローカルプロキシで1件だけ破棄する。クライアント側の期限切れ後、既知のTX IDでMempoolを照会して復旧し、同じ署名済みトランザクションを意図的に再送すると重複として拒否されることを確認した。
+
+この検証では、正常送金の受理後に受取UTXO情報を2回処理し、Outpoint単位の計上で金額を1回分に保つことも確認した。ただし、インメモリの教材試験であり、永続台帳・複数ワーカー・再編成による取り消しの検証ではない。実測記録は `experiments/devnet-send-retry-2026-10-31.md` を参照する。
 
 分散システムでは、応答がないことから処理の未実行を推論できない。
 
