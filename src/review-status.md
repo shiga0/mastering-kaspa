@@ -1,6 +1,6 @@
 # 技術レビューの進捗
 
-更新日：2026年10月31日。本書の[対象バージョン](baseline.md)を基準に、ページの確認と個別の検証結果を記録します。
+更新日：2026年11月1日。本書の[対象バージョン](baseline.md)を基準に、ページの確認と個別の検証結果を記録します。
 
 ## SUMMARY順のレビュー
 
@@ -20,7 +20,13 @@
 | 10 | [第6章](part-01-foundations/chapter-06.md) | 基礎概説・確率計算教材を確認 | `experiments/chapter-06-review-2026-10-31.md` |
 | 11 | [第7章](part-01-foundations/chapter-07.md) | 集合の定義・DAG教材を確認 | `experiments/chapter-07-review-2026-10-31.md` |
 | 12 | [第8章](part-01-foundations/chapter-08.md) | 総まとめ・基準版の処理経路を確認 | `experiments/chapter-08-review-2026-10-31.md` |
-| 13 | [第9章](part-02-consensus/chapter-09.md) | 次の対象 | — |
+| 13 | [第9章](part-02-consensus/chapter-09.md) | 構造・基準版との対応を確認 | `experiments/chapter-09-review-2026-10-31.md` |
+| 14 | [第10章](part-02-consensus/chapter-10.md) | 接続・伝播の主要経路と教材を確認 | `experiments/chapter-10-review-2026-11-01.md` |
+| 15 | [第11章](part-02-consensus/chapter-11.md) | 本文・状態区分・教材を確認 | `experiments/chapter-11-review-2026-11-01.md` |
+| 16 | [第12章](part-02-consensus/chapter-12.md) | 本文・集合の定義・教材を確認 | `experiments/chapter-12-review-2026-11-01.md` |
+| 17 | [第13章](part-02-consensus/chapter-13.md) | 本文・計算説明・簡易DAA教材を確認 | `experiments/chapter-13-review-2026-11-01.md` |
+| 18 | [第14章](part-02-consensus/chapter-14.md) | 本文・Virtualと受理規則・UTXO教材を確認 | `experiments/chapter-14-review-2026-11-01.md` |
+| 19 | [第15章](part-03-transactions/chapter-15.md) | 次の対象 | — |
 
 この順番でページを確認したことと、ページに関係する全技術・全コードを検証したことは別です。後続章には、先に重要箇所だけを照合・実行したものがあります。
 
@@ -38,7 +44,7 @@
 
 | 対象 | 確認した範囲 | 主な限界・対象外 |
 |---|---|---|
-| 教育用Rust教材 | DAG解析器5テスト、最小ノード6テスト、書式・Clippy。第3章SHA-256抜き出し教材は実行・書式・2テスト | Kaspa互換性や公式ノードの全規則ではありません。第3章教材は手動検査で、CI対象には追加していません |
+| 教育用Rust教材 | DAG解析器8テスト（2026-11-01改訂後）、最小ノード6テスト、書式・Clippy。第3章SHA-256抜き出し教材は実行・書式・2テスト | Kaspa互換性や公式ノードの全規則ではありません。第3章教材は手動検査で、CI対象には追加していません |
 | GHOSTDAG | 基準版への再照合、公式分類関数と集合モデルの24ケース比較 | 小規模な合成DAG。到達可能性は共通DFS。全DAG・論文の全証明は対象外 |
 | DAA | 算術27ケース、Full窓120ケース、Sampled/Dual288ケースでモデルと一致 | GHOSTDAGメタデータを入力に使う条件付き比較。全ネットワーク・全境界は未検証 |
 | ブロック本体検証 | 公式テスト2件で単独検査・BadMerkleRoot/親不足の扱いを確認 | 親不足等の回帰テストはPoWを無効化。全ブロック検証やPoW込みE2Eではありません |
@@ -68,12 +74,12 @@
 | [Chapter 06 — Blockchain Limitations（ブロックチェーンの限界）](part-01-foundations/chapter-06.md) | 基礎概説・近似モデル・書誌情報を確認（2026-10-31） | 追加発見と別枝/ステール率、TPSの平均と容量上限を区別。確率教材5テスト・表示4行と高精度計算を確認。実ネットワークの性能・安全性は未検証 |
 | [Chapter 07 — Introduction to BlockDAG（BlockDAG入門）](part-01-foundations/chapter-07.md) | 集合の定義・基準版APIの祖先判定規約を確認（2026-10-31） | Anticoneと反鎖を区別。教材の未知ID照会・表示順を修正し、祖先・拒否時不変性・登録順など5テスト成功。Kaspa互換性・GHOSTDAG全体は未検証 |
 | [Chapter 08 — From Blockchain to Kaspa（ブロックチェーンからKaspaへ）](part-01-foundations/chapter-08.md) | 総まとめ・基準版の処理経路を確認（2026-10-31） | 図・集合/score/work・PHANTOMとの関係を整理。第6章の確率教材と既存の主要経路照合を参照。新たなコード実行・ノード実験・安全性証明は対象外 |
-| [Chapter 09 — Kaspa Architecture（Kaspaのアーキテクチャ）](part-02-consensus/chapter-09.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Chapter 10 — Kaspa Node & P2P Network（KaspaノードとP2Pネットワーク）](part-02-consensus/chapter-10.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Chapter 11 — Block Processing & Validation（ブロック処理と検証）](part-02-consensus/chapter-11.md) | 主要経路のみSource-checked（v1.0.1） | 検証順・保存状態・親不足/BadMerkleRootを照合。公式本体テスト2件と教材5テスト成功。P2P全体・全規則・永続化の障害検証は未完了 |
-| [Chapter 12 — GHOSTDAG Internals（GHOSTDAGの内部構造）](part-02-consensus/chapter-12.md) | 主要規則のみSource-checked（v1.0.1再照合） | DAG解析器5テスト成功。別ハーネスで公式分類関数と24ケースの親選択・blue/red・score/workが一致。大規模DAG・章全体は未検証 |
-| [Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）](part-02-consensus/chapter-13.md) | 主要経路のみSource-checked（v1.0.1） | Full/Sampled・整数target計算・DAA scoreを照合。教材5テスト成功。Full/Sampled算術27ケース・計54回でbits一致。Full窓/non-DAA/DAA scoreは120ケースで一致。Sampled/Dualは288ケースで一致。全ネットワーク・全境界・Pruning後IBDは未完了 |
-| [Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）](part-02-consensus/chapter-14.md) | 主要経路のみSource-checked（v1.0.1） | 合意順序・virtual・UTXO処理の主要経路を照合。教材3テスト成功。公式実行との差分・クラッシュ耐久性・章全体は未完了 |
+| [Chapter 09 — Kaspa Architecture（Kaspaのアーキテクチャ）](part-02-consensus/chapter-09.md) | 構造・基準版の起動/Mempool/RPC/検証経路の入口を確認（2026-10-31） | 依存図・Virtual/祖先の規約・版の混同を修正。本文DAG教材3テスト・書式成功。ノード全体・現行Mainnet・Pruning後IBDは未検証 |
+| [Chapter 10 — Kaspa Node & P2P Network（KaspaノードとP2Pネットワーク）](part-02-consensus/chapter-10.md) | 基準版の接続/ハンドシェイク/relayの主要経路を確認（2026-11-01） | 伝播モデルの重複接続・切断・再接続時の未補完を含む5テストと出力を確認。全IBD・攻撃耐性・実ノードの新規通信試験は未検証 |
+| [Chapter 11 — Block Processing & Validation（ブロック処理と検証）](part-02-consensus/chapter-11.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 既存の公式本体テスト2件に加え、修正後の教材7テスト成功。状態名/is_validと検証完了、同一ID衝突を区別。P2P全体・全規則・永続化障害は未検証 |
+| [Chapter 12 — GHOSTDAG Internals（GHOSTDAGの内部構造）](part-02-consensus/chapter-12.md) | 主要規則Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 改訂DAG解析器8テスト成功。別ハーネスの既存24ケースで親選択・blue/red・score/workが一致。全DAG・全規則・論文の証明は未検証 |
+| [Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）](part-02-consensus/chapter-13.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | Full/Sampled・整数target計算・DAA scoreを照合。改訂教材7テスト・実行出力を確認。Full/Sampled算術27ケース・計54回でbits一致。Full窓/non-DAA/DAA scoreは120ケースで一致。Sampled/Dualは288ケースで一致。全ネットワーク・全境界・Pruning後IBDは未完了 |
+| [Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）](part-02-consensus/chapter-14.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 合意順序・virtual・UTXO処理を照合。改訂教材7テストと実行出力を確認。公式実行との差分・クラッシュ耐久性・全規則は未検証 |
 | [Chapter 15 — UTXO Model & Transaction Processing（UTXOモデルとトランザクション処理）](part-03-transactions/chapter-15.md) | 主要経路のみSource-checked（v1.0.1） | UTXO・TX検証の主要経路を照合。教材4テスト成功。公式実行との差分・全subnetwork・章全体は未完了 |
 | [Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）](part-03-transactions/chapter-16.md) | 主要経路のみSource-checked（v1.0.1） | 署名/Script・gen1導出・Generator/Signerの一部を照合。単一署名送金・所定の拒否・応答喪失を実測。HD復旧・全Script・全異常系・章全体は未完了 |
 | [Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）](part-03-transactions/chapter-17.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
@@ -112,6 +118,12 @@
 
 | 対象 | 記録ファイル |
 |---|---|
+| 第14章本文レビューとUTXO教材 | `chapter-14-review-2026-11-01.md` |
+| 第13章本文レビューと簡易DAA教材 | `chapter-13-review-2026-11-01.md` |
+| 第12章本文レビューと改訂DAG解析器 | `chapter-12-review-2026-11-01.md` |
+| 第11章本文レビューと改訂教材 | `chapter-11-review-2026-11-01.md` |
+| 第10章P2P概説と伝播教材 | `chapter-10-review-2026-11-01.md` |
+| 第9章ノード構造とDAG教材 | `chapter-09-review-2026-10-31.md` |
 | 第8章基礎の総まとめと処理経路 | `chapter-08-review-2026-10-31.md` |
 | 第7章BlockDAG概説とDAG教材 | `chapter-07-review-2026-10-31.md` |
 | 第6章性能概説と確率計算教材 | `chapter-06-review-2026-10-31.md` |
@@ -148,6 +160,6 @@
 
 ## 次に確認するページと残作業
 
-目次順の次は[第9章](part-02-consensus/chapter-09.md)、その次は[第10章](part-02-consensus/chapter-10.md)です。以前の重要章優先の一覧ではなく、この順番でページを確認します。
+目次順の次は[第15章](part-03-transactions/chapter-15.md)、その次は[第16章](part-03-transactions/chapter-16.md)です。以前の重要章優先の一覧ではなく、この順番でページを確認します。
 
 個別検証として残る主なものは、Finalityの実行時境界、HDウォレット復旧、Pruning後IBD、複数ワーカー/会計処理、新規環境での再現、未照合の説明・数値・出典です。全残作業と完了条件は、リポジトリの `ROADMAP.md` に記録しています。

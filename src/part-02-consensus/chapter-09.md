@@ -1,8 +1,8 @@
 # Chapter 09 — Kaspa Architecture（Kaspaのアーキテクチャ）
 
 > **Part II — Kaspa Consensus & Architecture**  
-> 原稿バージョン：v0.1／2026年10月  
-> 本章は構造と責務の理解を目的とする。具体的なファイル名・RPC・コンセンサスパラメータはバージョンで変わるため、参照する実装のコミットを固定して確認すること。
+> 構造・基準版との対応を確認：2026-10-31。参照版は[本書の基準版](../baseline.md)のv1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。
+> 本章は責務と処理経路の入口を扱う。全規則・全モジュールの検証ではない。
 
 ## 9.1 この章で学ぶこと
 
@@ -28,7 +28,7 @@ Kaspaは、Proof of Work（PoW）で生成された複数のブロックを**有
 
 | 要素 | 問い | 主な役割 |
 |---|---|---|
-| PoW | 誰がどの程度の計算資源を投じたか | ブロック生成のコストと重みの基礎 |
+| PoW | 規定のtargetを満たす計算の証拠があるか | ブロック生成のコストと重みの基礎 |
 | BlockDAG | どのブロックがどのブロックを参照しているか | 並行生成された履歴の表現 |
 | コンセンサス | 共有状態をどう決定するか | 順序・受理・UTXO状態の決定 |
 
@@ -36,7 +36,7 @@ Kaspaは、Proof of Work（PoW）で生成された複数のブロックを**有
 
 ## 9.3 システムコンテキスト：外側から見る
 
-以下はC4モデルのContextレベルに相当する概念図である。
+以下は外部の利用者・ピアと保存先を整理する概念図である。厳密なC4のContext図ではなく、接続の用途を学ぶために描いている。
 
 ```text
    ┌──────────────┐            ┌───────────────┐
@@ -69,31 +69,15 @@ Kaspaは、Proof of Work（PoW）で生成された複数のブロックを**有
 実装上のモジュール境界と完全一致するものではないが、理解のため次のように分けられる。
 
 ```text
-             ┌───────────────────────────────────┐
-             │          API / RPC Layer          │
-             └───────────────┬───────────────────┘
-                             │
- ┌─────────────┐   ┌──────────▼───────────┐   ┌───────────────┐
- │ P2P Network ├──►│ Node Orchestration  │◄──┤ Mining        │
- │ + Sync      │   │ / Event Routing     │   │ Interface     │
- └─────────────┘   └──────────┬───────────┘   └───────────────┘
-                             │
-             ┌───────────────▼───────────────────┐
-             │         Consensus Engine          │
-             │  Header / DAG / GHOSTDAG / DAA    │
-             │  Ordering / Virtual / UTXO        │
-             └───────────────┬───────────────────┘
-                             │
-             ┌───────────────▼───────────────────┐
-             │      Storage / Persistence        │
-             └───────────────────────────────────┘
-                             ▲
-             ┌───────────────┴───────────────────┐
-             │        Mempool / Tx Policy        │
-             └───────────────────────────────────┘
+kaspad：起動時の構成とサービスの接続
+├─ P2P / 同期：ブロック・取引・同期データの交換
+├─ Consensus：ヘッダー / GHOSTDAG / DAA / 本体 / Virtual / UTXO
+├─ Mining：Mempool・取引ポリシー / ブロックテンプレート
+├─ RPC：外部からの照会・提出・通知
+└─ 保存：コンセンサスのデータストア / オプションの索引等
 ```
 
-この図は**責務を理解するためのモデル**である。Mempoolはコンセンサスから独立した別世界ではなく、トランザクション検証の規則や現在の状態を参照する。実装には非同期処理、キャッシュ、通知、複数のデータストアがあり、単純な上下関係には収まらない。
+線は機能の分類であり、呼び出し順序や依存方向を表さない。[基準版の起動処理](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/kaspad/src/daemon.rs)では、コンセンサス、MiningManager、RPC等を構成している。Mempoolはコンセンサスから独立した別世界ではなく、トランザクション検証の規則や現在の状態を参照する。実装には非同期処理、キャッシュ、通知、複数のデータストアがあり、単純な上下関係には収まらない。
 
 ### 責務の一覧
 
@@ -111,7 +95,7 @@ Kaspaは、Proof of Work（PoW）で生成された複数のブロックを**有
 
 ## 9.5 BlockDAGはどのように表現されるか
 
-Blockchainでは通常、ブロックが一つの親を参照する。一方Kaspaでは、ブロックが**複数の親**を参照できる。
+BitcoinではGenesis以外のブロックが一つの親を参照する。一方Kaspaでは、ブロックが**複数の親**を参照できる。
 
 ```text
            Genesis
@@ -125,22 +109,22 @@ Blockchainでは通常、ブロックが一つの親を参照する。一方Kasp
              E
 ```
 
-矢印を親から子へ描いた概念図であり、実際のブロックヘッダーは親への参照を持つ。親が複数あるからといって、**すべての親のトランザクションを無条件で採用する**わけではない。
+上を親、下を子として配置した概念図であり、実際のブロックヘッダーの参照は子から親へ向かう。親が複数あるからといって、**すべての親のトランザクションを無条件で採用する**わけではない。
 
 ### DAGを理解するための用語
 
 - **Parent（親）**：そのブロックが直接参照するブロック。
 - **Ancestor（祖先）**：親参照をたどって到達できる過去のブロック。
 - **Descendant（子孫）**：あるブロックを祖先に持つ後続ブロック。
-- **Anticone**：互いに祖先・子孫関係にないブロックの集合。
+- **Anticone**：対象自身を除き、対象と祖先・子孫関係にない既知ブロックの集合。集合自体が反鎖になるとは限らない。
 - **Tip**：現在知られているDAGで子を持たないブロック。
 - **Selected parent**：GHOSTDAG規則で選ばれる親。単純な「最初の親」ではない。
 
 ### 不変条件の例
 
-1. ブロックは自分自身を祖先に持たない。
+1. 親参照を1回以上たどって自分自身へ戻る閉路がない。本章の祖先・子孫は自身を除くが、基準版APIには自身も祖先とみなすものがある（[第7章](../part-01-foundations/chapter-07.md)）。
 2. 参照先の親は、対象ブロックより論理的に過去のブロックである。
-3. 同じブロックデータとコンセンサスパラメータを与えたノードは、同じ検証結果を導く。
+3. 同じブロック、必要なDAG・UTXOの履歴、パラメータ、評価条件を与えれば、同じ論理的な検証結果を導く。ブロック単体だけが同じでも、親不足や参照状態が違えば処理結果は異なり得る。
 4. DAGに存在することと、トランザクションが最終的にUTXO状態へ反映されることは同義ではない。
 
 ## 9.6 GHOSTDAGの位置づけ
@@ -155,10 +139,10 @@ GHOSTDAGはBlockDAG上で選択親やブロックの分類・順序付けに必�
 
 Kaspaのアーキテクチャで特に重要なのが**Virtual（仮想）**という概念である。
 
-現時点のDAGには複数のtipが存在しうる。新しいブロックが届くたびに「現在のDAG全体をどう解釈するか」を求める必要がある。そこで、現在のtip群を参照する**概念上の仮想ブロック**を考え、そこから得られる順序・状態を計算する。
+現時点のDAGには複数のtipが存在しうる。新しいブロックが届くたびに「現在のDAG全体をどう解釈するか」を求める必要がある。そこで、規則に従って選ばれた親群を参照する**概念上の仮想ブロック**を考え、そこから得られる順序・状態を計算する。
 
 ```text
-      B       C       D      ← DAG tips
+      B       C       D      ← 選ばれたVirtualの親（全tipsとは限らない）
        ╲      │      ╱
         ╲     │     ╱
          [ Virtual ]         ← 概念上の計算対象
@@ -170,7 +154,7 @@ Kaspaのアーキテクチャで特に重要なのが**Virtual（仮想）**と�
          Virtual UTXO
 ```
 
-**Virtual Blockは、ネットワークでマイニングされる通常のブロックではない。** ノードが現在のDAGに対するコンセンサス状態を計算するための概念である。
+**Virtual Blockは、ネットワークでマイニングされる通常のブロックではない。** 全tipsを無条件に親として取り込むわけでもない。ノードが現在のDAGに対するコンセンサス状態を計算するための概念である。
 
 ### なぜVirtualが必要なのか
 
@@ -200,13 +184,13 @@ Bitcoinの説明では「現在のチェーン先端」を中心に状態を説�
  Mined block
    │
    ▼
- Block / DAG validation
+ Header validation / GHOSTDAG
    │
    ▼
- GHOSTDAG / ordering
+ Body validation
    │
    ▼
- Virtual state / UTXO update
+ Virtual ordering / UTXO update
    │
    ▼
  RPC notification / indexer / wallet
@@ -232,16 +216,15 @@ Bitcoinの説明では「現在のチェーン先端」を中心に状態を説�
 ```text
 Receive block
   ├─ メッセージ形式・サイズの検査
-  ├─ ヘッダー・PoW・親参照等の検査
-  ├─ 必要な親データの取得／同期
-  ├─ DAGへの登録と関連情報の計算
-  ├─ コンセンサス順序・Virtualの更新
-  ├─ トランザクションの文脈依存検証
+  ├─ 不足する親データの取得／同期
+  ├─ ヘッダー処理（PoW・親関係・GHOSTDAG・履歴依存検査等）
+  ├─ 本体処理（Merkle root・取引構造・親本体等の検査）
+  ├─ Virtualの親選択・順序に沿ったUTXO/取引の検証
   ├─ UTXO状態の更新
   └─ イベント通知／必要に応じたMempool再評価
 ```
 
-この順番は**概念モデル**であり、実装の厳密な呼び出し順序ではない。実際には段階的検証、非同期パイプライン、重複検知、キャッシュ、状態更新の最適化が存在する。
+GHOSTDAGは本体検証より前のヘッダー処理に含まれる。ヘッダー保存・本体保存・UTXO検証の状態は区別する（[第11章](chapter-11.md)）。この図は**概念モデル**であり、実装の厳密な呼び出し順序ではない。実際には段階的検証、非同期パイプライン、重複検知、キャッシュ、状態更新の最適化が存在する。
 
 ### 何を信頼しないか
 
@@ -263,11 +246,11 @@ Kaspaには古い履歴を無制限にすべて保持する前提を避けるた
 | IBD | 新規ノードをネットワーク状態へ追いつかせる |
 | Pruning | 一定の条件の下で古いデータの保持量を抑える |
 | Pruning point | 履歴を整理する際の基準点 |
-| Pruning proof | 履歴全体を直接保持しない場合でも、必要な整合性を検証する仕組み |
+| Pruning proof | Pruning pointの候補を複数レベルのヘッダー等から検査する仕組み。受信UTXO集合の検証は別の経路 |
 
 「データを削除する＝安全性を無視する」ではない。一方で、何を保持し、何を証明で置き換えるかは**コンセンサスの安全性とストレージ効率のトレードオフ**である。
 
-詳しいアルゴリズムは第21章で扱う。
+詳しいアルゴリズムは[第21章](../part-04-development/chapter-21.md)で扱う。既存Devnet実測はPruning pointがGenesisのままであり、実際の削減やPruning後IBDは未検証である。
 
 ## 9.11 ノードのストレージ設計
 
@@ -279,7 +262,7 @@ Persistent storage
 ├── DAG relations
 ├── Consensus metadata
 ├── UTXO-related state
-├── Indexes / caches / metadata
+├── Indexes / metadata
 └── Pruning / synchronization data
 ```
 
@@ -295,9 +278,9 @@ Persistent storage
 
 ## 9.12 Mempoolはコンセンサスそのものではない
 
-Mempoolは、まだブロックに確定的に組み込まれていないトランザクションの候補を管理する。ここでは、トランザクションがコンセンサス上有効かどうかに加え、**ノードの受け入れ・中継ポリシー**が関わる。
+Mempoolはノードが採掘候補として保持するトランザクションや、その依存・不足入力などを管理する。全未確定取引の一覧や、永続的なウォレット履歴ではない。ここでは、トランザクションがコンセンサス上有効かどうかに加え、**ノードの受け入れ・中継ポリシー**が関わる。
 
-例えば、ある手数料水準のトランザクションをMempoolが拒否したとしても、それだけで「コンセンサス規則上無効」と結論づけてはいけない。実装の文書にも、手数料ポリシーとコンセンサス規則の区別が明示されている。
+例えば、ある手数料水準のトランザクションをMempoolが拒否したとしても、それだけで「コンセンサス規則上無効」と結論づけてはいけない。基準版の[手数料率検査](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/transaction_validator/tx_validation_in_utxo_context.rs)にも、Mempoolの手数料率の検査はコンセンサス検査ではないと明記されている。
 
 この境界は、ウォレット、取引所、マイニングプールの設計で特に重要になる。
 
@@ -309,7 +292,7 @@ Mempoolは、まだブロックに確定的に組み込まれていないトラ�
 | gRPC | サーバーサイドのRPCクライアント | ノードの照会、提出、通知 |
 | wRPC | WebSocketクライアント | ブラウザやアプリからの照会・通知 |
 
-`rusty-kaspa` のREADMEでは、wRPCはオプションであり、JSONまたはBorshを使う構成が説明されている。**wRPCは通常のJSON-RPC規格そのものと同一ではない**ため、既存のJSON-RPCクライアントをそのまま流用できると決めつけないこと。
+[基準版のREADME](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/README.md)では、wRPCはオプションであり、JSONまたはBorshを使う構成が説明されている。**wRPCは通常のJSON-RPC規格そのものと同一ではない**ため、既存のJSON-RPCクライアントをそのまま流用できると決めつけないこと。
 
 ### セキュリティ境界
 
@@ -342,18 +325,14 @@ KaspaのRust実装はワークスペース構成であり、機能ごとに複�
 6. 対応するテストを探し、どの不変条件を確認しているか読む。
 
 ```bash
-# 実行せずにソースを調べるだけなら
-
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
-
+# 第1章で取得した基準版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-find . -maxdepth 2 -name Cargo.toml | sort | head -60
-rg 'Virtual|virtual' consensus -g '*.rs' | head -40
-rg 'getBlockTemplate|GetBlockTemplate' rpc mining -g '*.rs' | head -40
+find . -maxdepth 2 -name Cargo.toml
+grep -n -E 'ConsensusFactory|MiningManager|RpcCoreService|WrpcService' kaspad/src/daemon.rs
 ```
 
-`rg` はripgrep。未導入なら `brew install ripgrep` などで用意する。検索語やディレクトリは将来変更されうる。
+未取得の場合は[第1章](../part-01-foundations/chapter-01.md#12-実践kaspaのコードを見てみる)の手順を先に実行する。コミットの期待値は本章冒頭の完全SHAである。実装は本書のリポジトリ外へ取得し、この調査ではビルドやノード起動を行わない。
 
 ### 調査ログのテンプレート
 
@@ -381,7 +360,14 @@ rg 'getBlockTemplate|GetBlockTemplate' rpc mining -g '*.rs' | head -40
 
 ## 9.15 設計を理解するための簡易Rustモデル
 
-実際のKaspaコンセンサスを再実装する前に、**DAGの依存関係だけ**を扱う小さなプログラムを作る。以下は学習用であり、PoW、GHOSTDAG、トランザクション検証、pruningなどを実装していない。
+実際のコンセンサス処理と構造管理を区別するため、**DAGの依存関係だけ**を扱う小さなプログラムを作る。以下は学習用であり、PoW、GHOSTDAG、トランザクション検証、pruningなどを実装していない。
+
+本書のリポジトリ外の作業用ディレクトリで作成する。Rust 1.90.0で確認した、標準ライブラリのみの教材である。
+
+```bash
+cargo new --lib --edition 2021 kaspa-architecture-lab
+cd kaspa-architecture-lab
+```
 
 `Cargo.toml`：
 
@@ -413,6 +399,7 @@ pub enum DagError {
     Duplicate,
     UnknownParent(String),
     SelfParent,
+    DuplicateParent,
 }
 
 impl Dag {
@@ -422,6 +409,9 @@ impl Dag {
         }
         if block.parents.iter().any(|p| p == &block.id) {
             return Err(DagError::SelfParent);
+        }
+        if block.parents.iter().collect::<HashSet<_>>().len() != block.parents.len() {
+            return Err(DagError::DuplicateParent);
         }
         for parent in &block.parents {
             if !self.blocks.contains_key(parent) {
@@ -466,6 +456,28 @@ mod tests {
     }
 
     #[test]
+    fn invalid_insertions_preserve_all_blocks() {
+        let mut dag = Dag::default();
+        dag.insert(block("genesis", &[])).unwrap();
+        let before = dag.blocks.clone();
+        for (candidate, error) in [
+            (block("genesis", &[]), DagError::Duplicate),
+            (block("a", &["a"]), DagError::SelfParent),
+            (
+                block("a", &["genesis", "genesis"]),
+                DagError::DuplicateParent,
+            ),
+            (
+                block("a", &["missing"]),
+                DagError::UnknownParent("missing".into()),
+            ),
+        ] {
+            assert_eq!(dag.insert(candidate), Err(error));
+            assert_eq!(dag.blocks, before);
+        }
+    }
+
+    #[test]
     fn unknown_parent_is_rejected() {
         let mut dag = Dag::default();
         assert_eq!(
@@ -482,13 +494,13 @@ mod tests {
 cargo test
 ```
 
-この実装では**親が先に登録される**ことを要求する。実際のP2Pでは親より先に子が到着しうるため、未解決ブロックを一時保持して不足データを要求する仕組みが必要になる。また、この学習用モデルはGenesisの一意性、ハッシュの検証、親の重複、最大親数、ネットワーク敵対性を扱っていない。
+この実装では**親が先に登録される**ことを要求する。実際のP2Pでは親より先に子が到着しうるため、未解決ブロックを一時保持して不足データを要求する仕組みが必要になる。また、この学習用モデルはGenesisの一意性、ハッシュの検証、最大親数、ネットワーク敵対性を扱っていない。tipsは構造上の先端であり、Virtualの親選択を実装したものではない。教材3テストの結果と限界はリポジトリの `experiments/chapter-09-review-2026-10-31.md` に記録している。
 
 ### 追加実験
 
 1. 親が届く前のブロックを`pending`に入れる。
 2. 親が到着したときに`pending`を再評価する。
-3. 重複した親参照を拒否する。
+3. 複数の親なしブロックを許すモデルと、Genesisを一つに限定するモデルを比較する。
 4. `tips()`を毎回全走査せず更新する方式を比較する。
 5. DAGへの追加とUTXO更新を別モジュールに分ける。
 
@@ -550,7 +562,7 @@ Kaspaは分散システムだが、設計を読むときは業務システムと
 
 Kaspaのアーキテクチャは固定された図ではない。ネットワークアップグレードにより、コンセンサス規則、トランザクション形式、P2Pプロトコル、同期方式、APIが変化する。
 
-たとえば、公式`rusty-kaspa`のリリースノートには、2026年のリリースで**P2Pプロトコルv11のチャンク化IBD**、ネットワークメッセージの制限強化、コンセンサス処理の整理が記載されている。したがって「Kaspaは常にこのメッセージ形式を使う」といった説明は避ける。
+例えば[基準版v1.0.1のリリースノート](https://github.com/kaspanet/rusty-kaspa/releases/tag/v1.0.1)には、MainnetでP2P v6ノードとの接続を切る変更が記載されている。これはそのリリースの記録であり、現在のMainnetの全接続条件を確認したという意味ではない。後発版の同期方式を基準版の説明へ混ぜず、参照版と対象ネットワークを明記する。
 
 本書の実装調査では必ず次を記録する。
 
@@ -568,7 +580,7 @@ feature activation: <対象ネットワークの有効化状態>
 
 | 観点 | Bitcoin | Kaspa |
 |---|---|---|
-| ブロック参照 | 基本的に単一の親 | 複数の親を参照できる |
+| ブロック参照 | Genesis以外は単一の親 | 複数の親を参照できる |
 | 履歴表現 | 線形チェーンを中心に扱う | BlockDAG |
 | 並行ブロック | チェーン競合として扱う | DAGの並行履歴として保持できる |
 | 順序の決定 | 選択されたチェーン上の順序 | DAGに対するコンセンサス順序 |
@@ -619,11 +631,11 @@ Kaspaの全体像は、次のように整理できる。
 ```text
 P2Pでブロックと取引を受け取る
                 ↓
-      コンセンサス規則で検証する
+     ヘッダー処理でGHOSTDAG等を計算・検査する
                 ↓
-       BlockDAGとして関係を持つ
+       本体と取引構造を検査する
                 ↓
-     GHOSTDAGなどで順序を導く
+     Virtualの親・順序・取引の受理を計算する
                 ↓
         Virtual UTXOを更新する
                 ↓
@@ -632,20 +644,20 @@ P2Pでブロックと取引を受け取る
 
 実装はこれほど直線的ではないが、**どの層が何に責任を持つか**を理解するための出発点になる。
 
-第10章では、P2Pネットワークとノード間同期に焦点を当て、ネットワークから届くデータをどう扱うかを詳しく見る。
+[第10章](chapter-10.md)では、P2Pネットワークとノード間同期に焦点を当て、ネットワークから届くデータをどう扱うかを詳しく見る。
 
 ---
 
 ## 参考資料
 
-以下は調査の一次資料。仕様や実装は更新されるため、書籍公開時には参照したコミット・版を明記すること。
+基準版を確認した出典と、更新される背景資料を分けて読む。実装の説明は本章冒頭の固定SHAを基準とする。
 
 1. [Kaspa公式 `rusty-kaspa` リポジトリ](https://github.com/kaspanet/rusty-kaspa) — Rustフルノード、ディレクトリ構成、ビルド、RPC、シミュレータ。
 2. [`rusty-kaspa` Releases](https://github.com/kaspanet/rusty-kaspa/releases) — プロトコルや実装の変更履歴。
 3. [Kaspa Improvement Proposals（KIPs）](https://github.com/kaspanet/kips) — 提案の状態、設計背景、プロトコル仕様。
-4. [Kaspa RPC Protocol Definition](https://github.com/kaspanet/rusty-kaspa/blob/master/rpc/grpc/core/proto/rpc.proto) — ノードAPIのメッセージ定義。
-5. [Kaspa Toccata Node Setup Guide](https://github.com/kaspanet/rusty-kaspa/blob/master/docs/toccata-guide.md) — ネットワークアップグレードとコンセンサス／Mempoolポリシーの区別。
+4. [Kaspa RPC Protocol Definition](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/grpc/core/proto/rpc.proto) — ノードAPIのメッセージ定義。
+5. [基準版の取引検証](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/transaction_validator/tx_validation_in_utxo_context.rs) — コンセンサス規則とMempoolの手数料率検査の区別。
 6. [Kaspa公式ドキュメント](https://docs.kaspa.org/) — ノード・開発・プロトコル資料。
 7. [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf) — Bitcoinとの設計比較の原点。
 
-> **編集メモ（v0.1）**：本文の概念図は教育用に単純化したもの。出版前に対象バージョンのソースコードで用語、データフロー、KIP有効化状況を再検証し、実装の関数名・テスト・コミットへの参照を補強する。
+> **確認範囲（2026-10-31）**：基準版の起動・Mempool・RPC・主要検証経路の入口と説明を照合し、DAG教材3テストを確認した。ノード全体の実行試験、現行Mainnetの仕様、Pruning後IBD、全規則の監査は対象外。記録はリポジトリの `experiments/chapter-09-review-2026-10-31.md` を参照。

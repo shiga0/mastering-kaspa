@@ -1,7 +1,7 @@
 # Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）
 
 > **Mastering Kaspa / Part II — Kaspa Consensus & Architecture**  
-> 原稿ステータス：**v0.2（基準版のDAA主要経路を照合・章全体はレビュー継続中）**\
+> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要経路と照合。全規則・全経路の検証完了を意味しない。\
 > 確率モデルとRust教材は原理を理解するための簡略化を含む。13.6の固定ソースに基づく計算説明とは区別する。現在のMainnetの仕様との一致は未確認。
 
 ## この章で学ぶこと
@@ -20,7 +20,7 @@
 
 ## 13.1 難易度調整が解決する問題
 
-PoWではマイナーがブロックヘッダーの候補を変え、ハッシュ値がネットワークの定める**ターゲット（target）以下**になる解を探す。試行回数が増えるほど、一定時間内に解を発見する確率は高くなる。
+PoWではマイナーがブロックヘッダーの候補を変え、PoW値がネットワークの定める**ターゲット（target）以下**になる解を探す。Kaspaのブロック識別子のハッシュとは区別する（[第3章](../part-01-foundations/chapter-03.md)）。試行回数が増えるほど、一定時間内に解を発見する確率は高くなる。
 
 ハッシュレートが2倍になってもターゲットが変わらなければ、平均的なブロック生成間隔は概ね半分になる。逆に、マイナーが減ると生成は遅くなる。難易度調整アルゴリズム（Difficulty Adjustment Algorithm、DAA）は、**ネットワーク全体の計算能力の変化に応じてPoWの目標を調整する仕組み**である。
 
@@ -47,7 +47,7 @@ PoWではマイナーがブロックヘッダーの候補を変え、ハッシ�
 | 概念 | 役割 | 注意点 |
 |---|---|---|
 | ハッシュレート | マイナーの計算試行速度 | ノードが直接・正確に観測できる量ではない |
-| Target | 成功と認めるハッシュ値の上限 | 小さいほど厳しい |
+| Target | 成功と認めるPoW値の上限 | 小さいほど厳しい |
 | Difficulty | PoWの相対的な厳しさ | 定義・基準値は実装に依存する |
 | ブロック生成ペース | DAAが間接的に観測する現象 | ランダム性と通信遅延を含む |
 | DAA window | 推定に利用する履歴の範囲 | 大小で応答性と安定性が変わる |
@@ -56,13 +56,11 @@ PoWではマイナーがブロックヘッダーの候補を変え、ハッシ�
 
 ## 13.2 PoWの確率モデル
 
-暗号学的ハッシュの出力を、`0` から `2^n - 1` までほぼ一様な整数とみなす。ターゲットを `T` とすると、1回の試行が成功する確率は概ね次のようになる。
+PoW値を `0` から `2^n - 1` まで一様な整数とみなす理想モデルを考える。整数ターゲットを `0 ≤ T ≤ 2^n - 1` とすると、1回の試行が成功する確率は次のようになる。
 
-\[
-p = \frac{T+1}{2^n}
-\]
-
-> mdBookの標準環境では上の数式表示に追加設定が必要な場合がある。本文を数式プラグインなしで公開する場合は `p = (T + 1) / 2^n` と読めばよい。
+```text
+p = (T + 1) / 2^n
+```
 
 試行の独立性を近似すると、成功までの期待試行回数は `1/p`。ネットワーク全体の試行速度を `H`（hashes/second）とすれば、期待ブロック発見時間は次の近似になる。
 
@@ -82,7 +80,7 @@ E[block_interval] ≈ 1 / (H × p)
 
 ### 13.2.2 平均値と実際の観測値
 
-期待間隔が10秒でも、毎回10秒後に発見されるわけではない。PoWの発見は近似的にポアソン過程として扱え、発見間隔には大きなばらつきがある。
+期待間隔が10秒でも、毎回10秒後に発見されるわけではない。ハッシュレートとターゲットが一定で、独立な試行と小さい成功確率を仮定すると、PoWの発見は近似的にポアソン過程として扱え、発見間隔には大きなばらつきがある。
 
 したがって「直近の1ブロックが速かった」だけで難易度を大きく変更すると、ランダムな揺れに過剰反応してしまう。
 
@@ -122,7 +120,7 @@ Kaspaのヘッダーにも難易度に関わる `bits` フィールドがある�
 
 ## 13.4 Bitcoinの難易度調整を基準に考える
 
-Bitcoinは難易度調整の比較対象として理解しやすい。基本的には**2,016ブロックごと**に、対象期間の経過時間と目標時間を比較してターゲットを調整する。目標間隔は約10分なので、2,016ブロック分の目標時間は約2週間となる。
+Bitcoin Mainnetの通常の調整を比較対象にする。基本的には**2,016ブロックごと**に、対象期間の経過時間と目標時間を比較してターゲットを調整する。目標間隔は約10分なので、2,016ブロック分の目標時間は約2週間となる。
 
 ```text
 目標期間: 2016 × 10分 = 20,160分
@@ -131,7 +129,7 @@ Bitcoinは難易度調整の比較対象として理解しやすい。基本的�
 観測期間が長い → ブロック生成が遅すぎる → 難易度を下げる
 ```
 
-Bitcoinの調整には上限・下限の制約があり、実際の計算はコンセンサス実装に従う。**KaspaのDAAをBitcoinの2,016ブロック方式と同一視してはいけない**。
+観測する時刻差は対象2016ブロックの先頭と末尾の間であり、2016個の独立した間隔を測るわけではない。調整の概要と制約は [Bitcoin Developer Guide](https://developer.bitcoin.org/devguide/block_chain.html#proof-of-work) を参照する。Testnet等の例外規則を含む全ネットワークの仕様はここでは扱わない。**KaspaのDAAをBitcoinの2,016ブロック方式と同一視してはいけない**。
 
 ### 13.4.1 方式のトレードオフ
 
@@ -162,7 +160,7 @@ A ──────┤             ├── F
         └── C ── E ──┘
 ```
 
-BlockDAGでは、どのブロック集合を「直近の観測対象」とするかをコンセンサスとして定義する必要がある。
+図は左が親、右が子であり、実際の参照は子から親へ向かう。BlockDAGでは、どのブロック集合を「直近の観測対象」とするかをコンセンサスとして定義する必要がある。
 
 ### 13.5.1 直感的な落とし穴
 
@@ -213,7 +211,7 @@ PoWハッシュの条件を検証
 他の検証条件と合わせて受理可否を決定
 ```
 
-この図は**実際の関数呼び出し順序を示すものではない**。コンセンサス処理はキャッシュ、並列処理、親の検証状態、ストレージへのアクセスを含み、コード上の依存関係はさらに複雑になる。
+この図は**期待bitsの計算に必要な依存関係を整理したものであり、実際の関数呼び出し順序ではない**。通常のヘッダー処理では、申告bitsへのPoW検査を先に行い、親関係・GHOSTDAGの計算後に期待bitsとの一致を確認する（13.13.2参照）。コンセンサス処理はキャッシュ、並列処理、親の検証状態、ストレージへのアクセスを含み、コード上の依存関係はさらに複雑になる。
 
 ### 基準版で確認した計算経路
 
@@ -228,26 +226,28 @@ PoWハッシュの条件を検証
 | 時間差 | 除く前に得た最大timestamp−最小timestampを使い、最低1ミリ秒とする |
 | 出力 | 時間比を整数演算で適用し、最大targetで制限してcompact bitsへ戻す |
 
-Fullの通常計算を、最小時刻の要素を除いた件数 `n`、そのtarget平均 `avg` として書くと次になる。
+Fullの通常計算を、最小時刻の要素を除いた件数 `n > 0`、そのtarget平均 `avg` として書くと次になる。
 
 ```text
 avg = floor(sum(remaining_targets) / n)
 new_target = floor(avg × max(max_ts − min_ts, 1) / (target_time_per_block × n))
+bounded_target = min(new_target, max_difficulty_target)
+bits = compact_target_bits(bounded_target)
 ```
 
-timestampが同じ要素の順序はblue work、hashで決定する。timestampと目標時間の単位はミリ秒。途中の平均化でも整数除算するため、式の演算順序を変更したり、targetの平均をdifficultyの平均へ置き換えたりしない。Sampled側は通常の分母にsample rateも掛け、Crescendo直後で標本が不足するときにはselected parentのbitsを継承または目標時間比で補正する別経路を持つ。
+最小・最大の要素は `(timestamp, blue_work, hash)` の比較で決める。timestampと目標時間の単位はミリ秒。途中の平均化でも整数除算するため、式の演算順序を変更したり、targetの平均をdifficultyの平均へ置き換えたりしない。compact表現へ戻す段階でも精度が落ち得るため、整数targetの計算値とbitsを区別する。Sampled側は通常の分母にsample rateも掛け、Crescendo直後で標本が不足するときにはselected parentのbitsを継承または目標時間比で補正する別経路を持つ。
 
-根拠：[window.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/window.rs)、[difficulty.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/difficulty.rs)、[params.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)。ヘッダー検証では、申告bitsへのPoW検査と、履歴から計算する期待bitsとの照合を分けて行う。[第11章](chapter-11.md)の検証順を参照する。追加の `experiments/daa/` で、明示した窓に対するFull/Sampled算術を27ケース・各2通りの挿入順で実行比較し、整数モデルとbitsが一致した。履歴不足、同一時刻、丸め、target制限、Sampled標本不足時の境界を含む。続く `experiments/daa-window/` ではFull側の窓構築・non-DAA集合・DAA scoreを120ケースで比較し一致した。キャッシュ3条件と親配列2順も同じ出力。GHOSTDAGメタデータは公式から供給する条件付き比較で、合成DAGの到達可能性はDFSを使う。さらに `experiments/daa-transition/` でSampled窓とDual切り替えを288ケース比較し、Pythonモデルと一致した。選択親DAAのactivation直前・一致・直後を含み、窓・non-DAA・DAA score・bitsを確認。キャッシュ3条件と親配列2順でDual/直接計算器の結果も一致した。記録は `experiments/daa-comparison-2026-10-31.md`。
+根拠：[window.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/window.rs)、[difficulty.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/difficulty.rs)、[params.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)。ヘッダー検証では、申告bitsへのPoW検査と、履歴から計算する期待bitsとの照合を分けて行う。[第11章](chapter-11.md)の検証順を参照する。追加の `experiments/daa/` で、明示した窓に対するFull/Sampled算術を27ケース・各2通りの挿入順で実行比較し、整数モデルとbitsが一致した。履歴不足、同一時刻、丸め、target制限、Sampled標本不足時の境界を含む。続く `experiments/daa-window/` ではFull側の窓構築・non-DAA集合・DAA scoreを120ケースで比較し一致した。キャッシュ3条件と親配列2順も同じ出力。GHOSTDAGメタデータは公式から供給する条件付き比較で、合成DAGの到達可能性はDFSを使う。さらに `experiments/daa-transition/` でSampled窓とDual切り替えを288ケース比較し、Pythonモデルと一致した。選択親DAAのactivation直前・一致・直後を含み、窓・non-DAA・DAA score・bitsを確認。キャッシュ3条件と親配列2順でDual/直接計算器の結果も一致した。算術27ケースの記録は `experiments/daa-comparison-2026-10-31.md`、Full窓120ケースは `experiments/daa-window-comparison-2026-10-31.md`、Sampled/Dual288ケースは `experiments/daa-transition-comparison-2026-10-31.md`。これらは以前の実行記録で、今回の通読時に再実行したものではない。
 
 Sampled側の**窓に含まれないこと**と、**non-DAAであること**は異なる。non-DAAはblue scoreの閾値に基づいて判定し、sample rateによる間引きやactivationのフィルタと分ける。各merge setのDAA indexにはnon-DAA以外を数え、その後にactivationとサンプリング条件を適用する。したがって、窓の要素数だけをDAA scoreへ加算する計算にはしない。キャッシュもFull/Sampledのoriginを区別して利用する。
 
 窓の取り込みでは、標本ブロック自身の有効化と、それを取り込む文脈の有効化の両方を考慮する。条件と実測の詳細は `experiments/daa-transition-comparison-2026-10-31.md`。これらは合成DAGでの関数検査であり、実ネットワークの切り替えやPruning後IBDの成功とは区別する。
 
-### 13.6.1 過去の情報だけで決まること
+### 13.6.1 履歴と共通ルールで決まること
 
 ノードごとに難易度が違ってしまうとコンセンサスが成立しない。したがって、候補ブロックに対して期待される難易度は、**プロトコルで認められた決定的な入力と計算手順**から導かれなければならない。
 
-ノードのローカル時計、受信順、任意のピアの申告ハッシュレートをそのまま計算に使う設計は、ノード間不一致の原因になる。
+ノードのローカル時計、受信順、任意のピアの申告ハッシュレートを、そのまま期待bitsの算出に使わない。ヘッダーの未来時刻の許容検査など、DAAの算出とは別の検証でローカル時計を参照することまで否定する意味ではない。
 
 ### 13.6.2 Genesis・初期履歴・特殊条件
 
@@ -330,7 +330,12 @@ DAAは単なる性能調整ではなく、ネットワークのセキュリテ�
 - 整数ターゲット・コンパクト表現・BlockDAG固有のDAA windowは扱わない。
 - 難易度は `f64` で表すが、**実際のコンセンサス実装では浮動小数点の非決定性に注意し、正確な整数演算を使うべき**である。
 
-`cargo new daa-lab` でプロジェクトを作り、`src/main.rs` を次の内容に置き換える。
+本書とは別の作業用ディレクトリでプロジェクトを作り、`src/main.rs` を次の内容に置き換える。外部依存は使わず、Rust 1.90.0で確認した。
+
+```bash
+cargo new --bin --edition 2021 daa-lab
+cd daa-lab
+```
 
 ```rust
 const TARGET_INTERVAL_SECS: f64 = 10.0;
@@ -364,8 +369,8 @@ fn adjust_difficulty(
     let raw_ratio = expected_total / observed_total;
     let bounded_ratio = raw_ratio.clamp(0.25, 4.0);
     let next = current_difficulty * bounded_ratio;
-    if !next.is_finite() {
-        return Err("next difficulty is too large");
+    if !next.is_finite() || next <= 0.0 {
+        return Err("next difficulty must be positive and finite");
     }
     Ok(next)
 }
@@ -408,11 +413,24 @@ mod tests {
     }
 
     #[test]
+    fn unrepresentable_results_are_rejected() {
+        assert!(adjust_difficulty(100.0, &[f64::MAX, f64::MAX]).is_err());
+        assert!(adjust_difficulty(f64::MAX, &[1.0]).is_err());
+        assert!(adjust_difficulty(f64::from_bits(1), &[100.0]).is_err());
+    }
+
+    #[test]
+    fn tiny_intervals_still_respect_the_update_limit() {
+        assert_eq!(adjust_difficulty(100.0, &[f64::from_bits(1)]), Ok(400.0));
+    }
+
+    #[test]
     fn invalid_inputs_are_rejected() {
         assert!(adjust_difficulty(100.0, &[]).is_err());
-        assert!(adjust_difficulty(100.0, &[0.0]).is_err());
-        assert!(adjust_difficulty(-1.0, &[10.0]).is_err());
-        assert!(adjust_difficulty(100.0, &[f64::NAN]).is_err());
+        for value in [0.0, -1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert!(adjust_difficulty(value, &[10.0]).is_err());
+            assert!(adjust_difficulty(100.0, &[value]).is_err());
+        }
     }
 }
 ```
@@ -424,7 +442,9 @@ cargo run
 cargo test
 ```
 
-**期待される値**：`fast` は `Ok(200.0)`、`slow` は `Ok(50.0)`。コードとテストは説明用に提示しており、本書作成時点で実行検証済みとは主張しない。
+**期待される値**：`fast` は `Ok(200.0)`、`slow` は `Ok(50.0)`。本文から抽出したコードで、この出力と7テストの成功を確認した（`experiments/chapter-13-review-2026-11-01.md`）。
+
+有限の正の入力でも、合計や次の値がオーバーフローする場合、次の値がゼロへアンダーフローする場合はエラーとする。一方、極小の観測間隔で比が無限大になっても、教材の上限4倍へ制限する。これらは浮動小数点の教材上の方針であり、公式DAAの境界処理ではない。
 
 ### 13.10.2 この実装に欠けているもの
 
@@ -475,7 +495,7 @@ Interpretation:
 Limitations:
 ```
 
-結果は `experiments/chapter-13/` に保存すると、後から実験条件を追跡しやすい。
+結果には入力・更新規則・出力を記録する。この節は静的な履歴を与える演習であり、難易度変更後の採掘を含む閉ループのシミュレーションではない。振動や回復性を評価するには、変更後の難易度に応じて次の発見間隔を生成するモデルも必要になる。
 
 ---
 
@@ -484,21 +504,20 @@ Limitations:
 実装は更新されるため、**特定のファイルパスや関数名が常に存在すると決めつけない**。まず使用するタグ・コミットを固定し、リポジトリ内を検索する。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
-
-git checkout --detach fcd9c28f9b211b9872a0c90a8c94f79466ffb063
+# 第1章で取得した基準版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-rg -n 'difficulty|daa_score|daa_window|target|bits' consensus
-rg -n 'calculate.*difficulty|difficulty.*calculate|difficulty_manager' .
+grep -n -E 'calculate_difficulty_bits|average_target|sample_rate' consensus/src/processes/difficulty.rs
+grep -n -E 'block_daa_window|crescendo|difficulty' consensus/src/processes/window.rs
+grep -n -E 'difficulty|bits' consensus/src/pipeline/header_processor/pre_pow_validation.rs
 ```
 
-検索結果から、次の順序で読む。
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使い、HEADを本章冒頭の完全SHAと照合する。検索結果から、次の順序で読む。
 
 1. **コンセンサス設定**：ネットワーク別の目標レート、ウィンドウ長、境界値。
 2. **DAA計算**：対象ブロック集合、時刻、仕事量、ターゲット計算。
 3. **ヘッダー検証**：期待 `bits` との一致確認。
-4. **PoW検証**：ヘッダーとターゲットの照合。
+4. **PoW検証**：PoW値と申告ターゲットの照合。
 5. **テスト**：境界条件、固定テストベクトル、アップグレード前後の扱い。
 
 ### 13.12.1 調査メモに残すべき情報
@@ -555,9 +574,11 @@ DAAを設計対象として見ると、役割の分離が理解しやすい。
                     ▼
 ┌─────────────────────────────────────────────┐
 │ BlockDAG / Consensus State                  │
-│   DAG・GHOSTDAG・Virtual State              │
+│   親関係・UTXO・Virtualの保存状態            │
 └─────────────────────────────────────────────┘
 ```
+
+この図は責務の整理であり、関数呼び出しや更新の順序ではない。GHOSTDAGの計算はヘッダー検証の中でも使う。
 
 **依存関係の考え方**：P2P層は「いつ受信したか」を知っているが、「そのブロックの正しい難易度」を独断で決めるべきではない。難易度はコンセンサス層が、検証済みの履歴と共通ルールから決定する。
 
@@ -575,23 +596,22 @@ DAAを設計対象として見ると、役割の分離が理解しやすい。
 CandidateReceived
       │
       ▼
-ParentsAvailable ── no ──> WaitingForParents
+IsolatedHeaderAndPoWChecked ── fail ──> Rejected
+      │
+      ▼
+ParentsAvailable ── missing ──> WaitingForParents
       │ yes
       ▼
-ExpectedDifficultyComputed
-      │
-      ├── mismatch ──> Rejected
+ParentRelationsChecked / GHOSTDAGMetadataComputed
       │
       ▼
-PoWVerified
-      │
-      ├── fail ──────> Rejected
+ExpectedBitsChecked ── mismatch ──> Rejected
       │
       ▼
-FurtherConsensusValidation
+FurtherHeaderChecks → HeaderOnly → Body / Virtual processing
 ```
 
-これは学習用の状態モデルであり、実際のKaspaノードのステートマシンをそのまま示すものではない。
+これは基準版の通常ヘッダー処理を学習用に抜粋した図であり、全分岐を含まない。根拠：[単独検査](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/header_processor/pre_ghostdag_validation.rs)と[期待bitsの照合](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/header_processor/pre_pow_validation.rs)。親到着後は適切な検査段階から再試行する。図のRejectedが常に永続的なStatusInvalidを意味するわけではなく、HeaderOnlyも本体・UTXO検証の完了ではない（[第11章](chapter-11.md)参照）。
 
 ---
 
@@ -641,7 +661,7 @@ FurtherConsensusValidation
 2. ブロック間隔が確率的にばらつくことは、DAA windowの設計にどう影響するか。
 3. Bitcoinの2,016ブロック方式をKaspaにそのまま当てはめられないのはなぜか。
 4. Selected-parent chainだけを数えると、BlockDAGで何を見落とす可能性があるか。
-5. `bits` の値が不正でも、ヘッダーのハッシュがその値のTargetを満たせばよいか。
+5. `bits` の値が不正でも、PoW値がその値のTargetを満たせばよいか。
 6. タイムスタンプが信頼できる時計でないことは、DAA設計にどう影響するか。
 7. DAAをP2P受信時刻に依存させると、どの不変条件を破る可能性があるか。
 8. `rusty-kaspa` のDAA実装を調べる際、最低限どの情報を固定して記録すべきか。
@@ -670,7 +690,7 @@ FurtherConsensusValidation
 - DAAの計算は、すべての正しいノードで一致する**決定的なコンセンサス処理**でなければならない。
 - Rustの簡略モデルは直感の理解に役立つが、実際のKaspaの仕様を置き換えるものではない。
 
-次章 **Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）** では、DAG上のブロックに決定的な順序を与え、UTXO状態を評価する仕組みを扱う。
+次章 **[Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）](chapter-14.md)** では、DAG上のブロックに決定的な順序を与え、UTXO状態を評価する仕組みを扱う。
 
 ---
 
@@ -683,8 +703,8 @@ FurtherConsensusValidation
 5. [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — コンセンサス変更の提案と議論。提案と採用済み仕様は区別する。
 6. [Kaspa Research Papers](https://kaspa.org/research/) — GHOSTDAGおよびBlockDAGに関する研究資料への入口。
 
-> **残る確認**：27ケースの算術比較を基に、Full側の窓構築・DAA scoreの120ケース比較も踏まえ、Sampled/Dualの288ケース比較も踏まえ、全ネットワーク・未収録のsample rateや境界・中央値時刻窓・Pruning後IBDを追加検証する。Bitcoin比較と関連KIP・論文の全面照合も継続する。
+> **残る確認**：既存の算術27ケース、Full窓120ケース、Sampled/Dual288ケースは有限の合成入力に対する比較である。全ネットワーク、未収録のsample rateや境界、中央値時刻窓、Pruning後IBD、攻撃耐性、関連KIP・論文の証明は追加検証の対象とする。
 
-基準版の主要経路のSource-checked記録と教材5テストの結果は `experiments/core-validation-review-2026-10-31.md`。原論文/KIP・全ネットワーク・フォーク境界の数値比較は継続レビューとする。
+基準版の主要経路と旧教材5テストの記録は `experiments/core-validation-review-2026-10-31.md`。目次順の本文レビューと改訂教材7テストは `experiments/chapter-13-review-2026-11-01.md` に記録した。
 
-Full窓構築の条件と結果は `experiments/daa-window-comparison-2026-10-31.md`。ORIGIN境界を関数単位で検査したことを、実際のPruning後同期と同一視しない。
+Full窓のORIGIN境界を関数単位で検査したことを、実際のPruning後同期と同一視しない。今回の通読・教材実行を、既存の公式関数比較や全経路の検証と一括りにしない。

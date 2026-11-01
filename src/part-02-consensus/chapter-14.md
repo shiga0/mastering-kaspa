@@ -1,7 +1,7 @@
 # Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）
 
 > **Mastering Kaspa / Part II — Kaspa Consensus & Architecture**  
-> 原稿ステータス：**v0.2（主要経路を基準版ソースと照合・章全体のレビューは継続中）**\
+> 目次順の本文レビュー：2026-11-01。主要経路は基準版と照合。ページの確認と全規則・全経路の検証は区別する。\
 > 本章はKaspaの設計概念を解説する。Rustのサンプルは**教育用の状態遷移モデル**であり、`rusty-kaspa` のコンセンサス互換実装ではない。プロトコル上の厳密な順序、受理規則、例外処理は対象バージョンの実装・仕様で確認すること。
 
 ## 照合した実装
@@ -25,7 +25,7 @@
 
 ## 14.1 「順序」と「状態」は別の問題
 
-ブロックチェーンではブロックが基本的に1本の列を形成するため、ブロックの並びがトランザクションを処理する順序の土台になる。一方、BlockDAGには並行して生成されたブロックが存在する。
+ブロックチェーンでは、競合する枝から選ばれた採用チェーンが1本の列を形成するため、ブロックの並びがトランザクションを処理する順序の土台になる。一方、BlockDAGには並行して生成されたブロックが存在する。
 
 ```text
         Genesis
@@ -37,7 +37,7 @@
            D
 ```
 
-`B` と `C` は、いずれも `A` を参照しているが、互いを親子として参照していない。DAGの構造だけでは、`B` と `C` のどちらに含まれるトランザクションを先に処理すべきかは決まらない。
+図は上が親、下が子で、参照は子から親へ向かう。`B` と `C` は、いずれも `A` を参照しているが、互いを親子として参照していない。DAGの構造だけでは、`B` と `C` のどちらに含まれるトランザクションを先に処理すべきかは決まらない。
 
 **コンセンサス順序（consensus ordering）**は、このような並行性を含むブロック集合から、参加ノードが同じ規則に従って計算できる順序を定めるために必要となる。
 
@@ -85,6 +85,8 @@
        RPC / Wallet等
 ```
 
+GHOSTDAGはヘッダー検証の中で計算される。本体・UTXO検証がすべて終わってから初めてGHOSTDAGを実行する図とは読まない。
+
 これは**概念上の責務図**であり、実装内の関数呼び出し順を示すものではない。検証・状態更新・永続化は複数の段階に分かれ、キャッシュや並列処理も関係する。
 
 ### 14.2.1 決定的であること
@@ -93,7 +95,7 @@
 
 ### 14.2.2 状態が履歴に依存すること
 
-UTXO集合は、初期状態からトランザクションを順に適用した結果である。単に「ブロックが存在する」だけでは現在の残高を決定できない。
+UTXO集合は、合意された基準状態に受理されたトランザクションの効果を反映した結果である。Genesisから再構築する説明と、Pruning後の基準状態・検証済み差分から更新する処理を区別する。単に「ブロックが存在する」だけでは現在の残高を決定できない。
 
 ---
 
@@ -143,7 +145,7 @@ GHOSTDAGでは、ブロックの親のうち規則に従って**Selected Parent*
 - マージ集合は「すべての祖先」を単純に並べたものではない。
 - blue/redは、トランザクションが有効か無効かを直接示す分類ではない。
 
-正確な選択規則とマージ集合の順序は、GHOSTDAGの仕様と実装に従う。第12章の内容と照らし合わせて読むこと。
+基準版の親選択は `(blue_work, hash)` の最大値を用いる。マージ集合がselected parentを含むかは関数・データ構造ごとに区別する。[第12章](chapter-12.md)の定義と照らし合わせて読むこと。
 
 ## 14.5 blue/red分類と順序付け
 
@@ -176,7 +178,7 @@ selected parentの通常トランザクションでは、同じUTXO文脈で既�
 
 同一ブロック内の通常トランザクションは独立であることを[body検証](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/body_processor/body_validation_in_isolation.rs)で確認し、その後UTXO文脈の検証を並列化する。教材の「1件ずつ入力を消して次のトランザクションへ進む」というモデルを、そのまま実ノードのブロック内処理と見なさない。
 
-受理IDの並びにもフォーク条件がある。Crescendo前はIDをソートし、有効化後はcanonical orderを保持する。これはトランザクションIDのコミットメントに関する処理であり、適用順を後からID順に変えるという意味ではない。
+受理IDの並びにもフォーク条件がある。Crescendo前はIDをソートし、有効化後はcanonical orderを保持する。判定には処理対象のヘッダーに対応する `pov_daa_score` を使う。GHOSTDAGやDAAの切り替えで使うselected parentのDAA scoreと機械的に置き換えない。これはトランザクションIDのコミットメントに関する処理であり、適用順を後からID順に変えるという意味ではない。
 
 ## 14.6 Virtual Blockとは何か
 
@@ -213,7 +215,7 @@ Virtual BlockはDAGの先端を評価する抽象化である。ただし、基�
 
 ## 14.7 Virtual Stateとは何か
 
-**Virtual State**は、現在のVirtual Blockに対応して計算されるコンセンサス上の状態を指す。アプリケーションから見えるUTXO情報や、トランザクション受理結果を理解するうえで重要である。
+**Virtual State**は、現在のVirtual Blockに対応して計算されるコンセンサス上の状態を指す。基準版の[VirtualState](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/model/stores/virtual_state.rs)は、親群・GHOSTDAGデータ・DAA score・past median time・UTXO差分・受理IDなどを保持し、UTXO集合だけを指す名前ではない。アプリケーションから見えるUTXO情報や、トランザクション受理結果を理解するうえで重要である。
 
 概念的には、次のように表せる。
 
@@ -309,7 +311,7 @@ Aliceが所有するUTXO `U` を考える。
 
 ## 14.11 DAG tipsの変化とVirtual Stateの再計算
 
-新しいブロックが到着すると、DAG tips、選択親に関する結果、仮想的なコンセンサス順序が変化することがある。そのためVirtual Stateも更新対象になる。
+新しいブロックが到着すると、DAG tips、Virtual側のselected parent、仮想的なコンセンサス順序が変化することがある。親集合と共通規則が同じ既存ブロックのselected parentが、新しい子孫の到着だけで変わるという意味ではない。そのためVirtual Stateも更新対象になる。
 
 ```text
 時刻 t1:
@@ -362,7 +364,7 @@ New accepted history ──┘
 2. どのトランザクション受理結果が変化したかを検出できるか。
 3. 差分適用の途中で障害が発生した場合、整合性を回復できるか。
 
-これらはPruningやストレージ設計（第21章）にもつながる。
+これらはPruningやストレージ設計（[第21章](../part-04-development/chapter-21.md)）にもつながる。
 
 ## 14.13 Safety、Liveness、Finality
 
@@ -384,12 +386,14 @@ PoW型システムでは、一般に攻撃者の計算力、ネットワーク�
 
 ### 14.14.1 プロジェクト作成
 
+本書とは別の作業用ディレクトリで実行する。
+
 ```bash
-cargo new consensus-state-lab
+cargo new --bin --edition 2021 consensus-state-lab
 cd consensus-state-lab
 ```
 
-以下を `src/main.rs` に保存する。外部クレートは不要である。
+以下を `src/main.rs` に保存する。外部クレートは不要で、Rust 1.90.0で確認した。
 
 ```rust
 use std::collections::{HashMap, HashSet};
@@ -414,6 +418,8 @@ struct UtxoState {
 
 #[derive(Debug, PartialEq, Eq)]
 enum ApplyError {
+    InvalidStructure,
+    OutputIndexOverflow,
     DuplicateInput,
     MissingInput,
     ValueOverflow,
@@ -424,6 +430,12 @@ enum ApplyError {
 impl UtxoState {
     fn apply(&mut self, tx: &Transaction) -> Result<(), ApplyError> {
         // 途中失敗で状態を壊さないよう、すべて検査してから更新する。
+        if tx.id.is_empty() || tx.inputs.is_empty() || tx.outputs.is_empty() {
+            return Err(ApplyError::InvalidStructure);
+        }
+        // 教材は出力数がu32に収まる範囲に制限する。
+        let output_count =
+            u32::try_from(tx.outputs.len()).map_err(|_| ApplyError::OutputIndexOverflow)?;
         let mut seen = HashSet::new();
         let mut input_sum = 0u64;
 
@@ -447,10 +459,10 @@ impl UtxoState {
             return Err(ApplyError::InsufficientInput);
         }
 
-        for index in 0..tx.outputs.len() {
+        for index in 0..output_count {
             let outpoint = Outpoint {
                 txid: tx.id.clone(),
-                index: index as u32,
+                index,
             };
             if self.utxos.contains_key(&outpoint) {
                 return Err(ApplyError::OutputAlreadyExists);
@@ -460,11 +472,11 @@ impl UtxoState {
         for input in &tx.inputs {
             self.utxos.remove(input);
         }
-        for (index, value) in tx.outputs.iter().enumerate() {
+        for (index, value) in (0..output_count).zip(&tx.outputs) {
             self.utxos.insert(
                 Outpoint {
                     txid: tx.id.clone(),
-                    index: index as u32,
+                    index,
                 },
                 *value,
             );
@@ -474,7 +486,10 @@ impl UtxoState {
 }
 
 fn main() {
-    let genesis = Outpoint { txid: "genesis".into(), index: 0 };
+    let genesis = Outpoint {
+        txid: "genesis".into(),
+        index: 0,
+    };
     let mut state = UtxoState::default();
     state.utxos.insert(genesis.clone(), 10);
 
@@ -499,7 +514,10 @@ mod tests {
     use super::*;
 
     fn setup() -> (UtxoState, Outpoint) {
-        let original = Outpoint { txid: "genesis".into(), index: 0 };
+        let original = Outpoint {
+            txid: "genesis".into(),
+            index: 0,
+        };
         let mut state = UtxoState::default();
         state.utxos.insert(original.clone(), 10);
         (state, original)
@@ -509,10 +527,14 @@ mod tests {
     fn first_spend_wins_in_given_order() {
         let (mut state, original) = setup();
         let first = Transaction {
-            id: "first".into(), inputs: vec![original.clone()], outputs: vec![9],
+            id: "first".into(),
+            inputs: vec![original.clone()],
+            outputs: vec![9],
         };
         let second = Transaction {
-            id: "second".into(), inputs: vec![original], outputs: vec![8],
+            id: "second".into(),
+            inputs: vec![original],
+            outputs: vec![8],
         };
         assert_eq!(state.apply(&first), Ok(()));
         assert_eq!(state.apply(&second), Err(ApplyError::MissingInput));
@@ -522,10 +544,203 @@ mod tests {
     fn failed_transaction_does_not_mutate_state() {
         let (mut state, original) = setup();
         let invalid = Transaction {
-            id: "invalid".into(), inputs: vec![original.clone()], outputs: vec![11],
+            id: "invalid".into(),
+            inputs: vec![original.clone()],
+            outputs: vec![11],
         };
         assert_eq!(state.apply(&invalid), Err(ApplyError::InsufficientInput));
         assert_eq!(state.utxos.get(&original), Some(&10));
+    }
+
+    #[test]
+    fn reverse_order_changes_accepted_outputs() {
+        for first_id in ["first", "second"] {
+            let (mut state, original) = setup();
+            let other_id = if first_id == "first" {
+                "second"
+            } else {
+                "first"
+            };
+            let first = Transaction {
+                id: first_id.into(),
+                inputs: vec![original.clone()],
+                outputs: vec![if first_id == "first" { 9 } else { 8 }],
+            };
+            let second = Transaction {
+                id: other_id.into(),
+                inputs: vec![original],
+                outputs: vec![if other_id == "first" { 9 } else { 8 }],
+            };
+            assert_eq!(state.apply(&first), Ok(()));
+            assert_eq!(state.apply(&second), Err(ApplyError::MissingInput));
+            assert_eq!(
+                state.utxos,
+                HashMap::from([(
+                    Outpoint {
+                        txid: first_id.into(),
+                        index: 0
+                    },
+                    if first_id == "first" { 9 } else { 8 }
+                )])
+            );
+        }
+    }
+
+    #[test]
+    fn validation_errors_preserve_the_entire_state() {
+        let (mut state, original) = setup();
+        let large = Outpoint {
+            txid: "large".into(),
+            index: 0,
+        };
+        state.utxos.insert(large.clone(), u64::MAX);
+        let before = state.utxos.clone();
+        let candidates = [
+            (
+                Transaction {
+                    id: "".into(),
+                    inputs: vec![original.clone()],
+                    outputs: vec![9],
+                },
+                ApplyError::InvalidStructure,
+            ),
+            (
+                Transaction {
+                    id: "empty-inputs".into(),
+                    inputs: vec![],
+                    outputs: vec![0],
+                },
+                ApplyError::InvalidStructure,
+            ),
+            (
+                Transaction {
+                    id: "empty-outputs".into(),
+                    inputs: vec![original.clone()],
+                    outputs: vec![],
+                },
+                ApplyError::InvalidStructure,
+            ),
+            (
+                Transaction {
+                    id: "missing".into(),
+                    inputs: vec![
+                        original.clone(),
+                        Outpoint {
+                            txid: "absent".into(),
+                            index: 0,
+                        },
+                    ],
+                    outputs: vec![9],
+                },
+                ApplyError::MissingInput,
+            ),
+            (
+                Transaction {
+                    id: "input-overflow".into(),
+                    inputs: vec![original.clone(), large],
+                    outputs: vec![9],
+                },
+                ApplyError::ValueOverflow,
+            ),
+            (
+                Transaction {
+                    id: "output-overflow".into(),
+                    inputs: vec![original.clone()],
+                    outputs: vec![u64::MAX, 1],
+                },
+                ApplyError::ValueOverflow,
+            ),
+            (
+                Transaction {
+                    id: "too-much".into(),
+                    inputs: vec![original.clone()],
+                    outputs: vec![11],
+                },
+                ApplyError::InsufficientInput,
+            ),
+            (
+                Transaction {
+                    id: "duplicate".into(),
+                    inputs: vec![original.clone(), original.clone()],
+                    outputs: vec![9],
+                },
+                ApplyError::DuplicateInput,
+            ),
+            (
+                Transaction {
+                    id: original.txid.clone(),
+                    inputs: vec![original],
+                    outputs: vec![9],
+                },
+                ApplyError::OutputAlreadyExists,
+            ),
+        ];
+        for (tx, error) in candidates {
+            assert_eq!(state.apply(&tx), Err(error));
+            assert_eq!(state.utxos, before);
+        }
+    }
+
+    #[test]
+    fn dependent_spend_requires_its_producer() {
+        let (mut state, original) = setup();
+        let producer = Transaction {
+            id: "producer".into(),
+            inputs: vec![original],
+            outputs: vec![9],
+        };
+        let consumer = Transaction {
+            id: "consumer".into(),
+            inputs: vec![Outpoint {
+                txid: "producer".into(),
+                index: 0,
+            }],
+            outputs: vec![8],
+        };
+        let before = state.utxos.clone();
+        assert_eq!(state.apply(&consumer), Err(ApplyError::MissingInput));
+        assert_eq!(state.utxos, before);
+        assert_eq!(state.apply(&producer), Ok(()));
+        assert_eq!(state.apply(&consumer), Ok(()));
+        assert_eq!(
+            state.utxos,
+            HashMap::from([(
+                Outpoint {
+                    txid: "consumer".into(),
+                    index: 0
+                },
+                8
+            )])
+        );
+    }
+
+    #[test]
+    fn independent_spends_commute() {
+        let (mut left, original) = setup();
+        let other = Outpoint {
+            txid: "other".into(),
+            index: 0,
+        };
+        left.utxos.insert(other.clone(), 20);
+        let mut right = UtxoState {
+            utxos: left.utxos.clone(),
+        };
+        let first = Transaction {
+            id: "first".into(),
+            inputs: vec![original],
+            outputs: vec![9],
+        };
+        let second = Transaction {
+            id: "second".into(),
+            inputs: vec![other],
+            outputs: vec![19],
+        };
+        left.apply(&first).unwrap();
+        left.apply(&second).unwrap();
+        right.apply(&second).unwrap();
+        right.apply(&first).unwrap();
+        assert_eq!(left.utxos, right.utxos);
+        assert_eq!(left.utxos.len(), 2);
     }
 
     #[test]
@@ -549,14 +764,18 @@ cargo run
 cargo test
 ```
 
-**期待する挙動**：`tx1` が先に適用されると、同じUTXOを使う `tx2` は `MissingInput` で失敗する。テストは、二重消費の拒否、失敗時の原子性、同じ入力の重複検出を確認する。ここでのコードは作成例であり、本書の作成時点でビルド・実行を保証したものではない。
+**期待する挙動**：`tx1` が先に適用されると、同じUTXOを使う `tx2` は `MissingInput` で失敗する。テストは、二重消費の拒否、失敗時の原子性、同じ入力の重複検出を確認する。本文から抽出したコードで7テストと実行出力を確認した（`experiments/chapter-14-review-2026-11-01.md`）。逆順の競合、独立した取引の順序交換、依存取引の再試行も含む。
+
+`genesis` は教材の初期資金を識別する文字列であり、実KaspaのGenesis出力ではない。金額の10・7・2は架空の整数単位で、KAS/sompiの変換や報酬の配分を実装していない。
+
+ここでいう原子性は、通常の検査がErrを返すときにメモリ内の集合を変えないという範囲である。電源断・panic・永続化の耐久性は検証していない。出力数のu32上限を超えるケースは巨大な配列を要するため実行していない。
 
 ### 14.14.2 このモデルに含まれないもの
 
 - 署名・スクリプト検証
 - Coinbaseおよび成熟条件
 - ブロック単位のトランザクション受理規則
-- トランザクションIDの暗号学的検証
+- トランザクションIDの暗号学的検証・使用済みIDの履歴管理（出力の衝突検査は現在のUTXO集合だけ）
 - UTXOエントリの完全なデータ形式
 - GHOSTDAGとVirtual Blockの実装
 - 実際のKaspaの手数料・質量（mass）等の規則
@@ -586,6 +805,8 @@ cargo test
 結果: tx2受理、tx1不受理
 ```
 
+依存取引の逐次適用はこの教材の動作である。同一Kaspaブロック内の親子トランザクションを許す説明ではない（14.5.1参照）。
+
 この実験は、**UTXO検証が正しくても、順序がノード間で一致しなければ状態が一致しない**ことを示す。
 
 ### 14.15.1 さらに試すこと
@@ -604,13 +825,13 @@ cargo test
 [Block Received]
         │
         ▼
-[Block Validated]
+[Header Checked: GHOSTDAG included]
         │
         ▼
-[DAG Updated]
+[Header / Body Saved]
         │
         ▼
-[Ordering Re-evaluated]
+[UTXO / Virtual Evaluated]
         │
         ▼
 [Virtual State Updated]
@@ -619,7 +840,7 @@ cargo test
 [Changes Exposed]
 ```
 
-実際には、失敗、保留、再試行、再編成、同期状態などの分岐がある。設計レビューでは、**正常系の矢印だけでなく、各状態からの失敗時の遷移**を確認すること。
+この図は通常経路の責務を整理したもので、公式の永続ステータス名や全処理順ではない。HeaderOnly・本体保存・UTXO/Virtualの評価を区別する（[第11章](chapter-11.md)）。実際には、失敗、保留、再試行、再編成、同期状態などの分岐がある。設計レビューでは、**正常系の矢印だけでなく、各状態からの失敗時の遷移**を確認すること。
 
 ### 14.16.1 不変条件を明文化する
 
@@ -676,18 +897,15 @@ DDDの観点では、「ブロックが有効」「トランザクションが�
 本章の概念と実装を結び付けるには、**対象リリース・コミットを固定して調査する**ことが重要である。ファイル名やモジュール構成は変わり得るため、以下は調査の入口として使う。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+# 第1章で取得した基準版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-
-# 用語を入口に関連実装を探す
-rg -n 'virtual_state|virtual.*state|virtual.*block' consensus
-rg -n 'ghostdag|selected_parent|blue_work' consensus
-rg -n 'acceptance|accepted_transaction|utxo' consensus
-rg -n 'merge_set|ordering' consensus
+grep -n -E 'resolve_virtual|pick_virtual_parents|commit_virtual_state' consensus/src/pipeline/virtual_processor/processor.rs
+grep -n -E 'calculate_utxo_state|accepted_tx_ids|pov_daa_score' consensus/src/pipeline/virtual_processor/utxo_validation.rs
+grep -n -E 'consensus_ordered_mergeset|ascending_mergeset' consensus/src/model/stores/ghostdag.rs
 ```
 
-検索結果がない場合は、対象バージョンでの命名やディレクトリを確認する。**文字列検索の一致だけでは、コンセンサスの仕様を証明できない。** 呼び出し元・テスト・データ構造まで追う。
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使い、HEADを本章冒頭の完全SHAと照合する。**文字列検索の一致だけでは、コンセンサスの仕様を証明できない。** 呼び出し元・テスト・データ構造まで追う。
 
 ### 14.18.1 読む順序
 
@@ -724,12 +942,12 @@ rg -n 'merge_set|ordering' consensus
 
 | 観点 | Bitcoin | Kaspa |
 |---|---|---|
-| 基本構造 | 線形チェーン | BlockDAG |
+| 基本構造 | フォークを含む候補群から採用チェーンを選ぶ | BlockDAG |
 | 並行ブロック | 競合する枝として扱う | DAG上の並行ブロックとして扱う |
 | 順序の土台 | 採用チェーン上のブロック順序 | GHOSTDAGに基づく合意順序 |
 | 状態モデル | UTXO | UTXO |
 | 二重支払い | UTXO検証とチェーン上の順序で排除 | UTXO検証とDAG上の合意順序・受理規則で排除 |
-| 先端の扱い | チェーンのtip | 複数tipとVirtual Blockの概念 |
+| 先端の扱い | 採用チェーンのtip（候補の枝も存在） | 複数tipとVirtual Blockの概念 |
 | 状態の変化 | チェーン再編成で変化し得る | Virtual Stateの再評価で変化し得る |
 
 **共通点は「合意した順序に基づいて状態を決めること」**であり、相違点は、その順序を導くために使うブロック構造とコンセンサスの仕組みである。
@@ -794,7 +1012,7 @@ rg -n 'merge_set|ordering' consensus
 3. **Virtual Blockは概念上の先端**：複数tipを含む観測済みDAGの合意状態を考えるために使う。
 4. **Virtual Stateは変化し得る**：新しいブロックによって合意結果が再評価される場合があり、確定性と状態更新の設計が重要になる。
 
-ここまでで **Part II — Kaspa Consensus & Architecture（第9〜14章）** の学習用初稿が揃った。次のPart IIIでは、UTXOとトランザクションの具体的な処理をさらに深く扱う。
+ここまでの **Part II — Kaspa Consensus & Architecture（第9〜14章）** で、ノードの構造からコンセンサス状態の更新までを扱った。次のPart IIIの[第15章](../part-03-transactions/chapter-15.md)では、UTXOとトランザクションの具体的な処理をさらに深く学ぶ。
 
 ---
 
@@ -809,19 +1027,19 @@ rg -n 'merge_set|ordering' consensus
 
 ### 原論文・背景
 
-- [PHANTOM GHOSTDAG — A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104.pdf)
+- [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104.pdf)
 - [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
 
 ### 本書の関連章
 
-- Chapter 07 — Introduction to BlockDAG
-- Chapter 09 — Kaspa Architecture
-- Chapter 11 — Block Processing & Validation
-- Chapter 12 — GHOSTDAG Internals
-- Chapter 13 — Difficulty Adjustment Algorithm
-- Chapter 15 — UTXO Model & Transaction Processing
-- Chapter 20 — Kaspa Network Security & Finality
-- Chapter 21 — Pruning, Storage & Node Synchronization
-- Chapter 25 — Exploring the rusty-kaspa Codebase
+- [Chapter 07 — Introduction to BlockDAG](../part-01-foundations/chapter-07.md)
+- [Chapter 09 — Kaspa Architecture](chapter-09.md)
+- [Chapter 11 — Block Processing & Validation](chapter-11.md)
+- [Chapter 12 — GHOSTDAG Internals](chapter-12.md)
+- [Chapter 13 — Difficulty Adjustment Algorithm](chapter-13.md)
+- [Chapter 15 — UTXO Model & Transaction Processing](../part-03-transactions/chapter-15.md)
+- [Chapter 20 — Kaspa Network Security & Finality](../part-03-transactions/chapter-20.md)
+- [Chapter 21 — Pruning, Storage & Node Synchronization](../part-04-development/chapter-21.md)
+- [Chapter 25 — Exploring the rusty-kaspa Codebase](../part-04-development/chapter-25.md)
 
-> **編集者メモ**：正式公開前に、対象 `rusty-kaspa` のコミットを明記し、Virtual State・取引受理・順序付けに関する説明とソースコード・テストの対応を検証すること。図・Rustコードは説明用モデルとして扱い、メインネットの合意規則との同一性を主張しない。
+目次順の本文レビューと改訂教材7テストは `experiments/chapter-14-review-2026-11-01.md`。既存の主要経路と旧教材3テストは `experiments/consensus-state-review-2026-10-31.md` を参照する。公式関数との実行時差分、クラッシュ耐久性、報酬生成・署名・全例外規則、現在のMainnetとの一致は今回検証していない。

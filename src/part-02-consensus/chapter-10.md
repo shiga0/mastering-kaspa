@@ -1,7 +1,7 @@
 # Chapter 10 — Kaspa Node & P2P Network（KaspaノードとP2Pネットワーク）
 
 > **Part II — Kaspa Consensus & Architecture**  
-> 原稿ステータス: v0.1（技術レビュー前）
+> 概説・基準版の主要経路を確認：2026-11-01。参照版は[本書の基準版](../baseline.md)のv1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。
 
 ## この章で学ぶこと
 
@@ -89,6 +89,8 @@ Kaspaは中央サーバーが台帳を配布する仕組みではない。複数
 [切断・再接続候補の管理]
 ```
 
+基準版の[ハンドシェイク](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/protocol/p2p/src/handshake.rs)では、Versionの送受信とVerackの待機を並行に進める。[接続時の処理](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/protocol/flows/src/flow_context.rs)でネットワーク・対応プロトコル等を確認し、フロー登録後にReadyを交換してからフローを起動する。片側が全送信を終えてから相手が送るという直列手順ではない。
+
 接続できたことは、相手が正直であることの証明にはならない。相手から受け取ったデータは、形式、サイズ、識別子、ネットワーク条件、コンセンサスルールなどに従って確認する必要がある。
 
 ### 10.3.1 ピア発見とブートストラップ
@@ -96,6 +98,8 @@ Kaspaは中央サーバーが台帳を配布する仕組みではない。複数
 新しいノードは初めから全ピアを知らない。一般的には、設定された接続先、既知アドレス、ブートストラップ用の仕組みなどから接続候補を得る。
 
 **設計上の問い:** 初期接続先がすべて攻撃者の管理下だった場合、ノードはどのような情報しか観測できないだろうか。これが後述するEclipse攻撃の理解につながる。
+
+基準版の[接続管理](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/components/connectionmanager/src/lib.rs)には、既知アドレスから候補を選び、接続不足時にDNS seederへ問い合わせる経路がある。利用条件は起動設定にも依存し、隔離Devnetで外部DNSの利用が必須という意味ではない。
 
 ### 10.3.2 接続数は多ければよいわけではない
 
@@ -120,7 +124,9 @@ Node A                  Node B                  Node C
 
 ### 10.4.1 重複排除
 
-同じブロックが複数のピアから届くことは正常である。ブロック識別子を使い、既知のデータを再取得・再処理しないことが重要になる。ただし、重複判定だけで内容の正当性を保証できない。
+同じブロックが複数のピアから届くことは正常である。ブロック識別子を使い、不要な取得・処理を抑えることが重要になる。ただしヘッダーのみ保存済みの場合や親不足からの再試行もあるため、「一度IDを見たら永久に無視」とはしない。ただし、重複判定だけで内容の正当性を保証できない。
+
+[基準版のブロックrelay](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/protocol/flows/src/v5/blockrelay/flow.rs)には、InvRelayBlockの受信、RequestRelayBlocksによる取得、コンセンサスの `validate_and_insert_block` への引き渡しがある。単なる全データの一斉送信ではない。親不足では `process_orphan` と再投入の経路がある。なおソースの `v5/` という配置名だけから、交渉されたプロトコル版を判断しない。
 
 ### 10.4.2 順不同の到着
 
@@ -128,21 +134,27 @@ Node A                  Node B                  Node C
 
 ## 10.5 BlockDAGが同期を難しくする理由
 
-Bitcoinのブロックチェーンでは、ブロックは基本的に一つの親を参照する。一方、KaspaのBlockDAGでは、ブロックが複数の親を参照できる。
+BitcoinではGenesis以外のブロックが一つの親を参照する。候補全体には分岐がある。一方、KaspaのBlockDAGでは、ブロックが複数の親を参照できる。
 
 ```text
 線形チェーンのイメージ
 
 A -> B -> C -> D
 
-BlockDAGのイメージ（矢印は古いブロックから新しいブロックへ）
+BlockDAGのイメージ（上が親、下が子）
 
-        B ----> D
-       / \     / \
-A ----    --->    ---> F
-       \       \ /
-        C ----> E
+        A
+       / \
+      B   C
+       \ /
+        D
+       / \
+      E   F
+       \ /
+        G
 ```
+
+チェーン図の矢印は成長方向、DAG図の線は親子関係を表す。実際の参照はいずれも子から親へ向かう。
 
 BlockDAGでは、同期対象を「最長チェーンの末尾までの一列」として捉えられない。**どのブロックを持っているか、どの親が不足しているか、どのDAG関係が既知か**を考える必要がある。
 
@@ -163,7 +175,7 @@ BlockDAGでは、同期対象を「最長チェーンの末尾までの一列」
 
 **Initial Block Download（IBD）**は、ノードが既存ネットワークに追いつくための初期同期である。通常運用時の新規ブロック伝播とは、扱うデータ量も最適化の目的も異なる。
 
-Kaspaでは、過去の全履歴を無制限に保持し続けることを前提としない**Pruning**も重要な設計要素となる。したがって「初期同期は必ず全ブロックを創世時点から取得する」と単純化してはいけない。Pruningと同期の詳細は第21章で扱う。
+Kaspaでは、過去の全履歴を無制限に保持し続けることを前提としない**Pruning**も重要な設計要素となる。したがって「初期同期は必ず全ブロックを創世時点から取得する」と単純化してはいけない。Pruningと同期の詳細は[第21章](../part-04-development/chapter-21.md)で扱う。既存Devnetの短いDAGでの収束は、Pruning後のIBDを検証した結果ではない。
 
 ## 10.6 P2P通信とGHOSTDAGの境界
 
@@ -184,10 +196,10 @@ P2Pの通信が速くても、受信データを無条件に信頼してよい�
 
 | 性質 | 意味 | ネットワークとの関係 |
 |---|---|---|
-| Safety（安全性） | 互いに矛盾する状態を誤って受け入れないこと | 不正・順不同・競合を適切に処理する必要がある |
+| Safety（安全性） | 定義した確定条件の下で、矛盾する結果を確定しないこと | 不正・順不同・競合を適切に処理する必要がある |
 | Liveness（活性） | 条件が満たされれば処理が前進すること | 長期分断や検閲は進行を妨げ得る |
 
-実際の保証は、攻撃者の能力、ハッシュレート分布、ネットワーク条件などの仮定に依存する。「分散しているから必ず安全」「PoWだから即時確定」とは言えない。
+実際の保証は、攻撃者の能力、ハッシュレート分布、ネットワーク条件などの仮定に依存する。一時的に異なる未確定状態が見えること自体を、直ちに安全性の破綻とは扱わない。PoWの保証には確率的な評価も伴う。「分散しているから必ず安全」「PoWだから即時確定」とは言えない。
 
 ### 10.7.2 伝播遅延と並行ブロック
 
@@ -201,7 +213,7 @@ P2Pの通信が速くても、受信データを無条件に信頼してよい�
 
 ### 10.8.2 Eclipse攻撃
 
-特定ノードの接続先を攻撃者側に偏らせ、正直なネットワークからの情報を見えにくくする攻撃。ピアの多様性、接続先の選定、再接続方針などが防御上の論点となる。
+特定ノードの接続先を攻撃者側に偏らせ、正直なネットワークからの情報を見えにくくする攻撃。ピアの多様性、接続先の選定、再接続方針などが防御上の論点となる。[BitcoinのP2PへのEclipse攻撃研究](https://www.usenix.org/conference/usenixsecurity15/technical-sessions/presentation/heilman)は背景資料となるが、同じ攻撃条件が現在のKaspaで成立すると確認したものではない。
 
 ### 10.8.3 DoS・リソース枯渇
 
@@ -234,7 +246,7 @@ Discovered -> Connecting -> Handshaking -> Active
 
 **不変条件の例:**
 
-1. ネットワークの互換性確認前に、相手を信頼済みピアとして扱わない。
+1. ネットワークの互換性確認前に、通常の通信フローを開始しない。互換性確認後も相手の送信内容を無条件には信頼しない。
 2. 未検証データを確定済みUTXO状態へ反映しない。
 3. 同じブロック識別子を無制限に再要求しない。
 4. 切断したピアに対する待機処理を無制限に残さない。
@@ -244,6 +256,8 @@ Discovered -> Connecting -> Handshaking -> Active
 
 ここでは実際のKaspaプロトコルを実装するのではなく、**グラフ上のメッセージ伝播と重複排除**を確認する。ネットワークソケット、署名、PoW、ブロック検証は省略する。
 
+本書とは別の作業用ディレクトリで作成する。Rust 1.90.0・edition 2021で確認した、標準ライブラリだけのモデルである。
+
 ### 10.10.1 `src/main.rs`
 
 ```rust
@@ -251,17 +265,26 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 #[derive(Debug, Default)]
 struct Network {
-    peers: HashMap<u32, Vec<u32>>,
+    peers: HashMap<u32, HashSet<u32>>,
     seen: HashMap<u32, HashSet<String>>,
 }
 
 impl Network {
     fn connect(&mut self, a: u32, b: u32) {
-        self.peers.entry(a).or_default().push(b);
-        self.peers.entry(b).or_default().push(a);
+        self.peers.entry(a).or_default().insert(b);
+        self.peers.entry(b).or_default().insert(a);
     }
 
-    /// origin からメッセージを伝播させ、新たに受信したノード数を返す。
+    fn disconnect(&mut self, a: u32, b: u32) {
+        if let Some(peers) = self.peers.get_mut(&a) {
+            peers.remove(&b);
+        }
+        if let Some(peers) = self.peers.get_mut(&b) {
+            peers.remove(&a);
+        }
+    }
+
+    /// origin自身を含む、新たに受信したノード数を返す。
     fn broadcast(&mut self, origin: u32, message_id: &str) -> usize {
         let mut queue = VecDeque::from([origin]);
         let mut delivered = 0;
@@ -295,6 +318,8 @@ fn main() {
 
     println!("first delivery: {}", network.broadcast(1, "block-A"));
     println!("second delivery: {}", network.broadcast(1, "block-A"));
+    network.disconnect(3, 4);
+    println!("after disconnect: {}", network.broadcast(1, "block-B"));
 }
 
 #[cfg(test)]
@@ -313,6 +338,41 @@ mod tests {
     }
 
     #[test]
+    fn repeated_connections_are_idempotent() {
+        let mut n = Network::default();
+        n.connect(1, 2);
+        n.connect(2, 1);
+        assert_eq!(n.peers[&1].len(), 1);
+        assert_eq!(n.peers[&2].len(), 1);
+        assert_eq!(n.broadcast(1, "A"), 2);
+    }
+
+    #[test]
+    fn disconnect_removes_both_directions() {
+        let mut n = Network::default();
+        n.connect(1, 2);
+        n.connect(2, 3);
+        n.disconnect(2, 3);
+        assert!(!n.peers[&2].contains(&3));
+        assert!(!n.peers[&3].contains(&2));
+        assert_eq!(n.broadcast(1, "A"), 2);
+        assert!(!n.seen.contains_key(&3));
+    }
+
+    #[test]
+    fn reconnect_does_not_automatically_fill_missing_messages() {
+        let mut n = Network::default();
+        n.connect(1, 2);
+        n.connect(3, 4);
+        assert_eq!(n.broadcast(1, "A"), 2);
+        n.connect(2, 3);
+        assert_eq!(n.broadcast(1, "A"), 0);
+        assert!(!n.seen.contains_key(&3));
+        assert_eq!(n.broadcast(1, "B"), 4);
+        assert!(!n.seen[&3].contains("A"));
+    }
+
+    #[test]
     fn disconnected_component_does_not_receive() {
         let mut n = Network::default();
         n.connect(1, 2);
@@ -326,7 +386,7 @@ mod tests {
 ### 10.10.2 実行方法
 
 ```bash
-cargo new kaspa-p2p-lab
+cargo new --edition 2021 kaspa-p2p-lab
 cd kaspa-p2p-lab
 # 上記コードを src/main.rs に保存
 cargo run
@@ -338,13 +398,18 @@ cargo test
 ```text
 first delivery: 4
 second delivery: 0
+after disconnect: 3
 ```
 
-> このコードは標準ライブラリだけで動作する**教育用の同期シミュレーション**である。実際のネットワーク遅延、ピア切断、帯域制限、攻撃者、非同期処理は再現していない。ここでは実行・テスト結果の実測を主張しない。
+> このコードは標準ライブラリだけで動作する**教育用の同期シミュレーション**である。リンクの削除はモデル化するが、実際のソケット切断・遅延・帯域制限・攻撃者・非同期処理は再現していない。本文を抽出した実行と5テストを確認した。
+
+`message_id` は呼び出し側が割り当てた文字列であり、内容のハッシュや妥当性は検証しない。接続グラフの循環は許すが、ブロックの親参照の閉路を許すという意味ではない。隣接集合の走査順は固定せず、出力では到達したノード数だけを比較する。
+
+このモデルは既知メッセージを再中継しないため、再接続後に同じIDを元のノードから再送しても、不足側へ自動補完されない。実ノードの同期処理とは異なる。この限界もテストで確認し、同期機能を実装したこととは区別する。
 
 ### 10.10.3 発展課題
 
-1. `connect` に同じ接続を二度追加しても影響が出ないようにする。
+1. 新規ピアに不足しているメッセージを照会・再送する仕組みを追加する。
 2. メッセージごとにTTLを設け、転送回数を制限する。
 3. ノード間リンクに遅延を追加し、到着順が変わる様子を観察する。
 4. 一部のリンクを切断し、分断前後の到達可能性を比較する。
@@ -356,10 +421,12 @@ second delivery: 0
 コードを調べるときは、まずバージョンを固定する。`main` ブランチの現在の実装と、ローカルノードの実装が一致するとは限らない。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
-git tag --list | tail -n 20
+# 第1章で取得した基準版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
+git rev-parse HEAD
 ```
+
+未取得の場合は[第1章](../part-01-foundations/chapter-01.md)の手順を使い、本書のリポジトリ外へ取得する。期待するコミットは本章冒頭の完全SHAである。
 
 調査の順序は次のようにするとよい。
 
@@ -375,8 +442,9 @@ git tag --list | tail -n 20
 リポジトリ内で検索する例:
 
 ```bash
-rg -n 'IBD|ibd|handshake|peer|P2P|p2p' --glob '*.rs' | head -n 80
-rg -n 'block|Block' --glob '*.rs' | head -n 80
+grep -n -E 'handshake|exchange_ready_messages' protocol/p2p/src/handshake.rs
+grep -n -E 'WrongNetwork|exchange_ready_messages|flow.launch' protocol/flows/src/flow_context.rs
+grep -n -E 'RequestRelayBlocks|MissingParents|process_orphan' protocol/flows/src/v5/blockrelay/flow.rs
 ```
 
 検索結果が多い場合は、該当するクレートやディレクトリへ範囲を絞る。**ファイル名だけで責務を推測せず、呼び出し元と呼び出し先を追う**ことが大切である。
@@ -467,7 +535,7 @@ A. そのように一般化できない。Pruningは保存する過去データ�
 
 次章では、ネットワークから受け取ったブロックをノードがどのように処理・検証するかを掘り下げる。
 
-**Next: Chapter 11 — Block Processing & Validation（ブロック処理と検証）**
+**Next: [Chapter 11 — Block Processing & Validation（ブロック処理と検証）](chapter-11.md)**
 
 ---
 
@@ -476,8 +544,8 @@ A. そのように一般化できない。Pruningは保存する過去データ�
 1. [Kaspa公式ドキュメント](https://docs.kaspa.org/) — ノード、ネットワーク、開発者向け情報。
 2. [Kaspa公式GitHub: rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) — 実装・テスト・リリース履歴。
 3. [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — プロトコル変更の提案と背景。
-4. [Kaspa: A High-Throughput Blockchain](https://eprint.iacr.org/2018/104.pdf) — PHANTOM/BlockDAGの背景となる研究。
+4. [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104) — PHANTOM/BlockDAGの背景となる研究。
 5. [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf) — BitcoinのP2PとPoWの基本構想。
 6. [Rust標準ライブラリ `std::collections`](https://doc.rust-lang.org/std/collections/index.html) — サンプル実装で使用したデータ構造。
 
-> **執筆メモ:** 公開前には、対象の `rusty-kaspa` タグを明記し、実装に即したメッセージフロー、関連ソースへのパーマリンク、Devnetでの通信ログ、再現可能な統合テストを追加する。
+> **確認範囲（2026-11-01）:** 基準版の接続・ハンドシェイク・ブロックrelayの主要経路を照合し、伝播モデルの実行と5テストを確認した。実ノードの新たな通信実験や全IBD経路・攻撃耐性の検証ではない。記録はリポジトリの `experiments/chapter-10-review-2026-11-01.md` を参照。

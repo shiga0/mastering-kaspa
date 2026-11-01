@@ -45,6 +45,18 @@
 
 2026-10-31：SUMMARY順の12ページ目、第8章を確認し、第1部の目次順レビューを終えた。GHOSTDAGを含むヘッダー処理・本体・Virtualの図、PHANTOMとの関係、用語を整理し、重複していた確率コードは第6章への参照に集約。記録は `experiments/chapter-08-review-2026-10-31.md`。次は第2部・第9章 `src/part-02-consensus/chapter-09.md`。第1部全体の安全性証明・互換性検証が完了したという意味ではない。
 
+2026-10-31：SUMMARY順の13ページ目、第2部・第9章を確認。基準版の起動構成・Mempool・RPCを照合し、GHOSTDAGの段階、Virtualの親、検証の入力前提、後発版との混同を修正。DAG教材は重複親を拒否し、状態維持を含む3テスト・書式検査成功。記録は `experiments/chapter-09-review-2026-10-31.md`。次は第10章 `src/part-02-consensus/chapter-10.md`。
+
+2026-11-01：SUMMARY順の14ページ目、第10章を確認。基準版の接続・Version/Verack/Ready・relay/親不足処理を照合し、重複排除と再試行、同期と確定の説明を整理。伝播モデルは重複接続を排除・切断を追加し、再接続だけでは既知メッセージを補完しない限界を含む5テスト成功。記録は `experiments/chapter-10-review-2026-11-01.md`。次は第11章 `src/part-02-consensus/chapter-11.md`。
+
+2026-11-01：SUMMARY順の15ページ目、第11章を通読。既存の主要経路照合を踏まえ、NonceとPoW値、保存ステータス/is_validと検証完了、Virtual親の説明を補正。教材の同一ID・異なる内容を拒否し、親到着後の再試行と全拒否理由の状態維持を含む7テスト成功。記録は `experiments/chapter-11-review-2026-11-01.md`。公式テスト2件は以前の実行記録を参照。次は第12章 `src/part-02-consensus/chapter-12.md`。
+
+2026-11-01：SUMMARY順の16ページ目、第12章を通読。GHOSTDAG計算の処理段階、厳密なPastとReachability API、Anticoneとantichain、Virtualの親選択、論文の書誌を整理。既存DAG解析器の未知要素の検査を先行させ、空ID・重複親を拒否。Anticoneの反例・入力検査・状態維持を加えた8テスト、書式、Clippyが成功。既存24ケースの公式比較は再実行せず範囲を区別した。記録は `experiments/chapter-12-review-2026-11-01.md`。次は第13章 `src/part-02-consensus/chapter-13.md`。
+
+2026-11-01：SUMMARY順の17ページ目、第13章を通読。PoW値と識別子、確率モデルの条件、Fullの上限制限/compact変換、申告bitsへのPoW検査と期待bits照合の順序を整理。簡易DAA教材は結果がゼロへ丸められる場合も拒否し、極値・不正入力を含む7テストと期待出力を確認。書式・Clippyも成功。既存の公式比較27/120/288ケースとは証拠を区別した。記録は `experiments/chapter-13-review-2026-11-01.md`。次は第14章 `src/part-02-consensus/chapter-14.md`。
+
+2026-11-01：SUMMARY順の18ページ目、第14章を通読。GHOSTDAGの処理段階、VirtualStateの内容、受理IDの並びのactivation判定、既存ブロックとVirtualのselected parentを区別。UTXO教材は空の取引・出力数の変換を検査し、競合の逆順・独立取引・依存取引・拒否時の集合維持を含む7テストと出力を確認。記録は `experiments/chapter-14-review-2026-11-01.md`。Part II第9〜14章の目次順の本文確認を終え、次はPart III第15章。全規則の検証完了を意味しない。
+
 ## 優先順位と進め方
 
 - **P1**：本書の正確性と実習の前提。最初に進める。

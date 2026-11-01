@@ -1,10 +1,10 @@
 # Chapter 12 — GHOSTDAG Internals（GHOSTDAGの内部構造）
 
 > **Part II — Kaspa Consensus & Architecture**  
-> 原稿ステータス: v0.2（GHOSTDAGの主要規則を固定実装と照合、章全体の技術レビューは継続中）
+> 目次順の本文レビュー：2026-11-01。主要規則は基準版と照合済み。ページの通読と全経路の検証は区別する。
 
 
-> 主要なGHOSTDAG経路を[本書の基準版](../baseline.md)v1.0.1で再照合した。小規模DAGの24ケースで公式実装との実行時差分を比較した。章全体のレビューは未完了。
+> 主要なGHOSTDAG経路を[本書の基準版](../baseline.md)v1.0.1で再照合した。小規模DAGの24ケースで公式実装との実行時差分を比較した。本文を目次順に確認し、説明と教材を修正した。全DAG・全規則を検証したものではない。
 
 ## 照合した実装
 
@@ -17,7 +17,7 @@
 
 ## この章で学ぶこと
 
-前章では、受信したブロックが検証され、BlockDAGへ登録されるまでを学んだ。本章では、登録された複数のブロックを**どのように評価し、合意可能な順序へ変換するか**を掘り下げる。中心となるのがGHOSTDAGである。
+[前章](chapter-11.md)では、ヘッダー・本体・UTXOの検証と保存状態を区別した。本章では、複数の親とその履歴を**どのように評価し、合意可能な順序の基礎を作るか**を掘り下げる。GHOSTDAGの計算はヘッダー処理の一部であり、本体の検証・保存を終えた後に初めて行うものではない。
 
 本章の到達目標は次のとおり。
 
@@ -81,7 +81,7 @@ GHOST（Greedy Heaviest-Observed Sub-Tree）は、ブロックツリーにおけ
 
 ### 12.2.2 PHANTOM
 
-PHANTOMはBlockDAGに対して、並行性が一定の制約内に収まるブロック集合（`k`-cluster）を考える。理想的な集合を求める問題は一般に計算量の課題がある。
+PHANTOMはBlockDAGに対して、並行性が一定の制約内に収まるブロック集合（`k`-cluster）を考える。最大の `k`-clusterを求める最適化問題は一般にNP困難であり、これをそのまま毎回解くことには計算量の課題がある。
 
 ### 12.2.3 GHOSTDAG
 
@@ -100,7 +100,7 @@ GHOSTDAGはPHANTOMの考え方に基づく**貪欲（greedy）な近似手法**�
 
 ## 12.3 DAGの関係を正確に定義する
 
-以下では、矢印を **子ブロック → 親ブロック** とする。
+以下では、矢印を **子ブロック → 親ブロック** とする。12.3・12.4の線だけの図は上が子、下が親という配置で、参照は下向きである。
 
 ```text
          E
@@ -124,7 +124,7 @@ GHOSTDAGはPHANTOMの考え方に基づく**貪欲（greedy）な近似手法**�
 - `Past(B)`: `B` から親方向へたどって到達できる祖先の集合。
 - `Future(B)`: `B` を祖先として参照する子孫の集合。
 
-ここでは `B` 自身は両集合に含めない。
+ここでは `B` 自身は両集合に含めない。一方、基準版のReachabilityの `is_dag_ancestor_of` は同一ブロックにもtrueを返すため、教材の厳密なPastとAPIの境界を区別する。
 
 ### 12.3.3 Anticone
 
@@ -139,6 +139,8 @@ GHOSTDAGはPHANTOMの考え方に基づく**貪欲（greedy）な近似手法**�
 ```
 
 `C` と `D` は互いに祖先・子孫の関係がないため、互いのanticoneに属する。ただし、どのDAG部分集合を対象にするかによって、anticoneの計算対象は変わる。
+
+Anticoneの要素同士がすべて並行とは限らない。Aの子がBとC、Cの子がXなら、BのAnticoneにはCとXが入るが、CはXの祖先である。Anticoneをantichain（要素同士に祖先・子孫関係がない集合）と同一視しない。
 
 ### 12.3.4 Merge set
 
@@ -204,7 +206,7 @@ GHOSTDAGは、並行ブロックを無制限に同等視するのでなく、パ
 
 PHANTOM/GHOSTDAGを理解するうえで、`k` は重要なパラメータである。
 
-直感的には、選ばれた集合の各ブロックについて、**その集合内で互いに順序関係を持たないブロック数（anticoneサイズ）を制限する**。
+直感的には、選ばれた集合の各ブロックについて、**そのブロックと祖先・子孫関係を持たない集合内のブロック数（anticoneサイズ）を制限する**。
 
 集合 `S` が `k`-clusterである条件は、概念的に次のように書ける。
 
@@ -281,6 +283,8 @@ Genesis `G` の子として `A`、`B`、`C` が並行に生成され、`X` が3�
       A  B  C
        \ | /
          X
+
+上が親、下が子。実際の参照は下から上へ向かう。
 ```
 
 | 手順 | 判断 | 結果 |
@@ -294,7 +298,7 @@ Genesis `G` の子として `A`、`B`、`C` が並行に生成され、`X` が3�
 
 `B` のred判定はXを評価する文脈での分類である。Bを無効ブロックと判断したり、その中のトランザクションの受理可否をこの表だけで決めたりはしない。
 
-この表は上記の固定ソースの比較・分類・加算規則を手で適用したもの。公式実装を実行して得たテストベクトルではなく、公式実装との実行時の差分照合は未実施である。
+この表は上記の固定ソースの比較・分類・加算規則を手で適用したもの。公式実装を実行して得たテストベクトルではなく、この表の記号・仕事量をそのまま入力した実行比較は行っていない。冒頭の24ケースの実行比較とは区別する。
 
 ### 12.7.2 なぜ順序が決定的でなければならないのか
 
@@ -376,11 +380,11 @@ E は C と D の両方を参照する。
 トポロジカルソートは親を子より前に置くことができる。しかし、`C` と `D` の順序は一意ではない。
 
 ```text
-A → B → C → D → E
-A → B → D → C → E
+C, D, E
+D, C, E
 ```
 
-どちらも親子関係を満たす可能性があるため、コンセンサスには**追加の決定的な選択規則**が必要である。
+これは直前の3ブロックだけを対象にした列であり、どちらも親が子より先になる。そのため、コンセンサスには**追加の決定的な選択規則**が必要である。
 
 ### 12.9.2 GHOSTDAGとトランザクション順序
 
@@ -407,6 +411,8 @@ GHOSTDAGに基づく評価・順序
        ▼
 Virtual UTXO State
 ```
+
+Virtualの親は規則に従って選び、全tipsを無条件に使うわけではない。Virtualは実際に採掘されるブロックではなく、結果も不可逆な確定履歴とは限らない。
 
 これは**概念上の依存関係**であり、実装の厳密な関数呼び出し順ではない。
 
@@ -466,8 +472,10 @@ GHOSTDAGの安全性は「DAGを使うから自動的に保証される」もの
 
 ### 12.13.1 作成するプロジェクト
 
+収録済みの `examples/dag-relations/` を使う場合は、そのREADMEの手順で実行する。自分で入力する場合は、本書とは別の作業用ディレクトリで次を実行する。
+
 ```bash
-cargo new dag-relations
+cargo new --lib --edition 2021 dag-relations
 cd dag-relations
 ```
 
@@ -492,11 +500,17 @@ impl Dag {
     }
 
     pub fn insert(&mut self, id: &str, parents: &[&str]) -> Result<(), String> {
+        if id.is_empty() {
+            return Err("empty block id".into());
+        }
         if self.parents.contains_key(id) {
             return Err(format!("duplicate block: {id}"));
         }
         if parents.contains(&id) {
             return Err("self-parent is not allowed".into());
+        }
+        if parents.iter().copied().collect::<BTreeSet<_>>().len() != parents.len() {
+            return Err("duplicate parent".into());
         }
         if parents.iter().any(|p| !self.parents.contains_key(*p)) {
             return Err("unknown parent".into());
@@ -539,6 +553,9 @@ impl Dag {
     }
 
     pub fn is_k_cluster(&self, selected: &BTreeSet<String>, k: usize) -> Result<bool, String> {
+        if let Some(id) = selected.iter().find(|id| !self.parents.contains_key(*id)) {
+            return Err(format!("unknown block: {id}"));
+        }
         for id in selected {
             let anticone = self.anticone(id)?;
             let within = anticone.intersection(selected).count();
@@ -607,6 +624,49 @@ mod tests {
             assert_eq!(forward.anticone(id).unwrap(), reverse.anticone(id).unwrap());
         }
     }
+
+    #[test]
+    fn anticone_members_can_be_related_to_each_other() {
+        let mut dag = Dag::new();
+        dag.insert("A", &[]).unwrap();
+        dag.insert("B", &["A"]).unwrap();
+        dag.insert("C", &["A"]).unwrap();
+        dag.insert("X", &["C"]).unwrap();
+        assert_eq!(
+            dag.anticone("B").unwrap(),
+            BTreeSet::from(["C", "X"].map(str::to_owned))
+        );
+        assert!(dag.past("X").unwrap().contains("C"));
+    }
+
+    #[test]
+    fn validates_all_cluster_members_before_testing_the_bound() {
+        let dag = sample();
+        let unknown = BTreeSet::from(["C", "D", "Z"].map(str::to_owned));
+        for k in [0, 1] {
+            assert!(dag.is_k_cluster(&unknown, k).is_err());
+        }
+        assert!(dag.is_k_cluster(&BTreeSet::new(), 0).unwrap());
+        assert!(dag
+            .is_k_cluster(&BTreeSet::from(["C".to_owned()]), 0)
+            .unwrap());
+    }
+
+    #[test]
+    fn rejected_insertions_preserve_relations() {
+        let mut dag = sample();
+        let before = dag.parents.clone();
+        for (id, parents) in [
+            ("", vec![]),
+            ("A", vec![]),
+            ("X", vec!["X"]),
+            ("X", vec!["A", "A"]),
+            ("X", vec!["missing"]),
+        ] {
+            assert!(dag.insert(id, &parents).is_err());
+            assert_eq!(dag.parents, before);
+        }
+    }
 }
 ```
 
@@ -620,7 +680,11 @@ cargo test
 
 **期待される学び:** `C` と `D` は互いにanticoneに含まれ、`E` の過去には両方が入る。`{C, D}` は `k=0` の条件を満たさず、`k=1` では満たす。
 
-> 本サンプルは `examples/dag-relations/` に収録し、単体テストを実行している。条件と結果は `experiments/ghostdag-review-2026-10-31.md` に記録した。`insert`が既知の親しか受け取らないため、追加順に制約があり、実ネットワークの孤児ブロック・Pruning・到達可能性インデックス・並行処理には対応していない。
+> 本サンプルは `examples/dag-relations/` に収録し、単体テストを実行している。条件と結果は `experiments/ghostdag-review-2026-10-31.md` に記録した。今回の改訂後は8テスト成功（`experiments/chapter-12-review-2026-11-01.md`）。`insert`が既知の親しか受け取らないため、追加順に制約があり、実ネットワークの孤児ブロック・Pruning・到達可能性インデックス・並行処理には対応していない。
+
+空ID・重複ID・自己参照・重複親・未知の親はエラーとする。`is_k_cluster` は集合の全要素が既知か先に確認し、空集合ではtrueとなる。このAPIは条件を判定するだけで、最大の集合やGHOSTDAGのblue集合を選ばない。
+
+複数の親なしブロックを許す教材であり、Genesisの一意性、ハッシュ・PoW、親数・入力サイズの上限は検証しない。重複IDの再送もエラーとする方針で、第11章教材の `AlreadyKnown` と同じAPIではない。
 
 ---
 
@@ -659,15 +723,15 @@ cargo test
 ### 12.15.1 ソースコード調査の入口
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
-
+# 第1章で取得した基準版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-rg -n 'ghostdag|Ghostdag|selected_parent|blue_score|blue_work' .
-rg -n 'merge_set|anticone|reachability|ordering' .
+grep -n -E 'find_selected_parent|check_blue_candidate|blue_score|blue_work' consensus/src/processes/ghostdag/protocol.rs
+grep -n -E 'sort|anticone|selected_parent' consensus/src/processes/ghostdag/mergeset.rs
+grep -n -E 'cmp|blue_work' consensus/src/processes/ghostdag/ordering.rs
 ```
 
-リポジトリ構造や識別子は変更される可能性がある。以下のような責務を探す。
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の固定版取得手順を使う。HEADが本章冒頭の完全SHAと一致することを確認し、以下の責務を追う。
 
 | 探す責務 | 調査したいこと |
 |---|---|
@@ -724,7 +788,7 @@ rg -n 'merge_set|anticone|reachability|ordering' .
 | `mergeset.rs` | selected parentの過去を除いた候補の列挙 |
 | `GhostdagData` | selected parentを含むblue列と分類結果の保持 |
 
-UTXOの適用やvirtualの更新経路は第14章で扱う。本章の分類処理の照合だけで、それらの状態遷移まで検証できたとは扱わない。
+UTXOの適用やvirtualの更新経路は[第14章](chapter-14.md)で扱う。本章の分類処理の照合だけで、それらの状態遷移まで検証できたとは扱わない。
 
 ---
 
@@ -802,7 +866,7 @@ GHOSTDAGは合意順序を導く重要な構成要素だが、UTXOの適用可�
 5. 決定的な順序が得られても、トランザクションの適用可能性は別に検証する。
 6. 実装を読む際は、DAG・Reachability・GHOSTDAG・Ordering・Virtual Stateの責務を分ける。
 
-次章では **Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）** に進み、PoW難易度がどのようにネットワークのブロック生成状況に適応するかを学ぶ。
+次章では **[Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）](chapter-13.md)** に進み、PoW難易度がどのようにネットワークのブロック生成状況に適応するかを学ぶ。
 
 ---
 
@@ -812,7 +876,7 @@ GHOSTDAGは合意順序を導く重要な構成要素だが、UTXOの適用可�
 
 1. Yonatan Sompolinsky, Aviv Zohar, **[Secure High-Rate Transaction Processing in Bitcoin](https://eprint.iacr.org/2013/881)** — GHOSTの研究背景。
 2. Yonatan Sompolinsky, Yoad Lewenberg, Aviv Zohar, **[SPECTRE: A Fast and Scalable Cryptocurrency Protocol](https://eprint.iacr.org/2016/1159)** — BlockDAG系の関連研究。
-3. Yonatan Sompolinsky, Yoad Lewenberg, Aviv Zohar, **[PHANTOM, GHOSTDAG: Two Scalable BlockDAG Protocols](https://eprint.iacr.org/2018/104)** — PHANTOM/GHOSTDAGの原論文。
+3. Yonatan Sompolinsky, Shai Wyborski, Aviv Zohar, **[PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104)** — PHANTOM/GHOSTDAGの原論文。
 4. Satoshi Nakamoto, **[Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)** — 比較対象となるNakamoto consensus。
 
 ### 実装・公式資料

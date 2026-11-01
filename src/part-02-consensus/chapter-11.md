@@ -1,7 +1,7 @@
 # Chapter 11 — Block Processing & Validation（ブロック処理と検証）
 
 > **Part II — Kaspa Consensus & Architecture**  
-> 原稿ステータス: v0.2（基準版の主要検証経路を照合・章全体はレビュー継続中）
+> 目次順の本文レビュー：2026-11-01。主要経路は[基準版](../baseline.md)v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` と照合。全規則・全経路の検証完了を意味しない。
 
 ## この章で学ぶこと
 
@@ -65,14 +65,15 @@ Kaspaのブロックは大きく**ヘッダー**と**トランザクション群
 | 要素 | 主な役割 | 検証上の観点 |
 |---|---|---|
 | Version | 形式・規則の識別 | 対応するバージョンか |
-| Parents | 参照する親ブロック群 | 参照形式、親の存在、DAGの整合性 |
+| Parents | レベル別の親ブロック群 | 参照形式、親の存在、DAGの整合性 |
 | Hash Merkle Root | トランザクション群のコミットメント | 本体から再計算した値との一致 |
 | Accepted ID Merkle Root | 受理トランザクション情報に関するコミットメント | コンセンサス状態との整合性 |
 | UTXO Commitment | UTXO状態に関するコミットメント | 対応する状態との整合性 |
-| Timestamp | ブロック時刻 | コンセンサス上の許容条件 |
+| Timestamp | ブロック時刻（ミリ秒） | コンセンサス上の許容条件 |
 | Bits | PoWターゲットのコンパクト表現 | 要求難易度との整合性 |
-| Nonce | PoW探索用の値 | ヘッダーハッシュとターゲットの関係 |
+| Nonce | PoW探索用の値 | PoW値とターゲットの関係。ブロック識別子のハッシュとは区別 |
 | DAA Score / blue score / blue work | コンセンサス計算に関連する値 | 親・履歴・規則との整合性 |
+| Pruning point | ヘッダーが申告するPruningの基準点 | 履歴から得た期待値との一致 |
 | Transactions | コインベース等を含むトランザクション群 | 構造、証明、手数料、状態依存の検証 |
 
 > **注意:** この表は概念整理であり、フィールドの完全なシリアライズ仕様ではない。正確なフィールド、型、ハッシュ計算、各フィールドの検証段階は使用する `rusty-kaspa` のバージョンを確認すること。
@@ -91,7 +92,7 @@ A ────┤       ├── D
       └── C ──┘
 ```
 
-DがBとCの両方を参照することは、BとCが同じ親から並行して生成された状況を表現できる。ただし、**複数の親を参照できることと、二重支払いを両方受理することは別問題**である。
+図は左から右へブロックが増える配置であり、実際の参照は子から親へ向かう。DがBとCの両方を参照することは、BとCが同じ親から並行して生成された状況を表現できる。ただし、**複数の親を参照できることと、二重支払いを両方受理することは別問題**である。
 
 ---
 
@@ -111,11 +112,11 @@ DがBとCの両方を参照することは、BとCが同じ親から並行して
 
 ### 11.3.2 早期拒否と遅延評価
 
-計算コストの小さい検査を先に行えば、明らかな不正データに高価な検証を実行せずに済む。ただし、依存関係が未到着であることを「無効」と判定してはならない。
+計算コストの小さい検査を先に行えば、明らかな不正データに高価な検証を実行せずに済む。ただし、依存関係が未到着であることだけを根拠に、ブロック全体を「無効」と判定してはならない。
 
 | 状態 | 意味 | 典型的な対応 |
 |---|---|---|
-| Already known | 既に処理済み | 再処理を避ける |
+| Already known | 何らかの状態が保存済み | ヘッダーのみか本体もあるかを区別して必要な処理へ進む |
 | Missing parents | 依存する親が未到着 | 親の取得・保留 |
 | Invalid | 検証規則に違反 | 拒否・記録 |
 | Eligible for processing | 必要な依存関係が揃った | 次の検証段階へ |
@@ -253,7 +254,7 @@ BとCが両方ともBlockDAG上に存在しても、Tx-AとTx-Bが同じUTXOを�
 
 ## 11.7 Merkle rootとコミットメント
 
-Merkle rootは、トランザクションの集合や順序に関する暗号学的なコミットメントを提供する。
+Merkle rootは、トランザクションの列に関する暗号学的なコミットメントを提供する。
 
 ```text
             Root
@@ -265,7 +266,9 @@ Merkle rootは、トランザクションの集合や順序に関する暗号学
       Tx0 Tx1 Tx2 Tx3
 ```
 
-ノードはブロック本体から必要な値を再計算し、ヘッダーに含まれるコミットメントと照合する。
+ノードはブロック本体から必要な値を再計算し、ヘッダーに含まれるコミットメントと照合する。上の図は二分木の概念例であり、奇数個の場合の処理やハッシュの仕様は省いている。
+
+`Hash Merkle Root` の葉はトランザクションハッシュを用いる。`Accepted ID Merkle Root` は過去の文脈から得られる受理トランザクションID列に対応し、両者を同じ対象のrootと扱わない。根拠：[merkle.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/merkle.rs)と以下のUTXO検査。
 
 基準版の `Hash Merkle Root` は本体単独検査で確認する。一方、`UTXO Commitment` と `Accepted ID Merkle Root` の期待値との一致は、VirtualProcessorの `verify_expected_utxo_state` で過去UTXOの文脈を使って検査する。同じヘッダーフィールドでも検証段階は異なる。
 
@@ -301,7 +304,7 @@ GHOSTDAGのblue/redという分類を、単純な「有効/無効」の別名と
 - Valid/Invalidはプロトコルの検証規則に適合するかという概念。
 - redに分類されたという理由だけで、構造的に不正なブロックだと断定できない。
 
-詳しい定義と選択規則は第12章で扱う。
+詳しい定義と選択規則は[第12章](chapter-12.md)で扱う。
 
 ---
 
@@ -319,7 +322,7 @@ KaspaのBlockDAGには、単一の「最新ブロック」の代わりに、複�
 D, E が tips（概念例）
 ```
 
-**Virtual Block**は、DAGの先端を基にコンセンサス上の状態を評価するための概念的な構成要素である。Virtual Stateは、その評価によって得られる台帳状態を表す。
+**Virtual Block**は、DAGから規則に従って選んだ親群を基にコンセンサス上の状態を評価するための概念的な構成要素である。Virtual Stateは、その評価によって得られる台帳状態を表す。全tipsを無条件に親とするわけではなく、実際に採掘・配信されるブロックでもない。
 
 ### 11.9.1 状態更新は単純な追加だけではない
 
@@ -380,8 +383,10 @@ Virtual UTXO Stateを更新
 
 ### 11.11.2 プロジェクト作成
 
+本書とは別の作業用ディレクトリで実行する。教材は標準ライブラリだけを使い、Rust 1.90.0で確認した。
+
 ```bash
-cargo new block-validation-lab
+cargo new --lib --edition 2021 block-validation-lab
 cd block-validation-lab
 ```
 
@@ -400,6 +405,7 @@ pub struct Block {
 #[derive(Debug, PartialEq, Eq)]
 pub enum ValidationError {
     EmptyId,
+    ConflictingId,
     SelfParent,
     DuplicateParent,
     TooLarge,
@@ -425,15 +431,16 @@ impl BlockStore {
         }
     }
 
-    pub fn insert(
-        &mut self,
-        block: Block,
-    ) -> Result<InsertResult, ValidationError> {
+    pub fn insert(&mut self, block: Block) -> Result<InsertResult, ValidationError> {
         if block.id.is_empty() {
             return Err(ValidationError::EmptyId);
         }
-        if self.blocks.contains_key(&block.id) {
-            return Ok(InsertResult::AlreadyKnown);
+        if let Some(existing) = self.blocks.get(&block.id) {
+            return if existing == &block {
+                Ok(InsertResult::AlreadyKnown)
+            } else {
+                Err(ValidationError::ConflictingId)
+            };
         }
         if block.payload_size > self.max_payload_size {
             return Err(ValidationError::TooLarge);
@@ -489,7 +496,10 @@ mod tests {
         assert_eq!(store.insert(block("A", &[])), Ok(InsertResult::Inserted));
         assert_eq!(store.insert(block("B", &["A"])), Ok(InsertResult::Inserted));
         assert_eq!(store.insert(block("C", &["A"])), Ok(InsertResult::Inserted));
-        assert_eq!(store.insert(block("D", &["B", "C"])), Ok(InsertResult::Inserted));
+        assert_eq!(
+            store.insert(block("D", &["B", "C"])),
+            Ok(InsertResult::Inserted)
+        );
         assert_eq!(store.len(), 4);
     }
 
@@ -507,7 +517,10 @@ mod tests {
     fn repeated_block_is_idempotent() {
         let mut store = BlockStore::new(1024);
         store.insert(block("A", &[])).unwrap();
-        assert_eq!(store.insert(block("A", &[])), Ok(InsertResult::AlreadyKnown));
+        assert_eq!(
+            store.insert(block("A", &[])),
+            Ok(InsertResult::AlreadyKnown)
+        );
         assert_eq!(store.len(), 1);
     }
 
@@ -515,7 +528,10 @@ mod tests {
     fn rejects_self_parent_and_duplicate_parents() {
         let mut store = BlockStore::new(1024);
         store.insert(block("A", &[])).unwrap();
-        assert_eq!(store.insert(block("B", &["B"])), Err(ValidationError::SelfParent));
+        assert_eq!(
+            store.insert(block("B", &["B"])),
+            Err(ValidationError::SelfParent)
+        );
         assert_eq!(
             store.insert(block("C", &["A", "A"])),
             Err(ValidationError::DuplicateParent)
@@ -523,9 +539,51 @@ mod tests {
     }
 
     #[test]
+    fn retry_after_parent_arrival_succeeds() {
+        let mut store = BlockStore::new(1024);
+        let child = block("B", &["A"]);
+        assert!(matches!(
+            store.insert(child.clone()),
+            Err(ValidationError::MissingParents(_))
+        ));
+        store.insert(block("A", &[])).unwrap();
+        assert_eq!(store.insert(child.clone()), Ok(InsertResult::Inserted));
+        assert_eq!(store.insert(child), Ok(InsertResult::AlreadyKnown));
+        assert_eq!(store.len(), 2);
+    }
+
+    #[test]
+    fn every_rejection_preserves_the_store() {
+        let mut store = BlockStore::new(1024);
+        store.insert(block("A", &[])).unwrap();
+        let before = store.blocks.clone();
+        let mut oversized = block("X", &[]);
+        oversized.payload_size = 1025;
+        let mut conflicting = block("A", &[]);
+        conflicting.payload_size = 129;
+        for (candidate, error) in [
+            (block("", &[]), ValidationError::EmptyId),
+            (block("X", &["X"]), ValidationError::SelfParent),
+            (block("X", &["A", "A"]), ValidationError::DuplicateParent),
+            (oversized, ValidationError::TooLarge),
+            (
+                block("X", &["missing"]),
+                ValidationError::MissingParents(vec!["missing".into()]),
+            ),
+            (conflicting, ValidationError::ConflictingId),
+        ] {
+            assert_eq!(store.insert(candidate), Err(error));
+            assert_eq!(store.blocks, before);
+        }
+    }
+
+    #[test]
     fn rejects_oversized_payload() {
         let mut store = BlockStore::new(64);
-        assert_eq!(store.insert(block("A", &[])), Err(ValidationError::TooLarge));
+        assert_eq!(
+            store.insert(block("A", &[])),
+            Err(ValidationError::TooLarge)
+        );
     }
 }
 ```
@@ -535,6 +593,8 @@ mod tests {
 ```bash
 cargo test
 ```
+
+本文から抽出した教材は7テスト成功。同一データの再送は `AlreadyKnown`、同じIDで表現上の内容が異なる場合は `ConflictingId` とし、全拒否理由で既存集合が変わらないことと、親到着後の再試行を確認した。これは単一段階で保存する教材の方針であり、実Kaspaでヘッダーを保持したまま正しい本体を取得し直す処理とは区別する。
 
 ### 11.11.3 この実装の限界
 
@@ -546,7 +606,8 @@ cargo test
 - トランザクションやUTXOを検証しない。
 - 永続化、Pruning、同期、再編成を実装しない。
 - 未到着の親を取得する機構がない。
-- 同一IDで内容が異なるデータの扱いが簡略化されている。
+- 同一IDの比較は親リストと申告payload_sizeなどのモデル上の値だけであり、実データのバイト列・暗号学的な識別子は検証しない。
+- 複数の親なしブロックを許す。Genesisの一意性・親数やキューの上限は規定していない。
 
 このように**何を保証していないか**を明示することも、技術書や検証用コードに重要である。
 
@@ -561,13 +622,10 @@ Received → Parsed → DependenciesChecked
                            │
                   ┌────────┴─────────┐
                   ▼                  ▼
-          WaitingForParents      Validated
+          WaitingForParents      ModelChecksPassed
                   │                  │
         親到着で依存検査へ戻る       ▼
                               RegisteredInDAG
-                                     │
-                                     ▼
-                              ConsensusEvaluated
                                      │
                                      ▼
                               StateEffectsEvaluated
@@ -577,7 +635,7 @@ Received → Parsed → DependenciesChecked
 
 図中の `WaitingForParents` は拒否状態ではない。親が揃ったとき、適切な検証段階から処理を再開する。
 
-この図の状態名は教材用であり、公式の永続ステータスとは異なる。基準版には次の区別がある。
+この図は教材用の処理段階であり、公式の実行順や永続ステータスではない。公式のGHOSTDAG計算はヘッダー処理内で行い、DAG登録後に初めて行うわけではない（11.1参照）。基準版には次の区別がある。
 
 | 公式ステータス | 意味 |
 |---|---|
@@ -587,17 +645,17 @@ Received → Parsed → DependenciesChecked
 | `StatusDisqualifiedFromChain` | selected parentとして不適格 |
 | `StatusInvalid` | 無効として記録 |
 
-`StatusUTXOValid` は送金の不可逆な決済確定を示す状態ではない。根拠：[blockstatus.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/blockstatus.rs)。
+`StatusUTXOValid` は送金の不可逆な決済確定や、そのブロックに含まれる全取引の受理を示す状態ではない。また、基準版の `BlockStatus::is_valid()` は `StatusInvalid` 以外でtrueを返すため、`StatusHeaderOnly` にもtrueとなる。このメソッド名だけで本体・UTXOの検証完了を判断しない。根拠：[blockstatus.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/blockstatus.rs)。
 
 本体検証で `MissingParents`・`BadMerkleRoot`・`PrunedBlock` が返っても、`process_body` はブロック全体へ `StatusInvalid` を記録しない。正しい本体の再取得や親の到着などを許すためである。他の本体検証エラーは無効として記録する。ヘッダー側は `post_pow_validation` の失敗を無効として記録するが、それ以前の失敗すべてを同じ保存方針にはしていない。
 
-基準版のv5 relay flowは `MissingParents` を受けると `process_orphan` へ進み、依存を処理できた場合に投入し直す。親不足のエラーを返すコンセンサス層と、取得・再試行するネットワーク側の責務を分ける。根拠：[blockrelay/flow.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/protocol/flows/src/v5/blockrelay/flow.rs)。
+基準版の `v5/` に配置されたrelay flowは `MissingParents` を受けると `process_orphan` へ進み、依存を処理できた場合に投入し直す。親不足のエラーを返すコンセンサス層と、取得・再試行するネットワーク側の責務を分ける。根拠：[blockrelay/flow.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/protocol/flows/src/v5/blockrelay/flow.rs)。
 
 `validate_and_insert_block` は `block_task` と `virtual_state_task` を分けて返す。本体側の処理完了を待っただけでVirtual State更新まで完了したと扱わない。trusted blockでは検証の一部を省くため、この通常経路の説明をそのまま当てはめない。
 
 ### 11.12.1 不変条件
 
-- **I1:** 無効と判定されたブロックを、後続の処理で有効扱いしない。既存のヘッダーや関係データを必ず削除するという意味ではない。
+- **I1:** `StatusInvalid` と記録された識別子を、後続で通常の有効ブロックとして扱わない。本体の不一致など、すべての処理エラーがこの永続状態を意味するわけではない。既存のヘッダーや関係データを必ず削除するという意味ではない。
 - **I2:** 既知ブロックの再受信で、ブロック数や状態が不当に増えない。
 - **I3:** 親不足を「規則違反」と混同しない。
 - **I4:** BlockDAGへの登録だけで、すべてのトランザクションが受理されたと見なさない。
@@ -630,17 +688,15 @@ Kaspaの実装を理解するには、特定の関数名を暗記するより、
 ### 11.13.2 検索コマンドの例
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
-
-git checkout --detach fcd9c28f9b211b9872a0c90a8c94f79466ffb063
+# 第1章で取得した基準版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-rg -n 'validate.*header|validate.*body|validate.*block' consensus
-rg -n 'missing.*parent|orphan|block.*status' consensus
-rg -n 'virtual.*state|utxo.*diff|ghostdag' consensus
+grep -n -E 'validate_header|ghostdag|commit_header' consensus/src/pipeline/header_processor/processor.rs
+grep -n -E 'MissingParents|BadMerkleRoot|StatusInvalid' consensus/src/pipeline/body_processor/processor.rs
+grep -n -E 'is_valid|has_block_body' consensus/core/src/blockstatus.rs
 ```
 
-検索語やディレクトリはリポジトリの変更に合わせて調整する。`rg` はコード探索のための例であり、**該当する関数やファイルが必ず存在することを保証しない**。
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使う。期待する完全SHAは本章冒頭を参照する。これらは確認済みの基準版で読む入口であり、検索結果が出たことだけで検証の成功を意味しない。
 
 ### 11.13.3 調査メモのテンプレート
 
@@ -729,7 +785,7 @@ rg -n 'virtual.*state|utxo.*diff|ghostdag' consensus
 
 | 観点 | Bitcoin | Kaspa |
 |---|---|---|
-| 基本構造 | 線形チェーン | BlockDAG |
+| 基本構造 | フォークを含む候補群から最良チェーンを選ぶ | BlockDAG |
 | 親参照 | 通常一つ | 複数になり得る |
 | 並行ブロック | チェーン選択で扱う | DAG内で並行性を表現する |
 | PoW検証 | 必要 | 必要 |
@@ -777,11 +833,11 @@ rg -n 'virtual.*state|utxo.*diff|ghostdag' consensus
 3. 複数の親がすべて揃うまで登録しない。
 4. キューの最大件数を設ける。
 
-**合格条件:** 到着順が `D, C, B, A` でも、必要な親が揃った後に `A, B, C, D` の依存関係を満たす登録ができる。
+**合格条件:** Aを根、B/Cの親をA、Dの親をBとCとする。到着順が `D, C, B, A` でも、親が揃えばA、B/C、Dの依存順で登録できる。BとCの登録順は問わない。
 
 ### 課題B: エラー分類を設計する
 
-次のエラーを、`Retryable` / `Invalid` / `LocalFailure` などに分類する。
+次のエラーを、`Retryable` / `Invalid` / `LocalFailure` / `NoOp` などに分類する。
 
 - 親ブロックが未到着
 - Merkle rootが一致しない
@@ -789,7 +845,7 @@ rg -n 'virtual.*state|utxo.*diff|ghostdag' consensus
 - 同じブロックを再受信
 - PoWターゲットを満たさない
 
-分類の理由と、ピアへのペナルティを与えるべきかどうかも考える。
+返されたエラー、そのデータの再取得可否、ヘッダー識別子への `StatusInvalid` の保存、ピアへの評価を別々に考える。特に本体の `BadMerkleRoot` とヘッダー全体の恒久的な無効化を同一視しない。
 
 ### 課題C: `rusty-kaspa` の実装と対応付ける
 
@@ -832,7 +888,7 @@ Kaspaのブロック処理は、**受信したデータを一回チェックし�
 - GHOSTDAGは並行ブロックを扱うコンセンサスの重要な構成要素である。
 - Virtual Stateは、コンセンサスに基づいてUTXO状態を評価するために重要である。
 
-**次章「Chapter 12 — GHOSTDAG Internals」では、BlockDAGからコンセンサス順序を導く仕組みを詳しく学ぶ。**
+**[次章「Chapter 12 — GHOSTDAG Internals」](chapter-12.md)では、BlockDAGからコンセンサス順序を導く仕組みを詳しく学ぶ。**
 
 ---
 
@@ -852,7 +908,9 @@ Kaspaのブロック処理は、**受信したデータを一回チェックし�
 - [ ] 親不足・保留・再試行の実際の処理経路
 - [ ] ブロック本体の検証条件と状態依存の検証条件の照合
 - [ ] GHOSTDAG・Virtual State更新の実際の処理経路
-- [x] Rustサンプル5テストの実行記録（本文抽出後 `rustc --test`）
+- [x] Rust教材の目次順レビュー後7テストの実行記録（本文抽出後 `cargo test --offline`）
 - [ ] 参考資料のリンク・仕様変更の確認
 
 主要経路の照合と公式テスト2件の実行記録は `experiments/core-validation-review-2026-10-31.md`。上の未チェック項目には全条件・全経路の確認も含むため、部分的な照合だけで完了にしない。
+
+目次順の本文レビューと教材の修正・7テストは `experiments/chapter-11-review-2026-11-01.md` に記録した。公式テスト2件は以前の記録を参照し、今回新規に実行した結果としては扱わない。
