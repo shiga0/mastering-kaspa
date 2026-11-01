@@ -1,8 +1,10 @@
 # Appendix H — 参考文献・変更履歴
 
 > **Mastering Kaspa** / 付録H  
-> 原稿：v0.1（技術レビュー前） / 参照確認日：2026-10-30  
+> 目次順の本文レビュー：2026-11-01。主要書誌・参照版・Git履歴/検証索引を確認。\
 > 本付録は書籍全体の出典管理、実装バージョンの固定、変更履歴、レビュー記録を扱う。
+
+基準版は[本書の対象バージョン](../baseline.md)、ページごとの範囲は[技術レビューの進捗](../review-status.md)、今回の記録は `experiments/appendix-h-review-2026-11-01.md` を参照。目次順の通読と、全主張・全実装の検証完了は区別する。
 
 ## H.1 この付録の目的
 
@@ -29,36 +31,37 @@
 
 **重要：** KIPの `Active` は、個々のクライアント・ネットワークでの実行結果を直接証明するものではない。逆に、実装コードが存在しても、有効化されていない機能は利用できない場合がある。
 
-## H.3 Kaspa公式・一次資料
+## H.3 公式サイト・ソースと調査の入口
 
 | ID | 資料 | URL | 主な用途 |
 |---|---|---|---|
 | K-01 | Kaspa公式サイト | https://kaspa.org/ | 概要・公式発表 |
-| K-02 | Kaspa Wiki | https://wiki.kaspa.org/ | 用語・開発者向け資料 |
+| K-02 | Kaspa Wiki | https://wiki.kaspa.org/ | 用語の入口。仕様は原論文・固定実装へ戻る |
 | K-03 | rusty-kaspa | https://github.com/kaspanet/rusty-kaspa | ノード・コンセンサス・SDK |
 | K-04 | rusty-kaspa Releases | https://github.com/kaspanet/rusty-kaspa/releases | リリースと変更点 |
 | K-05 | Kaspa Improvement Proposals | https://github.com/kaspanet/kips | 改善提案と仕様 |
-| K-06 | KIP一覧 | https://github.com/kaspanet/kips/blob/master/README.md | KIP番号・状態 |
+| K-06 | KIP一覧 | https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/README.md | KIP番号・状態 |
 | K-07 | Kaspa Research Forum | https://research.kas.pa/ | 研究議論（一次論文とは区別） |
 
 ### H.3.1 版の固定
 
-GitHubの `master` や `main` は変化するため、出版時には以下のように固定する。
+GitHubのmaster/mainやタグ名だけでなくSHAを記録する。本書ではノードv1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`、KIP文書 `e4ae2332117b5cb68bd6188e065ef885b6d17939` を別の参照軸として使う。同じ時点の資料でも、Mainnetへの有効化証拠でもない。
+
+本書外の調査用ディレクトリで取得する読者用手順：
 
 ```bash
-# 調査時点の実装を取得
- git clone https://github.com/kaspanet/rusty-kaspa.git
- cd rusty-kaspa
- git rev-parse HEAD
- git describe --tags --always
- git status --short
+git clone --branch v1.0.1 --depth 1 https://github.com/kaspanet/rusty-kaspa.git rusty-kaspa-v1.0.1
+cd rusty-kaspa-v1.0.1
+git rev-parse HEAD
+# fcd9c28f9b211b9872a0c90a8c94f79466ffb063 と一致することを確認
+git status --short
 ```
 
-書籍の注記例：
+今回は新規cloneをしていない。既存の固定ソースarchiveを読むことと、Git checkoutのHEAD取得や全ノードの再ビルドは別。depth 1は全履歴を含まず、過去の設計変更を追うには別の完全な調査コピーが必要。
 
-> `rusty-kaspa` v2.1.0（Gitタグ・コミットIDを別途確認）を対象に調査。検証環境と実験IDは付録Gを参照。
+注記の形式例：
 
-**注：** 上記の例は記録形式の説明であり、この付録でソースの全行を実行・監査したことを意味しない。
+> rusty-kaspa v1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要処理を照合。配布Dockerバイナリーとのソース同一性や現行Mainnet仕様を保証しない。環境・配布物hashと確認範囲はbaseline・個別実験記録へ記載。
 
 ## H.4 基礎論文と学術資料
 
@@ -66,56 +69,51 @@ GitHubの `master` や `main` は変化するため、出版時には以下の�
 
 | ID | 文献 | 主な対象 | 検証状況 |
 |---|---|---|---|
-| P-01 | *SPECTRE: Serialization of Proof-of-work Events: Confirming Transactions via Recursive Elections* | BlockDAG上の投票・順序付け | 書誌情報・版の固定が必要 |
-| P-02 | *PHANTOM: A Scalable BlockDAG Protocol* | k-cluster、BlockDAGの安全性 | 書誌情報・版の固定が必要 |
-| P-03 | *DAGKnight: A Parameterless Generalization of GHOSTDAG* | DAGKnightの研究モデル | 書誌情報・版の固定が必要 |
-| P-04 | Bitcoin: *A Peer-to-Peer Electronic Cash System* | PoW・UTXOの歴史的背景 | 原文確認推奨 |
+| P-01 | Yonatan Sompolinsky, Yoad Lewenberg, Aviv Zohar, [*SPECTRE: A Fast and Scalable Cryptocurrency Protocol*](https://eprint.iacr.org/2016/1159), ePrint 2016/1159 | BlockDAG上の投票・順序付け | 公開書誌/要旨を確認。ページの最終改訂2018-01-15。証明の全面照合ではない |
+| P-02 | Yonatan Sompolinsky, Shai Wyborski, Aviv Zohar, [*PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus*](https://eprint.iacr.org/2018/104), ePrint 2018/104 | k-cluster、BlockDAG | 第29章の書誌確認記録に合わせた。今回の公開ページ取得は失敗し、PDF版/hashは未固定 |
+| P-03 | Yonatan Sompolinsky, Michael Sutton, [*The DAG KNIGHT Protocol: A Parameterless Generalization of Nakamoto Consensus*](https://eprint.iacr.org/2022/1494), ePrint 2022/1494 | DAGKnightの研究モデル | 公開書誌/要旨を確認。最終改訂2023-02-24。証明の全面照合ではない |
+| P-04 | Satoshi Nakamoto, [*Bitcoin: A Peer-to-Peer Electronic Cash System*](https://bitcoin.org/bitcoin.pdf), 2008 | PoW・電子現金の歴史的背景 | PDF表紙の題名・著者と[2008-10-31の原告知](https://www.metzdowd.com/pipermail/cryptography/2008-October/014810.html)を確認。全モデルや現行Bitcoin実装との照合ではない |
 
-論文タイトル・著者・発表年・識別子（DOI/arXiv等）は、最終校正時に**原本の表紙・公開ページ**と照合する。本文の説明は、論文で証明された条件を省略して一般化しない。
-
-参考入口：
-
-- Bitcoin whitepaper: https://bitcoin.org/bitcoin.pdf
-- Kaspa research forum: https://research.kas.pa/
-- Google Scholar: https://scholar.google.com/
+確認日は2026-11-01。ePrint識別子の年、受理日、改訂日、学会での出版年を同じ値と扱わない。上記は公開ページや表紙の確認であり、厳密な引用には実際に読んだPDFの版/hashと節・定理番号を追加する。未確認のDOIや改訂日を推測で埋めない。書誌と公開要旨の確認経緯は[第29章](../part-05-advanced/chapter-29.md)と各レビュー記録を参照。
 
 ### H.4.2 暗号技術とZK
 
-- NIST FIPS 180-4（Secure Hash Standard）：https://csrc.nist.gov/pubs/fips/180-4/upd1/final
-- NIST FIPS 186-5（Digital Signature Standard）：https://csrc.nist.gov/pubs/fips/186-5/final
+- [NIST FIPS 180-4, Secure Hash Standard](https://csrc.nist.gov/pubs/fips/180-4/upd1/final)：2015-08の公開情報を確認。掲載ページに改訂予定の注記がある。
+- [NIST FIPS 186-5, Digital Signature Standard](https://csrc.nist.gov/pubs/fips/186-5/final)：2023-02-03公開。掲載ページに将来修正/errataの案内がある。
+- Justin Thaler, [*Proofs, Arguments, and Zero-Knowledge*](https://people.cs.georgetown.edu/jthaler/ProofsArgsAndZK.pdf)、2023-07-18版。付録Cの概念整理で参照した範囲を同付録の記録に明記。
 - ZK-SNARK/STARKについては、採用する証明方式・検証器・ライブラリの論文および固定版を**個別に追加**する。
+
+NISTのページmetadata/注意書きの照合であり、規格本文やerrata全体を実装監査したものではない。
 
 **区別：** 一般的な暗号学の定義と、Kaspaで採用される具体的なアルゴリズムや署名方式は同じとは限らない。
 
 ## H.5 主要KIP対応表
 
-2026-10-30に公開KIP一覧を参照した。状態は将来変更されるため、出版時に再確認する。
+第30章・付録Fと同じ固定KIP `e4ae2332117b5cb68bd6188e065ef885b6d17939` の一覧に合わせる。表題は要旨であり本文のTitleと異なる場合がある。主要表の番号/Statusを照合し、最新の状態やネットワークでの稼働を示す表にはしない。
 
 | KIP | 公開一覧上の主題 | 一覧の状態（確認時点） | 本書の関連章 |
 |---|---|---|---|
-| KIP-0001 | Rustフルノードへの書き換え | Implemented | 9, 25, 36 |
-| KIP-0002 | DAGKnightへの移行 | Proposed | 29, 30 |
-| KIP-0004 | Sparse Difficulty Windows | Active | 13, 30 |
-| KIP-0009 | Extended Mass Formula | Active | 15, 30 |
-| KIP-0010 | Scriptオペコード拡張 | Active | 16, 31 |
-| KIP-0014 | Crescendo Hardfork | Active | 6, 9, 30 |
-| KIP-0015 | Canonical Transaction Ordering | Active | 14, 34 |
-| KIP-0016 | ZK Precompile Opcode | Active | 33, 34 |
-| KIP-0017 | Covenants | Active | 31, 32 |
-| KIP-0020 | Covenant IDs | Active | 31, 32 |
-| KIP-0021 | Partitioned Sequencing Commitment | Active | 33, 34 |
+| [KIP-0001](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0001.md) | Rustフルノードへの書き換え | Implemented | 9, 25, 36 |
+| [KIP-0002](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0002.md) | DAGKnightへの移行 | Proposed | 29, 30 |
+| [KIP-0004](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0004.md) | Sparse Difficulty Windows | Active | 13, 30 |
+| [KIP-0009](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0009.md) | Extended Mass Formula | Active | 15, 30 |
+| [KIP-0010](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0010.md) | Scriptオペコード拡張 | Active | 16, 31 |
+| [KIP-0014](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0014.md) | Crescendo Hardfork | Active | 6, 9, 30 |
+| [KIP-0015](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0015.md) | Canonical Transaction Ordering | Active | 14, 34 |
+| [KIP-0016](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0016.md) | ZK Precompile Opcode | Active | 33, 34 |
+| [KIP-0017](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0017.md) | Covenants | Active | 31, 32 |
+| [KIP-0020](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0020.md) | Covenant IDs | Active | 31, 32 |
+| [KIP-0021](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0021.md) | Partitioned Sequencing Commitment | Active | 33, 34 |
 
-一次資料：https://github.com/kaspanet/kips/blob/master/README.md
+一次資料：https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/README.md
 
 KIPの番号・タイトル・状態は公開一覧に基づく。実装箇所や仕様の適用範囲は**各KIP本文と対象リリース**を確認すること。
 
 ## H.6 実装とリリース履歴の扱い
 
-`rusty-kaspa`の公開リリースページでは、2026年9月22日付の **v2.1.0** が最新リリースとして掲載されている（2026-10-30確認）。リリースノートはP2P、IBD、ZK SDK、算術安全性、Toccata後の整理などを説明している。
+本書の実装照合/実習対象は[公式v1.0.1リリース](https://github.com/kaspanet/rusty-kaspa/releases/tag/v1.0.1)と、baselineに記録したSHA/配布物である。今回リリースページを参照し、タグv1.0.1と短縮SHA fcd9c28の表示を確認した。ソース/SDK/コンテナの同一性をページ表示だけで保証しない。
 
-また、**v2.0.0** のリリースノートはToccataハードフォークを扱い、KIP-0016/0017/0020/0021との関連を明記している。
-
-参照：https://github.com/kaspanet/rusty-kaspa/releases
+この付録は最新版や別リリースの提供機能を認定する一覧ではない。別リリースを扱う場合は、そのタグ/SHA・変更点・ネットワーク有効化・互換性を別途確認して記録する。
 
 ### H.6.1 「いつ利用可能になったか」を調べる手順
 
@@ -167,9 +165,10 @@ GitHubの行番号だけではリファクタリングでずれるため、**コ
 
 | 判定 | 定義 | 出版上の扱い |
 |---|---|---|
-| Verified | 一次資料と固定実装を確認し、必要なテストを実施 | 原則採用可 |
-| Source-checked | 一次資料と固定実装を確認、実行未検証 | 検証条件を注記 |
-| Literature-checked | 論文・KIPを確認、実装未確認 | 理論・提案として説明 |
+| Verified | 個別の主張について固定資料/実装と必要な試験を確認 | 対象条件・限界付きで採用。章全体/安全性の証明へ拡張しない |
+| Source-checked | 対象範囲の固定ソース/使用箇所を照合 | 実行の有無・部分的な試験結果は別に記録 |
+| Literature-checked | 引用する論文/KIPの要旨・節の内容を確認 | 読んだ範囲を明記。実装/有効化や他節の証明は別 |
+| Metadata-checked | 題名・著者・版・Status等のみを確認 | 内容の正しさや実装の根拠にしない |
 | Illustrative | 教育用の擬似コード・模式図 | 実装との非互換性を明記 |
 | Unverified | 根拠・検証が不足 | 断定を避け、公開前に解消 |
 | Deprecated | 古い仕様・非推奨 | 歴史的説明に限定 |
@@ -189,15 +188,21 @@ GitHubの行番号だけではリファクタリングでずれるため、**コ
 | Protocol update | KIPの有効化・コンセンサス変更 | ネットワーク別確認 |
 | Experiment update | 実測値・再現手順更新 | ログ・環境・証拠 |
 
-## H.11 本書の変更履歴（初期記録）
+## H.11 本書の変更履歴（確認した区切り）
 
-| 日付 | 版 | 対象 | 内容 | 状態 |
-|---|---|---|---|---|
-| 2026-10-30 | v0.1 | Appendix H | 参考文献・KIP対応・レビュー・変更履歴の雛形を作成 | 技術レビュー前 |
-| 未記入 | v0.1 | Chapters 1–36 | 各章初稿の統合と整合性確認 | 要記録 |
-| 未記入 | v0.1 | Appendices A–G | 付録の統合と出典確認 | 要記録 |
+Git logの実在コミットと、今回の未コミット作業を分けて記載する。新しい書籍版のタグや公開リリースを作成した意味ではない。
 
-他章の実際の更新日・コミット・検証状況は、この表から推測せず、**リポジトリのGit履歴を基に追記する**。
+| 日付 | 参照 | 対象 | 内容 |
+|---|---|---|---|
+| 2026-10-31 | `ed762c1` | 導入4ページ・第1〜8章 | 目次順レビューの最初の区切り |
+| 2026-11-01 | `d80cc68` | 第9〜14章 | 第2部の目次順レビュー |
+| 2026-11-01 | `f61b100` | 第15〜20章 | 第3部の目次順レビュー |
+| 2026-11-01 | `3fd455b` | 第21〜28章 | 第4部の目次順レビュー |
+| 2026-11-01 | `3a002f8` | 第29〜34章 | 第5部の目次順レビュー |
+| 2026-11-01 | `58e80d2` | 第35・36章、Argent補足 | 本文/補足と検証記録の区切り |
+| 2026-11-01 | 作業記録（本レビュー時点で未コミット） | 付録A〜H、進捗/ROADMAP | 各付録の本文・参照/教材/記録を確認。詳細は個別レビュー記録 |
+
+[進捗表](../review-status.md)はSUMMARYの49ページを掲載する。今回で目次順の本文レビューは一巡したが、未照合の主張/書誌、暗号・安全性の証明、Finality境界・HD復旧・Pruning後IBD・複数ワーカー/会計・新規環境再現等は残る。個別結果は付録Gと実験記録、完了条件はリポジトリのROADMAP.mdを参照する。
 
 ## H.12 Gitによる変更履歴の追跡
 
@@ -212,7 +217,7 @@ git log --follow -- src/part-05-advanced/chapter-34.md
 # 差分確認
 git diff -- src/appendices/appendix-h.md
 
-# 出典修正のコミット例
+# 以下はレビュー後に必要な場合のコミット例（今回自動実行していない）
 git add src/appendices/appendix-h.md
 git commit -m "docs: add bibliography and review policy"
 ```
@@ -274,7 +279,7 @@ git commit -m "docs: add bibliography and review policy"
 |---|---|---|---|---|---|
 | CLM-001 | GHOSTDAGの特定の性質 | P-02 | 未記入 | G-005 | Unverified |
 | CLM-002 | UTXO二重消費の拒否 | K-03 | 未記入 | G-003 | Unverified |
-| CLM-003 | ZK検証機能の存在 | K-05/K-04 | 未記入 | 未記入 | Literature-checked |
+| CLM-003 | ZK検証機能の存在 | K-05/K-04 | 未記入 | 未記入 | Unverified |
 
 この表は**管理形式の例**であり、検証済みの主張一覧ではない。
 
@@ -320,9 +325,11 @@ git commit -m "docs: add bibliography and review policy"
 
 ## H.17 出版前の確認リスト
 
-- [ ] 全36章と付録A–Hが `SUMMARY.md` に登録されている。
-- [ ] `mdbook build` が成功する。
-- [ ] 章間リンクと画像リンクが切れていない。
+今回の本文/リンク確認と、全技術の検証・ライセンス全面監査・公開作業は別。チェックは明示した範囲だけを示す。
+
+- [x] 導入4ページ・全36章・Argent補足・付録A〜Hの49ページがSUMMARY順に対応する。
+- [x] ローカルmdBook 0.5.4でHTMLビルドが成功する。
+- [x] ビルドした53 HTMLのローカルリンク/アンカー検査で不整合0（外部URLの全件確認ではない）。
 - [ ] 主要な数式・定数・KIP状態に一次資料がある。
 - [ ] ソースコード参照はタグ・コミットで固定されている。
 - [ ] Rustコードはコンパイル・テスト結果を記録している。
@@ -353,7 +360,7 @@ mastering-kaspa/
 
 ```bash
 mdbook build
-mdbook serve --open
+mdbook serve --hostname 127.0.0.1 --port 3000
 ```
 
 ## H.19 継続的なメンテナンス
@@ -376,5 +383,4 @@ Kaspaの実装・KIP・SDKは更新される。公開後も、少なくとも**�
 
 ---
 
-**原稿ステータス：v0.1（技術レビュー前）**  
-**未完了：** 論文の正確な書誌情報・固定URL、全章のコミット参照、Rustコードの実行結果、各章の出典IDの最終照合。
+**目次順レビュー：一巡済み。** 本付録は主要書誌/版と追跡管理を確認した範囲。PDF版/hash・全引用節/出典IDの最終照合、全機能/全OSの実行、ライセンス全面監査、ネットワーク有効化等は完了を意味しない。未完了事項は進捗表・ROADMAPと個別記録に残す。

@@ -1,9 +1,11 @@
 # Appendix F — 論文・KIP・実装対応表
 
 > **Mastering Kaspa / 付録F**  
-> 原稿: v0.1（技術レビュー前）｜確認日: 2026-10-30  
+> 目次順の本文レビュー：2026-11-01。固定KIPの主要metadata/参照先・記録教材を確認。\
 > 対象: Kaspaの理論・仕様・実装・検証をつなぐための調査ガイド  
-> **注意:** GitHubの`master`は変化する。以下のファイルパスは探索の入口であり、固定コミットでの完全照合を意味しない。KIPの状態は執筆時点のリポジトリREADME表示を参考にしたもので、ネットワークの稼働状況とは区別する。
+> **参照軸:** KIPは第30章と同じ `e4ae2332117b5cb68bd6188e065ef885b6d17939`、ノードは本書基準版v1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。異なる時点の資料であり、KIP索引の状態と基準版の実装・Mainnetでの有効化を分ける。
+
+確認結果は `experiments/appendix-f-review-2026-11-01.md`。今回全KIP本文・論文の証明・実装・ネットワークを全面照合したものではない。
 
 ## F.1 この付録の目的
 
@@ -14,7 +16,7 @@ Kaspaの理解には、次の4層を区別することが重要である。
 3. **実装（rusty-kaspa）** — 実際のノードがどのような処理をするか。
 4. **検証** — テスト、実験、リリース記録、実ネットワークで何を確認したか。
 
-この4層は一致するとは限らない。論文のアイデアが実装されていない場合、KIPが改訂された場合、コードが複数のアップグレードを扱う場合がある。
+対応は必ずしも1対1でも図のような直線的な順番でもない。この4層は一致するとは限らない。論文のアイデアが実装されていない場合、KIPが改訂された場合、コードが複数のアップグレードを扱う場合がある。
 
 ```text
 研究論文 ── 原理・安全性・仮定
@@ -37,7 +39,7 @@ rusty-kaspa ─ 実装・ネットワーク別パラメータ
 |---|---|---|
 | Kaspa実装 | [kaspanet/rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) | Rustノード、コンセンサス、RPC、テスト |
 | KIP一覧 | [kaspanet/kips](https://github.com/kaspanet/kips) | 提案番号、状態、仕様文書 |
-| KIP索引 | [kips/README.md](https://github.com/kaspanet/kips/blob/master/README.md) | KIPの表題とステータス |
+| KIP索引 | [kips/README.md](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/README.md) | KIPの表題とステータス |
 | Kaspaドキュメント | [kaspanet/docs](https://github.com/kaspanet/docs) | 論文、設計・技術文書の探索 |
 | Kaspa Wiki | [wiki.kaspa.org](https://wiki.kaspa.org/) | 用語と周辺解説（必ず一次実装へ戻る） |
 | 旧Go実装 | [kaspanet/kaspad](https://github.com/kaspanet/kaspad) | 歴史的な実装比較（現行仕様の根拠にしない） |
@@ -51,7 +53,8 @@ rusty-kaspa ─ 実装・ネットワーク別パラメータ
 | P | 論文に記述がある | 論文の節・定理・図 |
 | K | KIPに仕様がある | KIP番号・節・状態 |
 | I | 実装に対応する処理がある | コミットSHA・関数・行 |
-| T | テストを確認した | テスト名・実行コマンド・結果 |
+| T-read | テストのコードを読んだ | 対象SHA・テスト名・検査する性質 |
+| T-run | テストを実行した | 対象SHA・環境・入力・コマンド・実行日時と結果 |
 | N | 対象ネットワークで有効と確認した | リリース・アクティベーション条件・ノード結果 |
 | ? | 未確認 | 次に調べる事項 |
 
@@ -64,9 +67,9 @@ rusty-kaspa ─ 実装・ネットワーク別パラメータ
 | テーマ | 研究・理論 | KIPとの関係 | rusty-kaspaの探索先 | 確認すべき性質 |
 |---|---|---|---|---|
 | BlockDAG | DAGの因果関係・部分順序 | 基本プロトコル | `consensus/`、`consensus/core/` | 祖先・過去・未来・anticone |
-| GHOSTDAG | PHANTOM/GHOSTDAG系列 | 既存コンセンサスの基盤 | `consensus/`で`ghostdag`を検索 | selected parent、blue/red、順序 |
-| DAGKnight | DAGKnight研究 | **KIP-0002**（索引ではProposed） | 現行実装と研究コードを区別 | 提案内容と有効化の差 |
-| DAA | PoWの難易度調整 | **KIP-0004**（索引ではActive） | `consensus/`で`daa`を検索 | サンプル窓、境界条件 |
+| GHOSTDAG | PHANTOM/GHOSTDAG系列 | 既存コンセンサスの基盤 | `consensus/src/processes/ghostdag/protocol.rs` | selected parent、blue/red、順序 |
+| DAGKnight | DAGKnight研究 | **KIP-0002**（固定索引ではProposed） | 現行実装と研究コードを区別 | 提案内容と有効化の差 |
+| DAA | PoWの難易度調整 | **KIP-0004**（固定索引ではActive） | `consensus/src/processes/window.rs`、`difficulty.rs` | サンプル窓、境界条件 |
 | UTXO | UTXO状態遷移 | 関連KIP複数 | `consensus/`で`utxo`を検索 | 二重支払いの拒否、保存則 |
 | Script | 条件付き支出 | **KIP-0010、0017、0020** | `crypto/`、`consensus/`で`script`を検索 | オペコード、検証規則 |
 | Mass | リソース計測と状態肥大化 | **KIP-0009、0013** | `consensus/core/src/config/params.rs` | 制限値、計算、拒否条件 |
@@ -88,31 +91,31 @@ rusty-kaspa ─ 実装・ネットワーク別パラメータ
 | Pruning / Prunality | 過去の削減と安全性 | `pruning`, `proof` | 切り詰め前後の検証 |
 | PoW・DAA | 目標間隔、観測窓、難易度 | `daa`, `difficulty` | ブロック間隔の分布 |
 
-論文の表題・版・公開年・節番号は、書籍の正式な参考文献一覧（付録H）で**実際に読んだ版**に合わせて固定する。ここでは曖昧な論文名からDOIや著者を推測していない。
+既存の書誌確認と公開要旨の確認範囲は[第29章](../part-05-advanced/chapter-29.md)、整理用の文献索引は[付録H](appendix-h.md)を参照。付録Hの全書誌が確認済みとは扱わず、論文の表題・版・公開年・節番号は**実際に読んだ版**に合わせて固定する。ここでは曖昧な論文名からDOIや著者を推測していない。
 
 ## F.6 KIPの対応表（公開索引の例）
 
-2026-10-30に参照したKIP索引では、少なくとも以下の対応が掲載されている。**索引上のStatusは、稼働ネットワークでの機能提供を単独で証明しない。**
+固定コミット `e4ae2332117b5cb68bd6188e065ef885b6d17939` のREADMEを参照する。表題は索引の要旨であり、各KIP本文のTitleと必ずしも同じではない。2026-11-01の確認で15行の番号・Statusと本文ファイルの存在を照合した。**索引上のStatusは、稼働ネットワークでの機能提供を単独で証明しない。**
 
 | KIP | 表題（要旨） | 索引上のStatus | 本書の対応章 | 調査ポイント |
 |---|---|---|---|---|
-| 0001 | Rustフルノードへの書き換え | Implemented | 10, 25, 36 | Go→Rustの移行目的 |
-| 0002 | DAGKnightへのコンセンサス変更 | Proposed | 29, 30 | 提案と稼働実装の区別 |
-| 0003 | 高BPS向けブロックサンプリング | Rejected | 13, 30 | 不採用の理由と代替 |
-| 0004 | Sparse Difficulty Windows | Active | 13 | DAAのサンプル設計 |
-| 0005 | メッセージ署名 | Active | 16, 24 | ドメイン分離・検証 |
-| 0006 | Proof of Chain Membership | Draft | 21, 30 | 構想・証明の対象 |
-| 0009 | 拡張Mass計算 | Active | 15, 19, 30 | ストレージ負荷 |
-| 0010 | Script機能拡張のオペコード | Active | 16, 31, 32 | VMと互換性 |
-| 0013 | Transient Storage Handling | Active | 15, 30 | 一時リソースの扱い |
-| 0014 | Crescendo Hardfork | Active | 9, 13, 30 | 有効化前後のパラメータ |
-| 0015 | Canonical Transaction Ordering | Active | 14, 34 | 正規順序とコミットメント |
-| 0016 | ZK Precompile Opcode | Active | 33, 34 | 証明検証の費用・境界 |
-| 0017 | Covenants and Improved Scripting | Active | 31, 32 | 支出条件とScript検証 |
-| 0020 | Covenant IDs | Active | 31, 32 | IDと参照の仕様 |
-| 0021 | Partitioned Sequencing Commitment | Active | 14, 34 | 証明対象とスケーリング |
+| [0001](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0001.md) | Rustフルノードへの書き換え | Implemented | 10, 25, 36 | Go→Rustの移行目的 |
+| [0002](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0002.md) | DAGKnightへのコンセンサス変更 | Proposed | 29, 30 | 提案と稼働実装の区別 |
+| [0003](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0003.md) | 高BPS向けブロックサンプリング | Rejected | 13, 30 | 不採用の理由と代替 |
+| [0004](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0004.md) | Sparse Difficulty Windows | Active | 13 | DAAのサンプル設計 |
+| [0005](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0005.md) | メッセージ署名 | Active | 16, 24 | ドメイン分離・検証 |
+| [0006](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0006.md) | Proof of Chain Membership | Draft | 21, 30 | 構想・証明の対象 |
+| [0009](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0009.md) | 拡張Mass計算 | Active | 15, 19, 30 | ストレージ負荷 |
+| [0010](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0010.md) | Script機能拡張のオペコード | Active | 16, 31, 32 | VMと互換性 |
+| [0013](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0013.md) | Transient Storage Handling | Active | 15, 30 | 一時リソースの扱い |
+| [0014](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0014.md) | Crescendo Hardfork | Active | 9, 13, 30 | 有効化前後のパラメータ |
+| [0015](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0015.md) | Canonical Transaction Ordering | Active | 14, 34 | 正規順序とコミットメント |
+| [0016](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0016.md) | ZK Precompile Opcode | Active | 33, 34 | 証明検証の費用・境界 |
+| [0017](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0017.md) | Covenants and Improved Scripting | Active | 31, 32 | 支出条件とScript検証 |
+| [0020](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0020.md) | Covenant IDs | Active | 31, 32 | IDと参照の仕様 |
+| [0021](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0021.md) | Partitioned Sequencing Commitment | Active | 14, 34 | 証明対象とスケーリング |
 
-> これは**網羅的なKIP一覧ではない**。最新の提案や番号の欠番を含め、出版時にREADMEと各KIP本文を再確認する。
+> 対象にした固定READMEの15行と、最新の提案/未マージPRは別である。同版でもKIP-15本文のTitleはCanonical Transaction Ordering and SelectedParent Accepted Transactions Commitment、KIP-16はNew Transaction Opcodes for Verifiable Computationで、索引と異なる。番号だけでなくURL・SHA・本文も読む。索引/本文のActiveはネットワーク稼働の証拠ではない（[第30章](../part-05-advanced/chapter-30.md)）。
 
 ## F.7 `rusty-kaspa`の探索ルート
 
@@ -132,11 +135,12 @@ rusty-kaspa/
 
 ```bash
 # ソース取得
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+git clone --branch v1.0.1 --depth 1 https://github.com/kaspanet/rusty-kaspa.git rusty-kaspa-v1.0.1
+cd rusty-kaspa-v1.0.1
 
-# 調査対象を固定する
+# 固定タグのHEADを照合する
 git rev-parse HEAD
+# fcd9c28f9b211b9872a0c90a8c94f79466ffb063 と一致することを確認
 git status --short
 
 # 高速検索（ripgrepがある場合）
@@ -152,24 +156,26 @@ git grep -n 'ghostdag'
 git log --oneline -- consensus
 ```
 
-**注意:** コマンドは探索用であり、全パス・検索語が全バージョンで一致するとは限らない。
+本書外に作る読者用の調査コピーであり、今回は新規clone/HEAD取得をしていない。手元の固定ソースを読むことと、全履歴を取得することは別。depth 1ではlog/blameで過去全体を追えない。歴史調査は別の完全な調査コピーを用意する。全パス・検索語が全バージョンで一致するとも限らない。
 
 ## F.8 コンセンサスパラメータの追跡例
 
-[`consensus/core/src/config/params.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/params.rs)には、ネットワークごとのパラメータや`ForkActivation`、`BlockrateParams`、`Params`などの定義が見られる。たとえば`BlockrateParams`には、目標ブロック時間、`ghostdag_k`、難易度サンプリング、finality・pruning深度などがまとまっている。
+[基準版params.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)はParams、CrescendoParams、ForkActivation、ForkedParamを定義する。旧稿のBlockrateParams/blockrateという構造は基準版にはない。
 
 ```text
 Params
-  ├── network ID
-  ├── genesis
-  ├── blockrate: BlockrateParams
-  │      ├── target_time_per_block
-  │      ├── ghostdag_k
+  ├── net / genesis
+  ├── prior_*                     # 有効化前
+  ├── crescendo: CrescendoParams  # 有効化後の候補
+  │      ├── target_time_per_block / ghostdag_k
   │      ├── difficulty_sample_rate
-  │      ├── finality_depth
-  │      └── pruning_depth
+  │      └── finality_depth / pruning_depth
   └── crescendo_activation
+
+Paramsの取得関数 → ForkedParam::get(context_daa_score) → 使用値
 ```
+
+Mainnet、Testnet-10、Devnet、Simnetでactivationが異なり、定義があるだけでは使われない。呼出箇所がどのDAA scoreを渡すかも確認する。値と導出式は[付録E](appendix-e.md)、GHOSTDAGのkの選択親文脈は[第12章](../part-02-consensus/chapter-12.md)を参照。
 
 調査では次を分ける。
 
@@ -236,7 +242,7 @@ PoWの期待ブロック間隔と、個々のブロックの発生間隔は一�
 | 概念 | 実装で確認する責務 | 典型的な不変条件 |
 |---|---|---|
 | UTXO入力 | 存在確認・重複支出防止 | 同一UTXOを二度消費しない |
-| UTXO出力 | 新しい支出可能状態の生成 | 金額が範囲内 |
+| UTXO出力 | 受理/適用後の未使用出力の生成 | 金額・支出条件が規則に適合。即座に使用可能とは限らない |
 | 手数料 | 入出力差分と制約 | 負の手数料を許さない |
 | Script | 署名・条件評価 | 無効な支出を受理しない |
 | Mass | リソース消費の制限 | 上限を超えるトランザクションを拒否 |
@@ -309,6 +315,8 @@ git show <COMMIT_SHA> -- consensus/core/src/config/params.rs
 git blame consensus/core/src/config/params.rs
 ```
 
+`<COMMIT_SHA>`は実際のSHAへ置き換える説明用の表記で、そのままシェルへ貼らない。浅い履歴だけで変更の全経緯を判断しない。
+
 コミットメッセージは**設計意図の手がかり**であり、正式仕様そのものではない。関連PR、レビュー、テストも読む。
 
 ## F.15 追跡カードのテンプレート
@@ -343,70 +351,102 @@ F-003,Script,,KIP-0017,consensus/,未記録,未記録,調査中
 
 ここでの`未記録`は、**未実装**を意味しない。
 
-## F.17 Rustによる対応表の整合性チェック
+## F.17 Rustによる記録欄の不足チェック
 
-次は外部クレートなしで動く、**書籍管理用**の教育コードである。Kaspaのコンセンサス実装ではない。
+外部クレートなしの書籍管理用教材。記録欄の不足を見つけるだけで、テスト再現性やMainnetでの有効化を判定するプログラムではない。
 
 ```rust
 #[derive(Debug)]
-struct Evidence<'a> {
-    topic: &'a str,
-    paper: Option<&'a str>,
-    kip: Option<&'a str>,
-    commit: Option<&'a str>,
-    test: Option<&'a str>,
-    mainnet_verified: bool,
+pub struct Evidence<'a> {
+    pub topic: &'a str,
+    pub paper: Option<&'a str>,
+    pub kip: Option<&'a str>,
+    pub commit: Option<&'a str>,
+    pub test_record: Option<&'a str>,
+    pub mainnet_record: Option<&'a str>,
 }
 
-fn is_reproducible(e: &Evidence<'_>) -> bool {
-    e.commit.is_some() && e.test.is_some()
+fn nonblank(value: Option<&str>) -> bool {
+    value.is_some_and(|s| !s.trim().is_empty())
 }
 
-fn can_claim_mainnet(e: &Evidence<'_>) -> bool {
-    e.mainnet_verified && is_reproducible(e)
+pub fn has_test_record(e: &Evidence<'_>) -> bool {
+    let full_sha = e
+        .commit
+        .is_some_and(|s| s.len() == 40 && s.bytes().all(|b| b.is_ascii_hexdigit()));
+    full_sha && nonblank(e.test_record)
+}
+
+pub fn has_mainnet_record(e: &Evidence<'_>) -> bool {
+    has_test_record(e) && nonblank(e.mainnet_record)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn proposal_alone_does_not_prove_deployment() {
-        let e = Evidence {
-            topic: "DAGKnight",
-            paper: Some("research document"),
-            kip: Some("KIP-0002"),
-            commit: None,
-            test: None,
-            mainnet_verified: false,
-        };
-        assert!(!can_claim_mainnet(&e));
+    fn example() -> Evidence<'static> {
+        Evidence {
+            topic: "Example feature",
+            paper: None,
+            kip: Some("example KIP reference"),
+            commit: Some("fcd9c28f9b211b9872a0c90a8c94f79466ffb063"),
+            test_record: Some("example test record"),
+            mainnet_record: None,
+        }
     }
 
     #[test]
-    fn code_and_test_alone_do_not_prove_mainnet() {
+    fn proposal_alone_has_no_test_record() {
         let e = Evidence {
-            topic: "Example feature",
-            paper: None,
-            kip: Some("KIP"),
-            commit: Some("example-commit"),
-            test: Some("example-test"),
-            mainnet_verified: false,
+            commit: None,
+            test_record: None,
+            ..example()
         };
-        assert!(is_reproducible(&e));
-        assert!(!can_claim_mainnet(&e));
+        assert!(!has_test_record(&e));
+        assert!(!has_mainnet_record(&e));
+    }
+
+    #[test]
+    fn test_record_does_not_supply_mainnet_record() {
+        let e = example();
+        assert!(has_test_record(&e));
+        assert!(!has_mainnet_record(&e));
+    }
+
+    #[test]
+    fn placeholders_and_blank_records_are_rejected() {
+        let e = Evidence {
+            commit: Some("example-commit"),
+            ..example()
+        };
+        assert!(!has_test_record(&e));
+        let e = Evidence {
+            test_record: Some("  "),
+            ..example()
+        };
+        assert!(!has_test_record(&e));
+        let e = Evidence {
+            mainnet_record: Some("  "),
+            ..example()
+        };
+        assert!(!has_mainnet_record(&e));
+    }
+
+    #[test]
+    fn presence_check_does_not_read_record_contents() {
+        let e = Evidence {
+            mainnet_record: Some("uninspected reference"),
+            ..example()
+        };
+        assert!(has_mainnet_record(&e));
     }
 }
 ```
 
-実行方法:
+本書外の一時Cargo libプロジェクトのsrc/lib.rsへ保存し、Rust 1.90.0 / edition 2021でcargo test --offline、cargo fmt --all -- --check、cargo clippy --offline --all-targets -- -D warningsを実行した。4テストが成功。
 
-```bash
-rustc --test evidence.rs -o evidence_tests
-./evidence_tests
-```
-
-`mainnet_verified`は人間が記録するフラグであり、このコードがネットワークを自動検証するわけではない。
+SHAは40桁の16進表記しか検査しておらず、commitの存在や対象リポジトリとの対応を確認しない。test_record/mainnet_recordも空でない参照欄というだけで、ファイルの存在や内容・成功結果・network/activationの対応を読み取らない。最後のテストは未精査の文字列でもtrueになるという限界を示す。記録のレビューなしに、この戻り値を公開可否/機能稼働の根拠へ使わない。
 
 ## F.18 変更追跡と差分レビュー
 
@@ -483,8 +523,8 @@ Received → Validated → Accepted → Applied
 **目的:** `ghostdag_k`の定義から利用箇所まで追跡する。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+git clone --branch v1.0.1 --depth 1 https://github.com/kaspanet/rusty-kaspa.git rusty-kaspa-v1.0.1
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
 rg -n 'ghostdag_k' .
 rg -n 'ForkActivation|crescendo_activation' consensus
@@ -561,7 +601,9 @@ AIは調査の補助にはなるが、証拠にはならない。
 | 付録G | 実験結果・テストベクトル |
 | 付録H | 文献の版・コミット・変更履歴 |
 
-## F.28 出版前の確認チェックリスト
+## F.28 検証を広げる際のチェックリスト
+
+今回は固定索引の15行/主要metadata、主要ソース入口と教材を確認。全論文・全KIP仕様/実装・最新ネットワーク状態を確認した意味ではない。
 
 - [ ] 各論文の正式名称・著者・版・節番号を固定した。
 - [ ] 各KIPの状態を最新版で確認した。
@@ -606,12 +648,15 @@ Kaspaを深く理解するには、論文を読むだけでも、Rustコード�
 ## F.31 参考資料
 
 1. [Kaspa Improvement Proposals — GitHub](https://github.com/kaspanet/kips)
-2. [KIP索引（README）](https://github.com/kaspanet/kips/blob/master/README.md)
+2. [KIP索引（README）](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/README.md)
 3. [rusty-kaspa — GitHub](https://github.com/kaspanet/rusty-kaspa)
-4. [Consensus Parameters (`params.rs`)](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/params.rs)
-5. [Consensus Constants (`constants.rs`)](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/constants.rs)
+4. [Consensus Parameters (`params.rs`)](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)
+5. [Consensus Constants (`constants.rs`)](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)
 6. [Kaspa Documents](https://github.com/kaspanet/docs)
 7. [Kaspa Wiki](https://wiki.kaspa.org/)
 8. [旧Go実装 `kaspad`](https://github.com/kaspanet/kaspad)
 
 **書籍編集メモ:** 参考URLは追跡の入口。出版用の厳密な引用には、対象コミットのパーマリンク、参照日、論文の版情報を追加すること。
+
+
+次は[付録G — 実験結果・テストベクトル](appendix-g.md)。

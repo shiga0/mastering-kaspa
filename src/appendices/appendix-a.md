@@ -1,8 +1,10 @@
 # Appendix A — Rust環境・Docker環境の構築
 
 > **対象**：『Mastering Kaspa』のRustサンプル、教育用BlockDAGノード、Kaspa Devnet実験を再現する読者。  
-> **原稿ステータス**：v0.1（技術レビュー前）  
-> **原則**：コマンドは原則macOS（Apple Silicon）とLinuxを想定する。WindowsはWSL2を推奨する。CLIのフラグやポートはバージョンで変わるため、実行時の`--help`を優先する。
+> **目次順の本文レビュー**：2026-11-01。独自Rust教材・Compose設定・環境の読取検査と既存実測記録を照合。全OSの新規導入/Devnet再実行ではない。
+> **原則**：コマンドは原則macOS（Apple Silicon）とLinuxを想定する。Windows/WSL2を含む他環境は未検証で、ここでの動作保証には含めない。CLIのフラグやポートはバージョンで変わるため、実行時の`--help`を優先する。
+
+対象版の一覧は[本書の対象バージョン](../baseline.md)、この回の結果は `experiments/appendix-a-review-2026-11-01.md` を参照。既存のDevnet実測と、今回新しく確認した事項を分けて記録する。
 
 ## A.1 この付録の目的
 
@@ -79,7 +81,7 @@ sudo apt install -y git curl build-essential pkg-config libssl-dev
 
 ## A.5 Rustのインストール
 
-Rust公式の`rustup`を使う。インストールスクリプトは実行前に公式サイトで内容を確認すること。
+Rust公式の`rustup`を使う。未導入の場合だけインストールする。すでにrustupがあれば、再インストールせず後の版追加へ進む。スクリプトは公式の配布元から取得し、内容を確認してから実行する。
 
 - Rust公式：<https://www.rust-lang.org/tools/install>
 - rustup：<https://rust-lang.github.io/rustup/>
@@ -87,40 +89,43 @@ Rust公式の`rustup`を使う。インストールスクリプトは実行前�
 Unix系OSでの一般的なインストール方法：
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/mastering-kaspa-rustup-init.sh
+# 保存したスクリプトを読んでから、未導入の環境で実行する
+sh /tmp/mastering-kaspa-rustup-init.sh --profile minimal
 ```
 
 インストール後、ターミナルを開き直すか、環境設定を読み込む。
 
 ```bash
 . "$HOME/.cargo/env"
-rustc --version
-cargo --version
 rustup --version
 ```
 
-安定版ツールチェーンを選択する。
+本書のRust教材は1.90.0 / edition 2021で検証した。変化するstableへ一括変更せず、固定版を追加して明示的に呼び分ける。
 
 ```bash
-rustup toolchain install stable
-rustup default stable
-rustup component add rustfmt clippy
+rustup toolchain install 1.90.0 --profile minimal --component rustfmt --component clippy
+rustc +1.90.0 --version
+cargo +1.90.0 --version
 ```
 
-既存プロジェクトが特定のRustバージョンを要求する場合は、リポジトリの`rust-toolchain.toml`などを優先する。
+以下ではcargo +1.90.0を使い、既存プロジェクトのdefault/overrideを変更しない。rust-toolchain.tomlがある場合も、明示的な+版指定は別の版を選ぶため、対象リポジトリの要件と照合する。
+
+第32章のSilverscriptとArgent補足はRust 1.94.0以上を要求する別の実習である。必要な場合だけrustup toolchain install 1.94.0 --profile minimalで追加し、cargo +1.94.0で使う。1.94を入れたことが1.90の教材や基準ノードを再検証した証拠にはならない（[rustupの版指定](https://rust-lang.github.io/rustup/concepts/toolchains.html)）。
 
 ### A.5.1 Rustの最小動作確認
 
 ```bash
-cargo new kaspa-rust-lab
+# 本書とは別の調査用ディレクトリで作る
+cargo +1.90.0 new --edition 2021 kaspa-rust-lab
 cd kaspa-rust-lab
-cargo run
-cargo test
-cargo fmt --check
-cargo clippy --all-targets -- -D warnings
+cargo +1.90.0 run --offline
+cargo +1.90.0 test --offline
+cargo +1.90.0 fmt --all -- --check
+cargo +1.90.0 clippy --offline --all-targets -- -D warnings
 ```
 
-`Hello, world!`が表示され、テスト・フォーマット・Lintが成功すれば基礎環境は動いている。
+Hello, world!の表示と書式/Lintの成功は基本の動作確認であり、cargo new直後はテスト0件でも成功する。次節で実際に2件が走ることを確認する。これはC/C++依存や公式ノード・WASMのビルド試験ではない。
 
 ### A.5.2 テスト付きの最小実験
 
@@ -149,10 +154,10 @@ mod tests {
 ```
 
 ```bash
-cargo test
+cargo +1.90.0 test --offline
 ```
 
-ここでは「正常な状態遷移」と「不正な入力の拒否」をテストで表現する基本形を確認する。
+2件のテストで通常の加算とu64の表現範囲超えを確認する。引数自体は有効なu64であり、状態遷移やKaspaの金額/合意規則の検証ではない。
 
 ## A.6 Rustのディレクトリと主要コマンド
 
@@ -193,7 +198,7 @@ docker compose version
 docker run --rm hello-world
 ```
 
-`docker version`でクライアントのみ表示されサーバーへ接続できない場合、Docker DesktopまたはDocker Engineが起動しているか確認する。
+`docker version`でクライアントのみ表示されサーバーへ接続できない場合、Docker Desktop/Engineの起動に加え、接続先context・ソケット/OS側の権限も確認する。アクセス拒否をEngine停止と同一視しない。ソケットを誰でも書込可能にする対応は避ける。
 
 ### A.7.1 Dockerの基本操作
 
@@ -206,29 +211,26 @@ docker stop <container-name>
 docker rm <container-name>
 ```
 
-`<container-name>`は実際のコンテナ名に置き換える。データを消去する操作（`docker volume rm`や`docker compose down -v`）は、対象を確認してから実行する。
+`<container-name>`は説明用のプレースホルダーで、そのままシェルへ貼らず実名へ置き換える。上の行は基本操作の一覧であり、一括実行する手順ではない。データを消去する操作（`docker volume rm`や`docker compose down -v`）は、対象を確認してから実行する。
 
 ## A.8 Kaspaのソースコードを取得する
 
 公式リポジトリ：<https://github.com/kaspanet/rusty-kaspa>
 
+第1章と同じ固定版を、本書とは別のソース調査用ディレクトリへ取得する。既存の作業コピーへresetして合わせない。
+
 ```bash
-mkdir -p ~/dev/kaspa
-cd ~/dev/kaspa
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+git clone --branch v1.0.1 --depth 1 https://github.com/kaspanet/rusty-kaspa.git rusty-kaspa-v1.0.1
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
 git status --short
+# HEADが fcd9c28f9b211b9872a0c90a8c94f79466ffb063 と一致することを確認
+cargo +1.90.0 metadata --offline --locked --no-deps --format-version 1 > /tmp/rusty-kaspa-review-metadata.json
 ```
 
-**注意**：`main`や`master`の最新状態は時間とともに変化する。実験記録にはコミットハッシュを残し、可能なら特定のタグまたはコミットに固定する。
+固定版の宣言MSRVは1.82.0で、教材の実測Rust 1.90.0とは別の値。1.82.0自体のビルドを検証したという意味ではない。公式workspace全体のビルドにはREADMEのProtobuf・clang/RocksDB・用途別のWASM要件等も確認する。
 
-```bash
-git tag --list | tail -n 20
-cargo metadata --no-deps --format-version 1 > /tmp/rusty-kaspa-metadata.json
-```
-
-`cargo metadata`はワークスペースの構成調査に使える。ただし、依存関係や開発環境が不足すると失敗することがある。
+metadata --no-depsはパッケージ一覧の確認で、依存解決・ノードのビルド成功ではない。生JSONはローカルパスを含むため、そのまま公開記録へ入れない。ソースのSHAと配布Dockerバイナリーの申告版/digestも、再ビルドやビルド証明なしに同一性の証拠として扱わない。
 
 ### A.8.1 最初に読む場所
 
@@ -262,9 +264,11 @@ docker compose -f experiments/devnet/compose.yaml logs --tail=30 node
 experiments/devnet/.venv/bin/python experiments/devnet/probe.py
 ```
 
+Composeのconfig成功は構文・展開後の設定確認で、起動・RPC・P2Pの成功ではない。初回はprobeに必要なPython 3.11とwebsockets==14.1の環境を第28章に従って作る。probeはDevnet・版1.0.1・UTXO index等を検査する読取スモークテストで、同期完了/E2Eの証明ではない。
+
 ### A.10.1 保存先と終了
 
-設定は公開イメージのdigestを固定し、`--appdir=/data` と名前付きボリュームの保存先を合わせている。JSON wRPCはホストの127.0.0.1:18310だけへ公開する。
+設定は公開イメージのdigestを固定し、`--appdir=/data` と名前付きボリュームの保存先を合わせている。JSON wRPCはホストの127.0.0.1:18310だけへ公開する。コンテナ内の0.0.0.0待受とホスト側公開範囲を混同しない。ピア探索・UPnP・自動外部接続は抑制しているが、専用bridge自体は外向き通信を全面禁止する設定ではない。
 
 ```bash
 docker compose -f experiments/devnet/compose.yaml stop node
@@ -272,7 +276,7 @@ docker compose -f experiments/devnet/compose.yaml stop node
 
 停止ではデータを削除しない。既存データがあれば、再開時のブロック数やUTXOは初回の値と異なる。送金・通知・2ノードの試験は追加設定と専用スクリプトを使うため、第28章とリポジトリの `experiments/devnet/README.md` を参照する。
 
-この構成はmacOS Apple Siliconで検証済みであり、amd64やLinuxホストで実行確認したものではない。Pruning後の同期も未検証である。
+この構成はmacOS Apple Siliconで検証済みであり、amd64やLinuxホストで実行確認したものではない。Pruning後の同期も未検証である。これらは既存の実験記録の範囲で、今回起動/採掘/送金を再実行したわけではない。
 
 ## A.11 2ノード統合テストの考え方
 
@@ -306,9 +310,11 @@ RPCの方式・ポート・コマンドはノードのバージョンによっ�
 2. 利用するバージョンのRPC仕様を確認する。
 3. ネットワーク識別子を取得してDevnetであることを検証する。
 4. 同期状態とブロック情報を取得する。
-5. タイムアウト・再接続をテストする。
+5. タイムアウト・再接続・購読再登録と欠落補完をテストする。
 
 参照：<https://github.com/kaspanet/rusty-kaspa>
+
+孤立したDevnetでは未採掘時等にisSynced=falseを観測し得る。既存の採掘実験が使う未同期採掘の例外設定を、通常の同期要件やアプリの確定判定へ一般化しない。2ノードで同じ文字列Devnetと出ても、Genesis/パラメータ・接続先・データ世代が一致することは別に確認する。
 
 ## A.13 セキュリティ上の注意
 
@@ -342,10 +348,11 @@ logs: <保存場所>
 ### A.14.1 Dockerイメージのdigestを記録
 
 ```bash
+KASPA_IMAGE="kaspanet/rusty-kaspad@sha256:5bc3195c2cd2d171885781ed55ead9485d93c7bd7b784d46e9e393c96757fe22"
 docker image inspect "$KASPA_IMAGE" --format '{{json .RepoDigests}}'
 ```
 
-取得できるdigestはローカルのイメージ状態によって異なる。タグのみでは後日の完全な再現性を保証できない。
+RepoDigestsが空の場合もあり、ローカルimage IDとリポジトリdigestは同じ識別子ではない。OS/Architectureもdocker image inspectで照合する。今回の固定参照はローカルでlinux/arm64と一致したが、これは他のCPU・Linuxホストの動作確認や、ノードのソース/バイナリー一致の証明ではない。タグのみでは後日の完全な再現性を保証できない。
 
 ## A.15 トラブルシューティング
 
@@ -360,24 +367,26 @@ docker image inspect "$KASPA_IMAGE" --format '{{json .RepoDigests}}'
 | ディスクが不足する | ボリューム・ログ・ビルド生成物 | 使用量確認後、不要データのみ整理 |
 | Apple Siliconで動かない | イメージの対応アーキテクチャ | `docker manifest inspect`などで確認 |
 
-診断用コマンド：
+本書のルートからの診断用コマンド（版は実際に使ったtoolchainを指定）：
 
 ```bash
 rustc --version
 cargo --version
 docker version
-docker compose ps
-docker compose logs --tail=200
+docker compose -f experiments/devnet/compose.yaml ps
+docker compose -f experiments/devnet/compose.yaml logs --tail=200 node
 ```
 
 `docker system prune`などの一括削除コマンドは、他のプロジェクトのデータにも影響し得るため、安易に実行しない。
 
 ## A.16 CIでRustコードを検証する
 
-GitHub Actionsで教育用Rustプロジェクトを検証する例。`.github/workflows/rust.yml`：
+独立した単一Cargoプロジェクト向けの参考CI例。本書に.github/workflows/rust.ymlを追加したものではない。本書の実設定は.github/workflows/deploy.ymlである。
 
 ```yaml
 name: Rust checks
+permissions:
+  contents: read
 on:
   push:
   pull_request:
@@ -386,15 +395,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.90.0
         with:
           components: rustfmt, clippy
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets -- -D warnings
-      - run: cargo test --all-targets
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: cargo test --locked --all-targets
 ```
 
-これは単一Cargoプロジェクト向けの基本例。ワークスペースやサブディレクトリ配置の場合は`working-directory`等を調整する。第三者アクションは運用時にコミットSHAへ固定することも検討する。
+この例は生成したCargo.lockを版管理する前提。本書の既存CIが検査するRust教材は第12・27章の2件で、本付録の手動確認を自動実行済みとは扱わない。ワークスペースやサブディレクトリ配置の場合は`working-directory`等を調整する。第三者アクションは運用時にコミットSHAへ固定することも検討する。
 
 ## A.17 mdBookのインストールと表示
 
@@ -404,33 +413,32 @@ jobs:
 cargo install mdbook --version 0.5.4 --locked
 cd mastering-kaspa
 mdbook build
-mdbook serve
+mdbook serve --hostname 127.0.0.1 --port 3000
 ```
 
 ブラウザで通常`http://localhost:3000`を開く。ポートや設定は実行時の表示に従う。
 
 `mdbook build`が生成する`book/`は通常、Markdown原稿とは別の**ビルド成果物**として扱う。
 
-## A.18 推奨リポジトリ構成
+## A.18 本書の関連ファイル
 
 ```text
 mastering-kaspa/
 ├── book.toml
 ├── src/
 │   ├── SUMMARY.md
-│   └── appendices/
-│       └── appendix-a.md
+│   └── appendices/appendix-a.md
 ├── examples/
-│   ├── minimal-node/
-│   └── wallet/
+│   ├── dag-relations/
+│   └── minimal-node/
 ├── experiments/
-│   └── devnet-sync-001/
+│   └── devnet/
 │       ├── README.md
 │       ├── compose.yaml
-│       └── results.md
-└── .github/
-    └── workflows/
-        └── rust.yml
+│       ├── requirements.txt
+│       └── probe.py
+├── scripts/check-book-examples.py
+└── .github/workflows/deploy.yml
 ```
 
 生成物、秘密鍵、ノードの巨大なデータベース、実験用の機密設定はGitに含めない。`.gitignore`を適切に設定する。
@@ -494,4 +502,6 @@ Rustの単体テストで確認するのは、**自分が定義したモデル�
 
 ---
 
-**編集メモ**：出版前に、採用する`rusty-kaspa`のタグ・Dockerイメージ・Devnetフラグ・RPC仕様を固定し、実機で検証したコマンドとログを追記すること。
+**確認範囲：** Rust最小例・Compose設定・Dockerの版/ローカルイメージ読取と既存記録の照合。rustup/Docker等の新規導入、hello-worldコンテナ、Devnet起動/採掘/送金・他OS/CPU・Pruningは今回実行していない。記録は `experiments/appendix-a-review-2026-11-01.md`。
+
+次は[付録B — Kaspa用語集](appendix-b.md)。

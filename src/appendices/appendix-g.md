@@ -1,10 +1,12 @@
 # Appendix G — 実験結果・テストベクトル
 
 > **Mastering Kaspa / 付録G**  
-> 原稿ステータス：v0.1（技術レビュー前）  
+> 目次順の本文レビュー：2026-11-01。実験索引/記録・独自UTXO教材・SHA/DAG例を確認。\
 > 対象：Rustによる教育用実装、Kaspa Devnet、コンセンサス関連の再現実験
 
-本付録では、Kaspaの仕様を「理解したつもり」で終わらせず、**入力・期待値・実測値・実行環境を第三者が追跡できる形で残す**ための方法を示す。ここに掲載する値は、明記した教育用例を除き**未測定**である。実際に実行していない試験を「成功」と記録してはならない。
+本付録では、Kaspaの仕様を「理解したつもり」で終わらせず、**入力・期待値・実測値・実行環境を第三者が追跡できる形で残す**ための方法を示す。本付録は実行済みの記録と今後の計画を併記する。既存記録の照合を今回の再実行として扱わない。実際に実行していない試験を「成功」と記録してはならない。
+
+対象版は[本書の対象バージョン](../baseline.md)、今回の結果は `experiments/appendix-g-review-2026-11-01.md` を参照。実ノードの起動・採掘・送金は今回再実行していない。
 
 ## G.1 目的と適用範囲
 
@@ -15,7 +17,7 @@
 | 仕様由来ベクトル | 仕様から導かれる入力・期待出力 | ハッシュの既知値 |
 | 実装由来ベクトル | 参照実装で得た出力 | 特定コミットの関数出力 |
 | 実験結果 | 実測値・環境・ログ | Devnet同期時間 |
-| 性質テスト | 入力全体に期待する条件 | UTXOの二重消費を拒否 |
+| 性質テスト | 調べる入力範囲で成り立つべき条件 | UTXOの二重消費を拒否 |
 | 差分テスト | 二つの実装の比較結果 | 教育用実装と参照実装 |
 
 **注意：** 参照実装の出力は必ずしも独立した正しさの証明ではない。仕様との一致、実装間一致、ネットワークでの受理はそれぞれ別の検証対象となる。
@@ -26,41 +28,33 @@
 
 1. 実験ID、目的、仮説、判定基準。
 2. 使用したOS・CPU・アーキテクチャ・Rust・Dockerのバージョン。
-3. `rusty-kaspa`、SDK、実験コードの**GitコミットSHA**。
+3. `rusty-kaspa`、SDK、実験コードの**GitコミットSHA**。未コミットの教材はその旨と掲載ソースのhash・変更内容も残す。
 4. ネットワーク種別（Mainnet / Testnet / Devnet）、設定ファイル、起動引数。
 5. 入力データ、期待出力、実測出力、標準出力・標準エラー。
 6. 実行手順、所要時間、繰り返し回数、失敗の扱い。
 7. 日時、実施者、結論、未解決事項。
 
+生のstdout/stderrや設定は私有パス・peer識別子・鍵等を含み得る。保存は公開を意味せず、公開用には必要な集計・版・条件・hashを抽出する。公開しない生データの保存先をGit管理下に強制しない。
+
 「動いた」ではなく、**何が、どの条件で、どの程度確認できたか**を書く。
 
-## G.3 推奨ディレクトリ構成
+## G.3 本書の関連ファイルと教材例
 
 ```text
 mastering-kaspa/
-├── src/appendices/appendix-g.md
-├── experiments/
-│   ├── README.md
-│   ├── manifest.yaml
-│   ├── vectors/
-│   │   ├── sha256.json
-│   │   ├── utxo.json
-│   │   └── dag.json
-│   ├── rust/
-│   │   ├── Cargo.toml
-│   │   └── src/lib.rs
-│   ├── devnet/
-│   │   └── compose.yaml
-│   └── results/
-│       └── G-001/
-│           ├── metadata.yaml
-│           ├── stdout.txt
-│           ├── stderr.txt
-│           └── report.md
-└── examples/
+├── examples/
+│   ├── dag-relations/
+│   └── minimal-node/
+└── experiments/
+    ├── ghostdag/
+    ├── daa/
+    ├── daa-window/
+    ├── daa-transition/
+    ├── devnet/
+    └── *-2026-10-31.md 等の検証記録
 ```
 
-ログに秘密鍵、シードフレーズ、APIトークン、個人情報を含めない。
+本付録のJSON/manifest/結果テンプレートは保存形式の提案で、experiments/vectors、experiments/rust、experiments/resultsやexperiments.ymlを本書に追加したものではない。G.6の独自教材も本書外の一時プロジェクトで確認した。ログやDB・鍵を含む新しいフォルダーを公開用に作らない。
 
 ## G.4 実験IDとステータス
 
@@ -70,18 +64,18 @@ mastering-kaspa/
 
 | ID | テーマ | 種別 | ステータス |
 |---|---|---|---|
-| G-001 | ハッシュ関数の既知値 | テストベクトル | **未実行** |
-| G-002 | UTXOの保存則 | 性質テスト | **未実行** |
-| G-003 | 二重消費の拒否 | 性質テスト | **未実行** |
-| G-004 | DAGのPast・Anticone | 教育用モデル | **未実行** |
+| G-001 | ハッシュ関数の既知値 | テストベクトル | PASS：今回、空入力/abcの2値を確認 |
+| G-002 | UTXOの保存則 | 教育用の固定ケース | PASS：今回のG.6教材の範囲 |
+| G-003 | 二重消費の拒否 | 教育用の固定ケース | PASS：入力重複と再消費等。G.6の範囲 |
+| G-004 | DAGのPast・Anticone | 教育用モデル | PASS：今回、G.9のJSON固定DAGを計算 |
 | G-005 | GHOSTDAG分類 | 参照実装比較 | **実行済み：24ケースで一致（G.10の範囲）** |
 | G-006 | 難易度調整 | 参照実装比較 | **算術27・Full窓120・Sampled/Dual288ケース一致（G.11の範囲）** |
-| G-007 | Devnetのノード同期 | 統合実験 | **未実行** |
-| G-008 | RPC・wRPC再接続 | 障害注入 | **未実行** |
-| G-009 | トランザクション通知の重複 | アプリケーションテスト | **未実行** |
-| G-010 | Pruning・再起動 | 統合実験 | **未実行** |
+| G-007 | Devnetのノード同期 | 統合実験 | 限定PASS：既存2ノード伝播/停止復帰。Pruning後IBD等は未実施 |
+| G-008 | RPC・wRPC再接続 | 障害注入 | 限定PASS：既存購読終了/再購読と現在UTXO補完。全履歴再生ではない |
+| G-009 | トランザクション通知の重複 | アプリケーションテスト | 限定PASS：既存実通知のアプリ側二重適用/SQLite照合 |
+| G-010 | Pruning・再起動 | 統合実験 | INCONCLUSIVE：前提検査でpoint未進行。通常再起動のみ別途実測 |
 
-ステータスは `未実行 / 実行中 / PASS / FAIL / BLOCKED / INCONCLUSIVE` から選ぶ。**FAILを削除しない**。再試験は別の実行IDで記録する。
+個々の実行ステータスは `NOT_RUN / RUNNING / PASS / FAIL / BLOCKED / INCONCLUSIVE` から選ぶ。上表の「限定PASS」は記録ごとの条件付き成功の要約で、実験テーマ全体の完了を表さない。**FAILを削除しない**。再試験は別の実行IDで記録する。
 
 ## G.5 テストベクトルの設計原則
 
@@ -103,26 +97,26 @@ JSONの例：
   "input": "",
   "expected_hex": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "source": "SHA-256 known-answer test",
-  "status": "not-run"
+  "status": "NOT_RUN"
 }
 ```
 
-これは**一般的なSHA-256の既知値**であり、KaspaのPoWハッシュそのものを検証するベクトルではない。
+上のstatusは未実行テンプレートの初期値。今回の実測結果はG.7と検証記録へ分けて保存する。これは**一般的なSHA-256の既知値**であり、KaspaのPoWハッシュそのものを検証するベクトルではない。
 
 ## G.6 Rustで再現できる最小テスト
 
 以下はKaspaのコンセンサス実装ではなく、**UTXO台帳の保存則と二重消費防止を理解するための教育用コード**である。Rust標準ライブラリだけを使用する。
 
-`experiments/rust/Cargo.toml`：
+本書外でcargo +1.90.0 new --lib --edition 2021 utxo-lab等により作る独立プロジェクトの `Cargo.toml`：
 
 ```toml
 [package]
-name = "mastering-kaspa-experiments"
+name = "utxo-lab"
 version = "0.1.0"
 edition = "2021"
 ```
 
-`experiments/rust/src/lib.rs`：
+そのプロジェクトの `src/lib.rs`：
 
 ```rust
 use std::collections::{HashMap, HashSet};
@@ -164,13 +158,20 @@ pub fn apply_transaction(
             return Err(ApplyError::DuplicateInput);
         }
         let value = utxos.get(input).ok_or(ApplyError::MissingInput)?.value;
-        input_total = input_total.checked_add(value).ok_or(ApplyError::ValueOverflow)?;
+        input_total = input_total
+            .checked_add(value)
+            .ok_or(ApplyError::ValueOverflow)?;
     }
     let mut output_total = 0u64;
     for (index, output) in outputs.iter().enumerate() {
-        output_total = output_total.checked_add(output.value).ok_or(ApplyError::ValueOverflow)?;
+        output_total = output_total
+            .checked_add(output.value)
+            .ok_or(ApplyError::ValueOverflow)?;
         let index = u32::try_from(index).map_err(|_| ApplyError::ValueOverflow)?;
-        if utxos.contains_key(&Outpoint { tx_id: new_tx_id, index }) {
+        if utxos.contains_key(&Outpoint {
+            tx_id: new_tx_id,
+            index,
+        }) {
             return Err(ApplyError::OutputCollision);
         }
     }
@@ -182,7 +183,13 @@ pub fn apply_transaction(
         utxos.remove(input);
     }
     for (index, output) in outputs.iter().enumerate() {
-        utxos.insert(Outpoint { tx_id: new_tx_id, index: index as u32 }, *output);
+        utxos.insert(
+            Outpoint {
+                tx_id: new_tx_id,
+                index: index as u32,
+            },
+            *output,
+        );
     }
     Ok(input_total - output_total) // 教育用の「手数料」モデル
 }
@@ -204,18 +211,18 @@ mod tests {
             &[input],
             2,
             &[Output { value: 60 }, Output { value: 35 }],
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(fee, 5);
         assert_eq!(utxos.values().map(|v| v.value).sum::<u64>(), 95);
     }
 
     #[test]
-    fn rejects_double_spend_without_mutation() {
+    fn rejects_duplicate_input_without_mutation() {
         let (mut utxos, input) = initial();
         let before = utxos.clone();
-        let err = apply_transaction(
-            &mut utxos, &[input, input], 2, &[Output { value: 100 }],
-        ).unwrap_err();
+        let err = apply_transaction(&mut utxos, &[input, input], 2, &[Output { value: 100 }])
+            .unwrap_err();
         assert_eq!(err, ApplyError::DuplicateInput);
         assert_eq!(utxos, before);
     }
@@ -224,9 +231,7 @@ mod tests {
     fn rejects_overspending_without_mutation() {
         let (mut utxos, input) = initial();
         let before = utxos.clone();
-        let err = apply_transaction(
-            &mut utxos, &[input], 2, &[Output { value: 101 }],
-        ).unwrap_err();
+        let err = apply_transaction(&mut utxos, &[input], 2, &[Output { value: 101 }]).unwrap_err();
         assert_eq!(err, ApplyError::OutputsExceedInputs);
         assert_eq!(utxos, before);
     }
@@ -234,11 +239,73 @@ mod tests {
     #[test]
     fn rejects_missing_input() {
         let (mut utxos, _) = initial();
-        let missing = Outpoint { tx_id: 99, index: 0 };
+        let before = utxos.clone();
+        let missing = Outpoint {
+            tx_id: 99,
+            index: 0,
+        };
         assert_eq!(
             apply_transaction(&mut utxos, &[missing], 2, &[]),
             Err(ApplyError::MissingInput)
         );
+        assert_eq!(utxos, before);
+    }
+
+    #[test]
+    fn rejects_spending_consumed_output() {
+        let (mut utxos, input) = initial();
+        apply_transaction(&mut utxos, &[input], 2, &[Output { value: 100 }]).unwrap();
+        let before = utxos.clone();
+        assert_eq!(
+            apply_transaction(&mut utxos, &[input], 3, &[]),
+            Err(ApplyError::MissingInput)
+        );
+        assert_eq!(utxos, before);
+    }
+
+    #[test]
+    fn rejects_output_collision_without_mutation() {
+        let (mut utxos, input) = initial();
+        let before = utxos.clone();
+        assert_eq!(
+            apply_transaction(&mut utxos, &[input], 1, &[Output { value: 100 }]),
+            Err(ApplyError::OutputCollision)
+        );
+        assert_eq!(utxos, before);
+    }
+
+    #[test]
+    fn rejects_empty_inputs_without_mutation() {
+        let (mut utxos, _) = initial();
+        let before = utxos.clone();
+        assert_eq!(
+            apply_transaction(&mut utxos, &[], 2, &[]),
+            Err(ApplyError::EmptyInputs)
+        );
+        assert_eq!(utxos, before);
+    }
+
+    #[test]
+    fn rejects_totals_overflow_without_mutation() {
+        let (mut utxos, input) = initial();
+        let other = Outpoint { tx_id: 9, index: 0 };
+        utxos.insert(other, Output { value: u64::MAX });
+        let before = utxos.clone();
+        assert_eq!(
+            apply_transaction(&mut utxos, &[input, other], 2, &[]),
+            Err(ApplyError::ValueOverflow)
+        );
+        assert_eq!(utxos, before);
+        assert_eq!(
+            apply_transaction(
+                &mut utxos,
+                &[input],
+                2,
+                &[Output { value: u64::MAX }, Output { value: 1 }]
+            ),
+            Err(ApplyError::ValueOverflow)
+        );
+        assert_eq!(utxos, before);
     }
 }
 ```
@@ -246,12 +313,13 @@ mod tests {
 実行コマンド：
 
 ```bash
-cd experiments/rust
-cargo test
-cargo test -- --nocapture
+cd utxo-lab
+cargo +1.90.0 test --offline
+cargo +1.90.0 fmt --all -- --check
+cargo +1.90.0 clippy --offline --all-targets -- -D warnings
 ```
 
-**検証状況：** この原稿の作成時点では実行結果を採録していない。`PASS` と記録するのは実際の実行ログを保存した後に限る。また、このモデルは署名検証、Script、Mass、Coinbase、DAGの順序付けを実装していない。
+**確認結果：** 既存Rust 1.90.0 / edition 2021で8テスト・書式/Clippyが成功。新規toolchain導入はしていない。これは固定した入力例の確認で、全入力に対する性質の証明やfuzzingではない。また、このモデルは署名検証、Script、Mass、Coinbase、DAGの順序付けを実装していない。tx_idは簡略な整数で、呼出者が一意に決める前提。衝突検査は現在のUTXOに対するもので、消費済みIDの全履歴を保存・検証するものではない。
 
 ## G.7 G-001：ハッシュ関数の既知値
 
@@ -271,7 +339,7 @@ printf 'abc' | shasum -a 256
 | 空文字列 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 | `abc` | `ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad` |
 
-**結果欄：** `未実行`。実測値とコマンド実行環境を追記する。
+**今回の結果：** macOSのshasum -a 256とPython標準hashlibで、改行を付けない空入力/abcの2値が一致。実行条件は本付録のレビュー記録へ掲載。Kaspa固有ハッシュの検証ではない。
 
 ## G.8 G-002〜003：UTXO保存則と二重消費
 
@@ -297,12 +365,9 @@ printf 'abc' | shasum -a 256
 次の教育用DAGを用いる。矢印は**新しいブロックから参照する親への向き**とする。
 
 ```text
-  D     E
-  |\   /|
-  | \ / |
-  B  C  |
-   \ | /
-     A
+D → B → A
+D → C → A
+E → C
 ```
 
 曖昧な図の解釈を避けるため、辺を機械可読な形式でも固定する。
@@ -321,7 +386,7 @@ printf 'abc' | shasum -a 256
 
 この定義では、`Past(D) = {A, B, C}`、`Past(E) = {A, C}`、`D` と `E` は互いに祖先でも子孫でもないため、互いのAnticoneに属する。Pastに自身を含めるかは定義上明示し、ここでは**含めない**。
 
-**検証項目：** 閉路がないこと、祖先探索が期待集合に一致すること、参照方向を逆にしていないこと。
+**今回の確認：** このJSONをPython集合モデルで読み、親の存在・閉路なし・Past(D/E)・Anticone(D)={E}を確認。Rust祖先例の実行は[付録C](appendix-c.md)の既存記録を参照し、今回再実行したとは扱わない。
 
 ## G.10 G-005：GHOSTDAGの分類比較
 
@@ -360,7 +425,8 @@ GHOSTDAGは単純な「DAGのトポロジカルソート」ではない。比較
 
 ```bash
 # 実験環境の識別情報を保存
-uname -a
+uname -s
+uname -m
 rustc --version
 cargo --version
 docker --version
@@ -368,14 +434,14 @@ docker compose version
 
 git -C rusty-kaspa rev-parse HEAD
 
-# 実際の起動設定を確認した後で実行する
-# docker compose -f experiments/devnet/compose.yaml up -d
-# docker compose -f experiments/devnet/compose.yaml logs --timestamps > devnet.log
+# 2ノード専用手順。実行前にREADMEの条件と終了処理を確認する
+# python3 experiments/devnet/two-node.py
+# base compose.yamlの1ノード起動だけで2ノード試験の代替にしない
 ```
 
 **測定するもの：** ピア数、同期状態、DAG情報、再起動後の復帰、エラー数。同期時間の測定には起点と終点の定義が必要。
 
-**現時点の結果：** `BLOCKED`（使用するCompose構成とノードバージョン未固定）。
+**既存の結果：** `experiments/devnet-two-node-2026-10-31.md` に、別データ領域の2ノードで伝播・停止復帰後の27ブロック/DAA score・指定1アドレスの26 UTXOが一致した記録がある。イメージdigest/ARM64・構成は固定済み。「未固定によるBLOCKED」は現状と合わないため撤回する。全UTXOやPruning後IBD・同期時間ベンチマークは未検証。今回は記録の照合のみ。
 
 ## G.13 G-008：RPC・wRPC再接続
 
@@ -389,7 +455,7 @@ git -C rusty-kaspa rev-parse HEAD
 
 **注意：** wRPC通知だけで完全な履歴再生が保証されると仮定しない。必要な照合方法は実装とAPI仕様に依存する。
 
-**現時点の結果：** `未実行`。
+**既存の結果：** `experiments/devnet-live-reconciliation-2026-10-31.md` で、購読の終了/再購読・現在UTXOの再照会・古い応答の拒否を確認した記録がある。単一アドレス/単一書込主体の限定試験で、切断中の全イベント履歴や自動再接続サービスの継続運用を検証したものではない。今回は再実行していない。
 
 ## G.14 G-009：重複通知と冪等性
 
@@ -401,9 +467,9 @@ git -C rusty-kaspa rev-parse HEAD
 通知B ─┘
 ```
 
-検証対象は「イベントID」だけではない。トランザクションID、出力インデックス、チェーン状態、再編成の扱いも設計する。データベースの一意制約とトランザクション境界を併用する。
+検証対象は「イベントID」だけではない。トランザクションID、出力インデックス、チェーン状態、再編成の扱いも設計する。データベースの一意制約とトランザクション境界を併用する。added→removed→addedを永久的なoutpoint/kind重複排除で潰さない。現在状態への冪等置換とイベント履歴の同一性を区別する。
 
-**現時点の結果：** `未実行`。
+**既存の結果：** `experiments/devnet-notifications-2026-10-31.md` で、実際に受けた通知をアプリ側で2回適用し、SQLiteの件数/金額が増えないことを確認した記録がある。ネットワークが同じ通知を2回送った試験ではない。再編成のremoved観測は別の `experiments/devnet-reorg-observer-2026-10-31.md` を参照。会計取消や複数ワーカーの試験まで完了したとしない。
 
 ## G.15 G-010：Pruning・再起動
 
@@ -411,11 +477,11 @@ git -C rusty-kaspa rev-parse HEAD
 
 **観測項目：** 起動時間、ディスク使用量、同期状態、RPC応答、保持データの範囲、復旧に必要な手順。Pruningの挙動はコンセンサス・ストレージ設定・ノードバージョンに依存する。
 
-**現時点の結果：** `未実行`。
+**既存の結果：** 通常のプロセス再起動の保持は `experiments/devnet-environment-2026-10-31.md` に記録。一方、`experiments/devnet-pruning-review-2026-10-31.md` の前提検査はPruning pointがGenesisのままで終了コード2。実削減・削減後再起動/新規ノードIBDは未実施で、Pruning成功として扱わない。今回はこれらの記録を照合しただけである。
 
 ## G.16 実験メタデータのテンプレート
 
-`experiments/results/G-001/metadata.yaml`：
+本書には追加しない保存形式の例（生ログの公開を必須にしない）：
 
 ```yaml
 experiment_id: G-001
@@ -445,8 +511,8 @@ expected:
   sha256_hex: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 observed: null
 artifacts:
-  stdout: stdout.txt
-  stderr: stderr.txt
+  public_summary: null
+  private_raw_log_digest: null
 conclusion: null
 limitations: []
 ```
@@ -494,7 +560,7 @@ limitations: []
 | L3 | CIで自動検証 | CI PASS |
 | L4 | 独立環境・別実装で検証 | クロス検証PASS |
 
-**L4でも数学的な完全証明ではない**。また、ネットワークの安全性を単一のテストで保証できるわけではない。
+L0〜L4は本書の整理用ラベルで、公式の認証基準ではない。CIであるだけで独立性や検査範囲が増えるわけではなく、実行回数・環境・独立性は別軸で記録する。**L4でも数学的な完全証明ではない**。また、ネットワークの安全性を単一のテストで保証できるわけではない。
 
 ## G.19 差分テストと失敗の最小化
 
@@ -544,12 +610,14 @@ Issue / PR / 文書修正
 
 ## G.23 CIによる継続的検証
 
-次は教育用Rustテストを実行するGitHub Actionsの例。
+次は独立した教育用Rustプロジェクト向けの参考例。本書にはexperiments/rustやこのworkflowを追加していない。実際の本書CIは.github/workflows/deploy.ymlで、付録教材すべてを自動検査するものではない。
 
 `.github/workflows/experiments.yml`：
 
 ```yaml
 name: Experiments
+permissions:
+  contents: read
 on:
   push:
     paths:
@@ -567,7 +635,7 @@ jobs:
         working-directory: experiments/rust
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.90.0
       - run: cargo test --locked
 ```
 
@@ -616,7 +684,7 @@ jobs:
 1. 実行日時とコミットSHAが残っている。
 2. 再現コマンドがあり、依存バージョンが明記されている。
 3. 期待値の出典が説明できる。
-4. 実測ログが残っている。
+4. 実測値と必要な実行証拠が残り、公開用集計と非公開の生データを区別している。
 5. 失敗と未実行を隠していない。
 6. 仕様由来の事実と教育用モデルを区別している。
 7. 参照実装との比較結果を過大解釈していない。
@@ -627,7 +695,7 @@ jobs:
 **課題2：** G-002〜003のRustコードを実行し、`cargo test`ログを保存する。  
 **課題3：** G-004のDAGをRustで表現し、祖先集合を求める。  
 **課題4：** `rusty-kaspa`のコミットを固定し、G-005の参照テストを一つ特定する。  
-**課題5：** Devnetの起動構成を検証し、G-007のBLOCKEDを解除する。  
+**課題5：** Devnetの起動構成を検証し、G-007の未確認範囲・完了基準を定義する。\
 **課題6：** 失敗ケースを一つ作り、最小反例と回帰テストを記録する。
 
 ## G.28 理解度チェック
@@ -642,7 +710,7 @@ jobs:
 
 ## G.29 まとめ
 
-Kaspaの研究論文、KIP、Rust実装、Devnetを結びつけるのは、**再現可能な証拠**である。本付録の表は実験の計画表であり、未実施の結果を示すものではない。今後、実験を一つずつ実行してログ・ベクトル・コミットを固定することで、『Mastering Kaspa』の各章を検証可能な技術文書に近づけられる。
+Kaspaの研究論文、KIP、Rust実装、Devnetを結びつけるのは、**再現可能な証拠**である。本付録の表は実行済み記録の索引と未実施部分の計画を分けて示す。今後、実験を一つずつ実行してログ・ベクトル・コミットを固定することで、『Mastering Kaspa』の各章を検証可能な技術文書に近づけられる。
 
 ## G.30 一次資料・関連資料
 
@@ -655,3 +723,6 @@ Kaspaの研究論文、KIP、Rust実装、Devnetを結びつけるのは、**再
 - [GitHub Actions公式ドキュメント](https://docs.github.com/en/actions)
 
 > **編集メモ：** 出版前に、各実験の結果を実測ログで埋め、参照実装のコミットSHA・ネットワークバージョン・適用KIPを確定すること。
+
+
+次は[付録H — 参考文献・変更履歴](appendix-h.md)。

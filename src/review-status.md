@@ -4,7 +4,7 @@
 
 ## SUMMARY順のレビュー
 
-`src/SUMMARY.md` の上から、文章・構成・技術的根拠・リンク・実習への導線を確認しています。既存のソース照合や実行結果を使い、同じ検証を繰り返すことは避けます。
+`src/SUMMARY.md` の49ページを上から確認し、文章・構成・技術的根拠・リンク・実習への導線のレビューが一巡しました。既存のソース照合や実行結果を使い、同じ検証を繰り返すことは避けます。
 
 | 目次順 | ページ | 状況 | レビュー記録 |
 |---|---|---|---|
@@ -49,7 +49,14 @@
 | 39 | [第34章](part-05-advanced/chapter-34.md) | 本文・固定プロトタイプ/API・順序教材を確認 | `experiments/chapter-34-review-2026-11-01.md` |
 | 40 | [第35章](part-06-contributing/chapter-35.md) | 本文・RPC境界/集計教材・SQLite制約を確認 | `experiments/chapter-35-review-2026-11-01.md` |
 | 41 | [第36章](part-06-contributing/chapter-36.md) | 本文・開発用入口/貢献手順・不変条件教材を確認 | `experiments/chapter-36-review-2026-11-01.md` |
-| 42 | [付録A](appendices/appendix-a.md) | 次の対象 | — |
+| 42 | [付録A](appendices/appendix-a.md) | 手順・版の分離/Rust教材・Compose設定を確認 | `experiments/appendix-a-review-2026-11-01.md` |
+| 43 | [付録B](appendices/appendix-b.md) | 主要用語・集合定義・基準版/各章の対応を確認 | `experiments/appendix-b-review-2026-11-01.md` |
+| 44 | [付録C](appendices/appendix-c.md) | 数式の前提・数値例・Rust教材を確認 | `experiments/appendix-c-review-2026-11-01.md` |
+| 45 | [付録D](appendices/appendix-d.md) | 主要RPC/通知・CLI入口・再照会設計と教材を確認 | `experiments/appendix-d-review-2026-11-01.md` |
+| 46 | [付録E](appendices/appendix-e.md) | 基準版の前後値・単位/導出式・Rust教材を確認 | `experiments/appendix-e-review-2026-11-01.md` |
+| 47 | [付録F](appendices/appendix-f.md) | 固定KIP索引/metadata・基準版入口・記録教材を確認 | `experiments/appendix-f-review-2026-11-01.md` |
+| 48 | [付録G](appendices/appendix-g.md) | 実験ID/既存記録・SHA/DAG・UTXO教材を確認 | `experiments/appendix-g-review-2026-11-01.md` |
+| 49 | [付録H](appendices/appendix-h.md) | 主要書誌/固定版・Git履歴/追跡管理を確認 | `experiments/appendix-h-review-2026-11-01.md` |
 
 この順番でページを確認したことと、ページに関係する全技術・全コードを検証したことは別です。後続章には、先に重要箇所だけを照合・実行したものがあります。
 
@@ -126,14 +133,14 @@
 | [Chapter 34 — vProgs & Programmability（vProgsとKaspaのプログラマビリティ）](part-05-advanced/chapter-34.md) | 主要資料・教材を確認 | 公開案内と固定プロトタイプ/APIの境界・61パッケージmetadataを確認。独自教材9テスト成功。公式全テスト/証明・実アプリ間原子性・本番動作は未検証 |
 | [Chapter 35 — Building a Kaspa Application（Kaspaアプリケーションの構築）](part-06-contributing/chapter-35.md) | 主要入口・教材を確認 | 基準版RPC/UTXO境界を照合。独自集計12テストとAPI型検査・SQLite制約検査成功。実Payment Tracker/E2E・会計台帳/複数ワーカーは未検証 |
 | [Chapter 36 — Contributing to Kaspa（Kaspaへのコントリビュート）](part-06-contributing/chapter-36.md) | 主要手順・教材を確認 | 基準版README/check/test/CI・metadata59パッケージ、公開貢献手順を確認。独自教材9テスト成功。公式スクリプト/CI全体・実PR提出は未実施 |
-| [Appendix A — Rust環境・Docker環境の構築](appendices/appendix-a.md) | 未照合 | 記録したARM64環境でDevnet起動・送金等を実測し手順を反映。新規環境、他OS/CPU、付録全体は未確認 |
-| [Appendix B — Kaspa用語集](appendices/appendix-b.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Appendix C — 数学・確率・暗号技術の補足](appendices/appendix-c.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Appendix D — RPC・CLIリファレンス](appendices/appendix-d.md) | 未照合 | 起動・読み取り・送金・通知で使ったAPI名と経路を反映。全RPC/CLIの要求・応答・エラーは未照合 |
-| [Appendix E — プロトコルパラメータ一覧](appendices/appendix-e.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Appendix F — 論文・KIP・実装対応表](appendices/appendix-f.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Appendix G — 実験結果・テストベクトル](appendices/appendix-g.md) | 未照合 | G-005は24ケース、G-006は算術27・Full窓120・Sampled/Dual288ケースを実行。ほかのIDと既存実験の対応・完了条件の照合は未完了 |
-| [Appendix H — 参考文献・変更履歴](appendices/appendix-h.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
+| [Appendix A — Rust環境・Docker環境の構築](appendices/appendix-a.md) | 主要手順・教材を確認 | Rust最小例2テスト・実行/書式/Clippy、Compose5構成とDocker版/ARM64 imageの読取を確認。既存Devnet記録を照合。新規導入/他OS・今回の実ノード起動・Pruningは未実施 |
+| [Appendix B — Kaspa用語集](appendices/appendix-b.md) | 主要用語を照合 | 第12/13/16/17/20章等と基準版GHOSTDAG・TXIDの主要定義を確認。用語全体の完全監査や機能の有効化確認ではない |
+| [Appendix C — 数学・確率・暗号技術の補足](appendices/appendix-c.md) | 主要モデル・教材を確認 | Rust確率例7テスト・DAG例実行/書式/Clippy、数値例・集合/矢印規約・PoW比較を確認。暗号の安全性証明・公式合意の再検証ではない |
+| [Appendix D — RPC・CLIリファレンス](appendices/appendix-d.md) | 主要API・設計と教材を確認 | 基準版router/service・通知型/CLI入口、既存実測との対応・Rust3テストを確認。全RPC/CLIの要求・応答・エラー/実ノード再実行は未確認 |
+| [Appendix E — プロトコルパラメータ一覧](appendices/appendix-e.md) | 主要定義・教材を確認 | 基準版のCrescendo前後値/導出式・Mass主要検証・定数10件/算術・Rust4テストを確認。現行Mainnet実測・全境界値・公式関数の再実行比較は未実施 |
+| [Appendix F — 論文・KIP・実装対応表](appendices/appendix-f.md) | 主要対応・教材を確認 | 固定KIP索引15行/主要metadata・固定版Params/探索先とRust4テストを確認。全論文/KIP仕様・実装・現行ネットワークの全面照合ではない |
+| [Appendix G — 実験結果・テストベクトル](appendices/appendix-g.md) | 主要記録・教材を確認 | G-001〜004を今回のSHA2値/UTXO8テスト/固定DAGで確認。G-005〜010は既存記録と限界を対応付け、Pruning等の未完了を維持。実ノードや公式比較は再実行していない |
+| [Appendix H — 参考文献・変更履歴](appendices/appendix-h.md) | 主要書誌・管理を確認 | 主要論文の公開書誌/表紙・NIST公開情報、固定KIP表/Git履歴を確認。全PDF/引用節・暗号/ライセンス全面監査・最新ネットワークの確認ではない |
 
 ## 検証記録の場所
 
@@ -150,6 +157,14 @@
 | 第35章本文レビューとRPC/集計教材・SQLite制約 | `chapter-35-review-2026-11-01.md` |
 | Argent補足の本文レビューと固定CLI/ローカルruntime | `argent-review-2026-11-01.md` |
 | 第36章本文レビューと開発用入口/不変条件教材 | `chapter-36-review-2026-11-01.md` |
+| 付録A本文レビューとRust最小例/Compose設定・環境読取 | `appendix-a-review-2026-11-01.md` |
+| 付録B本文レビューと集合/score・TXID等の用語照合 | `appendix-b-review-2026-11-01.md` |
+| 付録C本文レビューと数値例/Rust確率・DAG教材 | `appendix-c-review-2026-11-01.md` |
+| 付録D本文レビューと主要API/再照会・Rust観測検証教材 | `appendix-d-review-2026-11-01.md` |
+| 付録E本文レビューと固定パラメータ/導出式・単位教材 | `appendix-e-review-2026-11-01.md` |
+| 付録F本文レビューと固定KIP索引/記録不足チェック教材 | `appendix-f-review-2026-11-01.md` |
+| 付録G本文レビューと実験索引/SHA・DAG・UTXO教材 | `appendix-g-review-2026-11-01.md` |
+| 付録H本文レビューと主要書誌/固定版・Git履歴/管理基準 | `appendix-h-review-2026-11-01.md` |
 | 第28章本文レビューとDevnet設定/教材 | `chapter-28-review-2026-11-01.md` |
 | 第27章本文レビューと改訂最小ノード | `chapter-27-review-2026-11-01.md` |
 | 第26章本文レビューとGHOSTDAG/保存境界 | `chapter-26-review-2026-11-01.md` |
@@ -191,7 +206,7 @@
 | 分岐合流時のUTXO観測補正 | `devnet-reorg-observer-2026-10-31.md` |
 | Pruning条件と未達の実測 | `devnet-pruning-review-2026-10-31.md` |
 
-教材コードは `examples/`、公式関数の比較ハーネスは `experiments/ghostdag/` と `experiments/daa*/`、実ノードの検査は `experiments/devnet/` を参照してください。付録GのG-005・G-006には、今回までの実行結果を限定した範囲で反映しています。ほかの実験IDへ反映するときは、既存の実験と完了条件を個別に対応づけます。
+教材コードは `examples/`、公式関数の比較ハーネスは `experiments/ghostdag/` と `experiments/daa*/`、実ノードの検査は `experiments/devnet/` を参照してください。付録GのG-001〜010は、今回の最小例と過去の実験記録を対応付けています。限定した成功と未完了を明記し、実験テーマ全体の完了へ広げていません。
 
 ## CIの設定と実行確認
 
@@ -204,8 +219,8 @@
 
 公式GHOSTDAG/DAAの比較、Dockerを使うDevnet試験、他章の抜き出しRustコードの検査は、このworkflowでは実行しません。設定内容とローカルの成功記録を、GitHub上の実ジョブの成功へ読み替えないでください。GitHub上のCI・Pages公開は未確認です。
 
-## 次に確認するページと残作業
+## 目次順レビューの区切りと残作業
 
-第1〜36章と[Argent補足](part-05-advanced/argent.md)の本文レビューは一区切りです。実装/暗号方式・実ネットワークをすべて検証した意味ではありません。次は[付録A](appendices/appendix-a.md)、その次は[付録B](appendices/appendix-b.md)です。以後もSUMMARYの順で付録を確認します。
+導入4ページ・第1〜36章・[Argent補足](part-05-advanced/argent.md)・付録A〜Hの計49ページを、SUMMARY順に通読・修正しました。目次順の未確認ページはなくなりましたが、各ページ内の全主張・実装/暗号方式・実ネットワークの検証が完了した意味ではありません。付録A〜Hと進捗/ROADMAP・個別記録は本レビュー時点で未コミットです。
 
 個別検証として残る主なものは、Finalityの実行時境界、HDウォレット復旧、Pruning後IBD、複数ワーカー/会計処理、新規環境での再現、未照合の説明・数値・出典です。全残作業と完了条件は、リポジトリの `ROADMAP.md` に記録しています。

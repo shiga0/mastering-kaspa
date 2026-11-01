@@ -1,8 +1,10 @@
 # Appendix E — プロトコルパラメータ一覧
 
 > **Mastering Kaspa / 付録E**  
-> 原稿ステータス：**v0.1（技術レビュー前）**  
-> 確認基準：2026年10月30日に閲覧した `rusty-kaspa` の公開 `master` ブランチ。**特定リリースの実行結果ではない**。出版時にはコミットハッシュと実機の値で再検証すること。
+> 目次順の本文レビュー：2026-11-01。基準版の主要定義/利用箇所と単位教材を確認。\
+> 確認基準：rusty-kaspa v1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。ソース定義の照合であり、現行Mainnetの実測ではない。
+
+対象版は[本書の対象バージョン](../baseline.md)、この回の結果は `experiments/appendix-e-review-2026-11-01.md` を参照。旧稿の別版master由来のフィールド/値を基準版へ整理した。
 
 ## E.1 この付録の目的
 
@@ -16,20 +18,20 @@ Kaspaのブロック生成速度、GHOSTDAG、難易度調整、UTXO、ブロッ
 4. **実測値**：観測BPS、手数料、ハッシュレートなど。プロトコル定数ではない。
 5. **フォーク依存値**：有効化前後で意味・数値が変わる値。
 
-> **重要**：`master` は将来の変更を含み得る。以下の「ソース上の値」は、現在稼働中のメインネットにすべて適用済みだという意味ではない。
+> **重要**：以下は固定コミットの定義であり、現在稼働中のMainnetの設定・ソフトウェア・有効化状況を確認した値ではない。
 
 ## E.2 一次資料と確認の優先順位
 
 | 優先 | 資料 | 確認するもの |
 |---|---|---|
-| 1 | [rusty-kaspa: `params.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/params.rs) | `MAINNET_PARAMS`、`TESTNET_PARAMS`、`DEVNET_PARAMS`、`BlockrateParams` |
-| 2 | [rusty-kaspa: `constants.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/constants.rs) | 時間・サンプリング・セキュリティ関連定数 |
-| 3 | [rusty-kaspa: パラメータ上書き文書](https://github.com/kaspanet/rusty-kaspa/blob/master/docs/override-params.md) | 実験ネットワーク用の設定項目 |
-| 4 | [rusty-kaspa: mass 実装](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/mass/mod.rs) | compute / storage / transient mass の計算 |
+| 1 | [rusty-kaspa: `params.rs`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs) | `MAINNET_PARAMS`、`TESTNET_PARAMS`、`DEVNET_PARAMS`、`CrescendoParams` / `Bps` |
+| 2 | [rusty-kaspa: `constants.rs`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs) | 時間・サンプリング・セキュリティ関連定数 |
+| 3 | [rusty-kaspa: `bps.rs`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/bps.rs) | `TenBps = Bps<10>` の導出式 |
+| 4 | [rusty-kaspa: mass 実装](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/mass/mod.rs) | compute / storage / transient mass の計算 |
 | 5 | [Kaspa KIPs](https://github.com/kaspanet/kips) | 変更の提案・動機・互換性 |
 | 6 | [rusty-kaspa Releases](https://github.com/kaspanet/rusty-kaspa/releases) | 配布版・変更履歴・アップグレード |
 
-**実装の値 > 二次解説の値**ではあるが、実装の `master` と稼働中リリースも同一ではない。検証時は**コミットIDとネットワーク**を必ず記録する。
+**実装の値 > 二次解説の値**ではあるが、固定版の定義と稼働中リリース/有効な分岐も同一ではない。検証時は**コミットIDとネットワーク**を必ず記録する。
 
 ## E.3 パラメータを読むための用語
 
@@ -44,52 +46,55 @@ Kaspaのブロック生成速度、GHOSTDAG、難易度調整、UTXO、ブロッ
 | Pruning depth | 過去データを整理するための深さ | すべての履歴を消す設定ではない |
 | Mass | トランザクションやブロックの資源コスト | バイト数と同義ではない |
 
-## E.4 Mainnetの主要パラメータ（ソース確認値）
+## E.4 Mainnetの主要パラメータ（基準版ソース）
 
-次の値は上記 `params.rs` の **`MAINNET_PARAMS` 定義**から読めるもの。**2026年10月30日時点の公開 `master` に関する記述**であり、稼働リリースとの一致は別途確認する。
+MAINNET_PARAMSの直接定義と、同設定が参照するCRESCENDOを分ける。変更される値はForkedParam::getへ渡すDAA scoreで選ばれる。どのブロック/親のスコアを使うかは呼出箇所を確認する。
 
-| 分類 | Rustのフィールド | ソース上の値 | 単位・意味 | 出典 |
-|---|---|---:|---|---|
-| ネットワーク | `net` | Mainnet | ネットワーク識別 | `MAINNET_PARAMS` |
-| 目標ブロック時間 | `blockrate.target_time_per_block` | **100** | ms、10 BPS相当 | `BlockrateParams::new::<10>()` |
-| Crescendo前の目標時間 | `pre_crescendo_target_time_per_block` | **1000** | ms、1 BPS相当 | `MAINNET_PARAMS` |
-| Crescendo有効化条件 | `crescendo_activation` | **110,165,000** | DAA score | `MAINNET_PARAMS` |
-| 時刻許容幅 | `timestamp_deviation_tolerance` | **132** | 秒 | `constants.rs` |
-| Coinbaseペイロード上限 | `max_coinbase_payload_len` | **204** | byte | `MAINNET_PARAMS` |
-| Coinbase内Script公開鍵上限 | `coinbase_payload_script_public_key_max_len` | **150** | byte | `MAINNET_PARAMS` |
-| Tx入力数上限 | `max_tx_inputs` | **1000** | 個 | `MAINNET_PARAMS` |
-| Tx出力数上限 | `max_tx_outputs` | **1000** | 個 | `MAINNET_PARAMS` |
-| Script公開鍵長上限 | `max_script_public_key_len` | **10,000** | byte | `MAINNET_PARAMS` |
-| 1バイトあたりの計算Mass | `mass_per_tx_byte` | **1** | mass / byte | `MAINNET_PARAMS` |
-| Script公開鍵1バイトあたりの計算Mass | `mass_per_script_pub_key_byte` | **10** | mass / byte | `MAINNET_PARAMS` |
-| SigOpあたりの計算Mass | `mass_per_sig_op` | **1000** | mass / SigOp | `MAINNET_PARAMS` |
-| ブロック計算Mass上限 | `block_mass_limits.compute` | **500,000** | mass | `MAINNET_PARAMS` |
-| ブロックStorage Mass上限 | `block_mass_limits.storage` | **500,000** | mass | `MAINNET_PARAMS` |
-| ブロックTransient Mass上限 | `block_mass_limits.transient` | **1,000,000** | mass | `MAINNET_PARAMS` |
-| 最大ブロックレベル | `max_block_level` | **225** | level | `MAINNET_PARAMS` |
-| Pruning Proofパラメータ | `pruning_proof_m` | **1000** | M | `MAINNET_PARAMS` |
-| PoW省略 | `skip_proof_of_work` | **false** | 真偽値 | `MAINNET_PARAMS` |
-| デフレ期開始DAA score | `deflationary_phase_daa_score` | **15,519,600** | DAA score | `MAINNET_PARAMS` |
-| デフレ期前基本報酬 | `pre_deflationary_phase_base_subsidy` | **50,000,000,000** | sompi | `MAINNET_PARAMS` |
+| 取得元・フィールド | Crescendo前 | Crescendo後 | 単位・意味 |
+|---|---:|---:|---|
+| `target_time_per_block()` | 1000 | 100 | ms、目標1/10 BPS |
+| `ghostdag_k()` | 18 | 124 | blue anticoneに関係するk |
+| `max_block_parents()` | 10 | 16 | 直接の親の数 |
+| `mergeset_size_limit()` | 180 | 248 | merge set制限 |
+| `merge_depth()` | 3600 | 36,000 | 深さ |
+| `finality_depth()` | 86,400 | 432,000 | blue scoreによる深さ |
+| `pruning_depth()` | 185,798 | 1,080,000 | 深さ |
+| `coinbase_maturity()` | 100 | 1000 | 検証ではDAA score差と照合 |
+| `max_tx_inputs()` / `max_tx_outputs()` | 各1,000,000,000 | 各1000 | 個。他の制限も適用 |
+| `max_signature_script_len()` | 1,000,000,000 | 10,000 | byte |
+| `max_script_public_key_len()` | 1,000,000,000 | 10,000 | byte |
+| `difficulty_window_size()` | 2641 | 661 | 前はFull窓、後はSampled窓 |
+| `difficulty_sample_rate()` | 1 | 40 | サンプリング間隔のブロック単位 |
 
-**未転記の値**：`max_signature_script_len`、`storage_mass_parameter`、`max_difficulty_target`、`blockrate.ghostdag_k`、`max_block_parents`、`mergeset_size_limit`などは、参照先の別定義やジェネリック計算を要する。根拠なしに数値を埋めず、E.6の手順で計算元を確認する。
+前の大きな入力/Script長上限は、巨大な取引を実際に受理できるという意味ではない。mass・Script engine・通信等の制限を別途満たす必要がある。
+
+| MAINNET_PARAMSのフィールド | 値 | 単位・意味 |
+|---|---:|---|
+| `crescendo_activation` | 110,165,000 | DAA score。境界を含めて有効 |
+| `timestamp_deviation_tolerance` | 132 | 秒 |
+| `max_coinbase_payload_len` | 204 | byte |
+| `coinbase_payload_script_public_key_max_len` | 150 | byte |
+| `mass_per_tx_byte` | 1 | mass / byte |
+| `mass_per_script_pub_key_byte` | 10 | mass / byte |
+| `mass_per_sig_op` | 1000 | mass / SigOp |
+| `max_block_mass` | 500,000 | mass。適用次元はE.9 |
+| `max_block_level` | 225 | level |
+| `pruning_proof_m` | 1000 | M |
+| `skip_proof_of_work` | false | 真偽値 |
+| `deflationary_phase_daa_score` | 15,519,600 | DAA score |
+| `pre_deflationary_phase_base_subsidy` | 50,000,000,000 | sompi、現在の報酬ではない |
 
 ### E.4.1 10 BPSの意味
 
-```text
-目標時間 = 100 ms / block
-目標BPS  = 1000 ms / 100 ms = 10 blocks/s
-```
+目標100 ms/blockは長期平均で10 blocks/s相当。任意の1秒に必ず10個生成される保証ではなく、取引の受理/確定とも別である。
 
-これは**長期平均の目標**であって、任意の1秒に必ず10個のブロックが生成される保証ではない。また、BlockDAGでは「ブロック数」と「トランザクションが最終的に採用される順序」を同一視しない。
+### E.4.2 時間単位と深さ
 
-### E.4.2 時間単位とブロック単位
-
-`finality_depth`、`pruning_depth`、`coinbase_maturity`は `BlockrateParams` で目標BPSを使って算出される。**秒単位の定数をそのままブロック数として記載しないこと**。
+秒と深さ・DAA score・blue scoreを区別する。BPSによる時間換算は設計上の目安で、時計による待ち時間の保証ではない。finality、pruning、coinbase maturityで実際に比較する値と分岐は各処理を追う（第19〜21章）。
 
 ## E.5 時間・難易度・Pruningに関する定数
 
-[`constants.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/constants.rs) に定義されている値。
+[`constants.rs`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs) に定義されている値。
 
 | 定数 | 値 | 単位 | 解説 |
 |---|---:|---|---|
@@ -97,47 +102,43 @@ Kaspaのブロック生成速度、GHOSTDAG、難易度調整、UTXO、ブロッ
 | `GHOSTDAG_TAIL_DELTA` | 0.01 | 確率 | 大きなAnticoneに関する設計上の確率パラメータ |
 | `TIMESTAMP_DEVIATION_TOLERANCE` | 132 | 秒 | タイムスタンプの許容幅 |
 | `PAST_MEDIAN_TIME_SAMPLE_INTERVAL` | 10 | 秒 | 中央時刻用サンプリング間隔 |
-| `DIFFICULTY_WINDOW_DURATION` | 2641 | 秒 | 難易度計算の目標窓長 |
+| `NEW_DIFFICULTY_WINDOW_DURATION` | 2641 | 秒 | 難易度計算の目標窓長 |
 | `DIFFICULTY_WINDOW_SAMPLE_INTERVAL` | 4 | 秒 | 難易度サンプリング間隔 |
-| `FINALITY_DURATION` | 43,200 | 秒 | 12時間 |
-| `PRUNING_DURATION` | 108,000 | 秒 | 30時間 |
+| `NEW_FINALITY_DURATION` | 43,200 | 秒 | 12時間 |
+| `NEW_PRUNING_DURATION` | 108,000 | 秒 | 30時間 |
 | `MERGE_DEPTH_DURATION` | 3600 | 秒 | 1時間 |
-| `COINBASE_MATURITY_SECONDS` | 100 | 秒 | Coinbase成熟の基準時間 |
+| `LEGACY_COINBASE_MATURITY` | 100 | 深さ | Bpsの成熟深さ導出の基準 |
 | `PRUNING_PROOF_M` | 1000 | — | Pruning Proof用のパラメータ |
 
-**注意**：`FINALITY_DURATION = 12時間` は「すべての送金で12時間待たなければならない」という意味ではない。プロトコル内部のFinalityと、アプリケーションが設定する決済確定ポリシーは別の概念である。
+**注意**：`NEW_FINALITY_DURATION = 12時間` は「すべての送金で12時間待たなければならない」という意味ではない。プロトコル内部のFinalityと、アプリケーションが設定する決済確定ポリシーは別の概念である。
 
-## E.6 `BlockrateParams` から導出される値
+## E.6 `CRESCENDO` と `Bps<10>` の導出値
 
-`BlockrateParams::new::<10>()` は、ブロック生成レートに依存するパラメータを組み立てる。主なフィールドは以下。
+基準版はBlockrateParamsではなく、CRESCENDO: CrescendoParamsでTenBpsの関数を呼ぶ。以下は固定ソースの式からの計算で、公式関数を今回実行比較した結果ではない。
 
-| フィールド | 役割 | 直接確認すべき場所 |
-|---|---|---|
-| `ghostdag_k` | GHOSTDAGの分類パラメータ | `Bps::<BPS>::ghostdag_k()` |
-| `past_median_time_sample_rate` | Median Timeのサンプリング率 | `Bps::<BPS>::past_median_time_sample_rate()` |
-| `difficulty_sample_rate` | DAAのサンプリング率 | `Bps::<BPS>::difficulty_adjustment_sample_rate()` |
-| `max_block_parents` | ブロックの親数上限 | `Bps::<BPS>::max_block_parents()` |
-| `mergeset_size_limit` | Merge Setのサイズ制限 | `Bps::<BPS>::mergeset_size_limit()` |
-| `merge_depth` | Merge Depth | `Bps::<BPS>::merge_depth_bound()` |
-| `finality_depth` | Finality Depth | `Bps::<BPS>::finality_depth()` |
-| `pruning_depth` | Pruning Depth | `Bps::<BPS>::pruning_depth()` |
-| `coinbase_maturity` | Coinbase成熟深さ | `Bps::<BPS>::coinbase_maturity()` |
+| 項目 | 10 BPS側の値 | 導出元 |
+|---|---:|---|
+| ghostdag_k | 124 | Bpsの定数表 |
+| max_block_parents | 16 | k/2を10〜16に制限 |
+| mergeset_size_limit | 248 | 2kを180〜512に制限 |
+| past_median_time_sample_rate | 100 | BPS×10 |
+| past_median_time_sampled_window_size | 27 | ceil((2×132−1)/10) |
+| difficulty_sample_rate | 40 | BPS×4 |
+| sampled_difficulty_window_size | 661 | ceil(2641/4) |
+| merge_depth | 36,000 | BPS×3600 |
+| finality_depth | 432,000 | BPS×43,200 |
+| pruning_depth | 1,080,000 | 下記max式 |
+| coinbase_maturity | 1000 | BPS×LEGACY_COINBASE_MATURITY |
 
-例：単純な時間換算として、100秒 × 10 BPS = 1000ブロック相当。ただし**実際の `coinbase_maturity` の計算式は実装を確認**し、単純換算を公式値と取り違えない。
+pruning_depthは `max(BPS×108000, finality_depth + 2×merge_depth + 4×mergeset_size_limit×k + 2×k + 2)`。10 BPSの後者は627,258で、採用値は1,080,000。単なる30時間換算だけが定義ではない。
+
+本書のDevnet既定値はCrescendoがneverなので、CRESCENDOに10 BPS値が入っていても前の設定を使う。Simnetはalways、Mainnet/Testnet-10はそれぞれ設定のactivationを確認する。
 
 ### E.6.1 サンプリング窓と実ブロック数
 
-`difficulty_window_size` は「**サンプリング済みの窓の大きさ**」。10 BPSで生成されるすべてのブロック数と同一ではない。
+Crescendo後の期待DAA窓時間は `100 ms × 40 × 661 = 2,644,000 ms`、2644秒。ceilにより設計期間2641秒と同じにはならない。前は `1000 ms × 2641 = 2,641,000 ms`。期待期間と、実際に取得できた窓/経過時間は別である。
 
-`params.rs` には次のような関係が実装されている。
-
-```rust
-// 原典の考え方を簡略化した説明用の式
-let expected_duration_ms =
-    target_time_per_block_ms * difficulty_sample_rate * difficulty_window_size;
-```
-
-ここで各変数の単位を確認する。単位を無視してBPSを乗算すると、10倍・100倍の誤りが起こる。
+difficulty_window_size()は前後の窓構成で意味が異なる。sampled窓を構成する際のnon-DAA除外とsamplingも区別する（[第13章](../part-02-consensus/chapter-13.md)）。
 
 ## E.7 難易度調整（DAA）のパラメータ
 
@@ -145,7 +146,7 @@ DAAを調査する際は、以下をセットで読む。
 
 - `difficulty_window_size`
 - `min_difficulty_window_size`
-- `blockrate.difficulty_sample_rate`
+- `difficulty_sample_rate()`
 - `max_difficulty_target`
 - ブロックヘッダのDifficulty関連フィールド
 - DAA scoreとフォーク有効化条件
@@ -172,17 +173,17 @@ GHOSTDAGの理解では、`k`だけを見るのでは不十分である。
 
 ## E.9 Mass：ブロック容量をバイトだけで判断しない
 
-Kaspaのリソース制限には、複数のMass次元がある。公開ソースの `MAINNET_PARAMS` には次の上限が定義されている。
+基準版にblock_mass_limits.compute/storage/transientというフィールドはない。Params::max_block_massは500,000で、body_validation_in_isolation.rsのcheck_block_massはCrescendo後に各次元を独立に集計し、それぞれこの値と比較する。
 
 ```text
-compute mass   <=   500,000
-storage mass   <=   500,000
-transient mass <= 1,000,000
+compute mass   <= 500,000
+storage mass   <= 500,000
+transient mass <= 500,000
 ```
 
-**注意**：これは`master`にある定義の転記であり、古い資料の「1ブロックのMassは○○」と機械的に比較できない。ルールやフォークが異なる可能性がある。
+Crescendo前のこの処理はcompute massを集計する。後のstorage集計は取引のmass commitmentを使い、UTXO文脈で計算した値との整合は別の検証段階で確認する。ここだけでmass全規則を説明・検証したことにはならない。
 
-`mass_per_tx_byte`、`mass_per_script_pub_key_byte`、`mass_per_sig_op` は計算Massの構成要素だが、**トランザクションMassは単なるTxバイト数ではない**。Storage MassもUTXO集合への影響を評価する。詳しい算出経路は [`consensus/core/src/mass/mod.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/mass/mod.rs) を参照。
+mass_per_tx_byte/script_pub_key_byte/sig_opはcompute massの構成要素で、単純な生Txバイト数と同じではない。Storage MassはUTXOへの影響を評価する。算出式は[基準版mass実装](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/mass/mod.rs)、適用は[body検証](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/body_processor/body_validation_in_isolation.rs)を参照。
 
 ### E.9.1 検証の観点
 
@@ -196,17 +197,9 @@ transient mass <= 1,000,000
 
 ## E.10 トランザクション・Scriptの制限
 
-公開 `MAINNET_PARAMS` から直接読めるもの：
+E.4の入力/出力/Script長はMainnetのCrescendo前後で異なる。CRESCENDOで各入力/出力1000、署名Script/公開鍵Scriptは各10,000 byte。coinbase payload全体204 byteと内部Script公開鍵150 byteは別の制限で、通常Txの任意データ上限ではない。
 
-| 項目 | 値 | 注意 |
-|---|---:|---|
-| 最大入力数 | 1000 | 別のMass制限が先に効く場合がある |
-| 最大出力数 | 1000 | 同上 |
-| Script公開鍵長 | 10,000 byte | 上限内でもMass制限がある |
-| Coinbaseペイロード長 | 204 byte | 通常Txの任意データ上限ではない |
-| Coinbaseペイロード内Script公開鍵長 | 150 byte | 通常のScript公開鍵上限と別 |
-
-`max_signature_script_len` の数値は、参照先の定数定義を確認してから記載する。**この表にない値は無制限という意味ではない**。
+この表にない値は無制限という意味ではない。個数/長さが範囲内でもmass・Script engine等で拒否され得る。
 
 ## E.11 PoWと難易度ターゲット
 
@@ -242,7 +235,7 @@ Kaspaでは通常、**1 KAS = 100,000,000 sompi** と表現する。実装で整
 4. フォーク前後のBPS履歴の扱い
 5. 実際のCoinbaseトランザクションと手数料
 
-`params.rs` の `bps_history()` は、Crescendo前後のBPS履歴を報酬月の計算に使うと説明している。**現在報酬を単一の定数で掲載しない**。
+基準版のCoinbaseManagerは前後のBPSとCrescendo activation DAA scoreを用いて補助金表と月を扱う。基準版params.rsにbps_history()という関数はない（[第19章](../part-03-transactions/chapter-19.md)）。**現在報酬を単一の定数で掲載しない**。
 
 ## E.13 Crescendo：フォーク前後の比較
 
@@ -302,21 +295,21 @@ RPCポートやP2Pポートは接続上重要だが、ブロックの有効性�
 
 実験では以下を徹底する。
 
-- Simnetまたは隔離されたDevnetを使用する。
+- 基準版の `--override-dag-params-file` はDevnet用。対応する項目/制限を確認し、隔離したDevnetで使う。Simnetでも同じCLI上書きが可能と仮定しない。
 - 変更前の値をJSON等で保存する。
 - Genesisと既存データベースの互換性を確認する。
 - ノードA/Bで設定が一致しているか検証する。
 - 実験結果にソースコミット・設定ファイル・ログを添付する。
 
-公式文書：[Parameter Overrides](https://github.com/kaspanet/rusty-kaspa/blob/master/docs/override-params.md)。
+基準版にdocs/override-params.mdはない。入口は[kaspadの引数定義](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/kaspad/src/args.rs)。これは上書き機能の実行試験ではない。
 
 ## E.17 ローカルで一次資料を固定する
 
-以下は**ユーザー自身のローカル環境で実行するコマンド例**。本書作成時点での実行検証はしていない。
+本書の外の調査用ディレクトリで固定ソースを取得する読者用手順。今回は既存の固定archiveを参照し、新しいcloneやGit HEAD取得はしていない。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+git clone --branch v1.0.1 --depth 1 https://github.com/kaspanet/rusty-kaspa.git rusty-kaspa-v1.0.1
+cd rusty-kaspa-v1.0.1
 
 git rev-parse HEAD
 git status --short
@@ -327,20 +320,13 @@ grep -n 'pub const DEVNET_PARAMS' consensus/core/src/config/params.rs
 grep -n 'pub const SIMNET_PARAMS' consensus/core/src/config/params.rs
 ```
 
-調査対象を再現可能にするには、`master` のままではなく**検証済みタグまたはコミットに固定**する。
-
-```bash
-# 実際に存在するタグまたはコミットを指定する
-# git checkout <verified-tag-or-commit>
-
-git rev-parse HEAD
-```
+HEADが `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` と一致することを確認する。既存の変更済み作業コピーをresetして合わせない。
 
 ## E.18 コード上の参照箇所を調べる
 
 ```bash
 rg 'ghostdag_k|target_time_per_block|pruning_depth' consensus/
-rg 'max_tx_inputs|max_tx_outputs|block_mass_limits' consensus/
+rg 'max_tx_inputs|max_tx_outputs|max_block_mass' consensus/
 rg 'deflationary_phase_daa_score|base_subsidy' consensus/
 ```
 
@@ -362,19 +348,19 @@ rg 'deflationary_phase_daa_score|base_subsidy' consensus/
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct BlockRate {
-    target_ms: u64,
+pub struct BlockRate {
+    pub target_ms: u64,
 }
 
 impl BlockRate {
-    fn bps(self) -> Option<u64> {
+    pub fn bps(self) -> Option<u64> {
         if self.target_ms == 0 || 1000 % self.target_ms != 0 {
             return None;
         }
         Some(1000 / self.target_ms)
     }
 
-    fn blocks_for_seconds(self, seconds: u64) -> Option<u64> {
+    pub fn blocks_for_seconds(self, seconds: u64) -> Option<u64> {
         seconds.checked_mul(self.bps()?)
     }
 }
@@ -409,7 +395,7 @@ mod tests {
 }
 ```
 
-`rustc --test example.rs -o example-tests && ./example-tests` で実行できる形式を意図しているが、**本書作成時点では実行未検証**。なお、この関数は整数BPSに限定した教材であり、任意のブロック時間を扱う汎用モデルではない。
+本書外のCargo libプロジェクトのsrc/lib.rsへ配置し、既存Rust 1.90.0 / edition 2021で4テスト・書式/Clippyを確認。新規toolchain導入はしていない。なお、この関数は整数BPSに限定した教材であり、任意のブロック時間を扱う汎用モデルではない。
 
 ## E.20 実装で守るべき不変条件
 
@@ -535,11 +521,11 @@ A. 必ずしもそうではない。実行中ノードのリリースとフォ�
 
 ### 演習1：値の出典を追う
 
-`MAINNET_PARAMS.blockrate` から `ghostdag_k` の定義までたどり、数値・単位・導出元を記録する。
+`MAINNET_PARAMS.crescendo` から `ghostdag_k` の定義までたどり、数値・単位・導出元を記録する。
 
 ### 演習2：Massの上限を調べる
 
-`block_mass_limits` がどの検証処理で使用されるか検索し、上限ちょうどと上限超過のテストを見つける。
+`max_block_mass` がどの検証処理で使用されるか検索し、上限ちょうどと上限超過のテストを見つける。
 
 ### 演習3：フォーク前後を比較する
 
@@ -553,14 +539,16 @@ Crescendo有効化前後のBPS履歴と報酬計算の関係をコードで確�
 
 `max_tx_outputs` が変更されたと仮定し、Wallet、Indexer、RPCクライアント、テストにどのような変更が必要か列挙する。
 
-## E.28 出版前の技術レビュー・チェックリスト
+## E.28 検証を広げる際のチェックリスト
+
+今回確認した主要定義/算術/教材と、全境界値・実ノードの実行は分ける。以下をすべて完了したという意味ではない。
 
 - [ ] 全数値に対象ネットワークを記載した。
 - [ ] 単位（ms、秒、ブロック数、DAA score、sompi）を明記した。
 - [ ] `master` と配布リリースを区別した。
 - [ ] 検証済みコミットSHAを記録した。
 - [ ] 10 BPSへの移行条件を一次資料で確認した。
-- [ ] `BlockrateParams` の導出値を実装と照合した。
+- [ ] `CrescendoParams` / `Bps` の導出値を実装と照合した。
 - [ ] Massの多次元制限を反映した。
 - [ ] 報酬の履歴と現在値を混同していない。
 - [ ] Testnetのサフィックスを明記した。
@@ -595,14 +583,14 @@ Kaspaのプロトコルパラメータを扱ううえで重要なのは、**数�
 
 ## E.30 参考資料
 
-- [kaspanet/rusty-kaspa — Consensus Parameters](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/params.rs)
-- [kaspanet/rusty-kaspa — Consensus Constants](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/constants.rs)
-- [kaspanet/rusty-kaspa — Parameter Overrides](https://github.com/kaspanet/rusty-kaspa/blob/master/docs/override-params.md)
-- [kaspanet/rusty-kaspa — Mass Calculation](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/mass/mod.rs)
+- [kaspanet/rusty-kaspa — Consensus Parameters](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)
+- [kaspanet/rusty-kaspa — Consensus Constants](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)
+- [kaspanet/rusty-kaspa — BPS derivation](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/bps.rs)
+- [kaspanet/rusty-kaspa — Mass Calculation](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/mass/mod.rs)
 - [kaspanet/kips — Kaspa Improvement Proposals](https://github.com/kaspanet/kips)
 - [kaspanet/rusty-kaspa — Releases](https://github.com/kaspanet/rusty-kaspa/releases)
 - [Kaspa Wiki](https://wiki.kaspa.org/)
 
 ---
 
-**次の付録：Appendix F — 論文・KIP・実装対応表**
+**次の付録：** [Appendix F — 論文・KIP・実装対応表](appendix-f.md)

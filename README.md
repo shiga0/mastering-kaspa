@@ -75,9 +75,10 @@ Devnetの起動・読み取りwRPC・再起動の検証手順は[Devnet実習](e
 
 技術的な記述の検証状態は、付録Hの基準に合わせて記録します。
 
-- **Verified**：一次資料と固定実装を確認し、必要なテストを実施。
-- **Source-checked**：一次資料と固定実装を確認、実行未検証。
-- **Literature-checked**：論文・KIPを確認、実装未確認。
+- **Verified**：個別の主張を固定資料・実装と必要な試験で確認。対象条件と限界を明記。
+- **Source-checked**：対象範囲の固定ソースと使用箇所を照合。実行の有無・結果は別に記録。
+- **Literature-checked**：引用する論文・KIPの要旨/節を確認。実装・有効化の確認とは別。
+- **Metadata-checked**：題名・著者・版・Status等のみを確認。内容や実装の検証とは別。
 - **Illustrative**：教育用の擬似コード・模式図。
 - **Unverified**：根拠・検証が不足。
 - **Deprecated**：古い仕様・非推奨。

@@ -1,11 +1,13 @@
 # Appendix D — RPC・CLIリファレンス
 
 > **Mastering Kaspa — 付録D**  
-> 原稿ステータス：**v0.1（技術レビュー前）**  
+> 目次順の本文レビュー：2026-11-01。主要RPC/通知・CLIの入口・独自Rust教材を確認。\
 > 対象：Kaspaノードの操作、RPC・wRPC、CLI、Devnetでの観測と検証  
-> **重要：** KaspaのRPCインターフェース、メソッド名、引数、ポート、CLIオプションはリリースやネットワーク設定によって異なる。本付録のコマンドは、特に断りがない限り**学習用の例**であり、実環境での動作は未検証である。実行前に使用バージョンのヘルプと一次資料を確認する。
+> **重要：** KaspaのRPCインターフェース、メソッド名、引数、ポート、CLIオプションはリリースやネットワーク設定によって異なる。本付録は基準版のソース照合と既存Devnet実測を区別して示す。今回は実ノードへの接続・起動/送金を再実行しておらず、全RPC/CLIの要求・応答・異常系を検証したものではない。実行前に使用バージョンのヘルプと一次資料を確認する。
 
 ---
+
+対象版は[本書の対象バージョン](../baseline.md)、今回の確認結果は `experiments/appendix-d-review-2026-11-01.md` を参照。以下の基準版はrusty-kaspa v1.0.1。
 
 ## D.1 この付録の目的
 
@@ -44,7 +46,7 @@
 | 要素 | 役割 | 注意点 |
 |---|---|---|
 | `kaspad` | Kaspaフルノード | 起動引数はバージョン依存 |
-| `kaspa-cli` 等 | ノードの情報取得・操作 | 配布物と対応RPCを確認 |
+| CLI関連crate・配布ツール | RPCやウォレット操作の入口 | crate名と実行ファイル名を区別し、配布物と対応RPCを確認 |
 | RPC | ノードに要求を送って結果を取得 | gRPCなど複数の実装形態がある |
 | wRPC | WebSocket経由のRPC・イベント購読 | エンドポイントとSDKの組み合わせを確認 |
 | P2P | ノード間のブロック・トランザクション伝播 | アプリ向けRPCとは別 |
@@ -66,13 +68,16 @@
 動作確認の前に、環境を記録する。
 
 ```bash
-uname -a
+uname -s
+uname -m
 rustc --version
 cargo --version
 docker --version
 docker compose version
 git --version
 ```
+
+公開記録ではhostnameや私有パスを含むuname -a等の出力、生ログ・認証情報をそのまま貼らない。docker --versionはClientのみで、Serverの稼働確認ではない。
 
 ノードのソースを取得した場合：
 
@@ -99,17 +104,19 @@ git -C rusty-kaspa status --short
 
 ```bash
 # リポジトリのREADMEやリリースノートを確認する
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+git clone --branch v1.0.1 --depth 1 https://github.com/kaspanet/rusty-kaspa.git rusty-kaspa-v1.0.1
+cd rusty-kaspa-v1.0.1
+git rev-parse HEAD
+# fcd9c28f9b211b9872a0c90a8c94f79466ffb063 と一致することを確認
 
 # 利用可能な実行ターゲットを調べる
-cargo metadata --no-deps --format-version 1
+cargo +1.90.0 metadata --offline --locked --no-deps --format-version 1 > /tmp/kaspa-rpc-review-metadata.json
 
 # 実際にビルドしたバイナリのヘルプを確認する（例）
 # ./target/release/kaspad --help
 ```
 
-上記の `cargo metadata` はCargoの情報を読むコマンドであり、ノードを起動しない。バイナリ名や配置場所はリリース構成による。
+本書の外の調査用ディレクトリで取得する。上記のmetadata --no-depsはworkspaceの列挙で、依存解決・ビルド成功の確認ではなく、ノードも起動しない。生JSONにはローカルパスを含むため公開しない。バイナリ名や配置場所はリリース構成による。
 
 **確認する順序**
 
@@ -130,7 +137,9 @@ experiments/devnet/.venv/bin/python experiments/devnet/probe.py
 docker compose -f experiments/devnet/compose.yaml stop node
 ```
 
-Python環境は[付録A](appendix-a.md)と[第28章](../part-04-development/chapter-28.md)で準備する。送金時は追加のmining.yamlを指定する。P2P/gRPCのコンテナ内部ポートと、ホストのJSON wRPCポート18310を区別する。
+Python環境は[付録A](appendix-a.md)と[第28章](../part-04-development/chapter-28.md)で準備する。採掘や送金はmining.yamlだけで完結するわけではなく、資金準備・SDK・鍵管理等も含む第28章と実験READMEの手順に従う。P2P/gRPCのコンテナ内部ポートと、ホストのJSON wRPCポート18310を区別する。
+
+probeは版・Devnet・UTXO index等を確認する読取スモークテストで、同期完了/E2Eを証明しない。logsやprobeの生出力にはpeer識別子等が含まれ得るため、そのまま公開しない。固定ComposeはARM64用で、他OS/CPUの動作を確認したものではない。
 
 ## D.7 RPC接続の基本
 
@@ -156,6 +165,14 @@ ConnectionConfig {
 - ノードとクライアントのRPCスキーマが互換か。
 - ネットワークが一致しているか。
 
+本書のbase ComposeのJSON wRPCは `ws://127.0.0.1:18310`。同じポートへHTTP JSON-RPCとしてPOSTしたり、Borsh接続用の設定を流用したりしない。生の要求はprobe.pyと同じenvelopeを使う。
+
+```json
+{"id":1,"method":"getCurrentNetwork","params":{}}
+```
+
+応答はid/method・error・paramsの型を検査する。SDKの返却オブジェクトとこの生のenvelopeは別で、購読には後述のSDK経路を使う。
+
 ## D.8 主要な読み取り系RPC
 
 以下は基準版1.0.1の実習で利用した名前と範囲である。wRPCの実メソッド名とSDKの呼び方を区別し、別のAPIの大文字小文字や旧名を流用しない。
@@ -171,6 +188,8 @@ ConnectionConfig {
 | SDKの `getServerInfo` | 版・networkId・同期状態 | Node.js/WASM SDK経由で使用 |
 | SDKの `getMempoolEntry` | 送信済みTX IDの照会 | 実習では `filterTransactionPool: false` を指定 |
 | SDKの `getVirtualChainFromBlock` | virtual chainの受理ID | `includeAcceptedTransactionIds: true` を指定 |
+
+getVirtualChainFromBlockは基準版で応答量が制限されるため、一回の応答が全差分とは限らない。removed/addedと受理IDを対応させ、保持範囲を超えた開始点では復旧方針を用意する。getServerInfoのisSyncedはノードの観測であり、入金確定や全履歴の保持を示さない。
 
 この表は全RPCの網羅表ではない。残高・手数料推定など、ここにないAPIの実測と要求/応答の完全リファレンス化は未完了。
 
@@ -211,6 +230,8 @@ Address
        └── ...
 ```
 
+上図は概念図で、実レスポンスのフィールド一覧ではない。特にacceptance contextを任意のブロックhashとして返すとは限らない。SDKではamountがBigInt等になり得るので、JavaScriptの安全整数範囲を超える値をNumberへ丸めず、整数または十進文字列で扱う。
+
 UTXOの識別には、一般に**トランザクションIDと出力インデックス**の組が使われる。残高は、観測時点で該当するUTXOの金額を合計した値として捉えられる。
 
 ```text
@@ -219,7 +240,7 @@ balance(address) = Σ amount(unspent outputs associated with address)
 
 ただし、実際のAPIが返す残高の意味（成熟前の出力、利用可能性、同期時点など）は確認が必要。
 
-**重要：** `getUtxosByAddresses` や残高系メソッドを利用する場合、ノードのUTXOインデックスが必要になる構成がある。単にノードが同期済みでも、必要な照会機能が有効とは限らない。
+**重要：** `getUtxosByAddresses` や残高系メソッドを利用する場合、基準版では `--utxoindex` が必要で、無効時はNoUtxoIndexを返す。単にノードが同期済みでも、必要な照会機能が有効とは限らない。
 
 ## D.11 Mempoolと未確定トランザクション
 
@@ -248,7 +269,7 @@ Mempoolに存在するトランザクションは、**ネットワーク全体�
 
 ## D.12 通知系RPCと購読
 
-本書の実習は公式v1.0.1 SDKの `subscribeUtxosChanged([address])` と `utxos-changed` イベントを使う。JSON接続のSDK enumは `Encoding.SerdeJson` であり、`Encoding.Json` ではない。共通RPC APIの名前を生のwRPCへそのまま送る方法では今回購読できなかったため、検証済みSDKの経路を使う。
+本書の実習は公式v1.0.1 SDKの `subscribeUtxosChanged([address])` と `utxos-changed` イベントを使う。JSON接続のSDK enumは `Encoding.SerdeJson` であり、`Encoding.Json` ではない。既存実験では共通RPC APIの名前を生のwRPCへそのまま送る方法で購読できなかったため、検証済みSDKの経路を使う。
 
 `watch-once.cjs` はSDK通知のOutpointと金額を正規化する。`live-reconciliation.py` は通知本文を直接適用せず再照会のヒントとして扱う。例の詳細と制約は[第28章](../part-04-development/chapter-28.md)を参照する。
 
@@ -260,8 +281,10 @@ Mempoolに存在するトランザクションは、**ネットワーク全体�
 - Virtual Chain Changed
 - Block Added
 - UTXOs Changed
-- Selected Tip Changed（利用可能な通知型は要確認）
-- Finality Conflict / Resolution（利用可能な通知型は要確認）
+- Sink Blue Score Changed / Virtual DAA Score Changed
+- Finality Conflict / Finality Conflict Resolved（型の存在と実測/運用上の意味は別）
+
+基準版notify/src/events.rsの通知型を参照した一覧で、ここに挙げた全購読を今回試験したわけではない。Selected Tip Changedという名前を基準版にあるAPIとして案内しない。
 
 ```text
         wRPC Client
@@ -285,26 +308,33 @@ Mempoolに存在するトランザクションは、**ネットワーク全体�
 次は**SDK非依存の擬似コード**。実際のRust APIではない。
 
 ```text
-client = connect(endpoint)
-assert client.current_network() == EXPECTED_NETWORK
-
-last_checkpoint = database.load_checkpoint()
-
 loop:
+    client = none
+    reader = none
     try:
-        client.subscribe_utxo_changes(watched_addresses)
-        for event in client.events():
-            database.transaction:
-                if not database.has_seen(event.stable_id):
-                    database.store_observation(event)
-                database.save_checkpoint(event.position)
-    except ConnectionError:
-        wait_with_exponential_backoff()
         client = connect(endpoint)
-        reconcile_chain_state(last_checkpoint)
+        verify_network_version_and_prerequisites_or_abort(client)
+        reader = start_notification_hint_reader(client, dirty_flag)
+        await_subscribe_ack(client, watched_addresses)
+        dirty_flag.set()  # 初回と再接続後は必ず再照会
+
+        while client.connected:
+            wait_for_dirty_flag_or_periodic_deadline()
+            dirty_flag.clear()  # 照会中の通知は次回の再照会を要求
+            snapshot = query_current_utxos(client, watched_addresses)
+            validate_snapshot(snapshot)
+            database.transaction:
+                replace_current_observed_utxos(snapshot)
+                reevaluate_application_state()
+    except ConnectionError:
+        wait_with_bounded_exponential_backoff_and_jitter()
+    finally:
+        stop_reader_and_close_if_created(client, reader)
 ```
 
-**注意：** イベントに安定したIDや再開カーソルが存在するかはAPI依存。存在しなければ、トランザクションID・出力インデックス・観測位置などから**アプリ側の冪等キーと再照会手順**を設計する。
+上の関数名は設計上の役割であり、実在SDKのAPI名ではない。接続ごとにネットワーク/版・index等の前提を再確認し、不一致は再試行で握りつぶさず停止する。通知購読の確認後に再照会し、定期照会も続ける。再照会は単一workerで行う例で、複数照会を並行する場合は古い応答が新しい状態を上書きしない世代管理等が必要。
+
+UTXO通知に永続イベントID・再開カーソル・全履歴があると仮定しない。この例は通知をヒントに現在状態を修復するもので、切断中に生成後すぐ消費された出力の履歴まで復元するものではない。複数RPCからの完全に同時点のsnapshotも保証しない。履歴が必要なら、保存済みの有効な位置からの差分取得・保持範囲/Pruning超過時の復旧を別途設計する（[第35章](../part-06-contributing/chapter-35.md)）。
 
 ## D.14 送信系RPCと注意事項
 
@@ -339,12 +369,12 @@ Mempool / DAG observation
 - 入力UTXOは現在も利用可能か。
 - 手数料の単位と金額は妥当か。
 - 署名済みデータに秘密情報が含まれていないか。
-- 再送が二重支払いを発生させない設計か。
+- 再試行で同じ支払い用の別トランザクションを新規作成し、二重送金しない設計か。
 - エラー時に送信済みか未送信かを再照会できるか。
 
 ## D.15 CLI操作の分類
 
-`kaspa-cli` の具体的なコマンド構文はバージョンによって異なるため、ここでは**操作カテゴリ**を示す。
+基準版にはCLI関連crateがあるが、crate名だけで実行ファイルやコマンドを推測しない。配布物のコマンド構文も版で異なるため、ここでは**操作カテゴリ**を示す。
 
 | 操作 | 目的 | 典型的な注意 |
 |---|---|---|
@@ -371,9 +401,11 @@ docker port <CONTAINER_NAME>
 docker logs --since 10m <CONTAINER_NAME>
 
 # Docker Composeを使っている場合
-docker compose ps
-docker compose logs --tail=100
+docker compose -f experiments/devnet/compose.yaml ps
+docker compose -f experiments/devnet/compose.yaml logs --tail=100 node
 ```
+
+本書ルートからComposeを指定する例。`<CONTAINER_NAME>`は実名へ置き換える説明用で、そのままシェルへ貼らない。docker psは他プロジェクトも列挙するので公開記録へ丸ごと貼らない。
 
 Dockerの公開ポートがあることと、RPCサーバーが正常に応答することは別。さらに、Dockerコンテナ内の `127.0.0.1` とホストの `127.0.0.1` は異なるネットワーク名前空間を指す。
 
@@ -428,6 +460,8 @@ Near network tip
      ▼
 Steady-state observation
 ```
+
+孤立した本書DevnetでisSynced=falseを観測しても、RPC接続の失敗とは限らない。実験用の未同期採掘例外を通常のアプリ判断へ適用しない。
 
 **同期済みの判定は、単一の数値だけで行わない。** ノードが返す同期フラグ、接続ピア、DAG情報、最新の観測時刻を組み合わせる。公開エクスプローラーの値との単純比較も、観測時刻の差を考慮する。
 
@@ -491,6 +525,8 @@ Idempotency key derived
 (network_id, transaction_id, output_index, observation_kind)
 ```
 
+この組は現在状態の行を識別する候補であり、永続的なイベントIDとは限らない。再編成で同じoutpointにadded→removed→addedが起きると、単純な既処理集合では最後の再追加を落とす場合がある。通知だけで金額を加算せず、現在状態への冪等な置換や履歴位置を含む設計にする。
+
 ただし、**観測イベントの同一性**と**現在のUTXOの有効性**は別。後者はチェーン状態の再照会で更新する。
 
 ## D.22 再接続・再同期の設計
@@ -498,7 +534,7 @@ Idempotency key derived
 WebSocketの切断を前提として、次を実装する。
 
 1. 接続状態を監視する。
-2. 指数バックオフで再接続する。
+2. 上限付き指数バックオフとjitterで再接続し、ネットワーク/版を再検証する。
 3. 再購読する。
 4. 保存した最終観測位置から差分を調べる。
 5. 差分取得が不可能なら対象アドレスの状態を再照会する。
@@ -571,21 +607,19 @@ RPC reconciliation = correctness mechanism
 
 ```rust
 #[derive(Debug, PartialEq, Eq)]
-struct UtxoObservation {
-    transaction_id: String,
-    output_index: u32,
-    amount_sompi: u64,
+pub struct UtxoObservation {
+    pub transaction_id: String,
+    pub output_index: u32,
+    pub amount_sompi: u64,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum ObservationError {
+pub enum ObservationError {
     EmptyTransactionId,
     ZeroAmount,
 }
 
-fn validate_observation(
-    observation: &UtxoObservation,
-) -> Result<(), ObservationError> {
+pub fn validate_observation(observation: &UtxoObservation) -> Result<(), ObservationError> {
     if observation.transaction_id.is_empty() {
         return Err(ObservationError::EmptyTransactionId);
     }
@@ -610,6 +644,19 @@ mod tests {
     }
 
     #[test]
+    fn rejects_empty_transaction_id() {
+        let item = UtxoObservation {
+            transaction_id: String::new(),
+            output_index: 0,
+            amount_sompi: 100,
+        };
+        assert_eq!(
+            validate_observation(&item),
+            Err(ObservationError::EmptyTransactionId)
+        );
+    }
+
+    #[test]
     fn rejects_zero_amount() {
         let item = UtxoObservation {
             transaction_id: "example-tx-id".into(),
@@ -628,16 +675,18 @@ mod tests {
 
 ## D.27 Rustの単体テストを実行する
 
-上記コードを単独で `src/lib.rs` に保存した場合：
+本書の外の作業ディレクトリで、上記コードを単独で `src/lib.rs` に保存した場合：
 
 ```bash
-cargo new --lib rpc-observation-lab
+cargo +1.90.0 new --lib --edition 2021 rpc-observation-lab
 cd rpc-observation-lab
 # src/lib.rs を上記のコードに置き換える
-cargo test
+cargo +1.90.0 test --offline
+cargo +1.90.0 fmt --all -- --check
+cargo +1.90.0 clippy --offline --all-targets -- -D warnings
 ```
 
-**実行結果は未検証。** 読者はテストの実行ログとRustバージョンを記録する。
+**確認結果**：既存Rust 1.90.0 / edition 2021で3テスト・書式/Clippyが成功。今回は名前付きtoolchainの新規導入はしていない。非空文字列と教材上の正額条件だけを検査し、TXIDの形式・network・Script・maturity・存在/未使用性・確定性の検証ではない。
 
 ## D.28 APIのバージョン差異を吸収する
 
@@ -701,7 +750,7 @@ C3: Components
 3. ノードを起動する。
 4. 接続ピアと同期状態を確認する。
 5. `getCurrentNetwork` 相当の手段でDevnetであることを確認する。
-6. `getBlockDAGInfo` 相当の読み取りを行う。
+6. `getBlockDagInfo` 相当の読み取りを行う。
 7. UTXO Indexを有効にしている場合、実験用アドレスのUTXOを照会する。
 8. 通知購読を開始する。
 9. Devnetでトランザクションを発生させ、通知と再照会の差を確認する。
@@ -779,7 +828,7 @@ SDK・バージョン・トランスポート間の差異がある。
 
 1. P2P通信とアプリケーション向けRPCは何が違うか。
 2. gRPCとwRPCを選ぶ際に何を確認するか。
-3. `getBlockDAGInfo` から何を読み取るか。
+3. `getBlockDagInfo` から何を読み取るか。
 4. UTXO Indexが必要になるのはどのような場合か。
 5. Mempoolに存在するトランザクションを「確定」と扱えないのはなぜか。
 6. 通知購読が切断された場合、何を再照会するか。
@@ -806,14 +855,18 @@ KaspaのRPC・CLIを使いこなすために必要なのは、コマンドを暗
 以下の資料を、使用するリリース・コミットに合わせて確認する。
 
 - [Kaspa公式リポジトリ — rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) — ノード実装、README、ビルド、CLI・RPC関連コード。
-- [Kaspa公式リポジトリ — kaspa-cli](https://github.com/kaspanet/kaspa-cli) — CLIのコマンド体系・対応状況。**リポジトリの存続と最新互換性は要確認。**
+- [基準版のCLI関連crate](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/cli/Cargo.toml) — CLI実装の入口。crateとバイナリー/配布物を区別する。
+- [基準版RPCサービス](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/service/src/service.rs) — UTXO index前提、server情報、virtual chain差分。
+- [基準版通知型](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/notify/src/events.rs)。
 - [Kaspa公式ドキュメント — Wiki](https://wiki.kaspa.org/) — ノード運用・ネットワーク・開発者向け情報。
 - [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — プロトコル変更の背景と提案状況。
 - [Docker公式ドキュメント](https://docs.docker.com/) — コンテナ・ネットワーク・ログ・Compose。
 - [The Rust Programming Language](https://doc.rust-lang.org/book/) — Rust開発の基礎。
 - [Cargo Book](https://doc.rust-lang.org/cargo/) — ビルド・テスト・依存管理。
 
-### 技術レビュー時に必ず確認する項目
+### 検証を広げる際の確認項目
+
+下のチェック欄は全項目を今回完了したという意味ではない。今回は主要ソース照合と教材の3テスト、既存実測記録との対応を確認し、実ノード/CLIの起動や全RPCの異常系・送金/通知を再実行していない。
 
 - [ ] 使用する `rusty-kaspa` のバージョンとコミットを固定した。
 - [ ] 本文の各RPCメソッドが対象バージョンに存在することを確認した。
@@ -822,9 +875,9 @@ KaspaのRPC・CLIを使いこなすために必要なのは、コマンドを暗
 - [ ] CLIの対応バージョンとコマンド体系を確認した。
 - [ ] UTXO Indexの前提条件を確認した。
 - [ ] Devnet実験を実行し、ログを保存した。
-- [ ] Rustの単体テストを実行した。
+- [x] 本付録の独自Rust教材の3テストを実行した（SDK/RPC接続テストではない）。
 - [ ] 誤解を招く固定値・未検証コマンドがないか再確認した。
 
 ---
 
-**次の付録：Appendix E — プロトコルパラメータ一覧**
+**次の付録：** [Appendix E — プロトコルパラメータ一覧](appendix-e.md)
