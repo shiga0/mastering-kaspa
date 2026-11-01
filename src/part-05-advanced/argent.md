@@ -2,7 +2,9 @@
 
 > **位置づけ**：KaspaのCovenant対応UTXO上で、状態を持つ複数のコントラクトを1つのトランザクションとして組み合わせるための言語・コンパイラ・Rustランタイム。
 >
-> **開発状況（2026年10月時点）**：開発中。主要機能とE2Eサンプルは存在するが、Argent自体は一般向けの本番リリース前で、監査・堅牢化が必要。以下の機能説明はプロジェクトが想定するCovenant機能を前提とし、現在のKaspaメインネットでそのまま利用可能であることを意味しない。
+> **確認状況（2026-11-01）**：開発中。主要機能とE2Eサンプルは存在するが、固定READMEはnot yet release-readyと説明し、監査・堅牢化が必要としている。以下の機能説明はプロジェクトが想定するCovenant機能を前提とし、現在のKaspaメインネットでそのまま利用可能であることを意味しない。
+
+目次順37番目の補足ページ。Argentは `2796809f167144902f04a4b3333a4c144f91fdaf`、Playgroundは `86d5453ee525e7aa743d0b3bb21d1bb8d96c3558` を取得して確認した。本書の基準ノードv1.0.1および第32章のSilverScript v1.0.0とは別の参照軸である。確認記録は `experiments/argent-review-2026-11-01.md`。
 
 ## 1. Argentとは
 
@@ -59,7 +61,7 @@ Covenantを使ったアプリでは、単に「署名が正しいか」だけで
    残り99枚           所有者 Alice
 ```
 
-これは既存のEvent UTXOを書き換える処理ではない。**古いEvent UTXOを消費し、新しいEvent UTXOとTicket UTXOを出力する**。トランザクション全体が成立しなければ、片方だけが確定することはない。
+これは既存のEvent UTXOを書き換える処理ではない。**古いEvent UTXOを消費し、新しいEvent UTXOとTicket UTXOを出力する**。これは同じトランザクションに含む出力の原子性であり、ローカルな構築成功やMempool受付を最終的な確定と扱わない。外部サービスの更新・別トランザクション・Full vProgsの合成まで原子的になるわけでもない。
 
 ### Actorの状態所有権
 
@@ -80,11 +82,11 @@ Actorは自身の状態レイアウトと、許可された状態遷移を定義
 | `observes` | 別Covenantの状態・出力を参照するICC宣言 |
 | `spawns` | 新しいCovenantの初期出力グループを宣言 |
 | `actor_type<State>` / `actor enum` | 実行時に選択するActor型を制約付きで扱う |
-| `virtual` / `expands` | 共通状態レイアウトと非公開の拡張状態を扱う |
+| `virtual` / `expands` | 共通状態レイアウトと具体型の拡張状態を扱う |
 
 ### 例：チケット購入（学習用）
 
-以下は公式READMEの構造を参考にした簡略例である。実行前には使用するArgentバージョンで検証すること。
+以下は固定Argent CLIでbuild/inspectを確認した本書独自の簡略例。公式examples/tickets.agはIssuerの発行とredeemを扱う別のアプリである。この例は購入/譲渡の説明に絞り、価格を正にし、Ticketの価値を維持する条件を置く。
 
 ```text
 state EventState {
@@ -103,8 +105,9 @@ actor Event owns EventState {
         ticket: Ticket,
     } {
         require(remaining_tickets > 0);
+        require(price > 0);
         require(event.value == self.value + price);
-        unrestricted(ticket.value);
+        require(ticket.value > 0);
 
         EventState next_event = {
             remaining_tickets: remaining_tickets - 1,
@@ -124,7 +127,7 @@ actor Ticket owns TicketState {
     emits next: Ticket {
         require(blake2b(byte[](owner_pk)) == owner);
         require(checkSig(owner_sig, owner_pk));
-        unrestricted(next.value);
+        require(next.value == self.value);
         TicketState new_state = { owner: next_owner };
         become next <- Ticket(new_state);
     }
@@ -136,13 +139,17 @@ app Tickets {
 }
 ```
 
-`require`は守るべき条件、`emits`は生成される出力の形、`become`は出力Actorの種類と状態を定義する。`unrestricted`は特定の出力値を制約しないという**明示的な宣言**であり、安全性の観点から意図を確認する必要がある。
+この例のbuyer/next_ownerは公開鍵そのものではなく、Ticketの検査と対応する`blake2b(byte[](pubkey))`の32-byte値を渡す想定である。アドレス文字列や別形式の32-byte値へ置き換えない。初期化・入力の変換を誤ると、後継Ticketを使えなくなり得る。
+
+`require`は守るべき条件、`emits`は生成される出力の形、`become`は出力Actorの種類と状態を定義する。公式例等にあるunrestrictedは特定の出力値を制約しないという宣言で、値の保存や受取人への支払いを保証しない。本例では使わず、Ticketの後継値を維持する。ただし返金・手数料・在庫管理権限・初期化条件や期限は別の設計課題である。
 
 ## 5. 複数Actorの原子的な遷移
 
 1つのトランザクションで複数のActor入力を消費する場合、`consumes`と`delegate`を使って協調する。中心となる`entry`が入力グループ全体の構成を検証し、参加するActor側の`delegate`も整合性を確認する。
 
 例：ゲームの対戦結果確定、複数資産の交換、チケットとイベント在庫の同時更新。
+
+consumes/emitsの対象はCovenant/認可グループの範囲と合わせて読む。通常の資金入力・釣り銭等も含む全取引の出力数が、宣言だけで一律に固定されると解釈しない。
 
 **重要な不変条件**：許可していないActor入力・出力が紛れ込まないこと、各出力の承認元が明確であること、各後継Actorのテンプレートと状態が検証されること。
 
@@ -154,6 +161,8 @@ app Tickets {
 - **Open ICC**：状態に保持したActor型ハンドルなどを用いて、実行時に参照先を選択する。
 - `observes`：外部Covenantの入力・出力を検証し、状態を読むための宣言。
 - 依存するアプリの**artifact ID**を照合し、想定と異なる依存物を使わないようにする。
+
+[ICC semantics](https://github.com/argent-lang/argent/blob/2796809f167144902f04a4b3333a4c144f91fdaf/docs/icc-semantics.md)は、同じ取引で相手Covenantが消費されたことと、自分の操作を認可したことを区別する。id.co_spent()による存在確認だけで認可範囲は定まらず、相手側の署名対象や観測/出力条件と意図して結び付ける必要がある。artifact IDの一致も、チェーン上の正当なGenesisや業務上の認可を単独で保証しない。
 
 ICCは任意のActorへ自由にメッセージを送る機能ではない。**同一トランザクション内のCovenant入力・出力を検証可能な形で結び付ける**仕組みである。
 
@@ -169,7 +178,7 @@ build/
     └── *.sil         # ActorごとのSilverScript
 ```
 
-コンパイラは、後継Actorのテンプレートをあらかじめコミットできるよう、Actor間の遷移グラフを解析する。`become`は出力の検証に、`observes`は外部Covenantの照合に変換される。必要に応じて非公開のWitness情報やテンプレートの部分情報が生成される。
+コンパイラは、後継Actorのテンプレートをあらかじめコミットできるよう、Actor間の遷移グラフを解析する。`become`は出力の検証に、`observes`は外部Covenantの照合に変換される。作者が手で指定しない内部Witnessやテンプレートの部分情報も生成する。ここでhidden/internalはコンパイラーが補う引数の意味であり、暗号学的な秘密・ゼロ知識性を意味しない。支出時にsignatureScript等へ含めるデータの公開範囲を別に確認する。
 
 `artifact.json`は、Rustランタイムがトランザクションを組み立てるための可搬な契約情報である。**生成された`.sil`とArtifactを監査対象に含める**ことが重要。
 
@@ -184,13 +193,17 @@ build/
 3. 消費するActor入力・通常入力を指定する。
 4. 後継Actor出力と値を指定する。
 5. 隠れたWitnessやScript情報を補完する。
-6. 完成したトランザクションを組み立てる。
+6. 取引を組み立て、ローカルのScript/Covenant検査・compute budget/massの処理を行う。
+
+固定runtimeのTxBuilder::buildはexecute_transaction_with_covenantsを呼ぶ。単なるJSON組み立てではないが、合成UTXOを渡せるローカル検証であり、実チェーン上の存在・未消費・資金調達・Finalityを保証しない。
 
 アプリケーションの業務ロジックはArgentで定義し、**UTXO取得、署名、トランザクション送信、状態追跡**などの周辺処理はRustアプリケーションが担う。
 
 ## 9. GenesisとCovenant ID
 
 Covenantの開始時には、初期Actor群とその状態を確定させる必要がある。ArgentはGenesis証明の仕組みを用意しており、Covenant IDがどの初期構成に対応するかを検証できる。
+
+ここでのGenesis proofは初期化の取引・outpoint・出力群・Script前像等の整合性を確かめる階層化された仕組みで、ZK証明やチェーン包含/Finalityの証明と同義ではない。証明packageの正しさと、取引が実チェーンで受理されたことを分ける。
 
 Covenant IDや初期状態を単なる外部データベースの申告として信頼せず、**オンチェーンで観測されたIDと初期化データの整合性を検証する**ことが目的。
 
@@ -206,7 +219,7 @@ Covenant IDや初期状態を単なる外部データベースの申告として
 
 ### `virtual`と`expands`
 
-共通の基本状態を維持しながら、具体的なActorが追加の状態を持つための機構。拡張部分をDigestと事前イメージで扱う設計がある。
+共通の基本状態を維持しながら、具体的なActorが追加の状態を持つための機構。拡張部分をDigestと事前イメージで扱う設計がある。Digestがあっても実行時に開示する前像まで非公開になるわけではない。
 
 ## 11. セキュリティ上の論点
 
@@ -240,26 +253,49 @@ Argentを学ぶ際には、コードがコンパイルできるだけでなく�
 
 ### 演習C：複数ActorとICC
 
-1. `two_actor_exchange`で原子的な交換を確認する。
+1. two_actor_exchangeでPing→Pong→Pingを2取引で進める経路を確認する。名前から2取引全体の原子的交換を実証したと解釈しない。
 2. `multiapp_badge`で別アプリ間の連携を追う。
 3. `open_icc_agent`で実行時Actorハンドルを確認する。
 4. `dex_asset`で資産・ペア・レジストリの関係を整理する。
 
-### ローカルでの確認コマンド
+### 固定版とローカル確認手順
 
-```bash
-# Argentリポジトリ内
-./check.sh
-cargo run -- build examples/tickets.ag --out examples/build/tickets
-cargo run --bin argentc -- inspect examples/build/tickets
+固定Cargo.toml/lockfileはRust 1.94.0、Kaspa 2.1.0、silverscript-lang/abi 1.0.1を使う。READMEの「SilverScript v1.0.0へpin」という説明と実manifestの差を区別する。基準版ノードや第32章で調べた版と混ぜない。
 
-# argent-playgroundリポジトリ内
-cargo run --bin basic_counter
-cargo run --bin two_actor_exchange
-cargo run --bin multiapp_badge
+Playgroundはpath依存で../argentを参照するため、次の兄弟配置が必要になる。調査コピーと生成物は本書外へ置く。
+
+```text
+argent-review/
+├── argent/
+├── argent-playground/
+└── lab/                 # 本書の例・生成物の検査用
 ```
 
-コマンドや生成物は開発中に変更され得るため、実行時は各リポジトリのREADMEを優先する。
+```bash
+# 親の調査用ディレクトリでcloneし、別々に完全SHAへ固定する
+git clone https://github.com/argent-lang/argent.git argent
+git -C argent checkout --detach 2796809f167144902f04a4b3333a4c144f91fdaf
+git clone https://github.com/argent-lang/argent-playground.git argent-playground
+git -C argent-playground checkout --detach 86d5453ee525e7aa743d0b3bb21d1bb8d96c3558
+
+# lab/tickets.agへ本節のコードを保存してから進める
+cd argent
+cargo +1.94.0 run --locked --bin argentc -- build ../lab/tickets.ag --out ../lab/tickets
+cargo +1.94.0 run --locked --bin argentc -- inspect ../lab/tickets
+
+# 兄弟のPlaygroundへ移動する
+cd ../argent-playground
+cargo +1.94.0 run --locked --bin basic_counter
+cargo +1.94.0 run --locked --bin two_actor_exchange
+```
+
+取得後、labディレクトリを作って本文のソースをtickets.agとして保存する。生成物もこの調査用コピーに保持する。cargo +1.94.0で追加版を呼び、既定Rustは変更しない。確認結果は次のとおり。チケット例のbuild/inspect、basic_counterとtwo_actor_exchangeが成功した。runtimeはbuild時にローカルScript/Covenant検査を呼ぶため、これらは構築だけの例ではない。ただし合成UTXO/outpointを使うローカルデモであり、実ノード・送信・チェーン受理のE2Eではない。
+
+two_actor_exchangeはPing→PongとPong→Pingを別々の取引で実行する。Actor型の遷移例であり、複数入力の同時交換・2取引全体の原子性のテストではない。
+
+Counterの期待値を2+3=5から6へ変えた独自probeは、入力0のScript失敗として拒否された。runtimeの失敗入力番号を確認する公式単体テスト1件も成功。本文のTicketの署名・支払い経路や、残りのICC/Genesis等の演習は実行していない。詳細は確認記録を参照する。
+
+check.shはコンパイル・テスト・lint等をまとめた開発者用スクリプト。--fullは追跡済みexample生成物の再生成も行う。この回の確認をcheck.sh全体の成功や、Playgroundの全デモ成功として扱わない。
 
 ## 13. SilverScript・Argent・vProgsの違い
 
@@ -274,19 +310,23 @@ Argentは**EVMそのものでも、L2そのものでもない**。KaspaのCovena
 
 ## 14. 制約と今後の課題
 
-- Argentは一般向けの正式リリース前で、監査・堅牢化が継続中。
+- 固定READMEはnot yet release-readyとしており、監査・堅牢化が継続中。
 - 一部の範囲指定機能（`observes`や`spawns`のrangeなど）は実装途中。
 - 生成Scriptのコストや複雑さはアプリケーション規模に依存する。
 - 実際のネットワーク利用可能性は、対象Kaspaネットワークで有効なCovenant関連機能・コンセンサス仕様に依存する。
 
 **本章の要点**：Argentは「UTXOをActorとして扱い、トランザクション全体の状態遷移を型付きソースで定義する」ための仕組みである。理解の核心は、`state` → `actor` → `entry` → `emits` → `become`と、生成されたSilverScriptによる検証を対応付けることにある。
 
-## 参考資料（一次資料）
+## 参考資料（固定一次資料）
 
-- [Argent公式README](https://github.com/argent-lang/argent/blob/master/README.md)
-- [Argent公式ソース](https://github.com/argent-lang/argent)
-- [Ticketsサンプル](https://github.com/argent-lang/argent/blob/master/examples/tickets.ag)
-- [ICC semantics](https://github.com/argent-lang/argent/blob/master/docs/icc-semantics.md)
-- [Security invariants](https://github.com/argent-lang/argent/tree/master/docs/security-invariants)
-- [Range設計と実装状況](https://github.com/argent-lang/argent/blob/master/docs/entry-clause-ranges.md)
-- [Argent Playground](https://github.com/argent-lang/argent-playground)
+- [Argent公式README](https://github.com/argent-lang/argent/blob/2796809f167144902f04a4b3333a4c144f91fdaf/README.md)
+- [Argent固定ソース](https://github.com/argent-lang/argent/tree/2796809f167144902f04a4b3333a4c144f91fdaf)
+- [Ticketsサンプル](https://github.com/argent-lang/argent/blob/2796809f167144902f04a4b3333a4c144f91fdaf/examples/tickets.ag)
+- [ICC semantics](https://github.com/argent-lang/argent/blob/2796809f167144902f04a4b3333a4c144f91fdaf/docs/icc-semantics.md)
+- [Security invariants](https://github.com/argent-lang/argent/tree/2796809f167144902f04a4b3333a4c144f91fdaf/docs/security-invariants)
+- [Range設計と実装状況](https://github.com/argent-lang/argent/blob/2796809f167144902f04a4b3333a4c144f91fdaf/docs/entry-clause-ranges.md)
+- [Argent Playground固定ソース](https://github.com/argent-lang/argent-playground/tree/86d5453ee525e7aa743d0b3bb21d1bb8d96c3558)
+
+次は[第36章 — Kaspaへのコントリビュート](../part-06-contributing/chapter-36.md)。第33〜35章はすでにレビュー済みのため、繰り返さずに先へ進む。
+
+**確認範囲：** 固定文書・主要コードと本節の学習例。全security invariant・暗号方式・実ネットワークの有効化、実資金を扱うアプリの監査ではない。記録は `experiments/argent-review-2026-11-01.md`。

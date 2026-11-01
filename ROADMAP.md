@@ -93,9 +93,15 @@
 
 2026-11-01：目次順36番目の第32章を確認。Silverscript v1.0.0 / 3ed9733の公式文書・CLI・依存版を固定し、擬似コード/独自教材/公式ツールを区別。承認者/閾値の公開フィールドから構築検証を迂回できた教材を改訂し、重複設定・閾値成立後の不正証拠等10テスト・書式/Clippy成功。記録は `experiments/chapter-32-review-2026-11-01.md`。Rust 1.94を追加して公式CLIのビルド/コンパイル・再実行一致/拒否を確認。実VM・本番/Devnet適用は未検証。次は第33章。
 
-2026-11-01：目次順37番目の第33章を確認。Rollup/外部DA、ZKの公開入力・rootの拘束、Pruning後の保持、ブリッジのReplay/成否不明・DBと外部作用の境界を整理。独自状態遷移を空ラベル/overflow/総量・自己送金の境界まで確認し、Replay未実装の実例も含む9テスト・書式/ClippyとAPI型検査が成功。記録は `experiments/chapter-33-review-2026-11-01.md`。実ブリッジ/回路・本番有効化・DA/退出試験は未検証。次は第34章。
+2026-11-01：目次順38番目の第33章を確認。Rollup/外部DA、ZKの公開入力・rootの拘束、Pruning後の保持、ブリッジのReplay/成否不明・DBと外部作用の境界を整理。独自状態遷移を空ラベル/overflow/総量・自己送金の境界まで確認し、Replay未実装の実例も含む9テスト・書式/ClippyとAPI型検査が成功。記録は `experiments/chapter-33-review-2026-11-01.md`。実ブリッジ/回路・本番有効化・DA/退出試験は未検証。次は第34章。
 
-2026-11-01：目次順38番目の第34章を確認。公式案内の有効化記載と構築中/将来構想を分け、vprogsをf9b84a8へ固定。README/実APIの違い・VMのtodo・lockfileの依存版、metadata61パッケージを確認。独自状態遷移の順序依存/Replay未実装・空ID/総量等9テスト、書式/Clippy成功。記録は `experiments/chapter-34-review-2026-11-01.md`。Part V第29〜34章の目次順本文レビューは一区切りだが、公式全テスト/証明・実アプリ間原子性・本番動作は未検証。次は第35章。
+2026-11-01：目次順39番目の第34章を確認。公式案内の有効化記載と構築中/将来構想を分け、vprogsをf9b84a8へ固定。README/実APIの違い・VMのtodo・lockfileの依存版、metadata61パッケージを確認。独自状態遷移の順序依存/Replay未実装・空ID/総量等9テスト、書式/Clippy成功。記録は `experiments/chapter-34-review-2026-11-01.md`。第29〜34章の番号付き章は確認したがArgent補足は未確認であり、公式全テスト/証明・実アプリ間原子性・本番動作は未検証。次は第35章。
+
+2026-11-01：目次順40番目の第35章を確認。基準版RPC/完全NetworkId・UTXO履歴を照合し、支出と取消、raw受理と集計適格を区別。集計に版/ネットワーク・拒否時の全状態保持を加え、12テスト・書式/Clippy・API型検査成功。SQLiteの一意/複合FK/型・範囲制約も検査。記録は `experiments/chapter-35-review-2026-11-01.md`。完成アプリ/E2E・期限/会計・複数ワーカーは未検証。SUMMARYのArgent補足（37番目）の見落としを訂正し、第33〜35章の番号を修正。次はArgent補足、その後は第36章。
+
+2026-11-01：目次順37番目のArgent補足の見落としを回収。Argent 2796809/Playground 86d5453へ固定し、READMEと実依存版の差・ICC認可・内部Witness/Genesisの意味を整理。本文チケット例build/inspectとCounter/2 Actorローカルデモ成功、不正次状態拒否と公式runtime単体1件も確認。記録は `experiments/argent-review-2026-11-01.md`。Part V全ページの本文確認は一区切りだが、全ICC/Genesis・署名経路・実ノード/E2Eは未検証。第35章は確認済みで、次は第36章。
+
+2026-11-01：目次順41番目の第36章を確認。固定README/check/test/CI・metadata59パッケージと公開貢献手順を照合し、書式変更/広域実行・0件テスト・再現tagとPR base・AI利用/セキュリティ窓口の区別を補足。自己送金で残高不足を迂回した教材を修正し、9テスト・書式/Clippy成功。記録は `experiments/chapter-36-review-2026-11-01.md`。公式CI全体・実PR提出は未実施。第1〜36章＋Argentの本文確認は一区切りで、次は付録A。
 
 ## 優先順位と進め方
 

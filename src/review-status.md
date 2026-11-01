@@ -44,9 +44,12 @@
 | 34 | [第30章](part-05-advanced/chapter-30.md) | 本文・固定KIP/PRの区別・境界教材を確認 | `experiments/chapter-30-review-2026-11-01.md` |
 | 35 | [第31章](part-05-advanced/chapter-31.md) | 本文・KIP/基準版の境界・支出教材を確認 | `experiments/chapter-31-review-2026-11-01.md` |
 | 36 | [第32章](part-05-advanced/chapter-32.md) | 本文・固定Silverscript/承認教材を確認 | `experiments/chapter-32-review-2026-11-01.md` |
-| 37 | [第33章](part-05-advanced/chapter-33.md) | 本文・L2/DA/Replayの前提・状態遷移教材を確認 | `experiments/chapter-33-review-2026-11-01.md` |
-| 38 | [第34章](part-05-advanced/chapter-34.md) | 本文・固定プロトタイプ/API・順序教材を確認 | `experiments/chapter-34-review-2026-11-01.md` |
-| 39 | [第35章](part-06-contributing/chapter-35.md) | 次の対象 | — |
+| 37 | [Argent補足](part-05-advanced/argent.md) | 固定文書/CLI・ローカルruntime例を確認 | `experiments/argent-review-2026-11-01.md` |
+| 38 | [第33章](part-05-advanced/chapter-33.md) | 本文・L2/DA/Replayの前提・状態遷移教材を確認 | `experiments/chapter-33-review-2026-11-01.md` |
+| 39 | [第34章](part-05-advanced/chapter-34.md) | 本文・固定プロトタイプ/API・順序教材を確認 | `experiments/chapter-34-review-2026-11-01.md` |
+| 40 | [第35章](part-06-contributing/chapter-35.md) | 本文・RPC境界/集計教材・SQLite制約を確認 | `experiments/chapter-35-review-2026-11-01.md` |
+| 41 | [第36章](part-06-contributing/chapter-36.md) | 本文・開発用入口/貢献手順・不変条件教材を確認 | `experiments/chapter-36-review-2026-11-01.md` |
+| 42 | [付録A](appendices/appendix-a.md) | 次の対象 | — |
 
 この順番でページを確認したことと、ページに関係する全技術・全コードを検証したことは別です。後続章には、先に重要箇所だけを照合・実行したものがあります。
 
@@ -118,11 +121,11 @@
 | [Chapter 30 — Kaspa Improvement Proposals（Kaspa改善提案・KIP）](part-05-advanced/chapter-30.md) | 主要文書・教材を確認 | 固定KIPの主要説明/Status・PRの区別・基準版の規則選択を照合。教材4テスト成功。全KIPの実装/証明・全ネットワーク有効化は未検証 |
 | [Chapter 31 — Covenants & Advanced Scripting（Covenantsと高度なスクリプティング）](part-05-advanced/chapter-31.md) | 主要文書・教材を確認 | KIP-10/17/20と基準版の内省/有効化経路・手数料を照合。独自支出教材11テスト成功。実Vault・全命令/現行本番有効化・SDK利用は未検証 |
 | [Chapter 32 — Silverscript & Smart Contract Design（Silverscriptとスマートコントラクト設計）](part-05-advanced/chapter-32.md) | 主要文書・教材を確認 | Silverscript v1.0.0のCLIビルド/コンパイル・生成物一致/拒否を確認。独自承認教材10テスト成功。実VM・本番/Devnet適用は未検証 |
-| [Argent — Actorベースのアプリケーション言語](part-05-advanced/argent.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
+| [Argent — Actorベースのアプリケーション言語](part-05-advanced/argent.md) | 主要文書・ローカル例を確認 | 固定CLIで本文例build/inspect、Counter/2 Actorデモ・不正次状態の拒否、公式runtime単体1件を確認。ICC全体/Genesis・実ノード/E2E・署名経路の監査は未実施 |
 | [Chapter 33 — Layer 2, Bridges & Zero-Knowledge Proofs（レイヤー2・ブリッジ・ゼロ知識証明）](part-05-advanced/chapter-33.md) | 主要資料・教材を確認 | Rollup/外部DA、公開入力・Replay/成否不明の境界を整理。状態遷移9テスト・API型検査成功。実ブリッジ/回路/本番有効化・DA/退出は未検証 |
 | [Chapter 34 — vProgs & Programmability（vProgsとKaspaのプログラマビリティ）](part-05-advanced/chapter-34.md) | 主要資料・教材を確認 | 公開案内と固定プロトタイプ/APIの境界・61パッケージmetadataを確認。独自教材9テスト成功。公式全テスト/証明・実アプリ間原子性・本番動作は未検証 |
-| [Chapter 35 — Building a Kaspa Application（Kaspaアプリケーションの構築）](part-06-contributing/chapter-35.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Chapter 36 — Contributing to Kaspa（Kaspaへのコントリビュート）](part-06-contributing/chapter-36.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
+| [Chapter 35 — Building a Kaspa Application（Kaspaアプリケーションの構築）](part-06-contributing/chapter-35.md) | 主要入口・教材を確認 | 基準版RPC/UTXO境界を照合。独自集計12テストとAPI型検査・SQLite制約検査成功。実Payment Tracker/E2E・会計台帳/複数ワーカーは未検証 |
+| [Chapter 36 — Contributing to Kaspa（Kaspaへのコントリビュート）](part-06-contributing/chapter-36.md) | 主要手順・教材を確認 | 基準版README/check/test/CI・metadata59パッケージ、公開貢献手順を確認。独自教材9テスト成功。公式スクリプト/CI全体・実PR提出は未実施 |
 | [Appendix A — Rust環境・Docker環境の構築](appendices/appendix-a.md) | 未照合 | 記録したARM64環境でDevnet起動・送金等を実測し手順を反映。新規環境、他OS/CPU、付録全体は未確認 |
 | [Appendix B — Kaspa用語集](appendices/appendix-b.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
 | [Appendix C — 数学・確率・暗号技術の補足](appendices/appendix-c.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
@@ -144,6 +147,9 @@
 | 第32章本文レビューと固定Silverscript/承認教材 | `chapter-32-review-2026-11-01.md` |
 | 第33章本文レビューとL2/DA/Replayの前提・状態遷移教材 | `chapter-33-review-2026-11-01.md` |
 | 第34章本文レビューと固定vprogs/API・順序教材 | `chapter-34-review-2026-11-01.md` |
+| 第35章本文レビューとRPC/集計教材・SQLite制約 | `chapter-35-review-2026-11-01.md` |
+| Argent補足の本文レビューと固定CLI/ローカルruntime | `argent-review-2026-11-01.md` |
+| 第36章本文レビューと開発用入口/不変条件教材 | `chapter-36-review-2026-11-01.md` |
 | 第28章本文レビューとDevnet設定/教材 | `chapter-28-review-2026-11-01.md` |
 | 第27章本文レビューと改訂最小ノード | `chapter-27-review-2026-11-01.md` |
 | 第26章本文レビューとGHOSTDAG/保存境界 | `chapter-26-review-2026-11-01.md` |
@@ -200,6 +206,6 @@
 
 ## 次に確認するページと残作業
 
-目次順の次は[第35章](part-06-contributing/chapter-35.md)、その次は[第36章](part-06-contributing/chapter-36.md)です。以前の重要章優先の一覧ではなく、この順番でページを確認します。
+第1〜36章と[Argent補足](part-05-advanced/argent.md)の本文レビューは一区切りです。実装/暗号方式・実ネットワークをすべて検証した意味ではありません。次は[付録A](appendices/appendix-a.md)、その次は[付録B](appendices/appendix-b.md)です。以後もSUMMARYの順で付録を確認します。
 
 個別検証として残る主なものは、Finalityの実行時境界、HDウォレット復旧、Pruning後IBD、複数ワーカー/会計処理、新規環境での再現、未照合の説明・数値・出典です。全残作業と完了条件は、リポジトリの `ROADMAP.md` に記録しています。

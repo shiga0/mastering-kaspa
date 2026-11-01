@@ -1,7 +1,9 @@
 # Chapter 36 — Contributing to Kaspa（Kaspaへのコントリビュート）
 
-> **原稿ステータス：v0.1（技術レビュー前）**  
+> **目次順の本文レビュー：2026-11-01。基準版の開発用入口・公開手順と独自Rust教材を確認。公式CI全体や実PR提出の検証ではない。**
 > この章は、Kaspaのオープンソース開発に参加するための実践ガイドである。リポジトリ構成、開発手順、CI、メンテナーの方針は変化するため、作業時点の一次資料を確認すること。
+
+ソース照合は本書の基準版v1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。実際の上流への貢献では、その時点の指定base・開発ルールを別に確認する。確認記録は `experiments/chapter-36-review-2026-11-01.md`。
 
 ## この章で学ぶこと
 
@@ -51,34 +53,42 @@
 - [Rust公式ドキュメント](https://doc.rust-lang.org/book/) — Rust言語の基礎
 - [Cargo Book](https://doc.rust-lang.org/cargo/) — ビルド・テスト・ワークスペース
 
-**注意：** リポジトリに`CONTRIBUTING.md`やIssueテンプレートが存在するか、どのブランチを基準にするか、必要なツールチェーンは何かを、実際の作業時点で確認する。本章は特定のブランチ構成を前提にしない。
+**注意：** リポジトリに`CONTRIBUTING.md`やIssueテンプレートが存在するか、どのブランチを基準にするか、必要なツールチェーンは何かを、実際の作業時点で確認する。基準版[README](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/README.md)は開発の既定をmaster、安定版の入口をstableと説明するが、現在のPRのbaseを保証しない。基準版のroot/.githubにはCONTRIBUTING.md、rootにはSECURITY.mdとrust-toolchain.tomlがなかった。存在するという前提でコマンドや報告先を創作しない。
 
 ## 36.4 開発環境の準備
 
 以下は一般的なRustプロジェクトとしての準備例であり、実際の必須コマンドはリポジトリのREADMEに従う。
 
 ```bash
-# リポジトリを取得
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
-
-# 現在の状態を記録
+# 第1章の固定checkoutを、本書とは別の調査用ディレクトリで再利用する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
+# HEADを本章の完全SHAと照合する
 rustc --version
 cargo --version
 
-# 利用可能なパッケージを確認
-cargo metadata --no-deps --format-version 1 > /tmp/rusty-kaspa-metadata.json
+# no-depsのパッケージ一覧。依存解決・ビルド成功の確認ではない
+cargo metadata --offline --locked --no-deps --format-version 1 > /tmp/rusty-kaspa-review-metadata.json
 ```
 
 ワークスペース全体のテストは時間やリソースを多く使う場合がある。最初は対象パッケージを絞り、リポジトリが指定するテスト方法を優先する。
 
 ```bash
 # 実際のパッケージ名を確認した上で実行する
-cargo test -p <package-name>
+cargo test --locked -p kaspa-math --lib -- --list
 ```
 
-`<package-name>`はプレースホルダーであり、そのまま実行しない。
+kaspa-mathは固定workspaceに存在する例で、--listはテストの一覧表示であり、テスト本体の実行ではない。一覧表示にもテスト対象のコンパイルは必要になる。実行する場合は必要な依存・環境を確認して--listを外す。--exact等で絞るときはmodule名を含む完全名と実際の実行件数を照合し、0件を成功件数に数えない（[Cargo testの仕様](https://doc.rust-lang.org/cargo/commands/cargo-test.html)）。今回この公式crateのテストは実行していない。
+
+固定版metadataは59パッケージを列挙できた。生JSONにはローカルパスが含まれるため、そのまま公開記録へ追加しない。一般のRust導入だけで足りるとは限らず、READMEのProtobuf・clang/RocksDB・対象WASM toolchain等の要件を用途ごとに確認する。
+
+### 公式スクリプト・CIと部分検査
+
+- [check](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/check)はcargo fmt --allで書式を書き換え、workspaceと複数WASM featureのClippyを呼ぶ。読取専用の検査ではない。
+- [test](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/test)はnextestのrelease/workspace/integration向けコマンドとwasm/build-nodeを呼ぶ。環境・実行対象を読んでから使う。
+- [CI定義](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/.github/workflows/ci.yaml)はworkspace check、releaseテスト、docテスト、追加feature等を含む。GitHub runnerを掃除する手順まで手元へコピーしない。
+
+ソースの表記を読んだこと、構文確認、特定crate/featureの成功、公式CI全体の成功は別の結果である。本章で公式スクリプトや上流CIを実行したわけではない。
 
 ## 36.5 コードを読む順番
 
@@ -144,7 +154,7 @@ cargo test -p <package-name>
 | blue / red | GHOSTDAG上の分類。ブロックの有効／無効と同義ではない |
 | Virtual State | 合意規則に基づいて導出される仮想的な状態 |
 | UTXO | 未使用トランザクション出力。二重消費を防ぐ状態管理の基礎 |
-| Finality | 何をもってトランザクションを十分確定したと扱うかという性質・運用判断 |
+| Finality | プロトコルのfinality point/検証と、アプリの確定ポリシーを区別する。第20章参照 |
 
 用語の定義は、ドキュメント、コード、テスト名、レビューコメントで一致させる。
 
@@ -159,6 +169,8 @@ cargo test -p <package-name>
 - 同じ入力と同じ合意ルールから、決定的な結果が得られる。
 - エラーで処理が中断した場合に、中途半端な永続化状態を残さない。
 - コンセンサスの判定を、受信順などの非決定的な要因に依存させない。
+
+同じ入力には初期状態・入力DAG・ネットワーク設定・有効化文脈等も含める。受信途中のノードの観測差を、そのまま固定入力の決定性違反と扱わない。エラー時の保存契約も明示する。無効状態の記録が必要な場合や、ヘッダー保存とVirtual更新が別バッチの場合があり、Result::Errなら一切の保存がないとは一般化しない。
 
 これらは概念的な例であり、実際のKaspaの検証規則は仕様と実装に照らして精密化する必要がある。
 
@@ -219,10 +231,11 @@ Applied
 - OS:
 - rustc / cargo:
 - rusty-kaspa commit:
-- Network: devnet / testnet / mainnet（該当するもの）
+- 完全なNetworkId: devnet / testnet-10 / testnet-11 / mainnet等
+- 起動フラグ・feature・RPC形式/版（必要な範囲）
 
 ## ログ・証拠
-秘密鍵、シードフレーズ、認証情報を除去して添付。
+公開用に最小化した証拠だけを添付。秘密鍵・シード・認証情報・個人ホームパスや不要な生ログ/DBを除く。脆弱性の疑いがあれば36.18の非公開報告経路を先に調べる。
 
 ## 補足
 関連するIssue、KIP、テスト。
@@ -267,6 +280,8 @@ git diff
 git status
 ```
 
+再現用の固定tagと、実PRが対象にする開発baseを区別する。作業中の差分を破棄して合わせるのではなく、必要なら別checkout/worktreeを用意する。forkのheadと上流baseを確認し、push・PR公開の前に公開対象を検査する。本章のレビューでは外部投稿やpushは行っていない。
+
 作業前にIssueを立てるべきか、PR前にメンテナーと相談すべきかは、プロジェクトの方針に従う。
 
 ## 36.14 テストの階層
@@ -290,28 +305,41 @@ git status
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct Ledger {
-    balances: HashMap<String, u64>,
+pub struct Ledger {
+    pub balances: HashMap<String, u64>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum TransferError {
+pub enum TransferError {
+    EmptyAccount,
+    ZeroAmount,
     MissingAccount,
     InsufficientFunds,
     Overflow,
 }
 
 impl Ledger {
-    fn transfer(&mut self, from: &str, to: &str, amount: u64) -> Result<(), TransferError> {
-        let from_balance = *self.balances.get(from).ok_or(TransferError::MissingAccount)?;
+    pub fn transfer(&mut self, from: &str, to: &str, amount: u64) -> Result<(), TransferError> {
+        if from.is_empty() || to.is_empty() {
+            return Err(TransferError::EmptyAccount);
+        }
+        if amount == 0 {
+            return Err(TransferError::ZeroAmount);
+        }
+        let from_balance = *self
+            .balances
+            .get(from)
+            .ok_or(TransferError::MissingAccount)?;
         let to_balance = *self.balances.get(to).ok_or(TransferError::MissingAccount)?;
 
+        let new_from = from_balance
+            .checked_sub(amount)
+            .ok_or(TransferError::InsufficientFunds)?;
         if from == to {
             return Ok(());
         }
-        let new_from = from_balance.checked_sub(amount)
-            .ok_or(TransferError::InsufficientFunds)?;
-        let new_to = to_balance.checked_add(amount)
+        let new_to = to_balance
+            .checked_add(amount)
             .ok_or(TransferError::Overflow)?;
 
         // 全ての検証が成功してから更新する。
@@ -327,10 +355,7 @@ mod tests {
 
     fn sample() -> Ledger {
         Ledger {
-            balances: HashMap::from([
-                ("alice".to_string(), 10),
-                ("bob".to_string(), 5),
-            ]),
+            balances: HashMap::from([("alice".to_string(), 10), ("bob".to_string(), 5)]),
         }
     }
 
@@ -346,7 +371,10 @@ mod tests {
     fn rejected_transfer_does_not_mutate_state() {
         let mut ledger = sample();
         let before = ledger.clone();
-        assert_eq!(ledger.transfer("alice", "bob", 100), Err(TransferError::InsufficientFunds));
+        assert_eq!(
+            ledger.transfer("alice", "bob", 100),
+            Err(TransferError::InsufficientFunds)
+        );
         assert_eq!(ledger, before);
     }
 
@@ -355,7 +383,10 @@ mod tests {
         let mut ledger = sample();
         ledger.balances.insert("bob".to_string(), u64::MAX);
         let before = ledger.clone();
-        assert_eq!(ledger.transfer("alice", "bob", 1), Err(TransferError::Overflow));
+        assert_eq!(
+            ledger.transfer("alice", "bob", 1),
+            Err(TransferError::Overflow)
+        );
         assert_eq!(ledger, before);
     }
 
@@ -366,10 +397,100 @@ mod tests {
         ledger.transfer("alice", "alice", 3).unwrap();
         assert_eq!(ledger, before);
     }
+
+    #[test]
+    fn rejects_zero_and_empty_labels_without_mutation() {
+        let mut ledger = sample();
+        let before = ledger.clone();
+        assert_eq!(
+            ledger.transfer("alice", "bob", 0),
+            Err(TransferError::ZeroAmount)
+        );
+        for (from, to) in [("", "bob"), ("alice", "")] {
+            assert_eq!(
+                ledger.transfer(from, to, 1),
+                Err(TransferError::EmptyAccount)
+            );
+            assert_eq!(ledger, before);
+        }
+        assert_eq!(ledger, before);
+    }
+
+    #[test]
+    fn missing_accounts_do_not_mutate_state() {
+        let mut ledger = sample();
+        let before = ledger.clone();
+        for (from, to) in [
+            ("missing", "bob"),
+            ("alice", "missing"),
+            ("missing", "missing"),
+        ] {
+            assert_eq!(
+                ledger.transfer(from, to, 1),
+                Err(TransferError::MissingAccount)
+            );
+            assert_eq!(ledger, before);
+        }
+    }
+
+    #[test]
+    fn self_transfer_cannot_bypass_available_funds() {
+        let mut ledger = sample();
+        let before = ledger.clone();
+        assert_eq!(
+            ledger.transfer("alice", "alice", 11),
+            Err(TransferError::InsufficientFunds)
+        );
+        assert_eq!(ledger, before);
+    }
+
+    #[test]
+    fn finite_grid_preserves_total_or_complete_input() {
+        for a in [0, 1, 10, u64::MAX] {
+            for b in [0, 1, 10, u64::MAX] {
+                for amount in [0, 1, 10, u64::MAX] {
+                    let mut ledger = Ledger {
+                        balances: HashMap::from([("alice".into(), a), ("bob".into(), b)]),
+                    };
+                    let before = ledger.clone();
+                    match ledger.transfer("alice", "bob", amount) {
+                        Ok(()) => assert_eq!(
+                            ledger
+                                .balances
+                                .values()
+                                .map(|v| u128::from(*v))
+                                .sum::<u128>(),
+                            u128::from(a) + u128::from(b)
+                        ),
+                        Err(_) => assert_eq!(ledger, before),
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn this_ledger_does_not_prevent_replay() {
+        let mut ledger = sample();
+        ledger.transfer("alice", "bob", 4).unwrap();
+        ledger.transfer("alice", "bob", 4).unwrap();
+        assert_eq!(ledger.balances["alice"], 2);
+        assert_eq!(ledger.balances["bob"], 13);
+    }
 }
 ```
 
-この例で確認できるのは、**検証完了前に状態を変更しない**という基本原則である。実際のKaspaではUTXO、DAG、仮想状態、永続化などが絡むため、同じ原則をより複雑な境界で守る必要がある。
+本書外でcargo new --lib --edition 2021 contribution-invariant-labを作り、src/lib.rsへ配置する。Rust/Cargo 1.90.0、外部依存なしで本文を検査した。
+
+```bash
+cargo test --offline
+cargo fmt --all -- --check
+cargo clippy --offline --all-targets -- -D warnings
+```
+
+この例は架空の非空IDによるアカウント残高モデルで、両アカウントが存在することと金額が正であることを要求する。自己送金でも残高不足を検査する。KaspaのUTXO・署名/認証・nonce/Replay防止・手数料・永続化/並行制御は実装しない。同じ要求の再実行で2回送金できることもテストした。
+
+この例で確認できるのは、**検証完了前に状態を変更しない**という通常のResultエラー経路での基本原則である。OOMやpanic・プロセスクラッシュを含むトランザクション保証ではない。実際のKaspaではUTXO、DAG、仮想状態、永続化などが絡むため、同じ原則をより複雑な境界で守る必要がある。
 
 ## 36.16 非決定性を持ち込まない
 
@@ -401,7 +522,8 @@ Rustの非同期処理や並列処理は性能に有用だが、合意結果の�
 
 脆弱性の可能性がある場合は、**公開Issueに攻撃手順や悪用可能な詳細を投稿する前に、公式のセキュリティ報告窓口を確認する**。
 
-- リポジトリのSecurityタブや`SECURITY.md`を確認する。
+- [対象リポジトリのSecurity policy](https://github.com/kaspanet/rusty-kaspa/security/policy)とSECURITY.md等を確認する。今回参照した公開ページはNo security policy detectedと表示し、基準版rootにもSECURITY.mdはなかった。
+- 報告窓口を確認できなければ、公式に案内される信頼できる連絡経路を調べる。推測のメールアドレスや公開Issueへの詳細投稿で代用しない。
 - 秘密鍵、シード、認証情報、個人情報をログに含めない。
 - 本番ネットワークへの無許可の攻撃的検証を行わない。
 - 再現用環境はローカルまたは許可されたDevnetなどに限定する。
@@ -409,35 +531,25 @@ Rustの非同期処理や並列処理は性能に有用だが、合意結果の�
 ## 36.19 Pull Requestの説明テンプレート
 
 ```markdown
-## 目的
-何の問題を解決するか。
+## 問題と変更後の動作
+何が起きる条件で、変更前後の結果がどう変わるか。
 
-## 変更内容
-- ...
-- ...
-
-## 変更しないこと
-今回のスコープ外を明記する。
-
-## 設計上の判断
-責務分離、依存関係、トレードオフを説明する。
-
-## 不変条件
-変更前後で守るべき性質を列挙する。
+## 変更内容と根拠
+主要な変更、仕様・ソースへの参照、必要な設計上の判断。
 
 ## 検証
-- 実行したコマンド:
-- 成功したテスト:
-- 未実施のテストと理由:
+- 対象コミット・環境・feature:
+- 実行コマンドと、実際に走ったテスト名/件数:
+- 未実施の検証と理由:
 
 ## 互換性・リスク
-既存動作への影響、必要なら移行手順。
+既存動作への影響と、必要なら移行・有効化手順。
 
 ## 関連Issue / KIP
 リンクを記載する。
 ```
 
-実行していないテストを「成功」と書かない。レビュー担当者が検証を再現できる情報を残す。
+小さな文書PRへ全項目を機械的に埋める必要はない。変更規模に合わせ、レビュアーが問題・変更・検証を追える説明にする。実行していないテストを「成功」と書かない。レビュー担当者が検証を再現できる情報を残す。
 
 ## 36.20 レビューコメントへの向き合い方
 
@@ -463,6 +575,8 @@ experiments/
     ├── results.csv
     └── findings.md
 ```
+
+この配置は提案例で、本章で新規実験ディレクトリを作成したわけではない。公開するのは最小限の整理済み記録とし、機密情報を含むrawログ/DB等をそのまま収録しない。
 
 最低限記録したい項目：
 
@@ -593,7 +707,7 @@ AIはコード探索、テスト案の列挙、ドキュメントの下書きに
 4. テストは本当に実行したか。
 5. PRの変更内容を自分の言葉で説明できるか。
 
-**AIを使ったことではなく、検証していないことが問題になる。**
+AI利用・開示の方針もプロジェクトごとに確認する。AIの利用が認められていても、提案の根拠・検証結果・提出内容への責任は投稿者が持つ。
 
 ## 36.30 最終チェックリスト
 
@@ -666,4 +780,6 @@ Kaspaへのコントリビュートは、完成した専門家だけの活動で
 7. [GitHub Docs — Contributing to projects](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project)
 8. [GitHub Docs — Creating a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)
 
-> **技術レビューの留意点：** 本章はOSS開発手順の一般原則を中心に構成した。`rusty-kaspa`固有のビルド要件、貢献ルール、テストコマンド、セキュリティ窓口については、作業時点のリポジトリで検証すること。掲載したRustコードは教育用であり、Kaspaのコンセンサス実装ではない。
+**確認範囲：** 基準版の開発用入口・現在の公開手順と独自Rust教材。公式スクリプト/CI全体、実PR提出や脆弱性報告の実行、コンセンサスの全面検証ではない。記録は `experiments/chapter-36-review-2026-11-01.md`。
+
+次は[付録A — Rust環境・Docker環境の構築](../appendices/appendix-a.md)。
