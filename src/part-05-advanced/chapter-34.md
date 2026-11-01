@@ -1,7 +1,9 @@
 # Chapter 34 — vProgs & Programmability（vProgsとKaspaのプログラマビリティ）
 
-> **原稿ステータス：v0.1（2026-10-30、技術レビュー前）**  
+> **目次順の本文レビュー：2026-11-01。主要な公開設計・固定プロトタイプと独自Rust教材を確認。Full vProgsや本番動作の検証ではない。**
 > 本章は研究構想・実装中の機能・メインネットで利用可能な機能を区別する。vProgsのAPIやプロトコルは変更され得る。
+
+公開vprogsは `f9b84a863a7c7c20586a9cf947550475e894f72e` へ固定した。本書の基準ノードv1.0.1、固定KIP、Silverscriptと同一時点の機能集合ではない。確認記録は `experiments/chapter-34-review-2026-11-01.md`。
 
 ## 34.1 本章の目的
 
@@ -15,20 +17,20 @@ Kaspaのプログラマビリティを「EVMのような汎用VMがL1ですべ�
 4. Rustで状態遷移と不変条件を実装し、テストできる。
 5. 研究仕様と実装・稼働状況を一次資料で追跡できる。
 
-## 34.2 2026年10月時点の位置付け
+## 34.2 2026-11-01に確認した公式案内の位置付け
 
 Kaspaの公式開発者向け案内では、**Covenants**、**Based Apps**、専門用途の**Inline ZK**を区別している。さらに、独立したアプリ間の合成を目指す**Full vProgs**は将来の方向性として説明されている。
 
-| 技術・モデル | 主な役割 | 2026年10月時点の読み方 |
+| 技術・モデル | 主な役割 | 確認時点の読み方 |
 |---|---|---|
 | Covenants | L1上のUTXO支出条件・状態遷移制約 | Toccata以降のメインネット機能と、実際に利用可能なopcodeを確認する |
 | Inline ZK | アクションごとの証明をL1で検証 | ZK検証機能と、アプリの完成度は別 |
-| Based Apps | 共有状態を持つアプリの実行モデル | 開発者向け環境・ツールチェーンの成熟度を個別に確認する |
+| Based Apps | 共有状態を持つアプリの実行モデル | 公式案内では構築中。環境・ツールチェーンを個別に確認する |
 | Full vProgs | 独立アプリ間の同期的な合成 | 研究・開発段階。完成した汎用メインネット基盤とみなさない |
 
-公式サイトによれば、ToccataによりCovenants、トランザクション内省、ZK検証、Based Apps向けの順序付け支援が導入され、2026年6月30日からメインネットで稼働している。一方、公開 `kaspanet/vprogs` リポジトリはプロトタイプ段階と明記する。**基盤機能の有効化 ≠ Full vProgsの完成**である。
+公式の[Toccata Dev Guide](https://docs.kaspa.org/toccata)は、2026-06-30、DAA score 474_165_565でMainnet有効化と説明する。これは確認日に読んだ公式文書の記載であり、このレビューで本番ノードを観測した結果ではない。Based Appsの案内は構築中、Full vProgsは将来の方向性と明記する。一方、公開 `kaspanet/vprogs` リポジトリはプロトタイプ段階と明記する。**基盤機能の有効化 ≠ Full vProgsの完成**である。
 
-参照：[Kaspa Programmability](https://docs.kaspa.org/programmability)、[Kaspa Build](https://kaspa.org/build)、[vprogs repository](https://github.com/kaspanet/vprogs)。
+参照：[Kaspa Programmability](https://docs.kaspa.org/programmability)、[Kaspa Build](https://kaspa.org/build)、[固定vprogs README](https://github.com/kaspanet/vprogs/blob/f9b84a863a7c7c20586a9cf947550475e894f72e/README.md)、[Based Apps](https://docs.kaspa.org/programmability/based-apps)、[Full vProgs](https://docs.kaspa.org/programmability/full-vprogs)。
 
 ## 34.3 なぜプログラマビリティを分離するのか
 
@@ -115,7 +117,7 @@ BlockDAG                       Computation DAG（概念例）
                                C:担保判定
 ```
 
-計算依存の履歴が長くなるほど、後続の操作を検証するために必要な計算範囲（computational scope）が増える可能性がある。研究モデルでは、定期的な証明・状態コミットが依存履歴を圧縮し、再計算範囲を縮める役割を担う。
+計算依存の履歴が長くなるほど、後続の操作を検証するために必要な計算範囲（computational scope）が増える可能性がある。2025-08-17の形式モデルでは、read/write集合と状態Witnessを持つ操作列を定義し、証明・状態コミットで計算上の依存scopeを縮めることを論じる。履歴データを永久保存したり、必要な状態/Witnessを自動復元したりする仕組みと同一視しない。証明生成・検証やDAも含む全体コストが常に減るという結論でもない。
 
 参照：[Computation DAGの形式モデル](https://research.kas.pa/t/zoom-in-a-formal-backbone-model-for-the-vprog-computation-dag/407)。
 
@@ -123,7 +125,7 @@ BlockDAG                       Computation DAG（概念例）
 
 アプリAの状態を参照するアプリBの操作を検証するには、個々の証明が正しいだけでなく、**それらが同じ履歴・同じ参照状態を扱っていること**も確認しなければならない。
 
-研究仕様のProof Stitchingは、個別の状態遷移証明や状態コミットメントを、依存関係と整合する形で結び付けることを目指す。
+2025-04-02のProof Stitchingの投稿は、logic zoneごとのsubtransactionにindex・入出力状態・call stack・証明を対応させるproof of conceptを説明する。2025-08-07の全体構想やComputation DAGの形式モデルと、単一の完成した仕様であるかのように混ぜない。研究仕様のProof Stitchingは、個別の状態遷移証明や状態コミットメントを、依存関係と整合する形で結び付けることを目指す。
 
 ```text
 Proof A ──┐
@@ -135,7 +137,7 @@ Proof B ──┘
 
 ## 34.9 L1で何を検証するのか
 
-KIP-16は、Kaspa ScriptにZK検証のための `OpZkPrecompile` を導入する提案で、公開仕様上のステータスは **Active** である。これはオフチェーン計算の正しさをL1上で検証するための基盤だが、**任意のvProgアプリが完成していることを意味しない**。
+KIP-16は、Kaspa ScriptにZK検証のための `OpZkPrecompile` を導入する提案で、本書の固定KIP文書上のステータスは **Active** である。これはオフチェーン計算の正しさをL1上で検証するための基盤だが、**任意のvProgアプリが完成していることを意味しない**。
 
 一般的な証明検証は次の形で表せる。
 
@@ -145,11 +147,13 @@ Verify(verifying_key, public_inputs, proof) -> true / false
 
 公開入力には、旧状態コミットメント、新状態コミットメント、対象操作のコミットメントなどが含まれ得る。ただし、**実際のフィールドや証明形式は採用された仕様・実装に従う**。
 
-参照：[KIP-16](https://github.com/kaspanet/kips/blob/master/kip-0016.md)。
+参照：[KIP-16](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0016.md)。
 
 ## 34.10 Based AppsとFull vProgs
 
 **Based Apps**は、Kaspaの順序付けを利用して共有状態アプリを構築する方向性として案内されている。**Full vProgs**は、アプリごとに独立した状態管理を維持しながら、アプリ横断の同期的合成を目指す、より広い研究目標である。
+
+公式Based Appsの案内は単一アプリ内の共有状態・組み込みアカウントと、app-localな合成を説明している。独立アプリ間のネットワークとしての合成とは範囲が異なる。
 
 「Based AppsでRustアプリが書ける」という説明から、「Full vProgsの合成プロトコルがすべて実装済み」と推論してはいけない。
 
@@ -204,7 +208,7 @@ API / Transaction Gateway
 - `storage`：状態の永続化・スナップショット。
 - `api`：外部からの操作受け付け。
 
-これは学習用の設計例であり、公式リポジトリのディレクトリ構造をそのまま再現したものではない。
+これは処理順や単一の原子的保存を表す図ではない。学習用の設計例であり、公式リポジトリのディレクトリ構造をそのまま再現したものではない。
 
 ## 34.13 Rustで最小の状態遷移を実装する
 
@@ -214,25 +218,29 @@ API / Transaction Gateway
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
-struct State {
-    balances: BTreeMap<String, u64>,
+pub struct State {
+    pub balances: BTreeMap<String, u64>,
 }
 
 #[derive(Clone, Debug)]
-struct Transfer {
-    from: String,
-    to: String,
-    amount: u64,
+pub struct Transfer {
+    pub from: String,
+    pub to: String,
+    pub amount: u64,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum Error {
+pub enum Error {
+    EmptyAccount,
     ZeroAmount,
     InsufficientFunds,
     Overflow,
 }
 
-fn apply(state: &State, tx: &Transfer) -> Result<State, Error> {
+pub fn apply(state: &State, tx: &Transfer) -> Result<State, Error> {
+    if tx.from.is_empty() || tx.to.is_empty() {
+        return Err(Error::EmptyAccount);
+    }
     if tx.amount == 0 {
         return Err(Error::ZeroAmount);
     }
@@ -260,30 +268,51 @@ mod tests {
     use super::*;
 
     fn initial() -> State {
-        State { balances: BTreeMap::from([
-            ("alice".into(), 100), ("bob".into(), 20)
-        ]) }
+        State {
+            balances: BTreeMap::from([("alice".into(), 100), ("bob".into(), 20)]),
+        }
     }
 
     #[test]
     fn transfer_preserves_total() {
         let before = initial();
-        let after = apply(&before, &Transfer {
-            from: "alice".into(), to: "bob".into(), amount: 30
-        }).unwrap();
+        let after = apply(
+            &before,
+            &Transfer {
+                from: "alice".into(),
+                to: "bob".into(),
+                amount: 30,
+            },
+        )
+        .unwrap();
         assert_eq!(after.balances["alice"], 70);
         assert_eq!(after.balances["bob"], 50);
-        assert_eq!(after.balances.values().sum::<u64>(),
-                   before.balances.values().sum::<u64>());
+        assert_eq!(
+            after
+                .balances
+                .values()
+                .map(|v| u128::from(*v))
+                .sum::<u128>(),
+            before
+                .balances
+                .values()
+                .map(|v| u128::from(*v))
+                .sum::<u128>()
+        );
     }
 
     #[test]
     fn rejected_transfer_does_not_change_input() {
         let before = initial();
         let snapshot = before.clone();
-        let result = apply(&before, &Transfer {
-            from: "alice".into(), to: "bob".into(), amount: 101
-        });
+        let result = apply(
+            &before,
+            &Transfer {
+                from: "alice".into(),
+                to: "bob".into(),
+                amount: 101,
+            },
+        );
         assert_eq!(result, Err(Error::InsufficientFunds));
         assert_eq!(before, snapshot);
     }
@@ -291,33 +320,176 @@ mod tests {
     #[test]
     fn self_transfer_does_not_mint_money() {
         let before = initial();
-        let after = apply(&before, &Transfer {
-            from: "alice".into(), to: "alice".into(), amount: 10
-        }).unwrap();
+        let after = apply(
+            &before,
+            &Transfer {
+                from: "alice".into(),
+                to: "alice".into(),
+                amount: 10,
+            },
+        )
+        .unwrap();
         assert_eq!(before, after);
     }
 
     #[test]
     fn overflow_is_rejected() {
-        let before = State { balances: BTreeMap::from([
-            ("alice".into(), 1), ("bob".into(), u64::MAX)
-        ]) };
-        assert_eq!(apply(&before, &Transfer {
-            from: "alice".into(), to: "bob".into(), amount: 1
-        }), Err(Error::Overflow));
+        let before = State {
+            balances: BTreeMap::from([("alice".into(), 1), ("bob".into(), u64::MAX)]),
+        };
+        assert_eq!(
+            apply(
+                &before,
+                &Transfer {
+                    from: "alice".into(),
+                    to: "bob".into(),
+                    amount: 1
+                }
+            ),
+            Err(Error::Overflow)
+        );
+    }
+
+    #[test]
+    fn rejects_zero_and_empty_account_labels() {
+        let before = initial();
+        assert_eq!(
+            apply(
+                &before,
+                &Transfer {
+                    from: "alice".into(),
+                    to: "bob".into(),
+                    amount: 0
+                }
+            ),
+            Err(Error::ZeroAmount)
+        );
+        for (from, to) in [("", "bob"), ("alice", "")] {
+            assert_eq!(
+                apply(
+                    &before,
+                    &Transfer {
+                        from: from.into(),
+                        to: to.into(),
+                        amount: 1
+                    }
+                ),
+                Err(Error::EmptyAccount)
+            );
+        }
+    }
+
+    #[test]
+    fn self_transfer_requires_available_funds() {
+        assert_eq!(
+            apply(
+                &initial(),
+                &Transfer {
+                    from: "alice".into(),
+                    to: "alice".into(),
+                    amount: 101
+                }
+            ),
+            Err(Error::InsufficientFunds)
+        );
+        assert_eq!(
+            apply(
+                &initial(),
+                &Transfer {
+                    from: "missing".into(),
+                    to: "missing".into(),
+                    amount: 1
+                }
+            ),
+            Err(Error::InsufficientFunds)
+        );
+    }
+
+    #[test]
+    fn order_changes_which_operations_can_succeed() {
+        let before = initial();
+        let first = Transfer {
+            from: "alice".into(),
+            to: "bob".into(),
+            amount: 80,
+        };
+        let second = Transfer {
+            from: "bob".into(),
+            to: "alice".into(),
+            amount: 50,
+        };
+        let after_first = apply(&before, &first).unwrap();
+        let after_both = apply(&after_first, &second).unwrap();
+        assert_eq!(after_both.balances["alice"], 70);
+        assert_eq!(after_both.balances["bob"], 50);
+        assert_eq!(apply(&before, &second), Err(Error::InsufficientFunds));
+    }
+
+    #[test]
+    fn finite_grid_preserves_total_and_complete_input() {
+        let mut successes = 0;
+        for a in [0, 1, 10, u64::MAX] {
+            for b in [0, 1, 10, u64::MAX] {
+                for amount in [0, 1, 10, u64::MAX] {
+                    let before = State {
+                        balances: BTreeMap::from([("alice".into(), a), ("bob".into(), b)]),
+                    };
+                    let snapshot = before.clone();
+                    if let Ok(after) = apply(
+                        &before,
+                        &Transfer {
+                            from: "alice".into(),
+                            to: "bob".into(),
+                            amount,
+                        },
+                    ) {
+                        assert_eq!(
+                            after
+                                .balances
+                                .values()
+                                .map(|v| u128::from(*v))
+                                .sum::<u128>(),
+                            u128::from(a) + u128::from(b)
+                        );
+                        successes += 1;
+                    }
+                    assert_eq!(before, snapshot);
+                }
+            }
+        }
+        assert!(successes > 0);
+    }
+
+    #[test]
+    fn replay_is_not_prevented_by_this_model() {
+        let tx = Transfer {
+            from: "alice".into(),
+            to: "bob".into(),
+            amount: 30,
+        };
+        let once = apply(&initial(), &tx).unwrap();
+        let twice = apply(&once, &tx).unwrap();
+        assert_eq!(twice.balances["alice"], 40);
+        assert_eq!(twice.balances["bob"], 80);
     }
 }
 ```
 
 ### 実行方法
 
-`src/main.rs` にコードを貼り付け、末尾に `fn main() {}` を追加する。
+本書外の調査用ディレクトリでlibを作り、src/lib.rsへ配置する。空のmainを持つ実行例にしない。
 
 ```bash
-cargo new minimal-vprog-model
+cargo new minimal-vprog-model --lib --edition 2021
 cd minimal-vprog-model
-cargo test
+cargo test --offline
+cargo fmt --all -- --check
+cargo clippy --offline --all-targets -- -D warnings
 ```
+
+Rust/Cargo 1.90.0、edition 2021、外部依存なしの一時libで本文を検査した。総量のテストはu128を使い、テスト自体の加算overflowを避ける。
+
+from/toは架空のラベルで、アカウント残高の教材である。KaspaのUTXOや公式vProgの状態所有権は再現しない。同じ操作の再適用を防がず、操作順を変えると成否も変わることをテストしている。残高0のentryは残るため、経済的に等しい状態と辞書の同一性・rootの同一性も別に定義する。
 
 この実装が保証するのは、**この関数に渡された状態と操作についてのローカルな規則**だけである。署名、二重実行、順序、永続化、ZK証明、Kaspa L1へのコミットは未実装。
 
@@ -342,7 +514,11 @@ Constraint:
   new_state = F(old_state, operation, context)
   commit(old_state) == old_root
   commit(new_state) == new_root
+  commit(operation) == operation_hash
+  contextの順序・program/domain/versionを公開入力へ結び付ける
 ```
+
+検証側もold_rootが現在受理している状態と一致すること、sequence_refが正しい履歴/順序に属すること、正しいプログラム/検証鍵であることを照合する。公開入力に名前を並べるだけでは、回路がその値を拘束したことにはならない。
 
 **注意**：これは証明システム設計の一般的な擬似仕様であり、Kaspa vProgsの正式な回路仕様ではない。
 
@@ -375,6 +551,8 @@ Committed
 commit(A) && commit(B)  または  !commit(A) && !commit(B)
 ```
 
+これは同じ論理操作・整合した観測に対する安全性条件であり、全処理がいつか完了するという進行性は別に必要になる。単一関数がcloneを返す原子性だけでは、独立ノード/アプリ・永続化・外部作用の原子性は保証しない。
+
 実際のプロトコルでこれを満たすには、アプリをまたぐ共通の確定条件が必要となる。
 
 ## 34.16 セキュリティと脅威モデル
@@ -392,27 +570,37 @@ commit(A) && commit(B)  または  !commit(A) && !commit(B)
 
 ## 34.17 公開 `vprogs` Rustリポジトリの読み方
 
-公式の公開リポジトリは**初期開発・プロトタイプ**と明記され、概ね以下のレイヤーを説明している。
+READMEはbased computationのframeworkと記述する。リポジトリ名vprogsだけでFull vProgsの合成プロトコルが完成したとは判断しない。
 
-| レイヤー | 役割 |
-|---|---|
-| `core/` | 基本型・共通抽象 |
-| `storage/` | 永続化 |
-| `state/` | 状態・バージョン管理 |
-| `scheduling/` | 実行順序・依存関係の調整 |
-| `transaction-runtime/` | トランザクション実行の意味論 |
-| `node/` | 全体統合 |
+固定[README](https://github.com/kaspanet/vprogs/blob/f9b84a863a7c7c20586a9cf947550475e894f72e/README.md)は初期開発・プロトタイプと明記する。確認したHEADは冒頭の完全SHA、コミット日は2026-07-28。READMEの層構造に加え、現在の主要配置を照合した。
 
-READMEはtrait境界、バッチ処理、`StateDiff`、`Rollback`などを説明している。ただし、**実際の最新ソースを開いて確認するまで、型名・公開API・互換性を保証しない**。
+| 対象 | 固定版で読んだ入口 | 確認した役割 |
+|---|---|---|
+| core | core/types/src/lib.rs | ResourceId / AccessMetadata / SchedulerTransaction等 |
+| storage | storage/types/src/lib.rs | ReadStore / Store / WriteBatchの境界 |
+| state | state/version/src/lib.rs | StateVersionとバージョン付き状態 |
+| scheduling | scheduling/scheduler/src/lib.rs、rollback.rs | ScheduledBatch / StateDiff / Rollback等 |
+| transaction-runtime | transaction-runtime/program/src/lib.rs | ProgramTypeと実行用ELF bytes |
+| node | node/vm/src/lib.rs | 統合用VMのProcessor実装。ただし下記の未実装部分がある |
+| L1接続 | l1/bridge/src/lib.rs | チェーン追跡・再編成をschedulerへ接続する責務 |
+| zk / runner等 | Cargo.toml、zk/abi/src/lib.rs | 証明用ABI・実行/統合の追加領域 |
+
+[core/types](https://github.com/kaspanet/vprogs/blob/f9b84a863a7c7c20586a9cf947550475e894f72e/core/types/src/lib.rs)の実際の型名はSchedulerTransactionで、README中のTransactionという略記と区別する。Rollbackの型は存在するが、scheduling/schedulerのlib.rsはそれを公開再exportしていない。文書にある名前を外部からそのまま使えるAPIだと判断しない。
+
+[node/vm](https://github.com/kaspanet/vprogs/blob/f9b84a863a7c7c20586a9cf947550475e894f72e/node/vm/src/lib.rs)のprocess_transactionはこの固定版でtodo!を含み、receipt用image IDも0を返す。この経路を完成した汎用VMと扱わない。一方、別のrunner等の存在もあるため、この1か所からリポジトリ全体が動かないと一般化もしない。
+
+Cargo metadataを--offline --locked --no-depsで取得し、61パッケージを列挙できた。依存解決・ビルド/全テストの成功ではない。Cargo.tomlはKaspa依存をmasterのbranch指定で記述するが、固定Cargo.lockは `9fdbaf1b1886fb5742783d2da73c36239bd6f272` を指す。ソースとlockfileを一緒に固定し、本書基準版やSilverscriptの依存へ置き換えない。
 
 ```bash
-git clone https://github.com/kaspanet/vprogs.git
-cd vprogs
-git rev-parse HEAD
-cargo test
+# 本書とは別の調査用ディレクトリで取得する
+git clone https://github.com/kaspanet/vprogs.git vprogs-review
+git -C vprogs-review checkout --detach f9b84a863a7c7c20586a9cf947550475e894f72e
+git -C vprogs-review rev-parse HEAD
+cd vprogs-review
+cargo +1.94.0 metadata --offline --locked --no-deps --format-version 1
 ```
 
-ビルドに失敗したら、まずRust toolchain、READMEの要件、Cargo workspace構成を確認する。実行結果を記録し、リポジトリのコミットハッシュを原稿に残す。
+metadataの生JSONにはローカルパスが含まれるため、本書の公開物へ追加しない。公式テストの場所はcore/atomics/src/atomic_ring.rs、scheduling/scheduler/tests/e2e.rs、node/framework/tests/e2e.rs等を確認した。ファイルやテスト名の存在と、実行成功は別である。全体のcargo testを無条件に動かす前に、対象crate・必要なRocksDB/RISC Zero等のビルド環境・ネットワークやノードの使用を確認する。今回、公式テスト・実ノード・証明生成は実行していない。
 
 ## 34.18 テスト戦略
 
@@ -427,7 +615,7 @@ cargo test
 
 - 任意の送金列でも残高が負にならない。
 - 任意の入力順序で、**同じ確定順序**を与えた場合の結果は一致する。
-- 証明対象の公開入力が変われば、元の証明を再利用できない。
+- 証明対象の公開入力に結び付けた値が変われば、元の証明を受理しない（方式が許す同値表現や別の有効証明と区別する）。
 
 ### 統合テスト
 
@@ -497,14 +685,16 @@ Rustで学ぶ際は、**決定的な状態遷移 → 不変条件のテスト �
 
 - [Kaspa公式：Programmability Overview](https://docs.kaspa.org/programmability)
 - [Kaspa公式：Build / 開発者向け案内](https://kaspa.org/build)
-- [kaspanet/vprogs：公開Rustプロトタイプ](https://github.com/kaspanet/vprogs)
+- [kaspanet/vprogs：固定Rustプロトタイプ](https://github.com/kaspanet/vprogs/tree/f9b84a863a7c7c20586a9cf947550475e894f72e)
 - [Kaspa Research：vProg Computation DAGの形式モデル](https://research.kas.pa/t/zoom-in-a-formal-backbone-model-for-the-vprog-computation-dag/407)
 - [Kaspa Research：同期的合成可能なvProgsアーキテクチャ提案](https://research.kas.pa/t/concrete-proposal-for-a-synchronously-composable-verifiable-programs-architecture/387)
 - [Kaspa Research：Proof Stitchingの基本フレームワーク](https://research.kas.pa/t/a-basic-framework-for-proofs-stitching/323)
-- [kaspanet/research：vProgs Yellow Paper（草案）](https://github.com/kaspanet/research/blob/main/vProgs/vProgs_yellow_paper.pdf)
-- [KIP-16：New Transaction Opcodes for Verifiable Computation](https://github.com/kaspanet/kips/blob/master/kip-0016.md)
+- [kaspanet/research：vProgs Yellow Paper（草案）](https://github.com/kaspanet/research/blob/main/vProgs/vProgs_yellow_paper.pdf)（追加調査先。今回PDF本文は未照合）
+- [KIP-16：New Transaction Opcodes for Verifiable Computation](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0016.md)
 - [Kaspa KIPs一覧](https://github.com/kaspanet/kips)
 
 ---
 
-**次章：Chapter 35 — Building a Kaspa Application（Kaspaアプリケーションの構築）**
+次は[第35章 — Kaspaアプリケーションの構築](../part-06-contributing/chapter-35.md)。
+
+**確認範囲：** 公開案内/研究投稿・固定プロトタイプの主要箇所・独自状態遷移教材。全論文/証明、公式テスト全体、実アプリ間原子性・DA/退出・現行Mainnet動作は未検証。記録は `experiments/chapter-34-review-2026-11-01.md`。

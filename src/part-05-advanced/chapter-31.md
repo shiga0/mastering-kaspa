@@ -1,7 +1,9 @@
 # Chapter 31 — Covenants & Advanced Scripting（Covenantsと高度なスクリプティング）
 
-> **原稿ステータス：v0.1（技術レビュー前）**  
+> **目次順の本文レビュー：2026-11-01。主要な固定KIP/基準版ソースと独自教材を確認。全仕様・本番有効化の検証ではない。**
 > 本章は仕組みと設計の学習を目的とする。Kaspaで実際に利用できるOpcode、スクリプトバージョン、ネットワークでの有効化状況は、対象のノード実装・KIP・ネットワーク設定で必ず確認する。例示するCovenantは概念モデルであり、現在のKaspaメインネットでそのまま動くことを意味しない。
+
+基準版はv1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`、KIP文書は第30章と同じ `e4ae2332117b5cb68bd6188e065ef885b6d17939`。両者は同時点の仕様集合ではない。確認記録は `experiments/chapter-31-review-2026-11-01.md`。
 
 ## 31.1 この章で学ぶこと
 
@@ -17,7 +19,7 @@
 
 ## 31.2 前提：UTXOとScript
 
-UTXO（Unspent Transaction Output）は、まだ消費されていないトランザクション出力である。トランザクションは既存のUTXOを入力として参照し、検証に成功すると新しいUTXOを生成する。
+UTXO（Unspent Transaction Output）は、まだ消費されていないトランザクション出力である。トランザクションは既存のUTXOを入力として参照する。Script検証の成功に加え、他の妥当性検査を通り、対象の受理順序・状態で適用されて初めてUTXO集合が更新される。Mempoolへの受付を適用済みと扱わない。
 
 ```text
 UTXO A ─┐
@@ -43,7 +45,7 @@ Input + Witness/Signature
 
 ## 31.3 Covenantとは何か
 
-通常の署名条件は「**誰が消費できるか**」を中心に扱う。Covenantは、これに加えて「**消費した結果、どのような出力を作らなければならないか**」などを制約する考え方である。
+通常の署名条件は、ある鍵による承認と署名対象への拘束を検証する。「誰が消費できるか」はその要約であり、署名が出力等へコミットしないという意味ではない。Covenantは、これに加えて「**消費した結果、どのような出力を作らなければならないか**」などを制約する考え方である。
 
 | 観点 | 一般的な署名条件 | Covenantの考え方 |
 |---|---|---|
@@ -93,11 +95,13 @@ Vault UTXO
 
 ### 31.6.3 継続する制約（再帰的Covenant）
 
-「出力先にも同じ制約を持たせる」ことで、複数回の支出にわたりポリシーを継続する。制約の解除条件を誤ると、資金が永久に動かせなくなる可能性がある。
+「出力先にも同じ制約を持たせる」ことで、複数回の支出にわたりポリシーを継続する。出力スクリプトの一致だけでなく、そのバージョン、引き継ぐ状態/金額、制約のない出力へ逃がせる値も検査する。複数入力が同じ出力をそれぞれ継続先として数える設計では、集約後の保存条件も必要になる。制約の解除条件を誤ると、資金が永久に動かせなくなる可能性がある。
 
 ### 31.6.4 Vaultと回復経路
 
 通常の支出と緊急回復を分ける。回復鍵、時間条件、キャンセル経路、監視システムを一体として設計する必要がある。
+
+待機中に攻撃者も有効な支出を作れる設計では、回復トランザクションの作成だけで先に受理されるとは限らない。競合、監視・通知の欠落、手数料、時間条件の単位と再編成を脅威モデルへ含める。
 
 ## 31.7 Covenantとスマートコントラクトの違い
 
@@ -105,11 +109,11 @@ Vault UTXO
 UTXO + Script / Covenant
   └─ 入力の消費可否と出力の制約を検証
 
-アカウント型の汎用スマートコントラクト
+アカウント型スマートコントラクトの例
   └─ コントラクトが保持する状態に対して処理を実行
 ```
 
-両者ともプログラム可能なルールを表現できるが、状態の持ち方、実行モデル、並行処理、開発者体験が異なる。**Covenantがあれば任意のEVMアプリをそのまま実行できる、という意味ではない。**
+UTXO型でもコントラクトの状態を表現できるため、これはCovenantとスマートコントラクトを排他的な分類にする図ではない。両者ともプログラム可能なルールを表現できるが、状態の持ち方、実行モデル、並行処理、開発者体験が異なる。**Covenantがあれば任意のEVMアプリをそのまま実行できる、という意味ではない。**
 
 ## 31.8 トランザクションの内省（Introspection）
 
@@ -135,6 +139,8 @@ Covenantを設計するときは、次の点を区別する。
 2. スクリプトが参照できる内容
 3. コンセンサスが別途検証する内容
 
+署名対象はSIGHASHフラグ等で変わる。[第16章](../part-03-transactions/chapter-16.md)の基準版との対応を参照し、承認後に変えられる出力や手数料の範囲も確認する。
+
 これらを混同すると、「署名しているから出力先も固定される」といった誤った前提が生まれる。
 
 ## 31.10 状態遷移として捉える
@@ -151,7 +157,7 @@ State S1 (Pending)
 State S2 (Released)
 ```
 
-たとえば、各状態を特定のスクリプトやコミットメントを持つUTXOで表現する。遷移が成立するための条件を定義し、許可されていない遷移を拒否する。
+たとえば、各状態を特定のスクリプトやコミットメントを持つUTXOで表現する。状態名だけを永続的な重複キーとすると、再編成後の正当な再受理を捨て得るため、outpoint・遷移・観測履歴を区別する。遷移が成立するための条件を定義し、許可されていない遷移を拒否する。
 
 ## 31.11 不変条件（Invariants）
 
@@ -163,31 +169,28 @@ State S2 (Released)
 | 許可先の限定 | 指定外のスクリプトへ移動しない |
 | 制約の継承 | 継続すべき制約が次のUTXOにも残る |
 | 単一消費 | 同じUTXOを二重に消費できない |
-| 回復可能性 | 緊急経路が意図どおり存在する |
+| 回復可能性（進行性の要件） | 必要な鍵・データ・時間/資源条件の下で緊急経路を使える |
 | コスト上限 | 検証処理が許容範囲に収まる |
+
+回復可能性は「不正な遷移が起きない」という安全性の不変条件だけでは示せない。必要な鍵・データの保持と、競合・時間条件・ネットワーク環境を含む進行性も別に検証する。
 
 ## 31.12 DDDによる責務分離
 
 概念的な設計を、以下のように分離できる。
 
 ```text
-Application
-  ├── CreateSpendProposal
-  └── ValidateSpendProposal
-          │
+Application ───────────▶ Domain
+  ├─ CreateSpendProposal  ├─ Utxo / Transaction
+  └─ ValidateSpendProposal├─ SpendPolicy
+          │              └─ PolicyViolation
           ▼
-Domain
-  ├── Utxo
-  ├── Transaction
-  ├── SpendPolicy
-  └── PolicyViolation
-          │
-          ▼
-Infrastructure
-  ├── ScriptAdapter
-  ├── NodeRpcAdapter
-  └── StorageAdapter
+Ports / Interfaces ◀──── Infrastructure
+                         ├─ ScriptAdapter
+                         ├─ NodeRpcAdapter
+                         └─ StorageAdapter
 ```
+
+アプリケーションが使うインターフェースをアダプターが実装し、Domainの純粋な検査をRPCやDBへ依存させない構成を考える。図は支出時の実行順を示すものではない。
 
 `SpendPolicy` はアプリケーションのドメイン概念であり、**そのままオンチェーンで強制されるわけではない**。オンチェーンで保証するには、対応するスクリプトとコンセンサス規則が必要である。
 
@@ -205,7 +208,7 @@ pub struct Output {
 #[derive(Debug, Clone)]
 pub struct SpendProposal {
     pub input_amount: u64,
-    pub fee: u64,
+    pub expected_fee: u64,
     pub outputs: Vec<Output>,
 }
 
@@ -215,6 +218,8 @@ pub enum PolicyError {
     ValueOverflow,
     InsufficientInput,
     EmptyOutputs,
+    EmptyDestination,
+    UnexpectedFee,
 }
 
 pub fn validate_spend(
@@ -226,6 +231,9 @@ pub fn validate_spend(
     }
 
     for output in &proposal.outputs {
+        if output.destination.is_empty() {
+            return Err(PolicyError::EmptyDestination);
+        }
         if !allowed_destinations.contains(&output.destination.as_str()) {
             return Err(PolicyError::UnauthorizedDestination);
         }
@@ -237,11 +245,15 @@ pub fn validate_spend(
     })?;
 
     let required = total_outputs
-        .checked_add(proposal.fee)
+        .checked_add(proposal.expected_fee)
         .ok_or(PolicyError::ValueOverflow)?;
 
     if required > proposal.input_amount {
         return Err(PolicyError::InsufficientInput);
+    }
+
+    if required != proposal.input_amount {
+        return Err(PolicyError::UnexpectedFee);
     }
 
     Ok(())
@@ -254,7 +266,7 @@ mod tests {
     fn proposal(destination: &str, amount: u64) -> SpendProposal {
         SpendProposal {
             input_amount: 100,
-            fee: 1,
+            expected_fee: 1,
             outputs: vec![Output {
                 destination: destination.to_owned(),
                 amount,
@@ -295,25 +307,102 @@ mod tests {
             Err(PolicyError::ValueOverflow)
         );
     }
+
+    #[test]
+    fn rejects_implicit_excess_fee() {
+        assert_eq!(
+            validate_spend(&proposal("safe", 98), &["safe"]),
+            Err(PolicyError::UnexpectedFee)
+        );
+    }
+
+    #[test]
+    fn checks_every_output() {
+        let mut p = proposal("safe", 50);
+        p.outputs.push(Output {
+            destination: "attacker".into(),
+            amount: 49,
+        });
+        assert_eq!(
+            validate_spend(&p, &["safe"]),
+            Err(PolicyError::UnauthorizedDestination)
+        );
+    }
+
+    #[test]
+    fn accepts_multiple_outputs_and_their_reordering() {
+        let mut p = proposal("safe", 40);
+        p.outputs.push(Output {
+            destination: "recovery".into(),
+            amount: 59,
+        });
+        assert_eq!(validate_spend(&p, &["safe", "recovery"]), Ok(()));
+        p.outputs.reverse();
+        assert_eq!(validate_spend(&p, &["safe", "recovery"]), Ok(()));
+    }
+
+    #[test]
+    fn rejects_empty_output_set_and_empty_allowlist() {
+        let mut p = proposal("safe", 99);
+        assert_eq!(
+            validate_spend(&p, &[]),
+            Err(PolicyError::UnauthorizedDestination)
+        );
+        p.outputs.clear();
+        assert_eq!(
+            validate_spend(&p, &["safe"]),
+            Err(PolicyError::EmptyOutputs)
+        );
+    }
+
+    #[test]
+    fn empty_label_is_not_authorized_even_if_allowlisted() {
+        assert_eq!(
+            validate_spend(&proposal("", 99), &[""]),
+            Err(PolicyError::EmptyDestination)
+        );
+    }
+
+    #[test]
+    fn rejects_output_plus_expected_fee_overflow() {
+        let mut p = proposal("safe", u64::MAX);
+        p.input_amount = u64::MAX;
+        assert_eq!(
+            validate_spend(&p, &["safe"]),
+            Err(PolicyError::ValueOverflow)
+        );
+    }
+
+    #[test]
+    fn accepts_exact_balance_with_zero_expected_fee() {
+        let mut p = proposal("safe", 100);
+        p.expected_fee = 0;
+        assert_eq!(validate_spend(&p, &["safe"]), Ok(()));
+    }
 }
 ```
 
-この例では、入力額と出力額の差額を「未使用額」として許容する。実際のトランザクション検証では、その差額の意味、手数料、複数入力、ネットワーク固有の規則を別途扱う必要がある。
+expected_feeは呼出し側の予定手数料で、ノードへ送る独立したfeeフィールドではない。基準版の[UTXO文脈の検査](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/transaction_validator/tx_validation_in_utxo_context.rs)では、通常取引の入力総額−出力総額が手数料になる。残額を「未使用額」として許さず、出力合計+予定手数料=入力額を要求する。釣り銭を戻す場合も、許可先への出力として明示する。
+
+input_amountは正しいUTXOから解決・合計済みという仮定で、destinationは架空の識別ラベルである。実アドレスの検査、ScriptPublicKeyのversion/bytes比較、複数入力の存在・単一消費、署名・時間・再帰的な継続制約をこの関数は検証しない。u64全域の教材上の判定を、ネットワークの供給上限や最小手数料の検証とも扱わない。
 
 ### 実行方法
 
 ```bash
-cargo new covenant-lab --lib
+# 本書の外の調査用ディレクトリで実行
+cargo new covenant-lab --lib --edition 2021
 cd covenant-lab
 # 上記コードを src/lib.rs に配置
-cargo test
+cargo test --offline
+cargo fmt --all -- --check
+cargo clippy --offline --all-targets -- -D warnings
 ```
 
-**検証状態：** 掲載コードの実行結果は、この原稿の作成時点では未検証。読者が `cargo test` で再現することを前提とする。
+**検証状態：** Rust/Cargo 1.90.0、edition 2021、外部依存なしの一時Cargo libで本文を抜き出して検査した。結果は確認記録に示す。実Kaspa Scriptの実行試験ではない。
 
 ## 31.14 オフチェーンのポリシーとオンチェーンの強制を区別する
 
-上のRustプログラムをウォレットに組み込めば、通常の操作で誤送金を防ぐ助けになる。しかし、攻撃者が別のウォレットを使えば、その検証を迂回できる可能性がある。
+上のRustプログラムをウォレットに組み込めば、通常の操作で誤送金を防ぐ助けになる。署名する実トランザクションから再構築した情報で、署名前に同じポリシーを評価することも必要になる。しかし、攻撃者が別のウォレットを使えば、その検証を迂回できる可能性がある。
 
 ```text
 Wallet Policy ──> ウォレットを通した操作のみ制約
@@ -344,12 +433,12 @@ Covenantの検証では正常系だけでなく、攻撃者が意図的に境界
 
 ```text
 任意の提案 p について：
-validate_spend(p) == Ok
+validate_spend(p, 許可先) == Ok
   ⇒ すべての出力先が許可済み
-  ∧ 出力総額 + 手数料 ≤ 入力額
+  ∧ 出力総額 + 予定手数料 = 入力額
 ```
 
-この性質を `proptest` などで検証すると、手作業では思いつかない組み合わせを発見しやすい。なお、実際のScript検証器の性質を証明するには、対応する仕様と実装を対象にする必要がある。
+ここで量化するのは、正しい入力額を与えた独自教材の提案である。全入力を網羅する証明やproptestの実行は今回行っていない。この性質を `proptest` などで検証すると、手作業では思いつかない組み合わせを発見しやすい。なお、実際のScript検証器の性質を証明するには、対応する仕様と実装を対象にする必要がある。
 
 ## 31.17 C4モデルで見る構成
 
@@ -358,21 +447,27 @@ validate_spend(p) == Ok
    │
    ▼
 [Wallet / Application]
-   │  支出提案・UI上のポリシー確認
-   ▼
-[Transaction Builder]
-   │  署名対象の構築
-   ▼
-[Kaspa Node RPC]
-   │  トランザクションの伝播
-   ▼
-[Consensus Validation]
-   │  ネットワーク規則に従う検証
-   ▼
-[UTXO Set]
+   ├── 支出ポリシーの評価
+   └── Transaction Builder / Signer
+             │ 署名済み取引の送信
+             ▼
+       [Kaspa Node RPC]
+             │ 受付・検証要求
+             ▼
+       [Mining Manager / Mempool] ──▶ [P2P peers]
+             │ コンセンサス規則による検査
+             ▼
+       [Transaction Validator]
+
+[Block Processing / Virtual]
+             │ 受理順序・状態の評価を経た適用
+             ▼
+          [UTXO Set]
 ```
 
-Covenantのオンチェーン強制は、最後のコンセンサス検証において、**当該ネットワークで有効なスクリプト規則**として実現されている場合に限る。
+これは責務の概念図であり、全呼び出し順や単一の保存処理ではない。RPC/Mempool受付だけではUTXO集合は更新されない。[第17章](../part-03-transactions/chapter-17.md)と[第26章](../part-04-development/chapter-26.md)の検査・適用の区別を参照する。
+
+Covenantのオンチェーン強制は、コンセンサス検証において、**当該ネットワークで有効なスクリプト規則**として実現されている場合に限る。
 
 ## 31.18 Kaspaにおける実装状況の確認
 
@@ -386,13 +481,21 @@ Kaspaの高度なスクリプトを論じるときは、以下を必ず区別す
 
 **コードが存在するだけで、メインネットで利用可能とは限らない。**
 
-調査の出発点：
+### 固定文書と基準版の対応
 
-- [Kaspa KIPs](https://github.com/kaspanet/kips)
-- [rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
-- [Kaspa Wiki](https://wiki.kaspa.org/)
+| 対象 | 固定KIPの記述 | 基準版v1.0.1で照合した範囲 |
+|---|---|---|
+| [KIP-10](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0010.md) | 内省命令7種と8-byte数値処理、StatusはActive | OpTxInputCount/OutputCount/InputIndex、InputAmount/InputSpk/OutputAmount/OutputSpkはkip10_enabledで分岐 |
+| [KIP-17](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0017.md) | 内省・バイト列操作等を拡張しToccataの有効化条件を記述、StatusはActive | 例えばOpTxVersion/OpTxLockTimeは予約エラーを返す。この固定ソースを後期KIPの実装と同一視しない |
+| [KIP-20](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0020.md) | covenant_idで系譜を追う仕組み、StatusはActive | UtxoEntry/TransactionOutputには、この改訂のcovenant_id/covenantフィールドがない |
 
-リポジトリ内では、対象バージョンを固定して、スクリプト検証・Opcode定義・トランザクション検証・ネットワーク有効化条件に関連する実装を探す。ファイル名やAPIは変更される可能性があるため、本章では未確認の具体的なパスを断定しない。
+照合先は[Opcode定義](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/crypto/txscript/src/opcodes/mod.rs)、[UTXO文脈の検証](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/transaction_validator/tx_validation_in_utxo_context.rs)、[UTXO/出力型](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/tx.rs)。基準版のcheck_scriptsはblock_daa_scoreでcrescendo_activationを評価し、KIP-10の有効/無効をエンジンへ渡す。
+
+金額内省は値をsompi単位のScript数値へ変換し、出力/入力のSPK内省はバージョンを含むバイト列を返す。アドレス文字列との単純な文字列比較へ置き換えない。具体的な命令の存在だけで、任意のVault・再帰制約・回復経路が実現できるとは判断しない。
+
+KIP-20の系譜識別と出力のbinding検証があっても、期待する次状態・出力Script・継続条件は正しく設計したCovenant側で強制する必要がある。IDを付けるだけでアプリケーションの遷移が正しくなるわけではない。
+
+ここで確認したのは固定文書の主要説明と固定ソースの該当箇所である。全命令、スクリプト上限・数値エンコード、全ネットワークの有効化、SDK経由の利用は未検証。現在の本番対応は実装コミット・リリース・対象ネットワークを別に照合する。[第30章](chapter-30.md)の文書Statusの読み方も参照する。
 
 ## 31.19 KIPを読むときのチェックリスト
 
@@ -408,7 +511,7 @@ KIPを読む際には、次を記録する。
 | Tests | 仕様を確認するテストベクトル |
 | Implementation | 仕様に対応するコードとコミット |
 
-KIP番号と内容は変更・追加される可能性がある。**最新版の一次資料を参照し、ステータスを原稿に記録すること。**
+KIP番号だけではなく、本文URL・コミット・PR・調査日を記録する。文書の改訂とネットワークの有効化を別に調べ、将来の更新では固定版との差分を確認する。
 
 ## 31.20 CovenantとL2・ZKの関係
 
@@ -445,7 +548,7 @@ L2 / Off-chain
 
 Rustのサンプルを拡張し、以下を実装する。
 
-1. 複数の許可先を登録する。
+1. 複数の許可先を設定から登録・更新し、検証へ渡す。
 2. 1トランザクションあたりの最大支出額を設定する。
 3. 制約違反の理由をユーザーに表示する。
 4. `cargo test` で正常系・異常系を検証する。
@@ -502,12 +605,15 @@ Rustのサンプルを拡張し、以下を実装する。
 - Kaspaで利用可能な機能は、KIP・実装・有効化状況を突き合わせて確認する。
 - 安全な設計では、状態遷移、不変条件、攻撃モデル、回復経路を先に定義する。
 
-次章では、こうしたスクリプトの設計をより読みやすく記述するためのアプローチとして、**Silverscriptとスマートコントラクト設計**を扱う。
+[次章](chapter-32.md)では、こうしたスクリプトの設計をより読みやすく記述するためのアプローチとして、**Silverscriptとスマートコントラクト設計**を扱う。
 
 ## 参考資料
 
-- [Kaspa KIPs — GitHub](https://github.com/kaspanet/kips)
-- [rusty-kaspa — GitHub](https://github.com/kaspanet/rusty-kaspa)
-- [Kaspa Wiki](https://wiki.kaspa.org/)
+- [KIP-10 — 固定版](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0010.md)
+- [KIP-17 — 固定版](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0017.md)
+- [KIP-20 — 固定版](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0020.md)
+- [rusty-kaspa — 基準版のソース](https://github.com/kaspanet/rusty-kaspa/tree/fcd9c28f9b211b9872a0c90a8c94f79466ffb063)
 - [Bitcoin Developer Reference — Transactions](https://developer.bitcoin.org/reference/transactions.html)（比較資料。Kaspaの仕様ではない）
-- [Bitcoin Optech — Covenants topic](https://bitcoinops.org/en/topics/covenants/)（比較資料。Kaspaへの適用を意味しない）
+
+
+**確認範囲：** 本文・主要KIP/基準版の該当箇所と独自教材。実Vault、公式Script試験・暗号方式の監査、現行Mainnet/全SDKの有効化確認は行っていない。記録は `experiments/chapter-31-review-2026-11-01.md`。

@@ -1,7 +1,9 @@
 # Chapter 32 — Silverscript & Smart Contract Design（Silverscriptとスマートコントラクト設計）
 
-> **原稿ステータス：v0.1／技術レビュー前**  
-> 本章は設計の考え方と検証方法を中心に扱う。Silverscriptの文法、対応オペコード、コンパイラの仕様、Kaspaメインネットでの利用可能性は、使用する実装のバージョンと有効化状況を必ず確認する。以下の擬似コードは説明用であり、Silverscriptの実行可能なソースコードを保証するものではない。
+> **目次順の本文レビュー：2026-11-01。固定Silverscript文書/CLIの主要箇所と独自Rust教材を確認。CLIコンパイルも確認。実VM・本番利用は未検証。**
+> 本章は設計の考え方と検証方法を中心に扱う。Silverscriptの文法、対応オペコード、コンパイラの仕様、Kaspaメインネットでの利用可能性は、使用する実装のバージョンと有効化状況を必ず確認する。第32.10節は固定CLIでのコンパイル確認例であり、他の概念図や独自Rustモデルと検証範囲を分ける。
+
+Silverscriptの参照版はv1.0.0 / `3ed973335b59269293564805cc2c58a14595ec03`。本書のノード基準版v1.0.1とは別の資料である。確認記録は `experiments/chapter-32-review-2026-11-01.md`。
 
 ## 32.1 この章で学ぶこと
 
@@ -39,7 +41,7 @@
 
 ## 32.3 Silverscriptとは何か
 
-Silverscriptは、KaspaのスクリプティングやCovenantに関係する高水準コントラクト記述を考える際に重要なプロジェクト・技術領域である。
+Silverscriptは、CashScriptに着想を得た、Kaspa Scriptを生成する言語とコンパイラーである。[公式README](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/README.md)と[チュートリアル](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/docs/TUTORIAL.md)を起点にする。[v1.0.0のリリース](https://github.com/kaspanet/silverscript/releases/tag/v1.0.0)と、そのタグの完全SHAを確認した。
 
 ただし、技術書では次の事柄を混同しない。
 
@@ -62,7 +64,23 @@ Silverscriptは、KaspaのスクリプティングやCovenantに関係する高�
 4. 生成物が要求する命令と、対象ネットワークの有効なルールを照合する。
 5. Devnetなどの隔離環境で実行し、成功例と失敗例を確認する。
 
-本章では、未確認の構文やコマンドを「正式なSilverscriptの書き方」として提示しない。
+固定版の[Cargo.toml](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/Cargo.toml)はedition 2024 / rust-version 1.94.0を指定し、Kaspa関連依存を `a41a333b08848f41bf737b72592e463a6011b8ac` へ固定する。本書の基準ノードやRust教材の1.90.0へそのまま置き換えられる構成ではない。
+
+### 32.3.2 CLIの読み方と未実行の範囲
+
+以下は固定READMEと[silvercの実装](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/silverscript-lang/src/bin/silverc.rs)で確認した手順である。実際には第32.10節の教材ソースと公開点のconstructor引数を与えてコンパイルした。本書とは別の調査用ディレクトリで、要求版のRustと依存のビルド環境を整えて使う。
+
+```bash
+git clone --branch v1.0.0 --depth 1 https://github.com/kaspanet/silverscript.git silverscript-v1.0.0
+git -C silverscript-v1.0.0 rev-parse HEAD
+cd silverscript-v1.0.0
+# HEADを本章冒頭の完全SHAと照合する
+cargo +1.94.0 run --locked -p silverscript-lang --bin silverc -- contract.sil -o contract.json
+```
+
+contract.silは読者が用意するソースの仮名である。コンストラクター引数があれば、portable ABI値の配列を[引数JSONの仕様](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/docs/CONSTRUCTOR_ARGS.md)に従って用意し、--constructor-argsで渡す。CLIは既定でソースと同じ場所へJSONを書き、-oで保存先、-cで標準出力を選ぶ。--ast-onlyはASTの出力で、コンパイル/生成Scriptの妥当性確認とは別である。
+
+既定のstableはRust 1.90.0のまま、要求版の1.94.0を追加してcargo +1.94.0で呼び分ける。Rust教材の検査と、公式コンパイラー/VMの実行結果は確認記録で分けて示す。
 
 ---
 
@@ -156,10 +174,12 @@ SpendAttempt（支出試行）
 | ID | 不変条件 | 検証例 |
 |---|---|---|
 | INV-01 | 必要署名数を満たさない支出を拒否する | 署名1件では拒否 |
-| INV-02 | 同じ承認者を重複カウントしない | 同じ鍵の署名2件を拒否 |
+| INV-02 | 同じ鍵を複数の承認者として数えない | 設定・証拠の両方で重複を検査 |
 | INV-03 | 許可されていない承認者を数えない | 第三者の署名を無視／拒否 |
 | INV-04 | 署名が対象トランザクションに結び付く | 別トランザクションの署名を拒否 |
 | INV-05 | UTXOは二重に消費できない | 同一入力の競合を検証 |
+
+承認者の文字列IDが異なっても同じ公開鍵へ対応するなら、独立した2人の承認にはならない。署名前の鍵の同一性・正規化も定義する。
 
 INV-05は通常、個別のスクリプトだけでなく**UTXOモデルとコンセンサス検証**が担う。責務の所在を取り違えない。
 
@@ -183,23 +203,31 @@ INV-05は通常、個別のスクリプトだけでなく**UTXOモデルとコ�
                  Spent
 ```
 
-これは理解のための**概念的な状態図**であり、Kaspaノードの内部状態名を示すものではない。また、Mempoolでの受理とコンセンサス上の確定は異なる。
+これは理解のための**概念的な状態図**であり、Kaspaノードの内部状態名を示すものではない。また、Mempoolでの受付、Virtual等の文脈での受理・UTXO適用、アプリの確定ポリシーは別である。UTXOのRejectedは支出試行の結果であり、そのUTXO自体が常に消費済みになるわけではない。再編成で受理/未受理が変わる可能性もあり、状態名だけで履歴を永久に重複排除しない。
 
-## 32.10 支出条件を擬似コードで書く
+## 32.10 支出条件をSilverscriptで書く
 
-以下は**Silverscriptの正式な構文ではなく擬似コード**である。
+以下は固定v1.0.0のCLIでコンパイルを確認した学習用ソースである。署名を使った支出、実VM、資金投入は試していない。出力先や継続状態のCovenantを実装した例でもない。
 
 ```text
-contract TwoOfTwoVault(ownerA, ownerB) {
-    require(ownerA != ownerB)
+pragma silverscript ^0.1.0;
 
-    spend(transaction, signatureA, signatureB) {
-        require(verify(ownerA, transaction, signatureA))
-        require(verify(ownerB, transaction, signatureB))
-        allow()
+contract TwoOfTwoVault(pubkey ownerA, pubkey ownerB) {
+    entry spend(sig signatureA, sig signatureB) {
+        require(ownerA != ownerB);
+        require(checkSig(signatureA, ownerA));
+        require(checkSig(signatureB, ownerB));
     }
 }
 ```
+
+[COMPILER_VERSION](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/silverscript-lang/src/compiler/mod.rs)はこの版で0.1.0。リリース/パッケージのv1.0.0とは別で、生成JSONのcompiler_versionも0.1.0だった。^1.0.0のpragmaは拒否されたため、タグ名から言語pragmaを作らない。
+
+constructor引数のpubkeyは、[portable ABI](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/docs/CONSTRUCTOR_ARGS.md)ではkind: bytesの配列で表す。kind: pubkeyは拒否される。今回の試験では既知の公開点G/2Gをx-onlyの32-byte引数に使用した。鍵生成・署名・ネットワークへの送信は行っていない。
+
+2回のコンパイルでJSONは同一、デコードしたScriptは168 bytesだった。これは同一の実行環境での再実行一致であり、異なるマシン間の再現ビルドや意味の正しさを証明しない。JSON/Scriptのhashと引数は確認記録へ残した。--ast-onlyの出力と、不正文法・不正なABIのkind・未対応pragmaの拒否も確認した。
+
+公式の別例は[2_of_3_multisig.sil](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/silverscript-lang/tests/examples/2_of_3_multisig.sil)。そのcheckMultiSigと、以下の文字列IDを数えるRust教材は同一の受理条件を再現したものではない。
 
 この例から、実装前に少なくとも次の点を決める必要がある。
 
@@ -247,8 +275,10 @@ Parser → AST → Type Check → Compiler
 3. 生成されたスクリプトのハッシュ。
 4. コンパイルオプション。
 5. 実行したテストベクトルと結果。
+6. constructor引数・依存/lockfile・ビルド環境、対象VM/ネットワークと有効化条件。
+7. hash対象のバイト列とアルゴリズム（JSON全体か、デコードしたScriptか等）。
 
-これにより、後日「同じソースから同じ結果が生成されるか」を確認できる。
+ABIやconstructor引数、エントリー選択・引数のエンコードも支出条件に関わる。JSONファイルのhashと生成Scriptのhashを混同しない。記録は再現性の照合に必要だが、同じ出力が出ること自体は仕様の正しさを証明しない。
 
 ## 32.13 コンパイラを信頼しすぎない
 
@@ -271,27 +301,41 @@ use std::collections::HashSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VaultPolicy {
-    pub owners: HashSet<String>,
-    pub threshold: usize,
+    owners: HashSet<String>,
+    threshold: usize,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum PolicyError {
     InvalidThreshold,
+    InvalidOwner,
+    DuplicateOwner,
     NotEnoughApprovals,
     UnknownApprover,
     DuplicateApprover,
 }
 
 impl VaultPolicy {
-    pub fn new(owners: HashSet<String>, threshold: usize) -> Result<Self, PolicyError> {
-        if threshold == 0 || threshold > owners.len() {
+    pub fn new(owners: Vec<String>, threshold: usize) -> Result<Self, PolicyError> {
+        let mut unique = HashSet::new();
+        for owner in owners {
+            if owner.is_empty() {
+                return Err(PolicyError::InvalidOwner);
+            }
+            if !unique.insert(owner) {
+                return Err(PolicyError::DuplicateOwner);
+            }
+        }
+        if threshold == 0 || threshold > unique.len() {
             return Err(PolicyError::InvalidThreshold);
         }
-        Ok(Self { owners, threshold })
+        Ok(Self {
+            owners: unique,
+            threshold,
+        })
     }
 
-    // approvals は「暗号学的に検証済みの承認者ID」という仮定。
+    // approvals は同じ対象取引・署名条件に結び付く検証済みIDという仮定。
     // 本番では署名・署名対象・鍵を別途検証する必要がある。
     pub fn authorize(&self, approvals: &[String]) -> Result<(), PolicyError> {
         let mut seen = HashSet::new();
@@ -311,7 +355,9 @@ impl VaultPolicy {
 }
 ```
 
-**このモデルはコンセンサス互換でも、Kaspa Scriptの実装でもない。** `String`で表した承認者IDは公開鍵ではなく、暗号署名の検証は省略している。
+owners/thresholdを非公開にし、new以外から不正な設定を作れないようにする。入力はVecで受け、HashSetへ変換する前に重複を拒否する。最初から集合へ変換すると、重複した設定を黙って捨ててしまう。
+
+**このモデルはコンセンサス互換でも、Kaspa Scriptの実装でもない。** `String`で表した承認者IDは公開鍵ではなく、暗号署名の検証は省略している。同じ取引・SIGHASH/規則・鍵への結合と、IDから鍵への一意な対応を呼出し側へ仮定する。この関数だけではその前提の真偽を検査できない。閾値成立後も未知/重複IDを拒否する独自の厳格な方針であり、VMのcheckMultiSigと同じ受理条件だとは主張しない。
 
 ### 32.14.1 テスト
 
@@ -322,17 +368,17 @@ mod tests {
 
     fn policy() -> VaultPolicy {
         VaultPolicy::new(
-            ["alice".to_string(), "bob".to_string()].into_iter().collect(),
+            ["alice".to_string(), "bob".to_string()]
+                .into_iter()
+                .collect(),
             2,
-        ).unwrap()
+        )
+        .unwrap()
     }
 
     #[test]
     fn accepts_two_distinct_approvers() {
-        assert_eq!(
-            policy().authorize(&["alice".into(), "bob".into()]),
-            Ok(())
-        );
+        assert_eq!(policy().authorize(&["alice".into(), "bob".into()]), Ok(()));
     }
 
     #[test]
@@ -366,10 +412,75 @@ mod tests {
             Err(PolicyError::InvalidThreshold)
         );
     }
+
+    #[test]
+    fn rejects_zero_threshold_and_empty_owner_set() {
+        assert_eq!(
+            VaultPolicy::new(vec!["alice".into()], 0),
+            Err(PolicyError::InvalidThreshold)
+        );
+        assert_eq!(
+            VaultPolicy::new(vec![], 0),
+            Err(PolicyError::InvalidThreshold)
+        );
+        assert_eq!(
+            VaultPolicy::new(vec![], 1),
+            Err(PolicyError::InvalidThreshold)
+        );
+    }
+
+    #[test]
+    fn rejects_duplicate_and_empty_configured_owners() {
+        assert_eq!(
+            VaultPolicy::new(vec!["alice".into(), "alice".into()], 2),
+            Err(PolicyError::DuplicateOwner)
+        );
+        assert_eq!(
+            VaultPolicy::new(vec!["".into()], 1),
+            Err(PolicyError::InvalidOwner)
+        );
+    }
+
+    #[test]
+    fn rejects_empty_approvals() {
+        assert_eq!(
+            policy().authorize(&[]),
+            Err(PolicyError::NotEnoughApprovals)
+        );
+    }
+
+    #[test]
+    fn checks_extra_evidence_after_threshold_is_met() {
+        let p = VaultPolicy::new(vec!["alice".into(), "bob".into()], 1).unwrap();
+        assert_eq!(p.authorize(&["alice".into()]), Ok(()));
+        assert_eq!(
+            p.authorize(&["alice".into(), "mallory".into()]),
+            Err(PolicyError::UnknownApprover)
+        );
+        assert_eq!(
+            p.authorize(&["alice".into(), "alice".into()]),
+            Err(PolicyError::DuplicateApprover)
+        );
+    }
+
+    #[test]
+    fn any_two_of_three_are_authorized_in_either_order() {
+        let p = VaultPolicy::new(vec!["alice".into(), "bob".into(), "carol".into()], 2).unwrap();
+        for pair in [["alice", "bob"], ["alice", "carol"], ["bob", "carol"]] {
+            assert_eq!(p.authorize(&pair.map(String::from)), Ok(()));
+            assert_eq!(p.authorize(&[pair[1].into(), pair[0].into()]), Ok(()));
+        }
+    }
 }
 ```
 
-実行するには、`cargo new vault-policy --lib` でプロジェクトを作り、`src/lib.rs`に上記コードとテストを貼り付けて`cargo test`を実行する。
+本書外の調査用ディレクトリで `cargo new vault-policy --lib --edition 2021` を作り、src/lib.rsへ上記2断片を続けて配置する。Rust/Cargo 1.90.0、外部依存なしで検査した独自教材であり、Silverscriptの要求版とは別である。
+
+```bash
+cargo test --offline
+cargo fmt --all -- --check
+cargo clippy --offline --all-targets -- -D warnings
+```
 
 ## 32.15 参照モデルから実コントラクトへ
 
@@ -385,7 +496,7 @@ Rustの参照モデルと実際のコントラクトの間にはギャップが�
                             Devnetで統合テスト
 ```
 
-両者に同じテストベクトルを与え、判定が一致するか比較する。これは**差分テスト**の基本形である。ただし、実コントラクトが表現できない条件を参照モデルに含めた場合、比較以前に設計を見直す必要がある。
+検証済みIDだけを受ける参照モデルと、署名/取引を評価するVMでは入力領域が異なる。署名検証結果からIDへの写像を定義したうえで、両者に対応するテストベクトルを与え、判定が一致するか比較する。これは**差分テスト**の基本形である。ただし、実コントラクトが表現できない条件を参照モデルに含めた場合、比較以前に設計を見直す必要がある。
 
 ## 32.16 テストベクトルを設計する
 
@@ -397,7 +508,7 @@ Rustの参照モデルと実際のコントラクトの間にはギャップが�
 | 不明 | A, X | 拒否 | 権限外の承認者 |
 | 署名不正 | Aの無効署名, B | 拒否 | 暗号学的検証 |
 | 署名再利用 | 別トランザクション向け署名 | 拒否 | 署名対象の結合 |
-| 競合支出 | 同じUTXOを二度支出 | 片方のみ受理 | UTXOの整合性 |
+| 競合支出 | 同じUTXOを二度支出 | 同じ受理状態で両方を適用しない | UTXOの整合性 |
 
 最後の3ケースは、先ほどの簡略Rustモデルだけでは検証できない。**何をテストできて、何をまだテストしていないか**を明示する。
 
@@ -410,27 +521,32 @@ Rustの参照モデルと実際のコントラクトの間にはギャップが�
 - 未登録の承認者を追加しても、権限は得られない。
 - 承認者の順序が変わっても、妥当性は変わらない（仕様が順序非依存の場合）。
 
+有効/無効の結果と最初に返るエラー理由も区別する。未知と重複を同時に含む場合、入力順で最初の理由が変わり得る。この回の有限テストを全入力の証明やproperty-based試験の実行とは扱わない。
+
 Rustでは`proptest`などを利用できるが、生成データの意味と前提条件を明確にする必要がある。
 
 ## 32.18 C4モデルで責務を可視化する
 
 ```text
-[User]
-   │
-   ▼
-[Wallet / Frontend]
-   │ 署名要求
-   ▼
-[Transaction Builder] ─────→ [Silverscript Compiler]
-   │                                │
-   │ トランザクション                │ スクリプト
-   └────────────────┬───────────────┘
-                    ▼
-               [Kaspa Node]
-                    │
-                    ▼
-             [Consensus / VM]
+[Contract Source + Constructor Args]
+                  │
+                  ▼
+        [Silverscript Compiler]
+                  │
+                  ▼
+        [Artifact / ABI / Script]
+                  │ 生成物を参照
+                  ▼
+[Wallet / Builder / Signer] ◀── [User]
+                  │ 署名済みトランザクション
+                  ▼
+             [Kaspa Node]
+                  │
+                  ▼
+           [Validation / VM]
 ```
+
+これは責務の概念図であり、全処理の実行順や単一の更新を示すものではない。JSON成果物全体をノードへ送るのではなく、対象形式・ABIに従って支出条件/証拠を取引へ組み込む。
 
 コンパイラは通常、トランザクションがネットワークで検証されるたびに呼ばれるわけではない。**コンパイル時の処理と検証時の処理**を区別する。
 
@@ -513,9 +629,9 @@ Rustでは`proptest`などを利用できるが、生成データの意味と前
 
 | 確認項目 | 参照コミット／資料 | 判定 | 証拠 |
 |---|---|---|---|
-| Silverscriptコンパイラの利用方法 | 未記入 | 未確認 | README・テスト |
-| 対応するScript命令 | 未記入 | 未確認 | 生成物・VM実装 |
-| Covenant関連機能の有効化 | 未記入 | 未確認 | KIP・リリース情報 |
+| Silverscriptコンパイラの利用方法 | v1.0.0 / 3ed9733 | ビルド・CLIコンパイルを確認 | 第32.10節、確認記録 |
+| 対応するScript命令 | 依存はa41a333、本書の基準版はfcd9c28 | 生成物との対応は未確認 | 依存版が違うため基準版へ自動適用しない |
+| Covenant関連機能の有効化 | 第30・31章の固定KIP/ソース比較 | 本番は未確認 | 文書Statusとネットワークの状態を分ける |
 | Devnetでの実行 | 未記入 | 未実施 | ログ・TX ID |
 | メインネットでの実行 | 未記入 | 未確認 | 公式仕様・実測 |
 
@@ -574,15 +690,18 @@ Script VM・コンセンサスでの検証
 
 Silverscriptは、その過程の「高水準の記述とコンパイル」を考えるうえで重要な題材となる。しかし、最終的な安全性は**ネットワークで実際に強制される条件**によって決まる。
 
-次章では、L2・ブリッジ・ゼロ知識証明を扱い、L1のスクリプトだけで完結しない機能をどのように設計・検証するかを考える。
+[次章](chapter-33.md)では、L2・ブリッジ・ゼロ知識証明を扱い、L1のスクリプトだけで完結しない機能をどのように設計・検証するかを考える。
 
 ## 参考資料
 
-- [Kaspa公式Wiki](https://wiki.kaspa.org/)
+- [Silverscript v1.0.0 — README](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/README.md)
+- [Silverscript v1.0.0 — Tutorial](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/docs/TUTORIAL.md)
+- [固定版の依存とMSRV](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/Cargo.toml)
+- [言語バージョン定数](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/silverscript-lang/src/compiler/mod.rs)
+- [CLI実装 silverc](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/silverscript-lang/src/bin/silverc.rs)
 - [rusty-kaspa — Kaspa Rustノード実装](https://github.com/kaspanet/rusty-kaspa)
 - [Kaspa Improvement Proposals（KIPs）](https://github.com/kaspanet/kips)
 - [Bitcoin Developer Guide — Transactions](https://developer.bitcoin.org/devguide/transactions.html)
-- [Bitcoin Optech — Covenants](https://bitcoinops.org/en/topics/covenants/)
 - [Rust公式ドキュメント](https://doc.rust-lang.org/book/)
 
-> **編集メモ**：正式版では、Silverscriptの公式リポジトリ・バージョン・実行可能な構文例を一次資料と実機テストに基づいて追加する。現段階では架空のコマンドや未検証の有効化状況を記載しない。
+**確認範囲：** 固定公式文書・CLIの主要箇所と独自Rust教材。公式CLIのビルド・2-of-2教材コンパイル・生成JSONの再実行一致と拒否ケースまで確認。生成ScriptのVM試験・Devnet/本番利用・暗号方式の全面照合は未実施。記録は `experiments/chapter-32-review-2026-11-01.md`。

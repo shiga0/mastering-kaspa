@@ -1,7 +1,9 @@
 # Chapter 29 — GHOSTDAG Security & DAGKnight（GHOSTDAGのセキュリティとDAGKnight）
 
-> **原稿ステータス：v0.1（技術レビュー前）**  
+> **目次順の本文レビュー：2026-11-01。公開要旨・書誌、固定版の主要規則、確率教材を確認。安全性証明の全面照合ではない。**\
 > 本章は研究・実装理解のための解説であり、特定の攻撃に対する無条件の安全性や、DAGKnightの本番導入状況を保証するものではない。プロトコルの採用状況とパラメータは、参照時点のKIP・公式実装・リリース情報で確認する。
+
+確認記録は `experiments/chapter-29-review-2026-11-01.md`。研究上の主張、基準版v1.0.1の実装、現行ネットワークでの有効化を分ける。
 
 ## 29.1 本章の目的
 
@@ -41,7 +43,7 @@
 
 | 性質 | 問い | 例 |
 |---|---|---|
-| Safety（安全性） | 正常ノードが互いに矛盾する確定結果を採用しないか | 二重支払いの防止 |
+| Safety（安全性） | 指定した前提・確定規則で矛盾した結果を採用する確率をどう抑えるか | 二重支払いの防止 |
 | Liveness（活性） | 正常なトランザクションが十分な条件下で処理され続けるか | 検閲や停止への耐性 |
 | Convergence（収束） | ネットワークが回復した後、正常ノードが共通の見方に近づくか | 一時的なDAG差分の解消 |
 
@@ -51,7 +53,7 @@
 
 - 無効なブロックが、検証を経ずに合意状態へ組み込まれない。
 - 同じUTXOが同一の受理済み状態で二度消費されない。
-- 合意順序が同じなら、決定的な状態遷移は同じ結果を返す。
+- 初期UTXO・有効化条件・適用順等を固定した同じ入力なら、決定的な状態評価は同じ結果を返す。
 - 再編成時にも、UTXO状態と合意順序の整合性が維持される。
 
 これらは**実装上の検証対象**であり、単にGHOSTDAGを採用するだけで自動的に保証されるわけではない。
@@ -85,7 +87,7 @@ E[N] = \lambda \Delta
 P(N \ge 1) = 1 - e^{-\lambda\Delta}
 \]
 
-となる。これは**ネットワーク競合の直感を得るためのモデル**であり、Kaspaの実際の安全性を計算する公式ではない。
+となる。λは仮定した一定の生成率、Δは固定の観測窓である。追加生成数はAnticoneサイズ、blue/red、攻撃成功確率そのものではない。これは**ネットワーク競合の直感を得るためのモデル**であり、Kaspaの実際の安全性を計算する公式ではない。
 
 例えば `λ=1 block/s`、`Δ=0.2s` と仮定すると、期待生成数は `0.2`、追加ブロックが少なくとも1個生成される確率は約18.1%となる。
 
@@ -111,9 +113,9 @@ GHOSTDAGは、BlockDAG上で選択された親（selected parent）を基準に�
 
 用語の整理：
 
-- **Past**：対象ブロックから親参照をたどって到達できるブロック集合。
-- **Future**：対象ブロックを祖先として参照するブロック集合。
-- **Anticone**：対象ブロックのPastにもFutureにも属さない、比較不能なブロック集合。
+- **Past**：対象ブロックから親参照をたどる、自分自身を除いた祖先集合。
+- **Future**：対象ブロックを祖先として参照する、自分自身を除いた子孫集合。
+- **Anticone**：対象と異なる既知のブロックのうち、PastにもFutureにも属さない集合。集合内の要素同士が互いに無関係とは限らない。
 - **Selected-parent chain**：各ブロックの選択親をたどる系列。
 - **blue / red**：GHOSTDAGの規則に基づく分類。**有効／無効の分類ではない**。
 
@@ -123,6 +125,8 @@ GHOSTDAGの `k` は、並行性を扱うための重要なパラメータであ�
 
 ただし、**「k個までの並行ブロックを無条件に受理する」や「kが大きいほど常に安全」という理解は不正確**。実際のblue集合の判定は、GHOSTDAGの具体的な規則に従う。
 
+[第12章](../part-02-consensus/chapter-12.md)のk-clusterは、集合Sの各bについてAnticone(b)とSの共通部分の件数がk以下という条件である。集合Sの総数をk以下に制限する条件ではない。分類は評価文脈に依存し、blueが常に正直、redが常に攻撃者という判定でもない。
+
 `k` に関する設計上の問い：
 
 1. 通常のネットワーク遅延で生じる並行性をどこまで吸収するか。
@@ -130,7 +134,7 @@ GHOSTDAGの `k` は、並行性を扱うための重要なパラメータであ�
 3. 高速なブロック生成と保守的な選択規則をどう両立させるか。
 4. ノードの処理負荷と状態管理コストにどう影響するか。
 
-**実際の値・ネットワーク別設定・変更履歴は、対象バージョンの公式実装を確認する。**
+**実際の値・ネットワーク別設定・変更履歴は、対象バージョンの公式実装を確認する。** 基準版v1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`の[GhostdagManager](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs)はselected parentのDAA scoreからForkedParamのkを取得する。リリースを通じて一つの固定値という意味ではなく、DAGKnightの適応アルゴリズムを実装したという意味でもない。
 
 ## 29.8 blue / redの誤解を避ける
 
@@ -199,14 +203,18 @@ Application acceptance policy satisfied
 
 ## 29.11 DAGKnightは何を改善しようとしているか
 
-DAGKnightは、GHOSTDAG系の研究を発展させ、**ネットワーク遅延に対する固定的な前提への依存を減らし、観測されたネットワーク状況に適応する**ことを目指すコンセンサス研究である。
+DAGKnightは、PHANTOM系のBlockDAG研究を発展させ、**ネットワーク遅延に対する固定的な前提への依存を減らし、観測されたネットワーク状況に適応する**ことを目指すコンセンサス研究である。
+
+[The DAG KNIGHT Protocol（ePrint 2022/1494）](https://eprint.iacr.org/2022/1494)の公開要旨は、プロトコル内に事前の遅延上限を持たない一方、クライアントが攻撃者による最近の最大遅延の上限をローカルに指定する条件を述べている。「parameterless」は、利用者側の確認条件も含めてあらゆる仮定・パラメータが不要という意味ではない。
+
+本章では公開要旨と書誌の範囲を確認し、定理・証明・全擬似コードを全面照合していない。ハッシュレート耐性の主張もそのモデルと条件の下で読み、「過半数未満ならあらゆる分断やEclipseでも安全」へ一般化しない。
 
 ここでの「適応」は、単純に「ブロック生成速度を自動で上げる」という意味ではない。合意の判断において、遅延・並行性・攻撃者に関する仮定をどう扱うかが中心となる。
 
 | 観点 | GHOSTDAG | DAGKnightの研究上の方向性 |
 |---|---|---|
 | 並行ブロック | DAGとして扱う | DAGとして扱う |
-| 合意規則 | `k` に依存する選択規則を用いる | 固定的な遅延前提への依存を減らすことを目指す |
+| 合意規則 | `k` に依存する選択規則を用いる | プロトコル内の事前遅延上限を不要とする主張。クライアント側の条件は別途確認 |
 | ネットワーク条件 | 想定条件・パラメータの設定が重要 | 観測された条件への適応が主要な研究課題 |
 | 実装上の課題 | 選択・順序・状態更新の決定性 | 追加の判定ロジック、証明と実装の整合性 |
 | 導入状況 | 対象ネットワークとバージョンを確認 | **提案・研究と本番稼働を区別して確認** |
@@ -284,7 +292,7 @@ Chapter 25〜28で扱ったコード調査方法を、セキュリティの観�
 - 再編成時にUTXO・インデックス・通知が整合するか。
 - 大量のブロック・極端なDAG形状で計算量がどう増えるか。
 
-> 実際のモジュール名や関数名はバージョンによって変わり得るため、特定のパスを断定せず、チェックアウトしたリポジトリ内で確認する。
+> この図は責務の比較であり、実行順序ではない。基準版ではGHOSTDAGはヘッダー処理中に計算され、ヘッダー保存とVirtual更新も別のバッチになる。[第26章](../part-04-development/chapter-26.md)の固定ソースと照合範囲を参照する。
 
 ## 29.15 最小実験：遅延中にブロックが増える確率
 
@@ -292,57 +300,112 @@ Chapter 25〜28で扱ったコード調査方法を、セキュリティの観�
 
 ### 29.15.1 Rustプロジェクト
 
+本書のリポジトリとは別の作業用ディレクトリで作成する。外部依存は不要である。
+
 ```bash
-cargo new dag-delay-experiment
+cargo new --bin --edition 2021 dag-delay-experiment
 cd dag-delay-experiment
 ```
 
 `src/main.rs`：
 
 ```rust
-fn probability_at_least_one(lambda: f64, delay_seconds: f64) -> f64 {
-    assert!(lambda >= 0.0);
-    assert!(delay_seconds >= 0.0);
-    1.0 - (-lambda * delay_seconds).exp()
+#[derive(Debug, PartialEq, Eq)]
+enum ProbabilityError {
+    InvalidInput,
+    MeanOverflow,
 }
 
-fn main() {
+fn probability_at_least_one(lambda: f64, delay_seconds: f64) -> Result<f64, ProbabilityError> {
+    if !lambda.is_finite() || !delay_seconds.is_finite() || lambda < 0.0 || delay_seconds < 0.0 {
+        return Err(ProbabilityError::InvalidInput);
+    }
+    let mean = lambda * delay_seconds;
+    if !mean.is_finite() {
+        return Err(ProbabilityError::MeanOverflow);
+    }
+    Ok(-(-mean).exp_m1())
+}
+
+fn main() -> Result<(), ProbabilityError> {
     let rates = [0.1, 1.0, 10.0];
     let delays = [0.05, 0.2, 1.0];
-
     println!("rate(block/s), delay(s), P(N>=1)");
     for rate in rates {
         for delay in delays {
-            println!("{rate:.2}, {delay:.2}, {:.4}",
-                probability_at_least_one(rate, delay));
+            println!(
+                "{rate:.2}, {delay:.2}, {:.4}",
+                probability_at_least_one(rate, delay)?
+            );
         }
     }
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
     fn zero_rate_means_zero_probability() {
-        assert_eq!(probability_at_least_one(0.0, 1.0), 0.0);
+        assert_eq!(probability_at_least_one(0.0, 1.0), Ok(0.0));
     }
-
     #[test]
     fn zero_delay_means_zero_probability() {
-        assert_eq!(probability_at_least_one(10.0, 0.0), 0.0);
+        assert_eq!(probability_at_least_one(f64::MAX, 0.0), Ok(0.0));
     }
-
     #[test]
     fn probability_increases_with_rate() {
-        assert!(probability_at_least_one(10.0, 0.2)
-            > probability_at_least_one(1.0, 0.2));
+        assert!(
+            probability_at_least_one(10.0, 0.2).unwrap()
+                > probability_at_least_one(1.0, 0.2).unwrap()
+        );
     }
-
     #[test]
     fn probability_increases_with_delay() {
-        assert!(probability_at_least_one(1.0, 1.0)
-            > probability_at_least_one(1.0, 0.1));
+        assert!(
+            probability_at_least_one(1.0, 1.0).unwrap()
+                > probability_at_least_one(1.0, 0.1).unwrap()
+        );
+    }
+    #[test]
+    fn matches_independent_decimal_reference() {
+        let expected = 0.18126924692201815;
+        assert!((probability_at_least_one(1.0, 0.2).unwrap() - expected).abs() < 1e-15);
+    }
+    #[test]
+    fn tiny_mean_does_not_cancel_to_zero() {
+        let actual = probability_at_least_one(1e-20, 1.0).unwrap();
+        assert!(actual > 0.0);
+        assert!((actual / 1e-20 - 1.0).abs() < 1e-14);
+    }
+    #[test]
+    fn rejects_invalid_inputs_on_either_side() {
+        for value in [-1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert_eq!(
+                probability_at_least_one(value, 1.0),
+                Err(ProbabilityError::InvalidInput)
+            );
+            assert_eq!(
+                probability_at_least_one(1.0, value),
+                Err(ProbabilityError::InvalidInput)
+            );
+        }
+    }
+    #[test]
+    fn rejects_overflow_of_finite_inputs() {
+        assert_eq!(
+            probability_at_least_one(f64::MAX, 2.0),
+            Err(ProbabilityError::MeanOverflow)
+        );
+    }
+    #[test]
+    fn finite_grid_is_bounded_and_large_mean_saturates() {
+        for rate in [0.0, 0.1, 1.0, 10.0] {
+            for delay in [0.0, 0.05, 0.2, 1.0] {
+                assert!((0.0..=1.0).contains(&probability_at_least_one(rate, delay).unwrap()));
+            }
+        }
+        assert_eq!(probability_at_least_one(1_000.0, 1.0), Ok(1.0));
     }
 }
 ```
@@ -352,11 +415,19 @@ cargo test
 cargo run
 ```
 
+これは解析式の評価であり、乱数を用いるネットワークシミュレーションではない。exp_m1を使い、微小なλΔで1−exp(−λΔ)の引き算が0へ丸められる問題を避ける。負値・NaN・無限大を拒否し、有限な入力同士でも積がoverflowしたらErrにする。正の極小積のunderflow等、浮動小数点演算の全誤差を解消したわけではない。
+
+Rust/Cargo 1.90.0で本文を抽出し、9テスト・main・書式・Clippyを確認した。λ=1、Δ=0.2の値はPython Decimalの60桁計算とも照合した。
+
 ### 29.15.2 観察と限界
+
+表示の1.0000は四捨五入であり、確実に発生する証拠ではない。大きな平均ではf64自体が1.0へ丸められることもあるが、有限の正の平均に対する数学上の確率は1未満である。
 
 期待される観察は、生成率と遅延が大きいほど、伝播中に別ブロックが生じやすくなること。ただし、ここでは伝播時間を固定値とし、ネットワークトポロジー、攻撃者、ブロックサイズ、相関、ノードの検証時間を省略している。
 
-**次の実験では**遅延を確率分布に変更し、ノードごとの観測DAGの違いを記録する。
+遅延が分布を持つ場合、平均遅延を一度この式へ代入することと、遅延ごとの確率を計算して平均することは一般に異なる。
+
+**発展課題では**遅延を確率分布に変更し、ノードごとの観測DAGの違いを記録する。
 
 ## 29.16 発展実験：攻撃者を含むDAGシミュレーター
 
@@ -431,21 +502,22 @@ Received → Validated → Indexed in DAG
                      Application notified
 ```
 
-通知と永続化の順序、再編成時の再通知・取り消しも設計対象となる。
+この状態図も設計用の概念図である。単一の原子的処理や、通知が必ずVirtual更新完了を意味するという仕様ではない。通知と永続化の順序、再編成時の再通知・取り消しもAPI・索引ごとに調べる。
 
 ## 29.19 `rusty-kaspa`を調査する手順
 
 対象のコミットを固定して、証拠を残す。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+# 第1章の固定版checkoutの親ディレクトリから実行
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-rg -n 'ghostdag|selected.parent|blue.score|blue.work' --glob '*.rs' .
-rg -n 'virtual.state|reorg|pruning|difficulty' --glob '*.rs' .
+git status --short
+grep -n -E 'ForkedParam|let k =|check_blue_candidate' consensus/src/processes/ghostdag/protocol.rs
+grep -n -E 'commit_virtual_state|pick_virtual_parents' consensus/src/pipeline/virtual_processor/processor.rs
 ```
 
-検索結果を起点に、次を追跡する。
+未取得なら[第1章](../part-01-foundations/chapter-01.md)を参照し、HEADを29.7の完全SHAと照合する。検索結果を起点に、次を追跡する。
 
 1. 入力データの型と前提条件。
 2. ブロック検証からDAG登録までの呼び出し関係。
@@ -458,7 +530,7 @@ rg -n 'virtual.state|reorg|pruning|difficulty' --glob '*.rs' .
 
 ## 29.20 DAGKnightの現状確認チェックリスト
 
-本章執筆時点でのDAGKnightの採用状況を、ここでは断定しない。読者は次を区別して確認する。
+2026-11-01の本レビューは研究の公開要旨と固定版GHOSTDAGの主要規則を確認した範囲であり、現行MainnetでのDAGKnight有効化の有無を判定する調査ではない。読者は次を区別して確認する。
 
 - 論文が公開されているか。
 - 対応するKIPや仕様が存在するか。
@@ -478,12 +550,12 @@ rg -n 'virtual.state|reorg|pruning|difficulty' --glob '*.rs' .
 **改善例**：
 
 1. `submitted`：送信を受け付けた。
-2. `observed`：ネットワーク上で観測した。
+2. `observed`：接続ノードで存在を観測した。
 3. `accepted_by_consensus`：ノードの合意状態で受理を観測した。
 4. `accepted_by_policy`：アプリ独自の確認ポリシーを満たした。
 5. `reversed`：再編成などで状態が変わった。
 
-これらをイベントとして記録し、重複通知や再編成に対して冪等に処理する。実際のRPCイベント名・確定性の意味は使用バージョンで確認する。
+これらはアプリ独自の状態で、必ず一方向に進むものではない。再編成後の再受理も考慮し、Outpointの識別と状態更新の履歴を分ける。状態名を含む一意キーを永久に処理済み扱いするだけでは、正当な再受理まで捨ててしまう（[第22章](../part-04-development/chapter-22.md)）。実際のRPCイベント名・確定性の意味は使用バージョンで確認する。
 
 ## 29.22 よくある誤解
 
@@ -543,15 +615,15 @@ DAGKnightについて「論文の主張」「KIPの要件」「実装済み」�
 - **論文、KIP、実装、ネットワーク有効化を混同しない。**
 - **Rust実装では不変条件・決定性・再編成・障害復旧を検証する。**
 
-次章 **Chapter 30 — Kaspa Improvement Proposals（Kaspa改善提案・KIP）** では、研究成果や変更案がどのように仕様・実装・ネットワーク運用へ結びつくかを扱う。
+[次章 Chapter 30 — Kaspa Improvement Proposals（Kaspa改善提案・KIP）](chapter-30.md) では、研究成果や変更案がどのように仕様・実装・ネットワーク運用へ結びつくかを扱う。
 
 ## 29.26 参考資料・一次資料
 
 - Kaspa公式Wiki：<https://wiki.kaspa.org/>
 - `rusty-kaspa`公式リポジトリ：<https://github.com/kaspanet/rusty-kaspa>
 - Kaspa Improvement Proposals：<https://github.com/kaspanet/kips>
-- Yonatan Sompolinsky, Yoad Lewenberg, Aviv Zohar, **SPECTRE: Serialization of Proof-of-work Events, Confirming Transactions via Recursive Elections**：<https://eprint.iacr.org/2016/1159>
-- Yonatan Sompolinsky, Yoad Lewenberg, Aviv Zohar, **PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus**：<https://eprint.iacr.org/2018/104>
-- **DAGKnight: A Parameterless Generalization of Nakamoto Consensus**（原著論文はタイトル・著者・版を確認して参照すること）
+- Yonatan Sompolinsky, Yoad Lewenberg, Aviv Zohar, **SPECTRE: A Fast and Scalable Cryptocurrency Protocol**：<https://eprint.iacr.org/2016/1159>
+- Yonatan Sompolinsky, Shai Wyborski, Aviv Zohar, **PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus**：<https://eprint.iacr.org/2018/104>
+- Yonatan Sompolinsky, Michael Sutton, [**The DAG KNIGHT Protocol: A Parameterless Generalization of Nakamoto Consensus**](https://eprint.iacr.org/2022/1494)。公開ページの最終改訂は2023-02-24。
 
-> **出典確認メモ：** 上記リンクは一次資料の調査入口。論文の改訂版、KIPの最新状態、`rusty-kaspa`の現行実装との差分は、技術レビュー時に必ず照合する。
+> **確認範囲：** 公開要旨・書誌・固定版の主要規則と数値教材を確認した。定理・証明の全面照合、DAGKnight実装/本番有効化、攻撃シミュレーター、実攻撃・安全性の実証は行っていない。記録は `experiments/chapter-29-review-2026-11-01.md`。

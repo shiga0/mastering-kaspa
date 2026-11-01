@@ -40,7 +40,13 @@
 | 30 | [第26章](part-04-development/chapter-26.md) | 本文・GHOSTDAG/保存境界・教材を確認 | `experiments/chapter-26-review-2026-11-01.md` |
 | 31 | [第27章](part-04-development/chapter-27.md) | 本文・改訂最小ノード教材を確認 | `experiments/chapter-27-review-2026-11-01.md` |
 | 32 | [第28章](part-04-development/chapter-28.md) | 本文・Devnet設定/手順・教材を確認 | `experiments/chapter-28-review-2026-11-01.md` |
-| 33 | [第29章](part-05-advanced/chapter-29.md) | 次の対象 | — |
+| 33 | [第29章](part-05-advanced/chapter-29.md) | 本文・研究の前提/書誌・数値教材を確認 | `experiments/chapter-29-review-2026-11-01.md` |
+| 34 | [第30章](part-05-advanced/chapter-30.md) | 本文・固定KIP/PRの区別・境界教材を確認 | `experiments/chapter-30-review-2026-11-01.md` |
+| 35 | [第31章](part-05-advanced/chapter-31.md) | 本文・KIP/基準版の境界・支出教材を確認 | `experiments/chapter-31-review-2026-11-01.md` |
+| 36 | [第32章](part-05-advanced/chapter-32.md) | 本文・固定Silverscript/承認教材を確認 | `experiments/chapter-32-review-2026-11-01.md` |
+| 37 | [第33章](part-05-advanced/chapter-33.md) | 本文・L2/DA/Replayの前提・状態遷移教材を確認 | `experiments/chapter-33-review-2026-11-01.md` |
+| 38 | [第34章](part-05-advanced/chapter-34.md) | 本文・固定プロトタイプ/API・順序教材を確認 | `experiments/chapter-34-review-2026-11-01.md` |
+| 39 | [第35章](part-06-contributing/chapter-35.md) | 次の対象 | — |
 
 この順番でページを確認したことと、ページに関係する全技術・全コードを検証したことは別です。後続章には、先に重要箇所だけを照合・実行したものがあります。
 
@@ -108,13 +114,13 @@
 | [Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）](part-04-development/chapter-26.md) | Source-checked（GHOSTDAG/保存境界） | 目次順で本文・ヘッダー保存/Virtual更新を確認。既存DAG教材8テスト・型断片コンパイル成功。過去の公式24ケース比較は再実行せず。全ストア・障害復旧は未検証 |
 | [Chapter 27 — Building a Minimal Kaspa-like Node in Rust（Rustによる最小Kaspa型ノードの構築）](part-04-development/chapter-27.md) | 教材の実行確認 | 目次順で本文を確認し、ID検査・全状態保持を改訂。16テスト・実行表示・書式・Clippy成功。関数呼び出しの親再送/逆順受信を検査。Kaspa互換性・実P2P・永続化は対象外 |
 | [Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）](part-04-development/chapter-28.md) | 設定・教材の実行確認 | 目次順で本文と既存実測を確認。Compose5構成・Rust教材7/観測ストア7テスト成功。実ノード試験は今回は再実行せず。全Script/HD復旧・会計・実Pruning後IBDは未検証 |
-| [Chapter 29 — GHOSTDAG Security & DAGKnight（GHOSTDAGのセキュリティとDAGKnight）](part-05-advanced/chapter-29.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Chapter 30 — Kaspa Improvement Proposals（Kaspa改善提案・KIP）](part-05-advanced/chapter-30.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Chapter 31 — Covenants & Advanced Scripting（Covenantsと高度なスクリプティング）](part-05-advanced/chapter-31.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Chapter 32 — Silverscript & Smart Contract Design（Silverscriptとスマートコントラクト設計）](part-05-advanced/chapter-32.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
+| [Chapter 29 — GHOSTDAG Security & DAGKnight（GHOSTDAGのセキュリティとDAGKnight）](part-05-advanced/chapter-29.md) | 主要出典・教材を確認 | 目次順で本文と公開要旨/書誌・固定版kの扱いを確認。数値教材9テスト成功。証明の全面照合・DAGKnight実装/本番有効化・攻撃実験は未検証 |
+| [Chapter 30 — Kaspa Improvement Proposals（Kaspa改善提案・KIP）](part-05-advanced/chapter-30.md) | 主要文書・教材を確認 | 固定KIPの主要説明/Status・PRの区別・基準版の規則選択を照合。教材4テスト成功。全KIPの実装/証明・全ネットワーク有効化は未検証 |
+| [Chapter 31 — Covenants & Advanced Scripting（Covenantsと高度なスクリプティング）](part-05-advanced/chapter-31.md) | 主要文書・教材を確認 | KIP-10/17/20と基準版の内省/有効化経路・手数料を照合。独自支出教材11テスト成功。実Vault・全命令/現行本番有効化・SDK利用は未検証 |
+| [Chapter 32 — Silverscript & Smart Contract Design（Silverscriptとスマートコントラクト設計）](part-05-advanced/chapter-32.md) | 主要文書・教材を確認 | Silverscript v1.0.0のCLIビルド/コンパイル・生成物一致/拒否を確認。独自承認教材10テスト成功。実VM・本番/Devnet適用は未検証 |
 | [Argent — Actorベースのアプリケーション言語](part-05-advanced/argent.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Chapter 33 — Layer 2, Bridges & Zero-Knowledge Proofs（レイヤー2・ブリッジ・ゼロ知識証明）](part-05-advanced/chapter-33.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Chapter 34 — vProgs & Programmability（vProgsとKaspaのプログラマビリティ）](part-05-advanced/chapter-34.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
+| [Chapter 33 — Layer 2, Bridges & Zero-Knowledge Proofs（レイヤー2・ブリッジ・ゼロ知識証明）](part-05-advanced/chapter-33.md) | 主要資料・教材を確認 | Rollup/外部DA、公開入力・Replay/成否不明の境界を整理。状態遷移9テスト・API型検査成功。実ブリッジ/回路/本番有効化・DA/退出は未検証 |
+| [Chapter 34 — vProgs & Programmability（vProgsとKaspaのプログラマビリティ）](part-05-advanced/chapter-34.md) | 主要資料・教材を確認 | 公開案内と固定プロトタイプ/APIの境界・61パッケージmetadataを確認。独自教材9テスト成功。公式全テスト/証明・実アプリ間原子性・本番動作は未検証 |
 | [Chapter 35 — Building a Kaspa Application（Kaspaアプリケーションの構築）](part-06-contributing/chapter-35.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
 | [Chapter 36 — Contributing to Kaspa（Kaspaへのコントリビュート）](part-06-contributing/chapter-36.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
 | [Appendix A — Rust環境・Docker環境の構築](appendices/appendix-a.md) | 未照合 | 記録したARM64環境でDevnet起動・送金等を実測し手順を反映。新規環境、他OS/CPU、付録全体は未確認 |
@@ -132,6 +138,12 @@
 
 | 対象 | 記録ファイル |
 |---|---|
+| 第29章本文レビューと研究の前提/数値教材 | `chapter-29-review-2026-11-01.md` |
+| 第30章本文レビューと固定KIP/規則選択教材 | `chapter-30-review-2026-11-01.md` |
+| 第31章本文レビューとCovenantの境界/支出教材 | `chapter-31-review-2026-11-01.md` |
+| 第32章本文レビューと固定Silverscript/承認教材 | `chapter-32-review-2026-11-01.md` |
+| 第33章本文レビューとL2/DA/Replayの前提・状態遷移教材 | `chapter-33-review-2026-11-01.md` |
+| 第34章本文レビューと固定vprogs/API・順序教材 | `chapter-34-review-2026-11-01.md` |
 | 第28章本文レビューとDevnet設定/教材 | `chapter-28-review-2026-11-01.md` |
 | 第27章本文レビューと改訂最小ノード | `chapter-27-review-2026-11-01.md` |
 | 第26章本文レビューとGHOSTDAG/保存境界 | `chapter-26-review-2026-11-01.md` |
@@ -188,6 +200,6 @@
 
 ## 次に確認するページと残作業
 
-目次順の次は[第29章](part-05-advanced/chapter-29.md)、その次は[第30章](part-05-advanced/chapter-30.md)です。以前の重要章優先の一覧ではなく、この順番でページを確認します。
+目次順の次は[第35章](part-06-contributing/chapter-35.md)、その次は[第36章](part-06-contributing/chapter-36.md)です。以前の重要章優先の一覧ではなく、この順番でページを確認します。
 
 個別検証として残る主なものは、Finalityの実行時境界、HDウォレット復旧、Pruning後IBD、複数ワーカー/会計処理、新規環境での再現、未照合の説明・数値・出典です。全残作業と完了条件は、リポジトリの `ROADMAP.md` に記録しています。

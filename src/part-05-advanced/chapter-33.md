@@ -1,8 +1,10 @@
 # Chapter 33 — Layer 2, Bridges & Zero-Knowledge Proofs
 
-> **レイヤー2・ブリッジ・ゼロ知識証明**  
-> 原稿ステータス：v0.1（技術レビュー前）  
+> **レイヤー2・ブリッジ・ゼロ知識証明**
+> 目次順の本文レビュー：2026-11-01。主要一次資料と独自状態遷移教材を確認。実ブリッジ・証明系・本番有効化の検証ではない。
 > 本章は概念・設計・検証手法を説明する。個別プロジェクトの稼働状況やKaspaメインネットの機能対応は、利用時点の一次資料で確認する。
+
+KaspaのKIP参照版は第30〜32章と同じ `e4ae2332117b5cb68bd6188e065ef885b6d17939`、ノードの基準版はv1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。両者は同時点の機能集合ではない。確認記録は `experiments/chapter-33-review-2026-11-01.md`。
 
 ## 33.1 この章で学ぶこと
 
@@ -52,10 +54,12 @@ KaspaのL1を基盤としてアプリケーションを拡張する際、L2、�
 
 一般に「L2」はL1に何らかの形で検証・決済を依存させる仕組みを指すが、業界全体で呼称が完全に統一されているわけではない。
 
-- **ロールアップ**：多数のトランザクションをL2で実行し、L1に状態コミットメントや証明などを送る方式。実際の安全性は検証方法とデータ可用性に依存する。
+- **ロールアップ**：L1で検証・決済し、状態再構築に必要なデータもL1のDAへ公開する構成。コミットメントや証明だけをL1へ置く方式と区別する。公開データは圧縮や状態差分でもよく、必ず元の取引の全バイトとは限らない。
 - **サイドチェーン**：独自のコンセンサスを持ち、L1との資産移動にブリッジを利用することが多い。
 - **Validium型**：有効性証明を使っても、トランザクションデータをL1外に置く構成。データが得られないと退出が困難になり得る。
 - **状態チャネル**：当事者間で更新を重ね、必要時に基盤チェーンへ決済する構成。
+
+ここでの区別は[EthereumのZK-rollup](https://ethereum.org/en/developers/docs/scaling/zk-rollups/)と[Validium](https://ethereum.org/en/developers/docs/scaling/validium/)の説明を比較基準にしたもの。Kaspaで同じ仕組みが稼働しているという根拠ではない。
 
 名称よりも、**不正な状態を拒否できる主体**と**データを失った際に退出できるか**を調べる。
 
@@ -84,11 +88,13 @@ S_next = F(S_previous, B)
 | 主な負荷 | 紛争処理と監視 | 証明生成計算 |
 | 注意点 | 挑戦できる環境・データが必要 | 証明が正しくてもデータ可用性は別問題 |
 
+Optimistic方式では、少なくとも1人が正しいデータを入手して異議を提出でき、L1が期限内に取り込める等の条件も必要になる。Validity方式でも検証器の更新権限、停止時の退出・強制取り込みを別に調べる。
+
 どちらもL1の実装可能な機能に制約される。Ethereumのロールアップの説明を、そのままKaspaで実現済みの機能として扱わない。
 
 ## 33.7 ゼロ知識証明とは何か
 
-ZKPは、ある主張が正しいことを、秘密情報を直接開示せずに検証できる暗号技術である。ただしロールアップの**有効性証明**では、秘密を隠すこと自体が目的でない場合もある。
+ZKPは、公開された命題の真偽の検証に必要な情報を超えてWitnessの情報を漏らさない、という性質を持つ証明技術である。これは公開入力自体を隠す性質ではない。完全性・健全性（方式により知識健全性等）とゼロ知識性は別の要件として読む。定義の入口は[NISTのZKP説明](https://csrc.nist.gov/projects/pec/zkproof)を参照する。ただしロールアップの**有効性証明**では、秘密を隠すこと自体が目的でない場合もある。
 
 ```text
 主張: 「この状態更新は定めたルールに従う」
@@ -107,7 +113,7 @@ Verifier（検証者）
      accept / reject
 ```
 
-証明が示すのは**回路・プログラムに符号化された命題**である。回路にバグがあれば、証明が正しくても意図した業務ルールを保証しない。
+証明が示すのは**回路・プログラムに符号化された命題**である。検証鍵やプログラムID、公開入力のエンコードも特定して初めて「何を証明したか」が定まる。回路にバグがあれば、証明が正しくても意図した業務ルールを保証しない。
 
 ## 33.8 ZK-SNARKとZK-STARK
 
@@ -117,6 +123,8 @@ Verifier（検証者）
 | セットアップ | 方式により信頼されたセットアップが必要 | 透明なセットアップの方式が代表的 |
 | 計算・検証コスト | 方式と回路による | 方式とパラメータによる |
 | 暗号学的前提 | 曲線・ペアリング等を使う方式がある | ハッシュ関数ベースの方式が代表的 |
+
+STARKの透明性等の研究上の性質は[元論文の公開要旨](https://eprint.iacr.org/2018/046)も参照する。個別の設定・実装・ラッパーの性質へ自動的には一般化しない。例えばSTARKを別のSNARKで包むと、最終検証の暗号学的前提やセットアップ条件も変わる。
 
 どちらが常に優れているという結論にはならない。比較には具体的な証明系、回路規模、検証環境が必要である。
 
@@ -132,6 +140,8 @@ Verifier（検証者）
  h0  h1  h2  h3
 ```
 
+葉/内部ノードのエンコード、順序・index、ドメイン分離、信頼するrootを定義して使う。攻撃者が自由に選んだrootに対する包含だけでは、正当なチェーンや資産ロックの証拠にならない。
+
 Merkle証明は「ある葉がコミットされた集合に含まれる」ことを示せるが、それだけで**状態遷移が正しい**ことは証明しない。
 
 ## 33.10 データ可用性（DA）を分離する
@@ -145,6 +155,8 @@ Finality: いつ・どの条件で覆りにくくなるか？
 ```
 
 証明だけが存在しても、利用者が必要なトランザクションデータを入手できなければ、独立検証や資産退出が困難になることがある。
+
+DAは永久アーカイブと同じではない。KaspaのPruningでは履歴の削除と現行UTXOの保持を区別する（[第21章](../part-04-development/chapter-21.md)）。Pruningや他のDA層の保持期間をまたいで、誰が復旧・退出に必要なデータを保存するかを決める。rootや検証鍵が残っていても、状態・経路・Witnessが自動復元されるわけではない。
 
 ## 33.11 ブリッジの基本モデル
 
@@ -173,6 +185,8 @@ Bridge Contract / Custody               |
 | ライトクライアント型 | 相手チェーンのヘッダー検証など | 検証実装、更新・再編成 |
 | 証明検証型 | 証明系、検証器、コミットメント | 回路バグ、検証器バグ、DA |
 
+これらは排他的な分類ではなく、証明検証と署名者、ヘッダー検証と管理者更新等が併用され得る。ライトクライアントでは、初期の信頼点・ヘッダーの合意/Finality・イベント包含・宛先拘束まで読む。設計ごとの[ブリッジのリスク](https://ethereum.org/en/bridges/)も区別する。
+
 「分散型ブリッジ」という名称だけでは安全性は判断できない。
 
 ## 33.13 ブリッジの状態機械
@@ -195,18 +209,20 @@ DestinationExecuted
    v
 Completed
 
-任意の段階 -> Failed / Expired / ManualReview
+完了前の各段階 -> Failed / Expired / ManualReview / OutcomeUnknown
 ```
 
-状態の名前は設計例。実際のチェーンでは、ファイナリティの定義、再編成、失敗時の補償手順を個別に決める必要がある。
+状態の名前は設計例。SourceFinalizedは設定したFinalityPolicyを満たした観測で、無条件に覆らないという意味ではない。送信結果が不明な場合はDestinationPending/OutcomeUnknown等も設け、相手側を照合してから再送・補償する。タイムアウトだけを根拠に返金すると、遅れて実行された支払いと二重に成立し得る。
+
+実際のチェーンでは、ファイナリティの定義、再編成、失敗時の補償手順を個別に決める必要がある。
 
 ## 33.14 ブリッジの不変条件
 
-1. **二重実行防止**：同じ送金イベントを二度実行しない。
+1. **二重実行防止**：同じ論理メッセージを二度実行しない。送信元の完全なネットワーク識別、bridge/資産の識別、outpointまたはイベントindex、宛先ネットワーク・受取人・金額・方式の版等を結び付ける。再編成で同じ取引が再観測されても、新しいブロックhashだけで別メッセージにしない。
 2. **金額保存**：手数料や換算ルールを除き、発行量が裏付けを超えない。
 3. **宛先一致**：チェーンID、受取人、資産IDを署名・証明の対象に含める。
 4. **順序・再編成耐性**：未確定イベントを確定済みと扱わない。
-5. **失敗時の回復**：片側だけ成功した状態を検出できる。
+5. **失敗時の回復（進行性・運用要件）**：片側だけ成功した状態と成否不明を区別し、再送・照合・補償の条件を定める。
 6. **鍵管理**：秘密鍵をアプリケーションの通常ログや設定ファイルに置かない。
 
 ## 33.15 代表的な攻撃と故障
@@ -233,6 +249,8 @@ KaspaはBitcoin型のUTXO設計を基礎とし、BlockDAGとGHOSTDAG系の合意
 - プロトコル変更が必要なら、どのKIPに依存するか。
 
 **KIPの提案、開発ネットワーク上のデモ、メインネットで有効な機能は必ず区別する。**
+
+固定[KIP-16](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0016.md)はOpZkPrecompileによる証明系の呼び分けを記述し、固定[KIP-21](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0021.md)はレーンごとのsequencing commitmentを記述する。いずれも文書のStatusはActiveだが、任意のL2状態や資産裏付けが自動的に検証されるという意味ではない。対象命題・プログラム/検証鍵・公開入力・支出条件との結合を読む。第30〜32章で使った基準版ソースやSilverscriptの依存版とも別に照合する。
 
 ## 33.17 EVM互換L2の構成を読む
 
@@ -293,6 +311,8 @@ Data Availability           Settlement Adapter
 | Indexing | Block, Event, Cursor | 再編成時に再処理可能 |
 | Operations | Alert, Incident | 障害を検知・追跡可能 |
 
+上の図・表は責務の概念整理で、全呼び出し順や一つの原子的更新を表すものではない。同じ入力には初期状態・ネットワーク/プロトコル設定・順序も含める。
+
 `Bridge` と `Indexing` を同じ責務にしない。インデクサの「観測した」という事実と、ブリッジの「支払いを許可した」という判断は異なる。
 
 ## 33.20 Rustで最小の状態遷移を作る
@@ -313,6 +333,7 @@ pub struct Transfer {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ApplyError {
+    EmptyAccount,
     ZeroAmount,
     InsufficientFunds,
     Overflow,
@@ -320,10 +341,10 @@ pub enum ApplyError {
 
 pub type Balances = BTreeMap<String, u64>;
 
-pub fn apply_transfer(
-    current: &Balances,
-    tx: &Transfer,
-) -> Result<Balances, ApplyError> {
+pub fn apply_transfer(current: &Balances, tx: &Transfer) -> Result<Balances, ApplyError> {
+    if tx.from.is_empty() || tx.to.is_empty() {
+        return Err(ApplyError::EmptyAccount);
+    }
     if tx.amount == 0 {
         return Err(ApplyError::ZeroAmount);
     }
@@ -336,7 +357,9 @@ pub fn apply_transfer(
         return Ok(current.clone());
     }
     let to_balance = current.get(&tx.to).copied().unwrap_or(0);
-    let new_to = to_balance.checked_add(tx.amount).ok_or(ApplyError::Overflow)?;
+    let new_to = to_balance
+        .checked_add(tx.amount)
+        .ok_or(ApplyError::Overflow)?;
 
     let mut next = current.clone();
     next.insert(tx.from.clone(), from_balance - tx.amount);
@@ -355,21 +378,35 @@ mod tests {
     #[test]
     fn transfer_preserves_total() {
         let before = initial();
-        let after = apply_transfer(&before, &Transfer {
-            from: "alice".into(), to: "bob".into(), amount: 30,
-        }).unwrap();
+        let after = apply_transfer(
+            &before,
+            &Transfer {
+                from: "alice".into(),
+                to: "bob".into(),
+                amount: 30,
+            },
+        )
+        .unwrap();
         assert_eq!(after["alice"], 70);
         assert_eq!(after["bob"], 30);
         assert_eq!(before["alice"], 100); // 元の状態は不変
-        assert_eq!(after.values().sum::<u64>(), before.values().sum::<u64>());
+        assert_eq!(
+            after.values().map(|v| u128::from(*v)).sum::<u128>(),
+            before.values().map(|v| u128::from(*v)).sum::<u128>()
+        );
     }
 
     #[test]
     fn insufficient_funds_does_not_mutate_state() {
         let before = initial();
-        let result = apply_transfer(&before, &Transfer {
-            from: "alice".into(), to: "bob".into(), amount: 101,
-        });
+        let result = apply_transfer(
+            &before,
+            &Transfer {
+                from: "alice".into(),
+                to: "bob".into(),
+                amount: 101,
+            },
+        );
         assert_eq!(result, Err(ApplyError::InsufficientFunds));
         assert_eq!(before["alice"], 100);
     }
@@ -377,17 +414,127 @@ mod tests {
     #[test]
     fn self_transfer_keeps_balance() {
         let before = initial();
-        let after = apply_transfer(&before, &Transfer {
-            from: "alice".into(), to: "alice".into(), amount: 10,
-        }).unwrap();
+        let after = apply_transfer(
+            &before,
+            &Transfer {
+                from: "alice".into(),
+                to: "alice".into(),
+                amount: 10,
+            },
+        )
+        .unwrap();
         assert_eq!(before, after);
     }
 
     #[test]
     fn rejects_zero_amount() {
-        assert_eq!(apply_transfer(&initial(), &Transfer {
-            from: "alice".into(), to: "bob".into(), amount: 0,
-        }), Err(ApplyError::ZeroAmount));
+        assert_eq!(
+            apply_transfer(
+                &initial(),
+                &Transfer {
+                    from: "alice".into(),
+                    to: "bob".into(),
+                    amount: 0,
+                }
+            ),
+            Err(ApplyError::ZeroAmount)
+        );
+    }
+
+    #[test]
+    fn recipient_overflow_preserves_the_complete_state() {
+        let before = BTreeMap::from([("alice".into(), 10), ("bob".into(), u64::MAX)]);
+        let saved = before.clone();
+        let result = apply_transfer(
+            &before,
+            &Transfer {
+                from: "alice".into(),
+                to: "bob".into(),
+                amount: 1,
+            },
+        );
+        assert_eq!(result, Err(ApplyError::Overflow));
+        assert_eq!(before, saved);
+    }
+
+    #[test]
+    fn rejects_empty_account_labels() {
+        for (from, to) in [("", "bob"), ("alice", "")] {
+            assert_eq!(
+                apply_transfer(
+                    &initial(),
+                    &Transfer {
+                        from: from.into(),
+                        to: to.into(),
+                        amount: 1
+                    }
+                ),
+                Err(ApplyError::EmptyAccount)
+            );
+        }
+    }
+
+    #[test]
+    fn self_transfer_still_requires_sufficient_funds() {
+        for (account, amount) in [("alice", 101), ("missing", 1)] {
+            assert_eq!(
+                apply_transfer(
+                    &initial(),
+                    &Transfer {
+                        from: account.into(),
+                        to: account.into(),
+                        amount
+                    }
+                ),
+                Err(ApplyError::InsufficientFunds)
+            );
+        }
+    }
+
+    #[test]
+    fn finite_grid_preserves_total_and_input_state() {
+        let mut successes = 0;
+        let mut failures = 0;
+        for a in [0, 1, 10, u64::MAX] {
+            for b in [0, 1, 10, u64::MAX] {
+                for amount in [0, 1, 10, u64::MAX] {
+                    let before = BTreeMap::from([("alice".into(), a), ("bob".into(), b)]);
+                    let saved = before.clone();
+                    match apply_transfer(
+                        &before,
+                        &Transfer {
+                            from: "alice".into(),
+                            to: "bob".into(),
+                            amount,
+                        },
+                    ) {
+                        Ok(after) => {
+                            assert_eq!(
+                                after.values().map(|v| u128::from(*v)).sum::<u128>(),
+                                u128::from(a) + u128::from(b)
+                            );
+                            successes += 1;
+                        }
+                        Err(_) => failures += 1,
+                    }
+                    assert_eq!(before, saved);
+                }
+            }
+        }
+        assert!(successes > 0 && failures > 0);
+    }
+
+    #[test]
+    fn identical_transfers_are_not_replay_protected() {
+        let tx = Transfer {
+            from: "alice".into(),
+            to: "bob".into(),
+            amount: 30,
+        };
+        let once = apply_transfer(&initial(), &tx).unwrap();
+        let twice = apply_transfer(&once, &tx).unwrap();
+        assert_eq!(twice["alice"], 40);
+        assert_eq!(twice["bob"], 60);
     }
 }
 ```
@@ -395,11 +542,18 @@ mod tests {
 ### 実行
 
 ```bash
-cargo new l2-state-lab --lib
+# 本書の外の調査用ディレクトリで実行
+cargo new l2-state-lab --lib --edition 2021
 cd l2-state-lab
 # src/lib.rs を上記コードで置き換える
-cargo test
+cargo test --offline
+cargo fmt --all -- --check
+cargo clippy --offline --all-targets -- -D warnings
 ```
+
+このモデルはアカウント残高の教材であり、KaspaのUTXO検証器ではない。from/toは架空の非空ラベルで、署名・権限・nonce・Replay防止・手数料・bridgeの裏付け・状態rootは実装しない。同じ取引を2回与えると2回移転できることもテストしている。残高0のentryも残るため、経済的に同じ残高集合でも辞書が同一とは限らない。
+
+Rust/Cargo 1.90.0、edition 2021、外部依存なしの一時libで本文を抜き出して検査した。総量を数えるテストはu128を使い、個別u64残高の合計でテスト自身がoverflowすることを避ける。
 
 この実験で学べるのは、**状態遷移を決定的・副作用なしに設計すること**である。実際のZKシステムでは、この遷移を証明可能な回路またはVMへ落とし込み、コミットメントと公開入力を整合させる必要がある。
 
@@ -412,6 +566,8 @@ Public inputs:
   old_state_root
   new_state_root
   batch_commitment
+  protocol_domain / version
+  relevant_L1_anchor / deposit_cursor (方式に応じる)
 
 Witness:
   transactions
@@ -426,39 +582,43 @@ Constraints:
   old_root -> new_root consistency
 ```
 
+検証側もold_state_rootが現在の受理状態と一致すること、batch_commitmentが証明に使う取引列と結び付くこと、正しいプログラム/検証鍵の証明であることを確認する。公開入力を用意するだけで回路がそれを拘束しなければ不十分である。
+
 署名、nonce、手数料、二重支払い防止、チェーンIDなどを回路から漏らすと、証明が通ってもシステムが安全とは限らない。
 
 ## 33.22 ブリッジ実装の最小API設計
 
 ```rust,ignore
 // 設計例。実際のSDK型・APIではない。
-trait SourceFinality {
+pub trait SourceFinality {
     type Event;
     type Error;
     fn finalized(&self, event: &Self::Event) -> Result<bool, Self::Error>;
 }
 
-trait MessageVerifier {
+pub trait MessageVerifier {
     type Message;
     type Error;
     fn verify(&self, message: &Self::Message) -> Result<(), Self::Error>;
 }
 
-trait ReplayProtection {
+pub trait ReplayProtection {
     type Id;
     type Error;
     fn claim_once(&mut self, id: &Self::Id) -> Result<bool, Self::Error>;
 }
 ```
 
-`claim_once` は単純なメモリ集合では不十分。実運用ではトランザクションと永続ストレージを使い、並行リクエストに対して原子的に一度だけ成功することを保証する。
+この型断片はSDKの再現ではなく、別の一時libで型検査した設計例である。finalizedのboolも指定したポリシーを満たす判定にすぎず、永続的な確定やネットワーク観測をこのtrait自体は保証しない。
+
+claim_onceが予約を表すのか完了記録かを仕様化する。ローカルDBの一意制約・トランザクションで同時のclaimを防いでも、外部チェーン上の実行と一つのDBトランザクションにはできない。claim後のクラッシュ、送信後のタイムアウト、実行成功後の記録失敗を扱い、宛先の重複防止・同じメッセージID・成否不明の照合で再送を設計する。このtraitだけではexactly-onceの外部作用を保証しない。
 
 ## 33.23 テスト戦略
 
 | レベル | 検証対象 | 例 |
 |---|---|---|
 | Unit | 状態遷移と不変条件 | 残高保存、オーバーフロー拒否 |
-| Property | 広い入力集合 | 入力順序、総量、決定性 |
+| Property | 広い入力集合 | 固定順序での決定性、総量、定義した入力変換 |
 | Differential | 独立実装との一致 | Rust実装と回路実装 |
 | Integration | RPC・インデクサ・DB | 再起動、イベント再取得 |
 | Adversarial | 敵対的入力 | Replay、再編成、署名偽造 |
@@ -493,7 +653,7 @@ trait ReplayProtection {
 6. **実稼働状態**：研究、テストネット、メインネットを区別。
 7. **障害履歴**：インシデントと復旧手順。
 
-IgraやCaravelなどの名称を見かけた場合も、EVM互換という特徴だけでKaspa L1による検証保証があると推定しない。
+個別プロジェクトを見かけた場合も、EVM互換という特徴だけでKaspa L1による検証保証があると推定しない。
 
 ## 33.26 実践演習A：ブリッジの脅威モデル
 
@@ -557,9 +717,9 @@ Kaspaへの適用では、論文・KIP・実装・実際に有効なネットワ
 
 ### Kaspa一次資料
 
-- [Kaspa Wiki](https://wiki.kaspa.org/)
-- [rusty-kaspa（公式実装）](https://github.com/kaspanet/rusty-kaspa)
-- [Kaspa Improvement Proposals（KIPs）](https://github.com/kaspanet/kips)
+- [rusty-kaspa（基準版）](https://github.com/kaspanet/rusty-kaspa/tree/fcd9c28f9b211b9872a0c90a8c94f79466ffb063)
+- [KIP-16（固定版）](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0016.md)
+- [KIP-21（固定版）](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0021.md)
 - [Kaspa公式サイト](https://kaspa.org/)
 
 ### 基礎技術
@@ -567,7 +727,9 @@ Kaspaへの適用では、論文・KIP・実装・実際に有効なネットワ
 - [Ethereum.org — Scaling](https://ethereum.org/en/layer-2/)
 - [Ethereum.org — Zero-knowledge rollups](https://ethereum.org/en/developers/docs/scaling/zk-rollups/)
 - [Ethereum.org — Bridges](https://ethereum.org/en/bridges/)
-- [NIST — Zero Knowledge Proof](https://csrc.nist.gov/projects/threshold-cryptography)
+- [NIST — PEC / ZKProof](https://csrc.nist.gov/projects/pec/zkproof)
+- [STARKの元論文 — ePrint 2018/046](https://eprint.iacr.org/2018/046)（公開要旨・書誌の参照）
+- [Ethereum.org — Validium](https://ethereum.org/en/developers/docs/scaling/validium/)
 
 ### 技術レビュー時の確認事項
 
@@ -578,4 +740,6 @@ Kaspaへの適用では、論文・KIP・実装・実際に有効なネットワ
 
 ---
 
-**次章：Chapter 34 — vProgs & Programmability（vProgsとKaspaのプログラマビリティ）**
+次は[第34章 — vProgs & Programmability（vProgsとKaspaのプログラマビリティ）](chapter-34.md)。
+
+**確認範囲：** 主要一次資料・固定KIPの説明、独自状態遷移教材と型断片。実ブリッジ・ZK回路/証明生成・暗号方式の全面照合、現行ネットワーク有効化やDA/退出試験は行っていない。記録は `experiments/chapter-33-review-2026-11-01.md`。
