@@ -1,11 +1,11 @@
 # Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）
 
-> **原稿ステータス:** v0.2（26.7の基準版再照合済み・章全体はレビュー継続中）\
+> **目次順の本文レビュー:** 2026-11-01。主要経路・保存境界・教材の確認。全コンセンサスの検証ではない。\
 > **対象:** 『Mastering Kaspa』Part IV — Kaspa Development & Implementation  
 > **前提:** 第7章（BlockDAG）、第12章（GHOSTDAG）、第14章（Virtual State）、第25章（コードベース調査）
 
 
-> 主要なGHOSTDAG経路を[本書の基準版](../baseline.md)v1.0.1で再照合した。小規模DAGの24ケースで公式実装との実行時差分を比較した。章全体のレビューは未完了。
+> 主要なGHOSTDAG経路を[本書の基準版](../baseline.md)v1.0.1で再照合した。小規模DAGの24ケースで公式実装との実行時差分を比較した。今回、本文全体を目次順で確認し、ヘッダー保存とVirtual更新の境界を補足した。過去の公式差分比較を今回再実行した意味ではない。記録は `experiments/chapter-26-review-2026-11-01.md`。
 
 ## 26.1 この章の目的
 
@@ -18,7 +18,7 @@ KaspaのコンセンサスをRustで理解するには、アルゴリズムだ�
 3. Virtual Stateの再計算とストレージ更新にどんな不変条件が必要か。
 4. `rusty-kaspa`のどこから読み始め、どのように実装の根拠を残すか。
 
-> **対象範囲:** 26.7は固定した公式ソースの読み取り記録である。その他の型・図は責務を説明する概念モデルであり、公式実装との一対一の対応やノード全体の検証を意味しない。
+> **対象範囲:** 26.7と26.10の固定ソースへの参照は主要経路の読み取り記録である。その他の型・図は責務を説明する概念モデルであり、公式実装との一対一の対応やノード全体の検証を意味しない。
 
 ## 26.2 コンセンサスの責務を分ける
 
@@ -63,7 +63,7 @@ Block processing ──────► Validation
          Storage / API
 ```
 
-実際には検証と状態更新の順番、キャッシュ、並列処理などが入り組む。上図を**ソースコードの呼び出し順序そのもの**として読んではいけない。
+基準版ではヘッダー処理中にGHOSTDAGを計算し、ヘッダー・本体・Virtualの各段階へ進む。GHOSTDAGが全検証・DAG保存の後に一度だけ走るという意味ではない。実際には検証と状態更新の順番、キャッシュ、並列処理などが入り組む。上図を**ソースコードの呼び出し順序そのもの**として読んではいけない。
 
 ## 26.3 Rustでのドメインモデル
 
@@ -80,17 +80,17 @@ Block processing ──────► Validation
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct BlockId(u64);
+pub struct BlockId(pub u64);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum InsertError {
+pub enum InsertError {
     Duplicate,
     MissingParent(BlockId),
     SelfReference,
 }
 ```
 
-この型は説明用であり、実際のKaspaのブロックハッシュは`u64`ではない。
+この型は説明用であり、実際のKaspaのブロックハッシュは`u64`ではない。Rust/Cargo 1.90.0、edition 2021の一時libでコンパイル・Clippyを確認した。挿入処理や検証アルゴリズムを実装したコードではない。
 
 ## 26.4 DAGの基本不変条件
 
@@ -100,13 +100,13 @@ BlockDAGを保持する部分には、最低限次のような不変条件が必
 2. 親参照は自己参照しない。
 3. 親を参照できるか、依存不足として保留する。
 4. DAGに循環を作らない。
-5. 失敗した更新が中途半端な状態を残さない。
+5. どの単位の更新をまとめ、失敗時に何を保存・維持するかを明示する。
 
 実際のコンセンサスでは、これに加えてPoW、親集合の制約、ブロックのコンテキスト依存規則などが必要となる。
 
 ### 26.4.1 Past・Future・Anticone
 
-ブロック`A`がブロック`B`の祖先であれば、`A`は`B`のPastに属する。`B`は`A`のFutureに属する。どちらも他方の祖先ではない場合、互いはAnticoneの関係にある。
+ここではPast/Futureを自分自身を除くstrictな集合として使う。ブロック`A`がブロック`B`の祖先であれば、`A`は`B`のPastに属する。`B`は`A`のFutureに属する。異なる既知の2ブロックで、どちらも他方の祖先ではない場合、互いはAnticoneの関係にある。公式Reachability APIには自分自身もancestorとする問い合わせがあるため、教材のstrictな定義と呼び出し条件を合わせる。あるブロックのAnticone集合の要素同士まで、互いに無関係であるとは限らない。
 
 ```text
        G
@@ -164,7 +164,7 @@ UTXO state transition
 - **コミット段階:** 全検証が成功した場合にのみ状態を変更する。
 - **障害復旧:** 永続化が失敗しても不整合を残さない。
 
-本番実装ではデータベースのトランザクション、書き込みバッチ、ロールバックなどの設計も重要になる。
+本番実装ではデータベースのトランザクション、書き込みバッチ、ロールバックなどの設計も重要になる。これは設計時に確認する性質であり、バッチを見つけただけで電源断後の耐久性まで実証したことにはならない。ヘッダー等の既に完了した段階や無効ステータスが、後続エラーで一律に取り消されるとも限らない（[第25章](chapter-25.md)）。
 
 ## 26.7 公式実装を追う：親選択からメタデータ保存まで
 
@@ -175,14 +175,28 @@ UTXO state transition
 | 読む箇所 | 入力と処理 | 確認する出力 |
 |---|---|---|
 | [`find_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs) | 親一覧を受け、ストアから各親のblue workを取得 | `(blue_work, hash)` が最大の親 |
-| [`ordered_mergeset_without_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/mergeset.rs) | 他の親から過去を探索し、selected parentの過去を除外 | blue work、hashの昇順の候補列 |
+| [`ordered_mergeset_without_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/mergeset.rs) | 他の親から過去を探索し、selected parent自身とその過去を除外 | blue work、hashの昇順の候補列 |
 | [`GhostdagData::new_with_selected_parent`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/model/stores/ghostdag.rs) | selected parentを最初のblueとして設定 | 分類計算の初期メタデータ |
 | [`check_blue_candidate`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs) | 到達可能性と既存blueのanticoneサイズを調べる | 候補のblue/red判定 |
 | [`ghostdag`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs) | 判定を反映し、score/workを算出 | `GhostdagData` |
 
+これらの関数には非空の親やストア上の親メタデータ等の前提があり、assert / unwrapも使われる。未検証のネットワーク入力をそのまま渡す汎用バリデーターではない。Genesisは通常のghostdag呼び出しと別に初期化し、ORIGINの子にも特別な分岐がある。
+
+通常経路のblue scoreはselected parentのscore + mergeset_bluesの長さ。blue workはselected parentのworkに、mergeset_blues内の各ブロックのcalc_work(bits)とlevel_workの大きい方を合計する。先頭のselected parentもこの列に含まれ、計算対象ブロック自身のPoWをここで加える式ではない。workはブロック数だけでは決まらない。
+
 基準版の通常 `GhostdagManager` は `ForkedParam<KType>` を持ち、`ghostdag` 内でselected parentのDAA scoreからkを取得する。旧照合版の固定kとは異なる。上位レベル用 `with_level` はkを定数化する。選択・候補順・blue判定・score/workの主要規則は再照合したが、任意のk減少まで扱えるという意味ではない。パラメータと適用範囲は[第12章](../part-02-consensus/chapter-12.md)、比較の記録は `experiments/ghostdag-baseline-review-2026-10-31.md` を参照する。
 
-### 26.7.1 読み取りの課題
+### 26.7.1 呼び出し元と保存の境界
+
+[HeaderProcessor](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/header_processor/processor.rs)の通常validate_headerは、[ヘッダー単独検査](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/header_processor/pre_ghostdag_validation.rs)（PoW・block levelの算出を含む）、親関係、文脈作成、GHOSTDAGを経てpre_pow_validation / post_pow_validationへ進む。関数名のpre_powだけから「ここまではPoWをまだ調べていない」と判断しない。trusted headerの経路も通常経路と検査範囲が異なる。
+
+processor側のghostdagは既存メタデータがあれば再利用し、なければGhostdagManagerを呼んで文脈へ保持する。分類関数自体がDBへ保存するわけではない。
+
+commit_headerはGHOSTDAGデータ、ヘッダー、DAA除外・depth、親関係、Reachability、StatusHeaderOnly等をWriteBatchへ追加し、関係するwrite guardを保持したままdb.write(batch)を呼ぶ。difficulty/median-time window cacheへの更新もある。StatusHeaderOnlyは本体・UTXOの処理完了を意味しない。
+
+ここで読んだバッチとロックの範囲はヘッダーの保存境界であり、全キャッシュの巻き戻し、後続の本体/Virtual更新、I/O失敗・電源断後の耐久性を検証した結果ではない。
+
+### 26.7.2 読み取りの課題
 
 1. 親一覧の順を変えても同じ親が選ばれる理由を、比較処理から説明する。
 2. `mergeset_blues` の先頭要素がscore/workの式にどう影響するか確認する。
@@ -236,15 +250,17 @@ Kaspaノードでは、P2P受信、ブロック検証、同期、RPCなどが同
 2. **差分適用:** 適用・取り消しの差分を保持する。
 3. **スナップショット:** ある時点の状態を保存し、以降の変更を再生する。
 
-実際のKaspaがどの経路でどの方式を使うかは、対象バージョンのソースコードで確認すること。
+基準版の[commit_virtual_state](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/processor.rs)は、蓄積したUTXO差分・新Virtual state・selected chainの変更を1つのWriteBatchへ積み、関連write guardを保持したままdb.writeを行う。これは26.7のヘッダー保存とは別の呼び出し・バッチである。呼び出し前の差分計算、通知や索引、Pruningを含む全操作が1つのトランザクションだとは扱わない。
 
 ### 26.10.1 Reorganizationの不変条件
 
-- 同じコンセンサス入力からは同じ状態が得られる。
+- 親、基準UTXO、適用順、ネットワーク規則・activation条件等を固定した同じ評価から、同じ結果を得る。
 - 取り消されたトランザクションの出力を誤って残さない。
 - 同じUTXOを二度消費しない。
 - 状態更新の途中でRPCに矛盾した結果を公開しない。
 - 再起動後の状態が、正しく再生した状態と一致する。
+
+これらは確認すべき性質であり、全経路で検証済みという列挙ではない。基準版のpick_virtual_parentsには候補をランダムに選ぶ処理があり、ノードの観測時点や選ばれた親を固定せずに「同じDAGだから現在のVirtualも完全一致する」とは言えない。更新途中の公開境界はAPI・索引ごとに調べ、複数RPCを続けて呼ぶだけで同じスナップショットを得たとも判断しない。
 
 ## 26.11 エラー設計と失敗の分類
 
@@ -292,24 +308,27 @@ Components (conceptual):
 ### 26.13.1 リビジョンを固定する
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+# 第1章の固定版checkoutの親ディレクトリから実行
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-cargo metadata --no-deps --format-version 1 > /tmp/rusty-kaspa-metadata.json
+git status --short
+KASPA_CONSENSUS_REVIEW_DIR="$(mktemp -d)"
+cargo metadata --locked --offline --no-deps --format-version 1 > "$KASPA_CONSENSUS_REVIEW_DIR/metadata.json"
 ```
+
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使い、HEADを26.7の完全SHAと照合する。metadataには絶対パスが含まれるため生JSONを公開しない。--no-depsの情報は外部依存の完全な解決グラフではない（[第25章](chapter-25.md)）。
 
 本の執筆では、調査時の**コミットハッシュ、実行したコマンド、観察した結果**を必ず残す。`master`ブランチの内容は更新されるため、行番号だけに依存した説明は古くなりやすい。
 
 ### 26.13.2 エントリーポイントを探す
 
 ```bash
-rg -n 'struct .*Consensus|trait .*Consensus|ConsensusManager' consensus
-rg -n 'ghostdag|selected_parent|blue_work' consensus
-rg -n 'virtual_state|virtual.*utxo|utxo' consensus
-rg -n 'pruning|daa|difficulty' consensus
+grep -n -E 'find_selected_parent|check_blue_candidate|pub fn ghostdag' consensus/src/processes/ghostdag/protocol.rs
+grep -n -E 'validate_header|fn ghostdag|commit_header|insert_batch' consensus/src/pipeline/header_processor/processor.rs
+grep -n -E 'commit_virtual_state|pick_virtual_parents' consensus/src/pipeline/virtual_processor/processor.rs
 ```
 
-検索語は**調査の手掛かり**であり、該当するシンボル名の存在を保証するものではない。検索結果が空なら、`cargo metadata`で実際のクレート名を確認し、関連する型やテストから辿る。
+これらは基準版で確認した入口である。検索で見つけただけでは、前提条件・エラー・公開境界まで検証したことにはならない。検索結果が空なら、`cargo metadata`で実際のクレート名を確認し、関連する型やテストから辿る。
 
 ### 26.13.3 1機能を縦に追う
 
@@ -365,14 +384,14 @@ rg -n 'pruning|daa|difficulty' consensus
 第12章の `examples/dag-relations/` にある `Dag` を題材に、次のメソッドを確認・追加する。
 
 - `past(id)`：既存メソッドで、指定ブロックの祖先集合を返すことを確認する。
-- `is_ancestor(a, b)`：`a`が`b`の祖先か判定する。
+- `is_ancestor(a, b)`：異なる既知の2ブロックについて、`a`が`b`のstrictな祖先か判定する。同一ブロックはfalse、不明IDはエラーとする。
 - `is_in_anticone(a, b)`：異なる既知の2ブロックが互いに祖先・子孫でないか判定する。既存の `anticone(id)` は集合を返すため、その名前と区別する。
 
-**確認:** 2本の並行枝を作り、同じ親を共有するブロック同士がAnticoneに入ることをテストする。
+**確認:** 2本の並行枝を作り、互いに祖先でないブロックがAnticoneに入ることをテストする。同じ親を共有するだけでは不十分で、片方がもう片方の子・子孫になっている例も区別する。不明IDや同一IDをAnticoneに含めない。既存メソッドはsrc/lib.rsにあり、8テストを今回一時コピーで再実行した。追加メソッドの実装はこの課題で行う。
 
 ### 課題B：状態差分を実装する
 
-第27章の `examples/minimal-node/src/main.rs` にある `UtxoSet::apply` を対象にする。トランザクションの適用結果として `UtxoDiff { removed, added }` を返すよう変更する。差分の逆適用を作り、適用前の状態へ戻せることを検証する。
+第27章の `examples/minimal-node/src/main.rs` にある `UtxoSet::apply` を対象にする。トランザクションの適用結果として `UtxoDiff { removed, added }` を返すよう変更する。差分には削除したOutputの内容も保持し、逆適用で元の状態へ戻せることを検証する。複数取引なら依存関係に従い逆順へ戻す。後続更新が入った状態へ古い差分を無条件に適用せず、状態の識別と対象出力の一致を検査する。この逆適用は今回実装・検証した機能ではない。
 
 ### 課題C：参照実装の経路を調査する
 
@@ -417,15 +436,15 @@ Kaspaのコンセンサス実装を理解するには、**BlockDAG・GHOSTDAG・
 
 Rustはこうした境界を型で表現しやすい一方、正しいコンセンサス規則そのものを保証するわけではない。学習用の小さな実装で基本を理解した後は、参照実装のリビジョンを固定し、関数・テスト・仕様を突き合わせて検証する。
 
-次章では、この考え方を踏まえて、**最小Kaspa型ノード**を組み立てる。
+[次章](chapter-27.md)では、この考え方を踏まえて、**最小Kaspa型ノード**を組み立てる。
 
 ## 26.19 参考資料
 
 - [Kaspa公式リポジトリ：rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
 - [Kaspa公式ドキュメント](https://docs.kaspa.org/)
 - [Kaspa Improvement Proposals (KIPs)](https://github.com/kaspanet/kips)
-- [GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104.pdf)
+- [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104.pdf)
 - [Rust公式ドキュメント](https://doc.rust-lang.org/book/)
 - [Cargo Book](https://doc.rust-lang.org/cargo/)
 
-> **編集・検証メモ:** 公開前に、対象の`rusty-kaspa`コミット、具体的なクレート・型・関数、テスト結果、仕様の対応を追記すること。本章の図とコードは学習用の概念モデルであり、実装と一対一で対応するという主張はしていない。
+> **確認範囲:** 固定版のGHOSTDAG主要経路、ヘッダー保存とVirtual更新、既存DAG教材と型断片を確認した。全規則・全キャッシュ・公式Reachability・永続化の障害注入・原論文の証明を検証した結果ではない。今回の記録は `experiments/chapter-26-review-2026-11-01.md`。

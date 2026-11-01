@@ -55,7 +55,7 @@ mdbook build
 
 ## 実行できるサンプル
 
-[第27章の最小ノード](examples/minimal-node/README.md)を掲載しています。標準ライブラリのみで実行でき、6件の単体テストを含みます。
+[第27章の最小ノード](examples/minimal-node/README.md)を掲載しています。標準ライブラリのみで実行でき、16件の単体テストを含みます。
 
 [第12章のDAG解析器](examples/dag-relations/README.md)も収録し、Past・Anticone・k-cluster条件と追加順の違いを検証しています。
 

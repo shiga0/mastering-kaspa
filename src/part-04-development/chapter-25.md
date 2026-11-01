@@ -1,8 +1,10 @@
 # Chapter 25 — Exploring the rusty-kaspa Codebase（rusty-kaspaのコードベースを読む）
 
-> **原稿ステータス:** v0.1（技術レビュー前）  
+> **目次順の本文レビュー:** 2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。主要入口・metadata・教材の確認。\
 > **対象読者:** Rustの基礎を理解し、Kaspaの実装を追跡したい開発者  
 > **この章の目的:** `rusty-kaspa` を「ファイルの集合」ではなく、責務・依存関係・データフローから読み解く。
+
+確認記録は `experiments/chapter-25-review-2026-11-01.md`。全ソース・全テストの検証ではなく、既存の公式関数の実行記録とも分けて読む。
 
 ## 25.1 本章の到達目標
 
@@ -32,29 +34,29 @@
 
 ## 25.3 調査環境の準備
 
-公式リポジトリを取得する。
+[第1章](../part-01-foundations/chapter-01.md)で取得した固定版を再利用する。未取得なら同章の取得手順を使い、本書のリポジトリとは別の作業用ディレクトリへ配置する。
 
 ```bash
- git clone https://github.com/kaspanet/rusty-kaspa.git
- cd rusty-kaspa
- git rev-parse HEAD
- git status --short
- rustc --version
- cargo --version
+# 固定版checkoutの親ディレクトリから実行
+cd rusty-kaspa-v1.0.1
+git rev-parse HEAD
+git status --short
+rustc --version
+cargo --version
 ```
 
-最初の行の先頭スペースはシェルに影響しないが、実行時には省いてよい。調査対象のコミットを必ずメモする。再現性を高めるなら、タグや特定コミットをチェックアウトする。
+HEADを冒頭の完全SHAと照合する。タグ名だけでなく、ローカル変更・feature・targetも記録する。既にある未コミット変更を消すためのreset等は実行しない。
 
 ```bash
-# ワークスペースのメンバーと依存関係を把握する
-sed -n '1,220p' Cargo.toml
-cargo metadata --no-deps --format-version 1 > /tmp/kaspa-metadata.json
-
-# 主要なRustファイルの一覧
-find . -name '*.rs' -not -path './target/*' | head -80
+sed -n '1,80p' Cargo.toml
+KASPA_REVIEW_DIR="$(mktemp -d)"
+cargo metadata --locked --offline --no-deps --format-version 1 > "$KASPA_REVIEW_DIR/metadata.json"
+find kaspad/src consensus/src rpc/service/src -name '*.rs'
 ```
 
-`cargo metadata` は、複数クレートを持つ大規模なRustプロジェクトの入口として便利である。
+今回の固定ソースではmetadataのpackages / workspace_membersはともに59件、resolveはnullだった。[cargo metadata](https://doc.rust-lang.org/cargo/commands/cargo-metadata.html)の--no-depsはワークスペースのパッケージと宣言上の依存を調べる入口であり、外部依存を解決した完全なグラフではない。
+
+metadataにはローカルの絶対パス等が含まれるため、そのJSONをそのまま公開記録へ追加しない。--lockedはlock更新を防ぎ、--offlineはネットワーク取得を禁止する別の指定である。依存が不足する処理ではofflineが失敗する場合があり、対象版の取得手順と必要なツールを確認する。
 
 ### 25.3.1 調査の再現性
 
@@ -127,16 +129,34 @@ Rustでは、ひとつのリポジトリに複数のクレートが存在し得�
 - `#[cfg(feature = "...")]` とフィーチャーフラグ
 
 ```bash
-# 利用できる場合、依存グラフを表示
-cargo tree --depth 2
+# 依存解決に必要なソース等を取得済みの場合
+cargo tree --locked -p kaspa-rpc-service --depth 2
 
-# 機能別に入口を探す
-rg 'trait .*Consensus|struct .*Consensus' --glob '*.rs'
-rg 'submit_block|validate_block|process_block' --glob '*.rs'
-rg 'get_block_template|submit_transaction' --glob '*.rs'
+# 固定版の具体的な入口を絞って探す
+grep -n 'validate_and_insert_block' consensus/src/consensus/mod.rs
+grep -n -E 'submit_transaction_call|get_block_template_call' rpc/service/src/service.rs
+grep -n 'submit_rpc_transaction' protocol/flows/src/flow_context.rs
 ```
 
-検索語は**探索用の候補**であり、現行実装に必ず同名の識別子が存在するという意味ではない。`rg` が未導入なら `grep -R` を使用する。
+[cargo tree](https://doc.rust-lang.org/cargo/commands/cargo-tree.html)は依存グラフであって実行時の呼び出しグラフではない。target・feature・依存種別によって表示が変わり、--lockedだけでネットワーク取得を禁止することもできない。今回、上記のcargo treeを実行して外部依存全体を再解決したわけではない。
+
+### 25.5.1 基準版で確認した地図
+
+以下はmetadataと固定ソースで存在を確認した入口である。ディレクトリ名とpackage名は同じとは限らない。
+
+| ディレクトリ | package | 主な入口・役割 |
+|---|---|---|
+| kaspad | kaspad | src/main.rs → daemon::create_core。ノード起動・サービスの組み立てを探す |
+| protocol/p2p | kaspa-p2p-lib | P2Pの型・通信の基盤 |
+| protocol/flows | kaspa-p2p-flows | src/v5/blockrelay/flow.rs、src/flow_context.rsの受信・伝播処理 |
+| consensus | kaspa-consensus | src/consensus/mod.rs、src/pipeline配下の処理段階 |
+| consensus/core | kaspa-consensus-core | 公開データ型・コンセンサスAPI |
+| components/consensusmanager | kaspa-consensusmanager | consensusの管理とstagingの境界 |
+| mining | kaspa-mining | src/manager.rs、Mempoolとテンプレート作成 |
+| rpc/service | kaspa-rpc-service | src/service.rsのRPC要求処理 |
+| database | kaspa-database | DBアクセスの基盤。全コンセンサス保存処理がここだけにあるとは限らない |
+
+walletやWASMの具体的な境界は[第23章](chapter-23.md)・[第24章](chapter-24.md)を参照する。Cargoの依存、Rustのモジュール、トレイト実装、実際の呼び出しはそれぞれ分けて追う。
 
 ## 25.6 主要な責務を分解する
 
@@ -174,14 +194,14 @@ BlockDAG / consensus state
 Storage + downstream consumers
 ```
 
-この図も概念図である。実装では並列化、キューイング、早期リターン、キャッシュなどにより順序が変わり得る。
+この図も概念図である。実装では並列化、キューイング、早期リターン、キャッシュがある。依存する検証段階の順序まで自由に入れ替わる、という意味ではない。
 
 調査手順：
 
 1. ブロックを表す型とP2Pメッセージ型を探す。
 2. 受信ハンドラーから呼ばれる処理を辿る。
 3. `Result` のエラー型を確認する。
-4. 検証に失敗した場合、永続状態が変わらないかを確認する。
+4. 検証に失敗した場合、既に完了した段階・無効ステータス・キャッシュ・永続状態のどこが変わるかを確認する。
 5. 成功時のイベント通知・キャッシュ更新・永続化を確認する。
 6. 対応するテストを探す。
 
@@ -192,13 +212,13 @@ Application
    │ RPC request
    ▼
 RPC boundary
-   │ parse / authorize / route
+   │ decode / convert / route
    ▼
 Transaction processing
    │ checks / UTXO dependencies
    ▼
-Mempool
-   │ accepted locally
+Mempool processing result
+   │ accepted transaction IDs
    ▼
 P2P propagation
 ```
@@ -225,6 +245,14 @@ Miner / Mining Client
 ```
 
 ここでは、親ブロックの選択、トランザクション選択、Coinbase、難易度関連フィールドの出所を調べる。
+
+### 25.7.1 固定版で経路を辿る例
+
+- **ブロック受信：** [HandleRelayInvsFlow](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/protocol/flows/src/v5/blockrelay/flow.rs)はsession.validate_and_insert_blockを呼び、block_taskとvirtual_state_taskを別々に扱う。[consensus/mod.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/consensus/mod.rs)のvalidate_and_insert_block_implは処理メッセージと2つの結果チャネルを作る。block_taskだけの完了をVirtual更新全体の完了と読み替えない。
+- **送信：** [submit_transaction_call](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/service/src/service.rs)はRPCのtransactionをtry_intoで変換し、[FlowContext::submit_rpc_transaction](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/protocol/flows/src/flow_context.rs)へ渡す。そこでMiningManagerのvalidate_and_insert_transactionをawaitし、結果のaccepted集合のIDをbroadcast_transactionsへ渡す。要求のallow_orphanはconfig.unsafe_rpcによって制限される。要求IDの返却・Mempool処理・伝播・Virtual受理は別の出来事である。
+- **テンプレート：** service.rsのget_block_template_callから[MiningManager](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/mining/src/manager.rs)を辿る。async側はspawn_blockingで内部の同期処理へ渡し、内部ではVirtualに関する近似IDとキャッシュを使う。要求ごとに全候補を最初から再計算するとは限らない。
+
+これらは主要入口のソース照合であり、ネットワーク上で3経路を今回再実行した意味ではない。[第11章](../part-02-consensus/chapter-11.md)・[第17章](../part-03-transactions/chapter-17.md)・[第18章](../part-03-transactions/chapter-18.md)の対応する検証範囲も参照する。
 
 ## 25.8 型を読む：データモデルと不変条件
 
@@ -293,7 +321,7 @@ Inbound Messages
   Storage / Events
 ```
 
-**キューを無制限に増やさないこと**は、メモリ枯渇やDoSを避けるうえで重要である。ただし、具体的な制限値は実装と設定に依存する。
+**キューを無制限に増やさないこと**は、メモリ枯渇やDoSを避けるうえで重要である。ただし、具体的な制限値は実装と設定に依存する。この図が固定版のすべてのキューをboundedだと示すものではない。unboundedや同期チャネル、spawn_blocking先も個別に調べる。
 
 ## 25.10 エラー処理を読む
 
@@ -302,7 +330,7 @@ Inbound Messages
 | エラー種別 | 例 | 調査の焦点 |
 |---|---|---|
 | 入力エラー | 不正なメッセージ形式 | ピア切断・拒否の条件 |
-| コンセンサスエラー | 無効なブロック | 永続化や通知が起きないか |
+| コンセンサスエラー | 無効なブロック | どの段階まで完了し、何を無効状態として保存するか |
 | 一時的エラー | 親ブロック未取得 | 後で再試行できるか |
 | ストレージエラー | 書き込み失敗 | 状態が部分更新されないか |
 | 通信エラー | ピア切断 | 再接続と同期回復 |
@@ -310,22 +338,21 @@ Inbound Messages
 
 `?` 演算子で伝播したエラーが最終的にどこで処理されるかを追う。エラーを返す関数だけでなく、その呼び出し元が重要である。
 
+例えば[本体処理](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/body_processor/processor.rs)は多くの本体検証エラーでStatusInvalidを保存する一方、BadMerkleRoot・MissingParents・PrunedBlockはその対象から外す。Errを返したからファイル・索引・ヘッダーまで一切変更されない、と決めつけない。
+
 ## 25.11 テストから仕様を発見する
 
 実装を読む際、対応するテストは強力な手掛かりとなる。
 
 ```bash
-# テスト候補を探す
-rg '#\[test\]|#\[tokio::test\]' --glob '*.rs' | head -80
+# 基準版に存在する具体的なテストを探す
+grep -n -E 'validate_body_in_isolation_test|merkle_root_missing_parents_known_invalid_test' consensus/src/pipeline/body_processor/body_validation_in_isolation.rs
 
-# 特定のクレートだけテストする（名前はCargo.tomlで確認）
-cargo test -p <package-name>
-
-# 名前でテストを絞る
-cargo test <test-name-fragment> -- --nocapture
+# 固定ソースのルートで、必要な依存を取得した環境に限って実行する
+cargo test --locked -p kaspa-consensus --lib pipeline::body_processor::body_validation_in_isolation::tests::validate_body_in_isolation_test -- --exact
 ```
 
-**注意:** `<package-name>` と `<test-name-fragment>` はプレースホルダーであり、そのまま実行しない。
+この公式テストの過去の実行は `experiments/core-validation-review-2026-10-31.md` に記録している。今回はソース中の存在と文脈を確認し、公式コンセンサスを再ビルド・再実行していない。--exactで絞っても、結果が0 testsなら対象の検証に成功したとは数えない。
 
 テストを読むときは、次の4点を記録する。
 
@@ -338,31 +365,53 @@ cargo test <test-name-fragment> -- --nocapture
 
 ## 25.12 Rustによる小さな実験：状態更新の原子性
 
-以下は `rusty-kaspa` のコードではなく、状態変更を安全に行うための教育用モデルである。**検証してから状態を変更する**という基本原則を確認する。
+以下は `rusty-kaspa` のコードではなく、状態変更を安全に行うための教育用モデルである。**通常のErrで既存のメモリ内状態を維持する**ことを確認する。実ノードの全段階が同じ性質を持つという例ではない。
 
 ```rust
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 
 #[derive(Debug, PartialEq, Eq)]
-enum Error {
+pub enum Error {
     AlreadyKnown,
+    EmptyParents,
+    DuplicateParent,
+    SelfParent,
     MissingParent,
 }
 
-#[derive(Default)]
-struct DagStore {
-    known: HashSet<u64>,
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DagStore {
+    parents: BTreeMap<u64, Vec<u64>>,
 }
 
 impl DagStore {
-    fn insert(&mut self, id: u64, parents: &[u64]) -> Result<(), Error> {
-        if self.known.contains(&id) {
+    // 教材のルートを明示する。本物のGenesis検証ではない。
+    pub fn new(root: u64) -> Self {
+        Self {
+            parents: BTreeMap::from([(root, vec![])]),
+        }
+    }
+
+    pub fn insert(&mut self, id: u64, parents: &[u64]) -> Result<(), Error> {
+        if self.parents.contains_key(&id) {
             return Err(Error::AlreadyKnown);
         }
-        if parents.iter().any(|parent| !self.known.contains(parent)) {
-            return Err(Error::MissingParent);
+        if parents.is_empty() {
+            return Err(Error::EmptyParents);
         }
-        self.known.insert(id);
+        let mut seen = HashSet::new();
+        for parent in parents {
+            if *parent == id {
+                return Err(Error::SelfParent);
+            }
+            if !seen.insert(parent) {
+                return Err(Error::DuplicateParent);
+            }
+            if !self.parents.contains_key(parent) {
+                return Err(Error::MissingParent);
+            }
+        }
+        self.parents.insert(id, parents.to_vec());
         Ok(())
     }
 }
@@ -371,39 +420,85 @@ impl DagStore {
 mod tests {
     use super::*;
 
+    fn sample() -> DagStore {
+        let mut store = DagStore::new(0);
+        store.insert(1, &[0]).unwrap();
+        store
+    }
     #[test]
     fn accepts_block_after_parent() {
-        let mut store = DagStore::default();
-        assert_eq!(store.insert(1, &[]), Ok(()));
+        let mut store = sample();
         assert_eq!(store.insert(2, &[1]), Ok(()));
-        assert!(store.known.contains(&2));
+        assert_eq!(store.parents.get(&2), Some(&vec![1]));
     }
-
     #[test]
-    fn invalid_block_does_not_mutate_state() {
-        let mut store = DagStore::default();
-        let before = store.known.clone();
-        assert_eq!(store.insert(2, &[99]), Err(Error::MissingParent));
-        assert_eq!(store.known, before);
+    fn invalid_block_preserves_nonempty_state() {
+        let mut store = sample();
+        let before = store.clone();
+        assert_eq!(store.insert(2, &[1, 99]), Err(Error::MissingParent));
+        assert_eq!(store, before);
     }
-
     #[test]
-    fn duplicate_is_rejected() {
-        let mut store = DagStore::default();
-        assert_eq!(store.insert(1, &[]), Ok(()));
-        assert_eq!(store.insert(1, &[]), Err(Error::AlreadyKnown));
+    fn duplicate_is_rejected_without_replacing_edges() {
+        let mut store = sample();
+        store.insert(2, &[0]).unwrap();
+        let before = store.clone();
+        assert_eq!(store.insert(1, &[2]), Err(Error::AlreadyKnown));
+        assert_eq!(store, before);
+    }
+    #[test]
+    fn only_explicit_root_has_no_parents() {
+        let mut store = sample();
+        let before = store.clone();
+        assert_eq!(store.insert(2, &[]), Err(Error::EmptyParents));
+        assert_eq!(store, before);
+    }
+    #[test]
+    fn duplicate_parent_preserves_state() {
+        let mut store = sample();
+        let before = store.clone();
+        assert_eq!(store.insert(2, &[1, 1]), Err(Error::DuplicateParent));
+        assert_eq!(store, before);
+    }
+    #[test]
+    fn self_parent_preserves_state() {
+        let mut store = sample();
+        let before = store.clone();
+        assert_eq!(store.insert(2, &[1, 2]), Err(Error::SelfParent));
+        assert_eq!(store, before);
+    }
+    #[test]
+    fn missing_parent_can_arrive_before_retry() {
+        let mut store = DagStore::new(0);
+        assert_eq!(store.insert(2, &[1]), Err(Error::MissingParent));
+        assert_eq!(store.insert(1, &[0]), Ok(()));
+        assert_eq!(store.insert(2, &[1]), Ok(()));
+    }
+    #[test]
+    fn multiple_parents_do_not_require_numeric_order() {
+        let mut store = DagStore::new(0);
+        store.insert(2, &[0]).unwrap();
+        store.insert(1, &[0]).unwrap();
+        store.insert(3, &[2, 1]).unwrap();
+        assert_eq!(store.parents.get(&3), Some(&vec![2, 1]));
     }
 }
 ```
 
+本書のリポジトリとは別の作業用ディレクトリで実行する。Cargo.tomlはcargo newが作るものを使い、外部依存は不要である。
+
 実行手順：
 
 ```bash
-cargo new dag-store-lab --lib
+cargo new --lib --edition 2021 dag-store-lab
 cd dag-store-lab
 # 上のコードを src/lib.rs に貼り付ける
 cargo test
 ```
+
+教材は明示したrootから始め、既知の親への辺を保存する。整数IDの大小は到着順やトポロジーを表さず、親配列の順序も本物のcanonical orderingの再現ではない。
+
+本文から抽出した教材は8テスト成功。既存状態を保った拒否、親が後から到着した場合の再投入、複数親も検査した。25.8の型・trait断片は別のライブラリとしてコンパイル確認した。
 
 このモデルにはPoW、GHOSTDAG、永続化、ネットワーク、UTXO処理は含まれない。また、メモリ上の単一操作の性質を示すだけであり、実際のノードのトランザクション性を保証するものではない。
 
@@ -534,7 +629,7 @@ cargo test
 
 ```bash
 cargo fmt --all -- --check
-cargo test -p <package-name>
+cargo test --locked -p kaspa-consensus --lib
 # lint対象・feature構成はリポジトリのCI設定に合わせる
 ```
 
@@ -587,7 +682,7 @@ A. ない。目的に沿った一つの経路を追い、周辺へ広げる方�
 - **状態遷移:** 成功・失敗時に何が変化するか。
 - **根拠:** コード、テスト、論文、KIPのどれに基づく結論か。
 
-この5つを意識して、まずはブロック受信かトランザクション送信の経路を一つ追ってみよう。次章では、ここで学んだ読み方を使い、コンセンサス実装の構造にさらに踏み込む。
+この5つを意識して、まずはブロック受信かトランザクション送信の経路を一つ追ってみよう。[次章](chapter-26.md)では、ここで学んだ読み方を使い、コンセンサス実装の構造にさらに踏み込む。
 
 ## 25.24 参考資料
 
@@ -600,4 +695,4 @@ A. ない。目的に沿った一つの経路を追い、周辺へ広げる方�
 - [Tokio Tutorial](https://tokio.rs/tokio/tutorial)
 - [C4 model](https://c4model.com/)
 
-> **編集メモ:** 出版前に、対象とする `rusty-kaspa` のリリースまたはコミットを固定し、実際のクレート名・エントリーポイント・テスト名を検証して本文へ追記すること。
+> **確認範囲:** 固定版のmetadata、主要な入口・エラー経路と独自教材を確認した。全呼び出し・全feature・全キュー・クラッシュ耐性・公式テスト全体を検証したものではない。記録は `experiments/chapter-25-review-2026-11-01.md`。

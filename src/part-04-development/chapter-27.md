@@ -1,8 +1,10 @@
 # Chapter 27 — Building a Minimal Kaspa-like Node in Rust（Rustによる最小Kaspa型ノードの構築）
 
-> **原稿ステータス:** v0.1（技術レビュー前）  
+> **目次順の本文レビュー:** 2026-11-01。教材のID検査・状態保持・ノード間の関数呼び出しを確認。Kaspa互換性の検証ではない。\
 > **対象:** 『Mastering Kaspa』Part IV — Kaspa Development & Implementation  
 > **前提:** 第7章（BlockDAG）、第10章（P2P）、第14章（Virtual State）、第15章（UTXO）、第25〜26章（Rust実装）
+
+今回の記録は `experiments/chapter-27-review-2026-11-01.md`。2026-10-31の6テストの記録と、今回の改訂後16テストを区別する。
 
 ## 27.1 この章で作るもの
 
@@ -88,12 +90,12 @@ cargo fmt --check
 cargo clippy --locked --all-targets -- -D warnings
 ```
 
-以下は、同じ教材を手元で組み立てる手順である。
+以下は、同じ教材を手元で組み立てる手順である。本書のリポジトリとは別の作業用ディレクトリで実行し、27.6〜27.12のRustコードを順にsrc/main.rsへ配置する。27.13以降の断片は発展設計として分ける。
 
 Rustの標準ライブラリだけで実行できるようにする。
 
 ```bash
-cargo new minimal-kaspa-like-node
+cargo new --bin --edition 2021 minimal-kaspa-like-node
 cd minimal-kaspa-like-node
 ```
 
@@ -126,14 +128,14 @@ struct Output {
     value: u64,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 struct Transaction {
     id: String,
     inputs: Vec<OutPoint>,
     outputs: Vec<Output>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 struct Block {
     id: String,
     parents: Vec<String>,
@@ -148,13 +150,23 @@ struct Block {
 状態遷移は**検証してからコミット**する。途中で失敗した場合に、半分だけ更新された状態を残さないためだ。
 
 ```rust
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 struct UtxoSet {
     entries: HashMap<OutPoint, Output>,
+    applied_txids: HashSet<String>,
 }
 
 impl UtxoSet {
     fn apply(&mut self, tx: &Transaction) -> Result<(), String> {
+        if tx.id.is_empty() {
+            return Err("empty transaction id".into());
+        }
+        if self.applied_txids.contains(&tx.id) {
+            return Err("duplicate transaction id".into());
+        }
+        if tx.inputs.iter().any(|input| input.txid == tx.id) {
+            return Err("self-referencing transaction id".into());
+        }
         if tx.inputs.is_empty() || tx.outputs.is_empty() {
             return Err("empty inputs or outputs".into());
         }
@@ -176,34 +188,32 @@ impl UtxoSet {
         if output_sum > input_sum {
             return Err("overspend".into());
         }
-        for (index, _) in tx.outputs.iter().enumerate() {
+        let mut created = Vec::with_capacity(tx.outputs.len());
+        for (index, output) in tx.outputs.iter().enumerate() {
+            let index = u32::try_from(index).map_err(|_| "too many outputs")?;
             let point = OutPoint {
                 txid: tx.id.clone(),
-                index: index as u32,
+                index,
             };
-            if self.entries.contains_key(&point) && !seen.contains(&point) {
+            if self.entries.contains_key(&point) {
                 return Err("output collision".into());
             }
+            created.push((point, output.clone()));
         }
-        // ここまで成功してから変更する。
+        // ここまで成功してから変更する。ID履歴も同じ候補状態に反映する。
         for input in &tx.inputs {
             self.entries.remove(input);
         }
-        for (index, output) in tx.outputs.iter().enumerate() {
-            self.entries.insert(
-                OutPoint {
-                    txid: tx.id.clone(),
-                    index: index as u32,
-                },
-                output.clone(),
-            );
-        }
+        self.entries.extend(created);
+        self.applied_txids.insert(tx.id.clone());
         Ok(())
     }
 }
 ```
 
-この実装には、**トランザクションIDが一意であることを保証する機構がない**。さらに、入力と出力の同一OutPointを許すと予期しない動作が起こり得る。実際のシステムでは、ID生成・出力衝突・金額・署名・Scriptなどを厳密に扱う必要がある。
+applied_txidsは、この状態で適用したラベルの履歴である。出力が消費済みでもIDを再利用せず、入力が自分のIDを参照する取引や既存出力への衝突を拒否する。初期残高のseedも使用済みラベルとして登録する。
+
+これは暗号学的なTX IDの計算ではなく、履歴を削らないメモリ内の一意性検査である。署名・Script・成熟・mass等は検証しない。出力indexはu32への変換を検査するが、受信サイズ・メモリ使用量の上限を設けた意味ではない。
 
 ### 失敗時の原子性
 
@@ -229,7 +239,7 @@ fn apply_block_transactions(
 Mempoolは、コンセンサスで確定した状態ではない。未処理のトランザクション候補を管理する領域だ。
 
 ```rust
-#[derive(Default)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 struct Mempool {
     transactions: HashMap<String, Transaction>,
     reserved_inputs: HashSet<OutPoint>,
@@ -237,6 +247,12 @@ struct Mempool {
 
 impl Mempool {
     fn insert(&mut self, tx: Transaction) -> Result<(), String> {
+        if tx.id.is_empty() {
+            return Err("empty transaction id".into());
+        }
+        if tx.inputs.iter().any(|input| input.txid == tx.id) {
+            return Err("self-referencing transaction id".into());
+        }
         if self.transactions.contains_key(&tx.id) {
             return Err("duplicate transaction".into());
         }
@@ -273,13 +289,16 @@ impl Mempool {
 複数親を登録できる構造を作る。ただし**親を複数持つことだけではGHOSTDAGにならない**。
 
 ```rust
-#[derive(Default)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 struct Dag {
     blocks: HashMap<String, Block>,
 }
 
 impl Dag {
     fn insert(&mut self, block: Block) -> Result<(), String> {
+        if block.id.is_empty() {
+            return Err("empty block id".into());
+        }
         if self.blocks.contains_key(&block.id) {
             return Err("duplicate block".into());
         }
@@ -317,10 +336,10 @@ impl Dag {
 
 ## 27.10 Nodeでコンポーネントを接続する
 
-ブロックの受理を、DAG更新とUTXO更新の**ひとつの操作**として扱う。
+この教材では、通常のErrでDAG・UTXO・適用済みID・Mempool予約を維持するため、ブロック受理の候補状態を先に作る。これはメモリ内の直列処理の境界であり、[第26章](chapter-26.md)の実ノードのヘッダー・本体・Virtualの別段階を再現したものではない。
 
 ```rust
-#[derive(Default)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 struct Node {
     dag: Dag,
     utxos: UtxoSet,
@@ -347,6 +366,8 @@ impl Node {
 
 このコードでは、**ブロック受理順にトランザクションを適用する**。そのため、ネットワークの受信順が異なると状態が異なる可能性がある。これは分散コンセンサスとして**成立しない**。実際のKaspaでは、GHOSTDAGとコンセンサス順序、Virtual Stateの仕組みがこの問題を解決する。ここは教材の最大の未実装部分である。
 
+適用失敗でブロック全体を拒否するのも教材独自の規則である。実際のKaspaのブロック妥当性と、各取引のVirtualでの受理を同一視しない。
+
 また、Mempoolからの削除は簡略化している。ブロック受理後に、残存トランザクションの再検証や競合トランザクションの除去が必要になる場合がある。
 
 ## 27.11 `main`で動かす
@@ -370,6 +391,7 @@ fn main() -> Result<(), String> {
         },
         Output { value: 100 },
     );
+    node.utxos.applied_txids.insert("seed".into());
 
     let tx = Transaction {
         id: "payment-1".into(),
@@ -433,6 +455,7 @@ mod tests {
             },
             Output { value: 100 },
         );
+        node.utxos.applied_txids.insert("seed".into());
         node
     }
 
@@ -466,7 +489,7 @@ mod tests {
     #[test]
     fn invalid_block_does_not_mutate_state() {
         let mut node = seeded_node();
-        let before = node.utxos.entries.clone();
+        let before = node.clone();
         assert!(node
             .accept_block(Block {
                 id: "bad".into(),
@@ -474,7 +497,7 @@ mod tests {
                 transactions: vec![spend("tx1", 101)],
             })
             .is_err());
-        assert_eq!(node.utxos.entries, before);
+        assert_eq!(node, before);
         assert!(!node.dag.blocks.contains_key("bad"));
     }
 
@@ -520,11 +543,199 @@ mod tests {
     #[test]
     fn duplicate_input_is_rejected_without_mutation() {
         let mut state = seeded_node().utxos;
-        let before = state.entries.clone();
+        let before = state.clone();
         let mut tx = spend("tx1", 50);
         tx.inputs.push(tx.inputs[0].clone());
         assert!(state.apply(&tx).is_err());
-        assert_eq!(state.entries, before);
+        assert_eq!(state, before);
+    }
+
+    fn block(id: &str, parent: &str, transactions: Vec<Transaction>) -> Block {
+        Block {
+            id: id.into(),
+            parents: vec![parent.into()],
+            transactions,
+        }
+    }
+    fn child_spend(id: &str, parent_tx: &str, amount: u64) -> Transaction {
+        Transaction {
+            id: id.into(),
+            inputs: vec![OutPoint {
+                txid: parent_tx.into(),
+                index: 0,
+            }],
+            outputs: vec![Output { value: amount }],
+        }
+    }
+
+    #[test]
+    fn later_invalid_transaction_preserves_entire_node() {
+        let mut node = seeded_node();
+        let first = spend("tx1", 99);
+        node.mempool.insert(first.clone()).unwrap();
+        let before = node.clone();
+        let bad = child_spend("tx2", "tx1", 100);
+        assert!(node
+            .accept_block(block("bad", "genesis", vec![first, bad]))
+            .is_err());
+        assert_eq!(node, before);
+    }
+    #[test]
+    fn dependent_transactions_in_one_block_succeed() {
+        let mut node = seeded_node();
+        node.accept_block(block(
+            "a",
+            "genesis",
+            vec![spend("tx1", 99), child_spend("tx2", "tx1", 98)],
+        ))
+        .unwrap();
+        assert_eq!(node.utxos.entries.len(), 1);
+        assert_eq!(
+            node.utxos.entries[&OutPoint {
+                txid: "tx2".into(),
+                index: 0
+            }]
+                .value,
+            98
+        );
+        assert!(node.utxos.applied_txids.contains("tx1"));
+        assert!(node.utxos.applied_txids.contains("tx2"));
+    }
+    #[test]
+    fn transaction_id_cannot_be_reused_after_its_outputs_are_spent() {
+        let mut node = seeded_node();
+        node.accept_block(block("a", "genesis", vec![spend("tx1", 99)]))
+            .unwrap();
+        node.accept_block(block("b", "a", vec![child_spend("tx2", "tx1", 98)]))
+            .unwrap();
+        let before = node.clone();
+        assert_eq!(
+            node.accept_block(block("c", "b", vec![child_spend("tx1", "tx2", 97)])),
+            Err("duplicate transaction id".into())
+        );
+        assert_eq!(node, before);
+    }
+    #[test]
+    fn transaction_cannot_recreate_its_own_input_label() {
+        let mut state = UtxoSet::default();
+        state.entries.insert(
+            OutPoint {
+                txid: "loop".into(),
+                index: 0,
+            },
+            Output { value: 100 },
+        );
+        let before = state.clone();
+        assert_eq!(
+            state.apply(&child_spend("loop", "loop", 99)),
+            Err("self-referencing transaction id".into())
+        );
+        assert_eq!(state, before);
+    }
+    #[test]
+    fn output_collision_preserves_all_utxo_state() {
+        let mut state = seeded_node().utxos;
+        state.entries.insert(
+            OutPoint {
+                txid: "tx1".into(),
+                index: 0,
+            },
+            Output { value: 7 },
+        );
+        let before = state.clone();
+        assert_eq!(
+            state.apply(&spend("tx1", 99)),
+            Err("output collision".into())
+        );
+        assert_eq!(state, before);
+    }
+    #[test]
+    fn arithmetic_overflow_preserves_state() {
+        let mut state = seeded_node().utxos;
+        state.entries.insert(
+            OutPoint {
+                txid: "large".into(),
+                index: 0,
+            },
+            Output { value: u64::MAX },
+        );
+        let before = state.clone();
+        let mut tx = spend("tx1", 1);
+        tx.inputs.push(OutPoint {
+            txid: "large".into(),
+            index: 0,
+        });
+        assert_eq!(state.apply(&tx), Err("input overflow".into()));
+        assert_eq!(state, before);
+        let mut tx = spend("tx2", 1);
+        tx.outputs = vec![Output { value: u64::MAX }, Output { value: 1 }];
+        assert_eq!(state.apply(&tx), Err("output overflow".into()));
+        assert_eq!(state, before);
+    }
+    #[test]
+    fn failed_mempool_insert_does_not_reserve_earlier_inputs() {
+        let mut pool = Mempool::default();
+        pool.insert(spend("tx1", 99)).unwrap();
+        let before = pool.clone();
+        let mut tx = spend("tx2", 98);
+        tx.inputs.insert(
+            0,
+            OutPoint {
+                txid: "free".into(),
+                index: 0,
+            },
+        );
+        assert!(pool.insert(tx).is_err());
+        assert_eq!(pool, before);
+    }
+    fn relay_block(sender: &Node, receiver: &mut Node, id: &str) -> Result<(), String> {
+        let block = sender
+            .dag
+            .blocks
+            .get(id)
+            .ok_or("sender does not have block")?
+            .clone();
+        receiver.accept_block(block)
+    }
+
+    #[test]
+    fn receiver_retries_child_after_parent_delivery() {
+        let mut sender = seeded_node();
+        let mut receiver = seeded_node();
+        let parent = block("a", "genesis", vec![]);
+        let child = block("b", "a", vec![]);
+        sender.accept_block(parent).unwrap();
+        sender.accept_block(child).unwrap();
+        let before = receiver.clone();
+        assert!(relay_block(&sender, &mut receiver, "b").is_err());
+        assert_eq!(receiver, before);
+        relay_block(&sender, &mut receiver, "a").unwrap();
+        relay_block(&sender, &mut receiver, "b").unwrap();
+        assert_eq!(receiver, sender);
+    }
+    #[test]
+    fn opposite_delivery_orders_diverge_on_conflicting_blocks() {
+        let a = block("a", "genesis", vec![spend("tx-a", 99)]);
+        let b = block("b", "genesis", vec![spend("tx-b", 98)]);
+        let mut x = seeded_node();
+        let mut y = seeded_node();
+        x.accept_block(a.clone()).unwrap();
+        assert!(x.accept_block(b.clone()).is_err());
+        y.accept_block(b).unwrap();
+        assert!(y.accept_block(a).is_err());
+        assert_ne!(x.utxos, y.utxos);
+        assert_ne!(x.dag, y.dag);
+    }
+    #[test]
+    fn empty_labels_are_rejected_without_mutation() {
+        let mut node = seeded_node();
+        let before = node.clone();
+        assert!(node.accept_block(block("", "genesis", vec![])).is_err());
+        assert!(node
+            .accept_block(block("a", "genesis", vec![spend("", 99)]))
+            .is_err());
+        assert!(node.mempool.insert(spend("", 99)).is_err());
+        assert_eq!(node, before);
     }
 }
 ```
@@ -535,7 +746,7 @@ cargo clippy --all-targets -- -D warnings
 cargo fmt --check
 ```
 
-2026年10月31日、収録サンプルをRust 1.90.0で実行し、期待する表示、6件の単体テスト、書式検査、Clippyの成功を確認した。これは教育用モデルの検証であり、Kaspaのコンセンサス仕様との互換性を確認したものではない。検証記録は `experiments/minimal-node-2026-10-31.md` を参照する。
+2026-11-01、Rust 1.90.0で改訂教材の16テスト・書式・Clippyとmainの期待表示を確認した。ブロック途中の失敗で全Node状態を維持すること、使用済みID・自己参照・出力衝突、算術overflow、Mempoolの部分予約防止、関数呼び出しによる親の再送と受信順の不一致を検査した。記録は `experiments/chapter-27-review-2026-11-01.md`。古い6テストは `experiments/minimal-node-2026-10-31.md` の実施時点の結果である。
 
 <!-- example:minimal-node:end -->
 
@@ -552,6 +763,8 @@ fn relay_block(sender: &Node, receiver: &mut Node, id: &str)
     receiver.accept_block(block)
 }
 ```
+
+収録コードではテスト内のrelay_blockでこの関数呼び出しを再現する。TCP・WebSocket・非同期タスクを使った伝送ではない。
 
 送信側が`genesis → a → b`を保持し、受信側が`genesis`しか持たないとする。`b`だけ先に送れば、親`a`がないため拒否される。`a`を受信してから`b`を再送すれば登録できる。
 
@@ -585,7 +798,7 @@ Node A                      Node B
 | X | A → B | Aのトランザクションを適用し、Bの競合トランザクションを拒否 |
 | Y | B → A | Bのトランザクションを適用し、Aの競合トランザクションを拒否 |
 
-**同じブロック集合を受信しても、同じ状態になる保証がない。** これが、DAGの保存だけではコンセンサスにならない理由だ。
+このケースをopposite_delivery_orders_diverge_on_conflicting_blocksで確認した。各ノードは競合側のブロック全体を拒否するため、登録済みDAGも異なる。**同じブロック集合を受信しても、同じ状態になる保証がない。** これが、DAGの保存だけではコンセンサスにならない理由だ。
 
 Kaspaでは、GHOSTDAGに基づくコンセンサス順序とVirtual Stateの計算が重要になる。教材を改良する際は、受信順に即時適用する設計をやめ、**DAGの保存と状態評価を分離**する必要がある。
 
@@ -612,7 +825,7 @@ DAG Storage ────────────────┐
                       Virtual State
 ```
 
-この改良版の`ConsensusOrdering`は、**本章ではインターフェースだけ**を設計する。
+この改良版の`ConsensusOrdering`は、**本章ではインターフェースだけ**を設計する。次の断片は収録バイナリには含めておらず、順序付けの実装・動作検証はしていない。
 
 ```rust
 trait ConsensusOrdering {
@@ -693,11 +906,15 @@ Stopped
 教材が動いたら、公式実装で同じ責務がどこにあるかを調べる。クレート名やディレクトリは変更されるため、調査時にはコミットを固定する。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+# 第1章の固定版checkoutの親ディレクトリから実行
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-cargo metadata --no-deps --format-version 1 > metadata.json
+git status --short
+KASPA_MINIMAL_REVIEW_DIR="$(mktemp -d)"
+cargo metadata --locked --offline --no-deps --format-version 1 > "$KASPA_MINIMAL_REVIEW_DIR/metadata.json"
 ```
+
+未取得なら[第1章](../part-01-foundations/chapter-01.md)を参照し、HEADを基準版v1.0.1の完全SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` と照合する。metadataには絶対パスが含まれるため生JSONを公開しない。具体的な入口は[第25章](chapter-25.md)・[第26章](chapter-26.md)を参照する。
 
 調査の順番は以下を推奨する。
 
@@ -734,11 +951,11 @@ cargo metadata --no-deps --format-version 1 > metadata.json
 
 ### 失敗3：ブロック検証の途中でクラッシュする
 
-メモリ上の`clone`はプロセス内の部分更新を防ぐが、永続化のクラッシュ整合性までは保証しない。
+候補を作る`clone`はこの教材の通常のErrでの状態保持に使うが、永続化のクラッシュ整合性までは保証しない。
 
 ### 失敗4：無制限のメモリ使用
 
-HashMapに受信ブロックを無制限に保存すればDoSに弱い。サイズ・件数・処理時間の上限を設ける必要がある。
+ブロック、UTXO、Mempool、使用済みID履歴には容量上限がなく、DoS対策は未実装である。サイズ・件数・処理時間の上限を設ける必要がある。
 
 ### 失敗5：送信元の情報を信用する
 
@@ -782,7 +999,7 @@ Tokioで2ノードを接続し、メッセージのシリアライズ、タイ�
 
 また、ノードを設計するときは、アルゴリズムだけでなく、検証の境界、状態更新の原子性、同期、永続化、障害回復、DoS耐性を一緒に考える必要がある。
 
-次章では、ここで整理した責務を踏まえて、**Devnet上の実ノードを使った統合テスト**に進む。
+[次章](chapter-28.md)では、ここで整理した責務を踏まえて、**Devnet上の実ノードを使った統合テスト**に進む。
 
 ## 27.26 参考資料
 
@@ -790,9 +1007,9 @@ Tokioで2ノードを接続し、メッセージのシリアライズ、タイ�
 - [Kaspa公式Wiki](https://wiki.kaspa.org/)
 - [rusty-kaspa（公式Rust実装）](https://github.com/kaspanet/rusty-kaspa)
 - [Kaspa Improvement Proposals](https://github.com/kaspanet/kips)
-- [PHANTOM GHOSTDAG論文（arXiv）](https://arxiv.org/abs/1805.04615)
+- [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104)
 - [Rust公式ドキュメント](https://doc.rust-lang.org/book/)
 - [Cargo Book](https://doc.rust-lang.org/cargo/)
 - [Tokio公式ドキュメント](https://tokio.rs/)
 
-> **出版前の検証TODO:** `cargo test`と`cargo clippy`の実行結果、対象Rustバージョン、`rusty-kaspa`の参照コミット、サンプルの既知の限界を付録Gに記録する。教材用のモデルをKaspa互換と表現しない。
+> **確認範囲:** 改訂後の教材16テスト・実行表示・書式・Clippyと本文同期を確認した。GHOSTDAG・署名・PoW・本物のP2P・永続化・reorg・Kaspa互換性は未実装であり、付録Gの実ノード実験と混同しない。記録は `experiments/chapter-27-review-2026-11-01.md`。

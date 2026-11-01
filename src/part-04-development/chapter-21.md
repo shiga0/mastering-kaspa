@@ -1,12 +1,12 @@
 # Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）
 
 > **Part IV — Kaspa Development & Implementation**  
-> 原稿バージョン：v0.2（主要経路を基準版と照合・実Pruning検証は未完了）\
+> 目次順の本文レビュー：2026-11-01。主要経路は基準版と照合。本文の確認と実Pruning・Pruning後同期の検証は区別する。\
 > 対象：Kaspaの仕組みを理解し、`rusty-kaspa` のコード・運用・テストに進む開発者
 
 ## 照合した実装と実測範囲
 
-2026年10月31日、[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` のPruningパラメータ、point進行、削減、証明検証、UTXOインポートの主要経路をソースで確認した（Source-checked）。章全体のレビュー・実データ削減・Pruning後の新規ノード同期は未完了。
+2026年10月31日、[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` のPruningパラメータ、point進行、削減、証明検証、UTXOインポートの主要経路をソースで確認した（Source-checked）。今回の目次順レビューで本文と教材を確認したが、実データ削減・Pruning後の新規ノード同期は未検証。
 
 既存実験のDevnetは5475ブロック、sinkのblue scoreも5475で、Pruning pointはGenesisのままだった。短い実験の再起動・分岐復旧をPruning後の検証へ読み替えない。記録は `experiments/devnet-pruning-review-2026-10-31.md`。
 
@@ -32,7 +32,7 @@
 
 ただし、**過去の全トランザクションデータを保持すること**と、**現在のトランザクションの正当性を検証できること**は同義ではない。
 
-UTXO方式では、すでに消費された出力は現在の支出可能な集合に残らない。現在の状態を表すために必要なのは、基本的には「まだ消費されていない出力の集合」である。
+UTXO方式では、すでに消費された出力は現在の未使用出力の集合に残らない。現在の状態を表すために必要なのは、基本的には「まだ消費されていない出力の集合」である。
 
 ```text
 過去のトランザクション履歴
@@ -67,7 +67,7 @@ Kaspaノードの永続化対象を概念的に分けると、次のようにな
 | ブロックヘッダー | PoW、親参照、コンセンサス情報 | 検証とPruning Proofに必要な範囲を保持 |
 | ブロック本体 | トランザクション・Coinbaseなど | 古い本体はPruning対象になり得る |
 | DAG関係情報 | 親子関係・到達可能性・順序付け | 現在の計算と証明に必要な情報を維持 |
-| UTXO集合 | 現在の支出可能な出力 | 正当性検証に必須 |
+| UTXO集合 | 現在の未使用出力（成熟等の使用条件は別に検査） | 正当性検証に必須 |
 | コンセンサスメタデータ | blue work、DAAなど | プロトコルの規則に従い保持 |
 | Mempool | 未確定のトランザクション候補 | 通常は永続コンセンサス履歴とは別 |
 | アプリケーション用インデックス | アドレス検索・履歴照会など | 用途に応じて追加の保存コストが必要 |
@@ -97,9 +97,9 @@ Pruning PointとFinalityの関係も重要だが、両者は同じ概念では�
 
 ### 実装パラメータを読む際の注意
 
-`rusty-kaspa` では、たとえば `PRUNING_DURATION` のような時間ベースの定数が定義されている。ただし、**ソース中の定数をそのまま「全ネットワークで必ず何時間後にすべて削除」と解釈しない**。ネットワーク別設定・バージョン・活性化済みアップグレード・実際の削除条件を合わせて確認する。
+`rusty-kaspa` では、`NEW_PRUNING_DURATION` などの時間ベースの定数が定義されている。ただし、**ソース中の定数をそのまま「全ネットワークで必ず何時間後にすべて削除」と解釈しない**。ネットワーク別設定・バージョン・活性化済みアップグレード・実際の削除条件を合わせて確認する。
 
-参考：[`consensus/core/src/config/constants.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/constants.rs)、[`params.rs`](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/params.rs)。
+参考：[`consensus/core/src/config/constants.rs`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)、[`params.rs`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)。
 
 ### 21.4.1 基準版Devnetの進行条件
 
@@ -113,7 +113,7 @@ Pruning PointとFinalityの関係も重要だが、両者は同じ概念では�
 
 ## 21.5 Pruning Proofが必要な理由
 
-新しいノードが同期するとき、ネットワーク上の既存ノードは古い履歴をすでに削減しているかもしれない。新規ノードは、単に相手から「現在のUTXOはこれだ」と渡されただけでは、それを信用できない。
+新しいノードが同期するとき、ネットワーク上の既存ノードは古い履歴をすでに削減しているかもしれない。新規ノードは、単に相手から「現在のUTXOはこれだ」と渡されただけでは、それを信用できない。同じ相手がUTXO集合とそのハッシュを提示して一致しても、比較先のヘッダー・履歴の正当性を確立したことにはならない。
 
 そこで重要になるのが、**PoWで裏付けられた履歴の証拠と、現在状態のコミットメントを組み合わせて検証すること**である。
 
@@ -139,7 +139,9 @@ Pruning PointとFinalityの関係も重要だが、両者は同じ概念では�
 
 ## 21.6 UTXO CommitmentとMuHash
 
-Pruning Point時点のUTXO集合をダウンロードする際、ノードはその内容がヘッダーにコミットされた状態と一致するか検証する。
+対象ヘッダーのUTXO commitmentは、そのブロックの過去の受理文脈に対応する。対象ブロック自身の通常取引をすべて適用した後の集合、と単純に解釈しない。
+
+Pruning Pointに対応するUTXO集合をダウンロードする際、ノードはその内容がヘッダーにコミットされた状態と一致するか検証する。
 
 概念的には次の関係になる。
 
@@ -181,6 +183,8 @@ IBDは、新しいノードがネットワークへ参加し、検証可能な�
 
 **実際の順序・フェーズ・例外処理はバージョンによって異なる。** 上記は理解のための論理的な分解であり、実装の固定的なステートマシンを意味しない。
 
+基準版の [`ibd/flow.rs`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/protocol/flows/src/v5/ibd/flow.rs) は、既知の共有履歴からヘッダーを同期する経路と、headers proofを使う経路を分ける。すべてのIBDが毎回Pruning ProofとUTXO集合を取り直すわけではない。`v5/` は配置名であり、接続で合意した番号とは区別する。
+
 ### IBDと通常同期の違い
 
 | 項目 | IBD | 通常同期 |
@@ -206,7 +210,9 @@ IBDは、新しいノードがネットワークへ参加し、検証可能な�
 
 したがって、**サイズ制限・タイムアウト・検証前のリソース制限・インポートの原子性・再開可能性**が重要になる。
 
-`rusty-kaspa` のリリースノートでは、Protocol v11で大きなIBDペイロードをチャンク分割する仕組みが説明されている。こうした仕様は変更され得るため、運用時は使用バージョンの[公式リリースノート](https://github.com/kaspanet/rusty-kaspa/releases)を確認する。
+基準版のheaders proof経路はstaging consensusを作り、証明・ヘッダー・Pruning point・時刻・UTXO集合の検証へ進む。成功するとstagingをcommitし、エラーならcancelする。通信の分割単位や上限・タイムアウトは対象版のflow/stream実装で確認し、別バージョンのリリース説明を基準版へ読み替えない。
+
+`import_pruning_point_utxo_set` 単体は、MuHashの一致後にPruning用UTXOの位置を保存し、VirtualのUTXO集合をクリアして分割コピーし、その後に対象ブロックの取引も検証する。単一WriteBatchで全部を差し替える関数ではない。外側のstaging境界と関数内部の更新を分け、ソース確認だけで電源断時の耐久性を保証しない。
 
 ## 21.9 ストレージとコンセンサスの責務を分離する
 
@@ -266,7 +272,7 @@ Synced
 実装上、少なくとも次の不変条件を検討したい。
 
 1. **未検証のスナップショットは有効なUTXO状態として公開しない。**
-2. **検証失敗時、以前の正常な状態を破壊しない。**
+2. **検証失敗時に公開状態を保つ境界を明示する。関数内・staging・永続化の各範囲を区別する。**
 3. **受信件数・バイト数・処理時間には上限を設ける。**
 4. **同期元ピアの発言だけで最終的なコンセンサス状態を確定しない。**
 5. **Pruning後も、新規ブロック検証に必要なデータを保持する。**
@@ -278,6 +284,8 @@ Synced
 
 このサンプルは教育用であり、KaspaのUTXO形式・MuHash・Pruning Proofを再現しない。
 
+本書とは別の作業用ディレクトリで `cargo new --lib --edition 2021 snapshot-lab` を実行し、次のCargo.tomlとsrc/lib.rsへ置き換える。Rust 1.90.0、sha2 0.10.9で確認した。
+
 ### Cargo.toml
 
 ```toml
@@ -287,7 +295,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sha2 = "0.10"
+sha2 = "=0.10.9"
 ```
 
 ### src/lib.rs
@@ -300,6 +308,8 @@ pub type UtxoSet = BTreeMap<String, u64>;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ImportError {
+    EmptyOutpoint,
+    KeyTooLong,
     DuplicateOutpoint,
     CommitmentMismatch,
     TooManyEntries,
@@ -308,6 +318,7 @@ pub enum ImportError {
 /// 教育用の決定的なコミットメント。KaspaのMuHashではない。
 pub fn commitment(utxos: &UtxoSet) -> [u8; 32] {
     let mut hasher = Sha256::new();
+    hasher.update(b"mastering-kaspa/snapshot-lab/v1\0");
     for (outpoint, amount) in utxos {
         let key = outpoint.as_bytes();
         hasher.update((key.len() as u64).to_le_bytes());
@@ -323,6 +334,7 @@ pub fn import_snapshot(
     entries: Vec<(String, u64)>,
     expected: [u8; 32],
     max_entries: usize,
+    max_key_bytes: usize,
 ) -> Result<(), ImportError> {
     if entries.len() > max_entries {
         return Err(ImportError::TooManyEntries);
@@ -330,6 +342,12 @@ pub fn import_snapshot(
 
     let mut candidate = UtxoSet::new();
     for (outpoint, amount) in entries {
+        if outpoint.is_empty() {
+            return Err(ImportError::EmptyOutpoint);
+        }
+        if outpoint.len() > max_key_bytes {
+            return Err(ImportError::KeyTooLong);
+        }
         if candidate.insert(outpoint, amount).is_some() {
             return Err(ImportError::DuplicateOutpoint);
         }
@@ -354,13 +372,7 @@ mod tests {
         let expected = commitment(&expected_set);
 
         let mut current = UtxoSet::new();
-        import_snapshot(
-            &mut current,
-            vec![("tx-a:0".into(), 100)],
-            expected,
-            10,
-        )
-        .unwrap();
+        import_snapshot(&mut current, vec![("tx-a:0".into(), 100)], expected, 10, 64).unwrap();
         assert_eq!(current, expected_set);
     }
 
@@ -370,13 +382,8 @@ mod tests {
         current.insert("old:0".into(), 50);
         let original = current.clone();
 
-        let error = import_snapshot(
-            &mut current,
-            vec![("new:0".into(), 100)],
-            [0; 32],
-            10,
-        )
-        .unwrap_err();
+        let error = import_snapshot(&mut current, vec![("new:0".into(), 100)], [0; 32], 10, 64)
+            .unwrap_err();
 
         assert_eq!(error, ImportError::CommitmentMismatch);
         assert_eq!(current, original);
@@ -390,6 +397,7 @@ mod tests {
             vec![("tx-a:0".into(), 1), ("tx-a:0".into(), 2)],
             [0; 32],
             10,
+            64,
         )
         .unwrap_err();
         assert_eq!(error, ImportError::DuplicateOutpoint);
@@ -397,15 +405,83 @@ mod tests {
     }
 
     #[test]
+    fn commitment_matches_independent_vector() {
+        let snapshot = UtxoSet::from([("tx-a:0".into(), 100)]);
+        // 固定のバイト列をPython hashlibへ渡して得た期待値。
+        assert_eq!(
+            commitment(&snapshot),
+            [
+                0x14, 0x5c, 0x04, 0xec, 0xfe, 0x64, 0x7a, 0x47, 0x60, 0x54, 0x39, 0xee, 0x76, 0x33,
+                0xcf, 0x31, 0xcc, 0x92, 0x74, 0x2e, 0x6d, 0xe8, 0x3a, 0x12, 0x89, 0xef, 0x36, 0x65,
+                0xdf, 0xaf, 0x2a, 0xa2
+            ]
+        );
+    }
+
+    #[test]
+    fn input_order_and_reimport_preserve_the_snapshot() {
+        let expected_set = UtxoSet::from([("a:0".into(), 1), ("b:1".into(), 2)]);
+        let expected = commitment(&expected_set);
+        let mut current = UtxoSet::new();
+        for entries in [
+            vec![("b:1".into(), 2), ("a:0".into(), 1)],
+            vec![("a:0".into(), 1), ("b:1".into(), 2)],
+        ] {
+            import_snapshot(&mut current, entries, expected, 2, 3).unwrap();
+            assert_eq!(current, expected_set);
+        }
+    }
+
+    #[test]
+    fn every_rejection_preserves_existing_state() {
+        let before = UtxoSet::from([("old:0".into(), 50)]);
+        let mut current = before.clone();
+        for (entries, max_entries, max_key_bytes, error) in [
+            (vec![("".into(), 1)], 10, 64, ImportError::EmptyOutpoint),
+            (vec![("long".into(), 1)], 10, 3, ImportError::KeyTooLong),
+            (
+                vec![("x:0".into(), 1), ("x:0".into(), 2)],
+                10,
+                64,
+                ImportError::DuplicateOutpoint,
+            ),
+            (vec![("x:0".into(), 1)], 0, 64, ImportError::TooManyEntries),
+            (
+                vec![("x:0".into(), 1)],
+                10,
+                64,
+                ImportError::CommitmentMismatch,
+            ),
+        ] {
+            assert_eq!(
+                import_snapshot(&mut current, entries, [0; 32], max_entries, max_key_bytes),
+                Err(error)
+            );
+            assert_eq!(current, before);
+        }
+    }
+
+    #[test]
+    fn byte_limits_and_empty_snapshot_are_explicit() {
+        let expected_set = UtxoSet::from([("あ".into(), 1)]);
+        let expected = commitment(&expected_set);
+        let mut current = UtxoSet::new();
+        assert_eq!(
+            import_snapshot(&mut current, vec![("あ".into(), 1)], expected, 1, 2),
+            Err(ImportError::KeyTooLong)
+        );
+        import_snapshot(&mut current, vec![("あ".into(), 1)], expected, 1, 3).unwrap();
+        assert_eq!(current, expected_set);
+        let empty = UtxoSet::new();
+        import_snapshot(&mut current, vec![], commitment(&empty), 0, 0).unwrap();
+        assert!(current.is_empty());
+    }
+
+    #[test]
     fn rejects_oversized_snapshot() {
         let mut current = UtxoSet::new();
-        let error = import_snapshot(
-            &mut current,
-            vec![("tx-a:0".into(), 1)],
-            [0; 32],
-            0,
-        )
-        .unwrap_err();
+        let error =
+            import_snapshot(&mut current, vec![("tx-a:0".into(), 1)], [0; 32], 0, 64).unwrap_err();
         assert_eq!(error, ImportError::TooManyEntries);
     }
 }
@@ -417,7 +493,11 @@ mod tests {
 cargo test
 ```
 
-> **実装上の限界**：このコードはメモリ上での原子的な置き換えを示すだけであり、ディスク書き込み・クラッシュ耐性・チャンク転送・ヘッダーの正当性検証・MuHashは含まない。実際のノードでは、保存前の検証だけでなく、永続化のトランザクション境界も設計する必要がある。
+本文から抽出した教材は8テスト成功（`experiments/chapter-21-review-2026-11-01.md`）。固定のdomain/versionタグ、BTreeMapのキー順、キー長・キー・金額のエンコードを用いる。Python hashlibから得た既知値、受信順の反転、再インポート、全拒否理由で旧集合の維持、UTF-8のバイト上限と空集合を確認した。
+
+`expected` の由来は呼び出し元の責任である。同じ未信頼の相手から届いた値との一致だけでは、正しいスナップショットの採用を保証しない。
+
+> **実装上の限界**：このコードはメモリ上での原子的な置き換えを示すだけであり、ディスク書き込み・クラッシュ耐性・チャンク転送・ヘッダーの正当性検証・MuHashは含まない。キーは単なる文字列で本物のOutpointではなく、金額と文字列だけをハッシュするためScript・Coinbaseフラグ・DAA score等も含まない。件数とキー長を確認する時点でVecは受信・確保済みであり、受信前のメモリ上限・時間制限の代用ではない。実ノードの永続化・stagingの境界は別途確認する。
 
 ## 21.12 ディスク障害・再起動・ロールバック
 
@@ -486,17 +566,15 @@ cargo test
 最初から全コードを読むのではなく、**入口→検証→保存→公開**の順に追う。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
-
+# 第1章で取得した固定版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-rg -n 'pruning_point|PruningPoint|pruning_proof|PruningProof' consensus p2p
-rg -n 'import_pruning_point_utxo_set|ImportedMultisetHashMismatch' consensus
-rg -n 'ibd|IBD|trusted_data|TrustedData' p2p consensus
-rg -n 'PRUNING_DURATION|FINALITY_DURATION' consensus
+grep -n -E 'import_pruning_point_utxo_set|ImportedMultisetHashMismatch' consensus/src/pipeline/virtual_processor/processor.rs
+grep -n -E 'validate_pruning_point_proof' consensus/src/processes/pruning_proof/validate.rs
+grep -n -E 'DownloadHeadersProof|staging|sync_pruning_point_utxoset' protocol/flows/src/v5/ibd/flow.rs
 ```
 
-ディレクトリやシンボル名は変更される可能性があるため、`rg` の結果から現在の実装を確認する。
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使い、HEADを本章冒頭の完全SHAと照合する。検索語の一致だけでなく、検証・更新・公開の境界を追う。
 
 ### 調査ノートのテンプレート
 
@@ -552,7 +630,7 @@ docker inspect kaspad --format '{{.Image}}'
 | B | 記録 | Devnet | SSD | 計測 | 計測 | 再起動後 |
 | C | 記録 | Devnet | SSD | 計測 | 計測 | ピア切断 |
 
-実測値を記録し、推測値と区別する。
+実測値を記録し、推測値と区別する。ログやinspectの生出力には内部情報が含まれ得るため、そのまま公開せず必要な集計・版・イメージ識別情報へ整理する。
 
 ## 21.17 障害シナリオと原因の切り分け
 
@@ -581,7 +659,7 @@ docker inspect kaspad --format '{{.Image}}'
 
 | 観点 | Bitcoin | Kaspa |
 |---|---|---|
-| 基本構造 | 線形Blockchain | BlockDAG |
+| 基本構造 | 競合する枝から採用チェーンを選ぶ | BlockDAG |
 | 状態 | UTXO集合 | UTXO集合 |
 | 古いデータの削減 | ブロック本体のPruningが可能 | Pruning Pointを用いたDAG履歴削減 |
 | 新規同期の基礎 | ヘッダー・ブロック検証など | Pruning Proof・UTXO commitment・追いつき処理など |
@@ -642,7 +720,7 @@ KaspaのPruningは、BlockDAGの保存コストを抑えながら、新しいノ
 
 開発者として特に重要なのは、**P2Pで受け取ったデータを信用せず、コンセンサスで検証し、ストレージへ安全にコミットする**という境界を明確にすることである。
 
-次章では、このノード内部の状態を外部アプリケーションから利用するための **Chapter 22 — Kaspa RPC, wRPC & Application Integration** に進む。
+次章では、このノード内部の状態を外部アプリケーションから利用するための **[Chapter 22 — Kaspa RPC, wRPC & Application Integration](chapter-22.md)** に進む。
 
 ---
 
@@ -650,12 +728,14 @@ KaspaのPruningは、BlockDAGの保存コストを抑えながら、新しいノ
 
 1. [kaspanet/rusty-kaspa — 公式Rust実装](https://github.com/kaspanet/rusty-kaspa)
 2. [rusty-kaspa Releases — IBD・Pruningの更新履歴](https://github.com/kaspanet/rusty-kaspa/releases)
-3. [Consensus constants — Finality / Pruningの定数](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/constants.rs)
-4. [Consensus parameters — ネットワーク別設定](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/params.rs)
+3. [Consensus constants — Finality / Pruningの定数](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)
+4. [Consensus parameters — ネットワーク別設定](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)
 5. [Kaspa KIPs — 改善提案一覧](https://github.com/kaspanet/kips)
-6. [KIP-0006 — Proof of Chain Membership](https://github.com/kaspanet/kips/blob/master/kip-0006.md)（提案文書。採用済み仕様と混同しない）
-7. [KIP-0015 — Canonical Transaction Ordering and Sequencing Commitments](https://github.com/kaspanet/kips/blob/master/kip-0015.md)
-8. [Issue #1100 — Pruning Point UTXO snapshotの敵対的テスト](https://github.com/kaspanet/rusty-kaspa/issues/1100)
+6. [KIP-0006 — Proof of Chain Membership](https://github.com/kaspanet/kips/blob/master/kip-0006.md)（履歴・取引の所属証明に関する文書。Pruning Proofそのものと同一視しない）
+7. [KIP-0015 — Canonical Transaction Ordering and SelectedParent Accepted Transactions Commitment](https://github.com/kaspanet/kips/blob/master/kip-0015.md)
+8. [Issue #1100 — Pruning Point UTXO snapshotの敵対的テスト](https://github.com/kaspanet/rusty-kaspa/issues/1100)（追加試験・防御の提案。固定版で試験が完了した証拠ではない）
 9. [Bitcoin Developer Reference](https://developer.bitcoin.org/reference/)
 
 > **技術レビュー時の確認事項**：本章の概念図・教育用実装と、`rusty-kaspa` の現行コードは厳密に区別すること。同期フェーズ・メッセージ名・Pruning保持規則・時間定数は、出版時に固定したGitコミットとネットワーク設定に基づいて再確認する。
+
+目次順の本文レビューと教材8テストは `experiments/chapter-21-review-2026-11-01.md`。KIPの文書ステータス・Issueの議論と、基準版の有効規則・実行済みの検証結果を区別する。実Pruning・Pruning後IBD・敵対的インポート・クラッシュ耐久性は今回実行していない。

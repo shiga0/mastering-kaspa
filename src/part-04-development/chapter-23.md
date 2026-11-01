@@ -1,7 +1,9 @@
 # Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）
 
 > **Mastering Kaspa — Part IV: Kaspa Development & Implementation**  
-> 原稿ステータス: v0.1（技術レビュー前）
+> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。主要バインディングの照合と教材の確認であり、SDK全体の検証ではない。
+
+確認記録は `experiments/chapter-23-review-2026-11-01.md`。公式配布SDKを使った過去のDevnet実測と、本章の独自教材の実行を区別する。
 
 ## この章で学ぶこと
 
@@ -57,7 +59,7 @@ SDKは便利な抽象化であって、アプリケーションの正しさを�
 
 ## 23.2 `rusty-kaspa`とSDKの位置付け
 
-Kaspaの主要なRust実装は [`kaspanet/rusty-kaspa`](https://github.com/kaspanet/rusty-kaspa) に公開されている。リポジトリには、ノード本体だけでなく、RPC、ウォレット、暗号・データ型、WASMに関連するコンポーネントが含まれる。**正確なcrate名とモジュール境界は対象コミットで確認する。**
+Kaspaの主要なRust実装は [`kaspanet/rusty-kaspa`](https://github.com/kaspanet/rusty-kaspa) に公開されている。リポジトリには、ノード本体だけでなく、RPC、ウォレット、暗号・データ型、WASMに関連するコンポーネントが含まれる。**crate名・公開型・featureは対象コミットで確認する。**
 
 | 層 | 主な責務 | アプリケーション側の注意 |
 |---|---|---|
@@ -69,16 +71,30 @@ Kaspaの主要なRust実装は [`kaspanet/rusty-kaspa`](https://github.com/kaspa
 
 > **重要:** 「Rust SDK」は単一の固定されたライブラリ名ではなく、Rust製の関連クレートやクライアント機能を指す文脈がある。本書では、個別の公開API名を示す際に必ずバージョンを併記する方針とする。
 
+### 23.2.1 基準版の具体的な入口
+
+| crate / ソース | 確認した境界 |
+|---|---|
+| [kaspa-wrpc-client](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/wrpc/client/src/client.rs) | Rust側のKaspaRpcClient。newはencoding、url、resolver、network_id、subscription_contextを受け取る |
+| [kaspa-wrpc-wasm](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/wrpc/wasm/src/client.rs) | JS向けRpcClient。connectとsubscribeUtxosChanged等のバインディング |
+| [kaspa-wasm](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/wasm/Cargo.toml) | cdylibの集約。wasm32-sdk / wasm32-rpc等で公開範囲を選ぶ |
+
+Rustのsnake_caseとJSのcamelCase、Rust crate名と配布アセット名を混同しない。kaspa-wasmを依存に追加しただけで、すべてのAPI・環境・featureが使えるとは限らない。基準版の[集約と読み込み例](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/wasm/src/lib.rs)も確認する。
+
+以下の独自教材はKaspa SDKに依存しない。基準版SDKの依存指定や、実際のRust RPCアダプターの実装例ではない。
+
 ## 23.3 Rustを使う理由
 
 Rustの所有権・型・エラー処理は、金額やトランザクション状態のような誤用を避けたいデータを扱うのに適している。
 
+本書の外で `cargo new --lib --edition 2021 kaspa-sdk-boundary-demo` を作成し、23.3の2つのRustコードと23.8のRustコードを、この順にsrc/lib.rsへ連結できる。外部依存は不要で、23.6のWASM教材とは別のプロジェクトである。
+
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct Sompi(u64);
+pub struct Sompi(pub u64);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct NetworkId(&'static str);
+pub struct NetworkId(pub &'static str);
 ```
 
 `Sompi` とネットワーク識別子を異なる型にすれば、単なる整数・文字列の取り違えを減らせる。ただし、**型だけでネットワークや送金先の正当性が保証されるわけではない**。
@@ -87,28 +103,68 @@ struct NetworkId(&'static str);
 
 ```rust
 #[derive(Debug, PartialEq, Eq)]
-enum TransferError {
+pub enum TransferError {
     ZeroAmount,
     InsufficientFunds,
     Overflow,
 }
 
-fn calculate_change(
-    inputs: u64,
-    amount: u64,
-    fee: u64,
-) -> Result<u64, TransferError> {
-    if amount == 0 {
+pub fn calculate_change(inputs: Sompi, amount: Sompi, fee: Sompi) -> Result<Sompi, TransferError> {
+    if amount.0 == 0 {
         return Err(TransferError::ZeroAmount);
     }
-    let required = amount.checked_add(fee)
-        .ok_or(TransferError::Overflow)?;
-    inputs.checked_sub(required)
+    let required = amount.0.checked_add(fee.0).ok_or(TransferError::Overflow)?;
+    inputs
+        .0
+        .checked_sub(required)
+        .map(Sompi)
         .ok_or(TransferError::InsufficientFunds)
+}
+
+#[cfg(test)]
+mod amount_tests {
+    use super::*;
+
+    #[test]
+    fn preserves_change_and_accepts_exact_balance() {
+        assert_eq!(
+            calculate_change(Sompi(1_001), Sompi(900), Sompi(100)),
+            Ok(Sompi(1))
+        );
+        assert_eq!(
+            calculate_change(Sompi(1_000), Sompi(900), Sompi(100)),
+            Ok(Sompi(0))
+        );
+    }
+    #[test]
+    fn rejects_zero_payment() {
+        assert_eq!(
+            calculate_change(Sompi(1_000), Sompi(0), Sompi(10)),
+            Err(TransferError::ZeroAmount)
+        );
+    }
+    #[test]
+    fn rejects_insufficient_funds() {
+        assert_eq!(
+            calculate_change(Sompi(1_000), Sompi(901), Sompi(100)),
+            Err(TransferError::InsufficientFunds)
+        );
+    }
+    #[test]
+    fn rejects_overflow_and_preserves_u64_precision() {
+        assert_eq!(
+            calculate_change(Sompi(u64::MAX), Sompi(u64::MAX), Sompi(1)),
+            Err(TransferError::Overflow)
+        );
+        assert_eq!(
+            calculate_change(Sompi(u64::MAX), Sompi(u64::MAX - 1), Sompi(1)),
+            Ok(Sompi(0))
+        );
+    }
 }
 ```
 
-この関数は送金額の算術チェックを示すだけで、実際のトランザクション構築や署名は行わない。
+この関数はSompi単位の算術チェックだけを行い、UTXO選択・mass・手数料率・成熟・署名・送信を扱わない。上の型は独自モデルで、NetworkIdの文字列の構文検査も実装していない。23.3と23.8のRust断片を同じlib.rsに連結すると、後述のモックを含めてテストできる。
 
 ## 23.4 WebAssembly（WASM）の基本
 
@@ -147,28 +203,42 @@ RustとJavaScriptでは、値・エラー・非同期処理の表現が異なる
 
 | Rust側 | JavaScript側 | 注意点 |
 |---|---|---|
-| `u64` | `number` / `bigint` | `number`の安全整数範囲に注意 |
+| wasm-bindgenの`u64` | `bigint` | 範囲外のBigIntは循環するため、変換前に範囲検査 |
+| wasm-bindgenの`u32` | `number` | 小数・負数・NaN・範囲外を変換前に検査 |
 | `Result<T, E>` | 返り値 / 例外など | エラーの意味を失わない |
 | `Vec<u8>` | `Uint8Array` | コピーと所有権を確認 |
 | `async fn` | `Promise` | キャンセル・タイムアウト |
 | `String` | `string` | アドレスや識別子の検証 |
 
-JavaScriptの`number`は、整数を常に正確に表現できるわけではない。**通貨の最小単位を浮動小数点数で安易に扱わない**こと。
+JavaScriptの`number`は、整数を常に正確に表現できるわけではない。**通貨の最小単位を浮動小数点数で安易に扱わない**こと。上表はwasm-bindgenの直接バインディングの説明であり、SDK独自の変換は対象版の型宣言を確認する。
+
+[wasm-bindgenの数値境界](https://wasm-bindgen.github.io/wasm-bindgen/reference/types/numbers.html)では、整数型への変換で範囲外の値が循環したり、小数が切り捨てられたりする。Rustの引数を整数型にしても、JS入力の検証を自動で済ませたことにはならない。u64なら`typeof value === "bigint"`と`0n <= value && value <= 0xffff_ffff_ffff_ffffn`などを呼び出し前に検査する。
 
 ## 23.6 最小のWASMモジュールを作る
 
 ここではKaspa SDKに依存しない**教育用のRust/WASM実験**を作る。
+
+本書のリポジトリとは別の作業用ディレクトリで次を実行する。以下はこのプロジェクト内のファイルである。
+
+```bash
+cargo new --lib --edition 2021 kaspa-wasm-lab
+cd kaspa-wasm-lab
+```
 
 ### ディレクトリ
 
 ```text
 kaspa-wasm-lab/
 ├── Cargo.toml
-└── src/
-    └── lib.rs
+├── src/
+│   └── lib.rs
+├── payment.js
+└── index.html
 ```
 
 ### `Cargo.toml`
+
+以下へ置き換える。
 
 ```toml
 [package]
@@ -180,7 +250,7 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-wasm-bindgen = "0.2"
+wasm-bindgen = "=0.2.100"
 ```
 
 ### `src/lib.rs`
@@ -189,11 +259,7 @@ wasm-bindgen = "0.2"
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub fn can_cover_payment(
-    available: u32,
-    amount: u32,
-    fee: u32,
-) -> bool {
+pub fn can_cover_payment(available: u32, amount: u32, fee: u32) -> bool {
     if amount == 0 {
         return false;
     }
@@ -226,23 +292,74 @@ mod tests {
     fn rejects_overflow() {
         assert!(!can_cover_payment(u32::MAX, u32::MAX, 1));
     }
+    #[test]
+    fn supports_maximum_and_zero_fee() {
+        assert!(can_cover_payment(u32::MAX, u32::MAX, 0));
+        assert!(can_cover_payment(1, 1, 0));
+    }
+    #[test]
+    fn empty_balance_cannot_pay() {
+        assert!(!can_cover_payment(0, 1, 0));
+    }
 }
 ```
 
 `u32`はブラウザ境界の例を簡単にするために選んだ。**実際のKaspa金額型を`u32`に制限してよいという意味ではない**。
 
+Rust側のWASM教材6テストと、23.3/23.8を連結した金額・Gateway教材9テストが成功した。実際のノードとの接続試験ではない。
+
+### JavaScript側の検査と読み込み
+
+`payment.js`では、Rustへ渡す前に値域を検査する。Rust関数のchecked_addだけでは、変換前の不正値は検出できない。
+
+```javascript
+import { can_cover_payment } from "./pkg/kaspa_wasm_lab.js";
+
+export function canCoverPayment(available, amount, fee) {
+    for (const value of [available, amount, fee]) {
+        if (!Number.isSafeInteger(value) || value < 0 || value > 0xffff_ffff) {
+            throw new RangeError("Expected an integer in the u32 range");
+        }
+    }
+    return can_cover_payment(available, amount, fee);
+}
+```
+
+`index.html`はES moduleを読み込み、WASMの初期化完了を待ってから呼ぶ。
+
+```html
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<title>WASM payment lab</title>
+<pre id="result">Loading...</pre>
+<script type="module">
+import init from "./pkg/kaspa_wasm_lab.js";
+import { canCoverPayment } from "./payment.js";
+await init();
+document.getElementById("result").textContent = String(canCoverPayment(1000, 900, 100));
+</script>
+</html>
+```
+
 ### 実行手順
+
+作業プロジェクト内で実行する。Rust/Cargo 1.90.0、wasm-pack 0.12.1、wasm-bindgen 0.2.100を今回の教材の基準とする。Kaspa SDK自体のツールチェーン指定ではない。
 
 ```bash
 cargo test
 rustup target add wasm32-unknown-unknown
-cargo install wasm-pack
-wasm-pack build --target web
+# wasm-packが未導入の場合だけ実行する
+cargo install wasm-pack --version 0.12.1 --locked
+wasm-pack build --target web --dev
+python3 -m http.server 8080 --bind 127.0.0.1
 ```
 
-生成された`pkg/`を、ローカルWebサーバーで配信するHTML/JavaScriptから読み込む。`file://`で直接開く場合はモジュール読み込み制約に注意する。
+初回の依存・target・ビルドツールの取得にはネットワークが必要な場合がある。今回のCargo検査は依存キャッシュを使い`--offline`で実行した。wasm-packはcrateに対応したwasm-bindgen CLIも必要とする。crateとCLIの版を揃える。
 
-> このサンプルはコード例として提示している。ここでは実際のビルド・テスト実行結果を保証しない。
+`http://127.0.0.1:8080/`を開くとtrueを表示する構成である。`file://`で直接開かず、生成されたJSとWASMを一緒にHTTP配信する（[公式の読み込み例](https://wasm-bindgen.github.io/wasm-bindgen/examples/without-a-bundler.html)）。ブラウザーのDOM表示の実行確認は、ビルドやNode.jsでのWASM実行とは分けて記録する。
+
+今回、web向けJS/WASM生成とNode.js 20.0.0からの呼び出しを確認した。正常・算術境界8件、各引数の不正値39件、生のバインディングの変換挙動4件の計51項目を検査した。NodeではWASMのバイト列を明示して初期化しており、ブラウザーのHTTP読み込み・DOM表示は未実行である。再実行用の検査コードと制限は `experiments/chapter-23-review-2026-11-01.md` に示す。
 
 ## 23.7 アプリケーションの依存関係を整理する
 
@@ -275,31 +392,31 @@ SDKの実際のAPI名に依存しない、アプリケーション側のポー�
 
 ```rust
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct NodeStatus {
-    network: String,
-    synced: bool,
+pub struct NodeStatus {
+    pub network: NetworkId,
+    pub synced: bool,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-enum GatewayError {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GatewayError {
     Unavailable,
     InvalidResponse,
 }
 
-trait NodeGateway {
+pub trait NodeGateway {
     fn status(&self) -> Result<NodeStatus, GatewayError>;
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum AppError {
+pub enum AppError {
     Node(GatewayError),
     WrongNetwork,
     NotSynced,
 }
 
-fn ensure_ready(
+pub fn ensure_ready(
     gateway: &impl NodeGateway,
-    expected_network: &str,
+    expected_network: NetworkId,
 ) -> Result<(), AppError> {
     let status = gateway.status().map_err(AppError::Node)?;
     if status.network != expected_network {
@@ -312,53 +429,75 @@ fn ensure_ready(
 }
 
 #[cfg(test)]
-mod tests {
+mod gateway_tests {
     use super::*;
 
-    struct FakeGateway(NodeStatus);
+    struct FakeGateway(Result<NodeStatus, GatewayError>);
 
     impl NodeGateway for FakeGateway {
         fn status(&self) -> Result<NodeStatus, GatewayError> {
-            Ok(self.0.clone())
+            self.0.clone()
         }
     }
 
     #[test]
     fn ready_on_expected_network() {
-        let gateway = FakeGateway(NodeStatus {
-            network: "testnet".into(),
+        let gateway = FakeGateway(Ok(NodeStatus {
+            network: NetworkId("testnet-10"),
             synced: true,
-        });
-        assert_eq!(ensure_ready(&gateway, "testnet"), Ok(()));
+        }));
+        assert_eq!(ensure_ready(&gateway, NetworkId("testnet-10")), Ok(()));
     }
 
     #[test]
     fn rejects_wrong_network() {
-        let gateway = FakeGateway(NodeStatus {
-            network: "mainnet".into(),
+        let gateway = FakeGateway(Ok(NodeStatus {
+            network: NetworkId("mainnet"),
             synced: true,
-        });
+        }));
         assert_eq!(
-            ensure_ready(&gateway, "testnet"),
+            ensure_ready(&gateway, NetworkId("testnet-10")),
             Err(AppError::WrongNetwork)
         );
     }
 
     #[test]
     fn rejects_unsynced_node() {
-        let gateway = FakeGateway(NodeStatus {
-            network: "testnet".into(),
+        let gateway = FakeGateway(Ok(NodeStatus {
+            network: NetworkId("testnet-10"),
             synced: false,
-        });
+        }));
         assert_eq!(
-            ensure_ready(&gateway, "testnet"),
+            ensure_ready(&gateway, NetworkId("testnet-10")),
             Err(AppError::NotSynced)
+        );
+    }
+    #[test]
+    fn preserves_transport_and_decode_errors() {
+        for error in [GatewayError::Unavailable, GatewayError::InvalidResponse] {
+            let gateway = FakeGateway(Err(error.clone()));
+            assert_eq!(
+                ensure_ready(&gateway, NetworkId("testnet-10")),
+                Err(AppError::Node(error))
+            );
+        }
+    }
+
+    #[test]
+    fn testnet_number_must_match() {
+        let gateway = FakeGateway(Ok(NodeStatus {
+            network: NetworkId("testnet-11"),
+            synced: true,
+        }));
+        assert_eq!(
+            ensure_ready(&gateway, NetworkId("testnet-10")),
+            Err(AppError::WrongNetwork)
         );
     }
 }
 ```
 
-実アプリケーションでは、ネットワークIDを単純な文字列ではなく、SDKが提供する識別子型などで扱うことが望ましい。
+23.3のNetworkIdを使い、Testnetの番号まで照合する。実アプリではSDKの識別子型や検証済みの値へ変換する。これはエラー変換に絞ったモック教材であり、[第22章](chapter-22.md)の応答の鮮度・必要なUTXO index等の検査は省略している。実装時にはその要件も引き継ぐ。
 
 ## 23.9 非同期処理と接続管理
 
@@ -388,19 +527,24 @@ Disconnected
 - 再試行してよい操作と、重複送信が危険な操作を区別する。
 - イベントを受信できなかった期間は、RPCで現在状態を再照会する。
 
+基準版のWASM RpcClient.connectは通知タスクと内部クライアントを起動する。一方、subscribe_utxos_changedにはlistenerがないとログを出してOkを返す分岐がある。購読メソッドの正常終了だけで購読の生存を判断せず、対象SDKの接続イベントと購読順序、実通知、再照会による補完を確認する。これは固定ソースの照合であり、今回切断中の購読を実測した結果ではない。
+
 ### 冪等性
 
-送信処理のタイムアウトは「送信されなかった」ことを意味しない。再送前にトランザクションIDやノード状態を確認し、業務上の二重処理を避ける。
+送信処理のタイムアウトは「送信されなかった」ことを意味しない。送信前からTX ID・署名済み取引・業務上の支払い意図との対応を保持し、成否を照会する。同一署名済み取引の再送と、別の取引の再構築を区別する。Promiseの期限切れも元の処理の中止を保証しない。
 
 ## 23.10 イベント購読と状態の整合性
 
 トランザクションの追跡は、単発のRPC応答だけで完結しない。
 
 ```text
+Store intent / signed TX / TX ID
+       │
+       ▼
 Submit Transaction
        │
        ▼
-Receive RPC Response
+RPC Response / Unknown outcome
        │
        ▼
 Track Transaction ID
@@ -419,12 +563,14 @@ Track Transaction ID
 |---|---|---|
 | `created` | ローカルで構築 | 署名・検査 |
 | `submitted` | ノードに送信要求 | 追跡開始 |
-| `observed` | ネットワーク上で観測 | 状態再照会 |
-| `accepted` | ノードが受理と報告 | 確定ポリシー評価 |
+| `submit_unknown` | 送信の成否不明 | 既知のTX IDで照会 |
+| `observed` | 接続ノードで存在を観測 | 状態再照会 |
+| `accepted` | ノードのVirtual評価で受理を確認 | 確定ポリシー評価 |
 | `settled` | アプリの確定条件を満たす | 業務処理完了 |
 | `rejected` | 無効・競合など | 原因記録 |
+| `reverted` | 以前の受理状態が変わった | 状態と業務記録を再評価 |
 
-この表は**アプリケーション独自の状態モデル**であり、Kaspa RPCが同名のステータスを提供するという意味ではない。
+この表は**アプリケーション独自の状態モデル**であり、Kaspa RPCが同名のステータスを提供するという意味ではない。Mempool受理とVirtualでの受理を区別し、単調な一方向の遷移とも考えない。現在UTXOの再照会は、切断中の全取引履歴や会計台帳の復元とは別である。
 
 ## 23.11 ウォレットと秘密鍵の境界
 
@@ -485,20 +631,20 @@ Node version / commit
 SDK crate or package version
 WASM toolchain version
 Rust toolchain version
-Network (mainnet / testnet / devnet)
+Full NetworkId (including testnet suffix)
 RPC transport and endpoint
 ```
 
-依存関係を固定する例:
+依存関係・環境を確認する例:
 
 ```bash
 rustc --version
 cargo --version
-cargo tree
-cargo metadata --no-deps
+cargo tree --locked
+cargo metadata --locked --no-deps
 ```
 
-`Cargo.lock`はアプリケーションで原則コミットし、再現性を確保する。ライブラリの配布方針は用途に応じて検討する。
+単一crateの直接依存を固定するだけでは推移的依存まで固定できない。`Cargo.lock`はアプリケーションで原則コミットし、再現性を確保する。ライブラリの配布方針は用途に応じて検討する。
 
 ## 23.15 `rusty-kaspa`の読み方
 
@@ -512,12 +658,15 @@ cargo metadata --no-deps
 6. 統合テスト・既存サンプルを実行する。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
-rg 'wasm_bindgen|RpcClient|connect|subscribe' .
+# 第1章で取得した固定版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
+git rev-parse HEAD
+grep -n -E 'pub fn new|pub async fn connect' rpc/wrpc/client/src/client.rs
+grep -n -E 'subscribeUtxosChanged|subscribe_utxos_changed' rpc/wrpc/wasm/src/client.rs
+grep -n -E 'wasm32-sdk|wasm32-rpc|crate-type' wasm/Cargo.toml
 ```
 
-`rg`はripgrepのコマンド。該当する型やディレクトリはバージョンによって変わり得る。
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使う。HEADが本章冒頭の完全SHAと一致することを確認し、別の版へAPIを無条件に読み替えない。
 
 ### 調査メモのテンプレート
 
@@ -551,7 +700,7 @@ rg 'wasm_bindgen|RpcClient|connect|subscribe' .
 
 [第28章](chapter-28.md)の28.6で、v1.0.1公式Node.js/WASM SDKの取得・SHA-256照合・WebSocket依存の導入を行う。Node.js 20.0.0で単一署名送金とUTXO通知を実測した。JSON接続のenumは `Encoding.SerdeJson`。金額はsompiの整数として扱い、SDKから返る `bigint` をJavaScriptの `number` へ無条件に変換しない。
 
-本章の説明用Rust/WASMモジュールをビルド・ブラウザー実行した結果ではない。公式SDK配布物の利用検証と、独自WASMモジュールの開発・ビルド検証を分ける。HDウォレット復旧と全Scriptへの対応も未検証である。
+この過去の実測は、本章の独自Rust/WASMモジュールのビルドやブラウザー実行とは別である。公式SDK配布物の利用検証と、独自WASMモジュールの開発・ビルド検証を分ける。HDウォレット復旧と全Scriptへの対応も未検証である。
 
 ### テストの階層
 
@@ -658,11 +807,11 @@ A. 用途次第。公開RPCの負荷・権限・可用性・プライバシー�
 1. SDKとノード本体の責務はどう異なるか。
 2. WASMが動作する環境で、ネイティブRustと異なる制約は何か。
 3. JavaScriptの`number`で大きな整数を扱う際の問題は何か。
-4. RPC送信がタイムアウトした場合、なぜ即座の再送が危険になり得るか。
+4. RPC送信がタイムアウトした場合、同一署名済み取引の再送と、成否不明のまま別の取引を作ることはどう違うか。
 5. `NodeGateway`を抽象化する利点は何か。
 6. 秘密鍵をWASM内で扱うだけでは安全性が保証されない理由は何か。
 7. 再接続後にイベント購読だけを再開しても不十分な場合があるのはなぜか。
-8. 単体テストと統合テストは何をそれぞれ保証するか。
+8. 単体テストと統合テストで確認できる範囲と、その限界は何か。
 9. SDK更新時に固定・記録すべきバージョン情報は何か。
 10. コンセンサスの受理とアプリケーションの入金確定を分ける理由は何か。
 
@@ -678,7 +827,7 @@ Rust SDKとWASMは、Kaspaのコンセンサス機能をアプリケーション
 - **秘密鍵の管理は、SDK選定とは別のセキュリティ設計である。**
 - **実装を調べるときは、必ずバージョンとソースコードを固定する。**
 
-次章「Wallet Architecture & Key Management」では、鍵生成、HDウォレット、アドレス、署名、バックアップと復旧をさらに掘り下げる。
+[次章「Wallet Architecture & Key Management」](chapter-24.md)では、鍵生成、HDウォレット、アドレス、署名、バックアップと復旧をさらに掘り下げる。
 
 ## 23.23 参考資料
 
@@ -694,4 +843,4 @@ Rust SDKとWASMは、Kaspaのコンセンサス機能をアプリケーション
 
 ---
 
-**技術レビューTODO:** 対象とする`rusty-kaspa`のリリース/コミットを決め、実際のRPCクライアント初期化、WASMパッケージ名、接続・購読API、各サンプルのビルド結果を確認して追記する。
+本文・固定ソース・独自教材の確認範囲は `experiments/chapter-23-review-2026-11-01.md`。全SDK、実際のRust RPCアダプター、ブラウザーDOM、HD復旧、全Scriptを検証したものではない。

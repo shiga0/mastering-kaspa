@@ -1,12 +1,14 @@
 # Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）
 
 > **Mastering Kaspa / Part IV — Kaspa Development & Implementation**  
-> 原稿ステータス：v0.2（主要経路を基準版ソースと照合・章全体のレビューは継続中）\
+> 目次順の本文レビュー：2026-11-01。主要経路を基準版と再照合し、入力予約教材を実行。全ウォレット・鍵保護の監査ではない。\
 > 対象読者：Rust・バックエンド開発の経験があり、Kaspaウォレットの設計と安全性を理解したい人
 
 ## 照合した実装
 
-2026年10月31日、[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要ソースを照合した。以下の固定ソースへの参照はSource-checkedの範囲を示す。別途、ランダム鍵による単一署名のDevnet送金・virtual受理は実測した（`experiments/devnet-send-review-2026-10-31.md`）。HD鍵導出・復旧・異常系と章全体の技術レビューは未完了。記録はリポジトリの `experiments/signing-wallet-review-2026-10-31.md` を参照する。
+基準版は[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。主要経路の初回照合は2026-10-31、本文・教材の目次順レビューは2026-11-01に行った。今回の記録は `experiments/chapter-24-review-2026-11-01.md`、以前の照合は `experiments/signing-wallet-review-2026-10-31.md` に示す。
+
+ランダム鍵による単一署名Devnet送金・Virtual受理は過去に実測した（`experiments/devnet-send-review-2026-10-31.md`）。今回再実行したものではなく、HD鍵導出・復旧・全異常系の検証も完了していない。
 
 ## 24.1 この章で学ぶこと
 
@@ -67,7 +69,7 @@ Secret Key ──(楕円曲線演算)──> Public Key
     └──(署名)──> Signature ──(公開鍵で検証)──> true / false
 ```
 
-Kaspaのアドレス形式・署名方式・Scriptバージョンの詳細は、利用するウォレット種別と現行の実装で確認する。Bitcoinの`bc1...`やEthereumの`0x...`をそのままKaspaアドレスとして扱ってはならない。Kaspaではネットワーク識別子を含むアドレス表記が用いられる。
+Kaspaのアドレス形式・署名方式・Scriptバージョンの詳細は、利用するウォレット種別と現行の実装で確認する。Bitcoinの`bc1...`やEthereumの`0x...`をそのままKaspaアドレスとして扱ってはならない。基準版の[Address Prefix](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/crypto/addresses/src/lib.rs)はkaspa / kaspatest / kaspasim / kaspadevを区別する。ただし接頭辞は完全なNetworkIdではなく、kaspatestだけではTestnet-10とTestnet-11を識別できない。アドレスの検査に加え、接続ノードのNetworkIdを番号まで照合する。
 
 **注意：** 秘密鍵を知っていることと、任意のUTXOを支出できることは同義ではない。対象UTXOのロック条件、署名対象データ、トランザクションの有効性が一致する必要がある。
 
@@ -75,7 +77,7 @@ Kaspaのアドレス形式・署名方式・Scriptバージョンの詳細は、
 
 ### 24.4.1 なぜ階層的に鍵を導出するのか
 
-単一の秘密鍵しかない場合、受取先を増やすたびに秘密情報を別々に保管しなければならない。HD（Hierarchical Deterministic）ウォレットは、共通のルートから複数の鍵を決定的に導出する。
+受取先ごとに独立した鍵を生成する方式では、鍵を増やすたびにバックアップ対象も増える。HD（Hierarchical Deterministic）ウォレットは、共通のルートから複数の鍵を決定的に導出する。
 
 ```text
 Recovery Mnemonic
@@ -109,7 +111,7 @@ Hierarchical Key Derivation
 
 ### 24.4.3 パスフレーズ
 
-BIP-39の追加パスフレーズは、同じニーモニックから異なるシードを導出する。パスフレーズを失うと、ニーモニックが残っていても目的のウォレットを復旧できない可能性がある。パスフレーズの有無もバックアップ仕様の一部である。
+[BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)の追加パスフレーズは、同じニーモニックから異なるシードを導出する。誤ったパスフレーズでも別の有効なシードになり得るため、エラーが出ないことは復旧成功の証拠ではない。既知の受取・変更アドレス等を照合する。ウォレットファイルの解除・暗号化パスワードとも役割を分ける。パスフレーズを失うと、ニーモニックが残っていても目的のウォレットを復旧できない可能性がある。パスフレーズの有無もバックアップ仕様の一部である。
 
 ## 24.5 アドレスの再利用と変更出力
 
@@ -196,9 +198,9 @@ Available -> Reserved -> Broadcast -> Accepted
 
 [Generator](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/wallet/core/src/tx/generator/generator.rs)はUTXOを集め、mass境界に達した場合に中継トランザクションを作り、複数段階のトランザクションへ分割する。送金要求1件が必ず単一のトランザクションになるとは限らない。各段階の入力・手数料と、最終の支払い先を分けて追う。
 
-[SignerT::try_sign](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/wallet/core/src/tx/generator/signer.rs)は `SignableTransaction` とアドレス群を受け、対応する鍵を取得し、`sign_with_multiple_v2` と `fully_signed` を呼ぶ。署名用の一時的な鍵配列をzeroizeする処理はあるが、これだけで全キャッシュの寿命やプロセスメモリ全体の消去を保証したとは扱わない。multisig向けのTODOもあるため、この一般Signerが任意のマルチシグを扱えるとは断定しない。
+[SignerT::try_sign](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/wallet/core/src/tx/generator/signer.rs)は `SignableTransaction` とアドレス群を受け、対応する鍵を取得し、`sign_with_multiple_v2` と `fully_signed` を呼ぶ。署名用の一時的な鍵配列に対するzeroizeは、fully_signed()?の後にある。そこでErrになると通常の早期returnで消去行へ到達しない。成功経路に消去処理があることと、全終了経路・鍵キャッシュ・プロセスメモリ全体の消去を保証することは別である。これはソース上の制御フローの確認で、実鍵を使ったメモリ残留の測定ではない。multisig向けのTODOもあるため、この一般Signerが任意のマルチシグを扱えるとは断定しない。
 
-この経路のソース確認は、生成したトランザクションがノードで受理された実験とは別である。鍵素材を出力・保存せずにローカルで生成するDevnet実習と、その受理確認は後続作業とする。
+この経路のソース確認は、生成したトランザクションがノードで受理された実験とは別である。ランダム鍵で単一署名送金した過去の記録は24.17に示す。gen1のHD復旧、任意のGenerator/Signer経路、全失敗分岐を実測した意味ではない。
 
 ## 24.9 オフライン署名とハードウェアウォレット
 
@@ -213,7 +215,7 @@ Online Host                          Isolated Signer
 └───────────────────┘                └──────────────────┘
 ```
 
-ただしオフライン署名も万能ではない。署名デバイスが**受取先・金額・手数料・ネットワーク・変更出力**を正しく解釈し、利用者に確認できなければ、悪意あるホストによる誘導を防げない。
+ただしオフライン署名も万能ではない。署名要求の参照UTXOの金額・Script、変更出力が自分の導出経路に属すること、[第16章](../part-03-transactions/chapter-16.md)のSIGHASHフラグも確認対象になる。署名デバイスが**受取先・金額・手数料・ネットワーク・変更出力**を正しく解釈し、利用者に確認できなければ、悪意あるホストによる誘導を防げない。
 
 ハードウェアウォレット対応は製品・ファームウェア・Kaspa機能の実装状況によって異なる。購入前に公式の対応状況を確認する。
 
@@ -229,6 +231,8 @@ Watch-onlyウォレットは、公開情報を用いて残高やトランザク�
 | Multisig / 条件付き支出 | 複数承認や条件の表現（対応方式による） | 実装非対応のスクリプト条件の実行 |
 
 Kaspaのスクリプト機能で実現できる条件と、特定ウォレットがUIとして提供する機能は分けて確認する。
+
+Watch-onlyでも拡張公開鍵（xpub）はアドレス群の関連付けを可能にし、プライバシー上の機微情報になる。[BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)では、親の拡張公開鍵と対応する非hardened子秘密鍵が揃うと親秘密鍵を求められる性質もある。xpubだけで署名できるわけではないが、公開リポジトリやログへ無条件に載せてよい情報とは扱わない。
 
 ## 24.11 マルチシグと組織の承認フロー
 
@@ -263,6 +267,8 @@ Broadcast
 3. 使用したウォレットの導出方式とアカウント構成
 4. アドレス形式・ネットワークの情報
 5. 必要に応じてアドレス探索範囲やウォレット固有のメタデータ
+
+探索範囲・停止条件も復旧仕様である。[BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)のアカウント探索は残高だけでなく取引履歴に基づく。残高ゼロを未使用と決めると、過去に使われたアドレスやアカウントを見落とし得る。gap limitを超えて離れたindexを使っていた場合などは探索範囲の調整が必要になるが、BIP-44の探索規則をすべてのKaspaウォレットへ当てはめない。
 
 ### 復旧テスト
 
@@ -302,44 +308,67 @@ Application Service
     └── NodeGateway (trait)
 ```
 
-以下は**秘密鍵を持たない**入力予約の教育用実装である。外部クレート不要で、Rust標準ライブラリのみを利用する。
+以下は**秘密鍵を持たない**入力予約の教育用実装である。外部クレート不要で、Rust標準ライブラリのみを利用する。本書のリポジトリとは別の作業用ディレクトリで、後述のプロジェクトを作る。Outpointの文字列も独自モデルであり、実際のTX ID・Script・成熟・NetworkIdは検証しない。
 
 ```rust
-use std::collections::{HashMap, HashSet};
+use std::collections::{hash_map::Entry, HashMap, HashSet};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Outpoint {
-    txid: String,
-    index: u32,
+pub struct Outpoint {
+    pub txid: String,
+    pub index: u32,
 }
 
-#[derive(Debug, Clone)]
-struct Utxo {
-    outpoint: Outpoint,
-    amount: u64, // sompi
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Utxo {
+    pub outpoint: Outpoint,
+    pub amount: u64, // sompi
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ReservationId(u64);
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct Reservation {
+    pub id: ReservationId,
+    pub total: u64,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum WalletError {
+pub enum WalletError {
+    EmptyInput,
     UnknownUtxo,
     AlreadyReserved,
     DuplicateInput,
+    DuplicateUtxo,
     AmountOverflow,
+    ReservationIdExhausted,
 }
 
-#[derive(Default)]
-struct WalletState {
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct WalletState {
     utxos: HashMap<Outpoint, Utxo>,
-    reserved: HashSet<Outpoint>,
+    reserved: HashMap<Outpoint, ReservationId>,
+    last_reservation_id: u64,
 }
 
 impl WalletState {
-    fn insert(&mut self, utxo: Utxo) {
-        self.utxos.insert(utxo.outpoint.clone(), utxo);
+    // 初期投入用。同じOutpointのデータを黙って上書きしない。
+    pub fn insert(&mut self, utxo: Utxo) -> Result<(), WalletError> {
+        match self.utxos.entry(utxo.outpoint.clone()) {
+            Entry::Occupied(_) => Err(WalletError::DuplicateUtxo),
+            Entry::Vacant(entry) => {
+                entry.insert(utxo);
+                Ok(())
+            }
+        }
     }
 
-    // 全入力を検証してから一括予約する。途中失敗時に状態を変えない。
-    fn reserve(&mut self, inputs: &[Outpoint]) -> Result<u64, WalletError> {
+    // 全入力・合計・IDを検証してから更新する。Errなら既存状態を維持する。
+    pub fn reserve(&mut self, inputs: &[Outpoint]) -> Result<Reservation, WalletError> {
+        if inputs.is_empty() {
+            return Err(WalletError::EmptyInput);
+        }
         let mut seen = HashSet::new();
         let mut total = 0_u64;
         for input in inputs {
@@ -347,20 +376,29 @@ impl WalletState {
                 return Err(WalletError::DuplicateInput);
             }
             let utxo = self.utxos.get(input).ok_or(WalletError::UnknownUtxo)?;
-            if self.reserved.contains(input) {
+            if self.reserved.contains_key(input) {
                 return Err(WalletError::AlreadyReserved);
             }
-            total = total.checked_add(utxo.amount)
+            total = total
+                .checked_add(utxo.amount)
                 .ok_or(WalletError::AmountOverflow)?;
         }
-        self.reserved.extend(inputs.iter().cloned());
-        Ok(total)
+        let next = self
+            .last_reservation_id
+            .checked_add(1)
+            .ok_or(WalletError::ReservationIdExhausted)?;
+        let id = ReservationId(next);
+        self.reserved
+            .extend(inputs.iter().cloned().map(|input| (input, id)));
+        self.last_reservation_id = next;
+        Ok(Reservation { id, total })
     }
 
-    fn release(&mut self, inputs: &[Outpoint]) {
-        for input in inputs {
-            self.reserved.remove(input);
-        }
+    // 同一インスタンス内の対象予約だけを解除する。古いIDの再適用は0件。
+    pub fn release(&mut self, id: ReservationId) -> usize {
+        let before = self.reserved.len();
+        self.reserved.retain(|_, owner| *owner != id);
+        before - self.reserved.len()
     }
 }
 
@@ -368,56 +406,159 @@ impl WalletState {
 mod tests {
     use super::*;
 
+    fn add(wallet: &mut WalletState, name: &str, amount: u64) -> Outpoint {
+        let op = Outpoint {
+            txid: name.into(),
+            index: 0,
+        };
+        wallet
+            .insert(Utxo {
+                outpoint: op.clone(),
+                amount,
+            })
+            .unwrap();
+        op
+    }
     fn sample() -> (WalletState, Outpoint) {
-        let op = Outpoint { txid: "tx-a".into(), index: 0 };
         let mut wallet = WalletState::default();
-        wallet.insert(Utxo { outpoint: op.clone(), amount: 100 });
+        let op = add(&mut wallet, "tx-a", 100);
         (wallet, op)
     }
 
     #[test]
     fn reserve_once() {
         let (mut wallet, op) = sample();
-        assert_eq!(wallet.reserve(&[op.clone()]), Ok(100));
+        assert_eq!(
+            wallet.reserve(std::slice::from_ref(&op)).unwrap().total,
+            100
+        );
+        let before = wallet.clone();
         assert_eq!(wallet.reserve(&[op]), Err(WalletError::AlreadyReserved));
+        assert_eq!(wallet, before);
     }
-
     #[test]
     fn duplicate_input_does_not_mutate_state() {
         let (mut wallet, op) = sample();
-        assert_eq!(wallet.reserve(&[op.clone(), op.clone()]),
-                   Err(WalletError::DuplicateInput));
-        assert!(wallet.reserved.is_empty());
+        let before = wallet.clone();
+        assert_eq!(
+            wallet.reserve(&[op.clone(), op]),
+            Err(WalletError::DuplicateInput)
+        );
+        assert_eq!(wallet, before);
     }
-
     #[test]
     fn missing_input_does_not_mutate_state() {
         let (mut wallet, op) = sample();
-        let missing = Outpoint { txid: "missing".into(), index: 0 };
-        assert_eq!(wallet.reserve(&[op, missing]), Err(WalletError::UnknownUtxo));
-        assert!(wallet.reserved.is_empty());
+        let missing = Outpoint {
+            txid: "missing".into(),
+            index: 0,
+        };
+        let before = wallet.clone();
+        assert_eq!(
+            wallet.reserve(&[op, missing]),
+            Err(WalletError::UnknownUtxo)
+        );
+        assert_eq!(wallet, before);
     }
-
+    #[test]
+    fn empty_input_does_not_allocate_an_id() {
+        let (mut wallet, _) = sample();
+        let before = wallet.clone();
+        assert_eq!(wallet.reserve(&[]), Err(WalletError::EmptyInput));
+        assert_eq!(wallet, before);
+    }
     #[test]
     fn release_allows_retry() {
         let (mut wallet, op) = sample();
-        wallet.reserve(&[op.clone()]).unwrap();
-        wallet.release(&[op.clone()]);
-        assert_eq!(wallet.reserve(&[op]), Ok(100));
+        let first = wallet.reserve(std::slice::from_ref(&op)).unwrap();
+        assert_eq!(wallet.release(first.id), 1);
+        let second = wallet.reserve(&[op]).unwrap();
+        assert_eq!(second.total, 100);
+        assert_ne!(first.id, second.id);
+    }
+    #[test]
+    fn stale_release_cannot_clear_a_new_reservation() {
+        let (mut wallet, op) = sample();
+        let old = wallet.reserve(std::slice::from_ref(&op)).unwrap();
+        wallet.release(old.id);
+        let current = wallet.reserve(&[op]).unwrap();
+        let before = wallet.clone();
+        assert_eq!(wallet.release(old.id), 0);
+        assert_eq!(wallet, before);
+        assert_eq!(wallet.release(current.id), 1);
+    }
+    #[test]
+    fn release_affects_only_the_matching_owner() {
+        let (mut wallet, a) = sample();
+        let b = add(&mut wallet, "tx-b", 200);
+        let c = add(&mut wallet, "tx-c", 300);
+        let first = wallet.reserve(&[a, b]).unwrap();
+        assert_eq!(first.total, 300);
+        let second = wallet.reserve(std::slice::from_ref(&c)).unwrap();
+        assert_eq!(wallet.release(first.id), 2);
+        assert_eq!(wallet.reserved.get(&c), Some(&second.id));
+    }
+    #[test]
+    fn partially_reserved_input_set_preserves_all_state() {
+        let (mut wallet, a) = sample();
+        let b = add(&mut wallet, "tx-b", 200);
+        wallet.reserve(std::slice::from_ref(&b)).unwrap();
+        let before = wallet.clone();
+        assert_eq!(wallet.reserve(&[a, b]), Err(WalletError::AlreadyReserved));
+        assert_eq!(wallet, before);
+    }
+    #[test]
+    fn amount_overflow_preserves_existing_reservations() {
+        let (mut wallet, a) = sample();
+        let b = add(&mut wallet, "tx-b", u64::MAX);
+        let c = add(&mut wallet, "tx-c", 1);
+        wallet.reserve(&[a]).unwrap();
+        let before = wallet.clone();
+        assert_eq!(wallet.reserve(&[b, c]), Err(WalletError::AmountOverflow));
+        assert_eq!(wallet, before);
+    }
+    #[test]
+    fn duplicate_insert_cannot_change_reserved_amount() {
+        let (mut wallet, op) = sample();
+        wallet.reserve(std::slice::from_ref(&op)).unwrap();
+        let before = wallet.clone();
+        assert_eq!(
+            wallet.insert(Utxo {
+                outpoint: op,
+                amount: 999
+            }),
+            Err(WalletError::DuplicateUtxo)
+        );
+        assert_eq!(wallet, before);
+    }
+    #[test]
+    fn exhausted_ids_do_not_wrap_or_mutate_state() {
+        let (mut wallet, op) = sample();
+        wallet.last_reservation_id = u64::MAX;
+        let before = wallet.clone();
+        assert_eq!(
+            wallet.reserve(&[op]),
+            Err(WalletError::ReservationIdExhausted)
+        );
+        assert_eq!(wallet, before);
     }
 }
 ```
 
+本文から抽出した教材は11テスト成功。既存の予約を含む失敗時の状態維持、古い解除要求、複数予約の分離、ID上限も検査した。実UTXO・署名・送金・永続DBの検査ではない。
+
 ローカルでの実行例：
 
 ```bash
-cargo new wallet-state-lab --lib
+cargo new --lib --edition 2021 wallet-state-lab
 cd wallet-state-lab
 # 上のコードを src/lib.rs に配置
 cargo test
 ```
 
-この実装は**同一プロセス内での予約**しか扱わない。複数プロセスや複数デバイスでの送金には、DBトランザクション、排他制御、再起動後の復元、ネットワークとの再照合が必要である。`release`を通信タイムアウト直後に無条件で呼ぶのも危険だ。
+この実装の予約IDは、同じWalletStateインスタンスのメモリ内でだけ有効である。別のウォレット・ネットワーク・再起動後に通用するIDではなく、認証トークンでもない。Cloneはテストの状態比較用であり、複製を別の送金ワーカーとして動かしてはいけない。insertは初期投入用で、RPCのスナップショットを反映するupsertや再編成処理ではない。
+
+この実装は**&mut selfで直列に操作するメモリ内の予約**しか扱わない。複数プロセスや複数デバイスでの送金には、DBトランザクション、排他制御、再起動後の復元、ネットワークとの再照合が必要である。`release`は送信前の取消や、既存の送信結果を解決して解除できると判断した場合に呼ぶ。通信タイムアウトや期限切れだけでの無条件解除はしない。期限は再照合を始める契機として扱う。Err時の状態維持はこのメモリ内の通常の戻り値についての性質であり、クラッシュやDBの原子性の保証ではない。
 
 ## 24.15 ウォレットのステートマシン
 
@@ -426,10 +567,11 @@ cargo test
 | Draft | UTXO選択 | Prepared | 入力の重複なし |
 | Prepared | 利用者承認 | Approved | 宛先・金額・手数料一致 |
 | Approved | 署名 | Signed | 署名対象と承認内容一致 |
-| Signed | 送信 | Broadcast | ネットワーク一致 |
+| Signed | 送信 | Broadcast / SubmitUnknown | NetworkId照合、送信前からTX ID・予約ID・支払い意図を関連付け |
 | Broadcast | コンセンサス観測 | Observed | トランザクション識別子一致 |
 | Observed | 確認ポリシー充足 | Settled | 同期・再編成条件を考慮 |
-| Broadcast / Observed | 競合・再編成 | Reconcile | UTXO状態を再取得 |
+| SubmitUnknown | 成否の照会 | Broadcast / Observed / Reconcile | 既知のTX IDを使い、別取引を直ちに構築しない |
+| Broadcast / Observed / Settled | 競合・再編成 | Reconcile | 受理状態・UTXOと業務記録を再評価 |
 
 **不変条件の例：**
 
@@ -456,13 +598,15 @@ cargo test
 調査用コマンド例：
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+# 第1章で取得した固定版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-rg -n 'struct .*Wallet|trait .*Signer|derive.*key|signature|address' wallet* crypto* 2>/dev/null | head -80
+grep -n -E 'build_derivate_path|create_address' wallet/keys/src/derivation/gen1/hd.rs
+grep -n -E 'try_sign|fully_signed|zeroize' wallet/core/src/tx/generator/signer.rs
+grep -n -E 'stage|relay' wallet/core/src/tx/generator/generator.rs
 ```
 
-ディレクトリ名や公開APIはバージョンで変わり得る。上の検索は**調査の入口**であり、特定バージョンでの存在を保証するものではない。
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使い、HEADを本章冒頭の完全SHAと照合する。検索は固定版の主要箇所への入口であり、全APIを列挙するものではない。
 
 ## 24.17 Devnetでの実験計画
 
@@ -506,7 +650,7 @@ A. いいえ。手数料、入力選択、mass、予約・未確定状態など�
 
 1. **C4モデル：** Wallet UI、Wallet Service、Signer、Node Gateway、Kaspa Nodeの境界を描く。
 2. **脅威分析：** ホットウォレットの秘密鍵が漏えいした場合の被害範囲と防止策を表にする。
-3. **Rust：** 24.14の入力予約モデルに「予約ID」「期限」「再起動後の復旧」を追加する。
+3. **Rust：** 24.14の予約IDをTX ID・支払い意図へ関連付け、永続化と再起動後の再照合を設計する。期限切れだけで自動解除しない。
 4. **テスト：** 送信が成功したのにレスポンスだけ失われたケースをモデル化する。
 5. **復旧：** テスト用のHDウォレットで受取アドレスと変更アドレスを再現する。実資産を使わない。
 
@@ -527,7 +671,7 @@ A. いいえ。手数料、入力選択、mass、予約・未確定状態など�
 
 Kaspaアプリケーションでは、ウォレットが観測する状態とコンセンサス上の状態を混同せず、RPC・SDK・Signer・業務ロジックの依存方向を明確にすることが重要である。
 
-次章 **Chapter 25 — Exploring the rusty-kaspa Codebase** では、これらの責務が実際のRustコードでどのように分割されているかを調査する。
+[次章 Chapter 25 — Exploring the rusty-kaspa Codebase](chapter-25.md) では、これらの責務が実際のRustコードでどのように分割されているかを調査する。
 
 ## 24.22 参考資料
 
@@ -539,4 +683,4 @@ Kaspaアプリケーションでは、ウォレットが観測する状態とコ
 - [BIP-44: Multi-Account Hierarchy for Deterministic Wallets](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)
 - [OWASP Cryptographic Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html)
 
-> **残る確認：** legacy/gen0を含む導出互換性、バックアップ復旧、実SDKでの署名・手数料・massの実測、鍵キャッシュの寿命、マルチシグ・ハードウェア機器の対応は未検証。基準版のgen1とGenerator/Signerの主要経路の確認に限定する。
+> **残る確認：** legacy/gen0を含む導出互換性、HDバックアップ復旧、鍵キャッシュの寿命と全終了経路の消去、マルチシグ・ハードウェア機器の対応、全Generator経路は未検証。過去の単一署名Devnet送金・所定の拒否・応答喪失と、今回の入力予約教材は別の検査である。記録は `experiments/chapter-24-review-2026-11-01.md`。

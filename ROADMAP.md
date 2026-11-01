@@ -69,6 +69,22 @@
 
 2026-11-01：SUMMARY順の24ページ目、第20章を通読。Finalityの初期/Pruning境界、PoWと試行回数、仮のview差とSafety、ポリシー判断と実際の入金台帳を区別。教材はPolicyDecision/PolicySatisfiedへ整理し、古い証拠と閾値ゼロを調査対象にした。8テスト・書式・Clippyが成功。記録は `experiments/chapter-20-review-2026-11-01.md`。Part III第15〜20章の本文確認は一区切り。全技術の検証完了ではなく、次は第21章 `src/part-04-development/chapter-21.md`。
 
+2026-11-01：SUMMARY順の25ページ目、第21章を通読。未照合のProtocol v11説明とmaster参照を整理し、proof検証・UTXOインポートの複数保存処理・外側stagingのcommit/cancelを区別。教材はdomain/version、空キー/キー長上限を追加し、独立SHA-256既知値・順序/再インポート・拒否時の旧集合維持を含む8テスト、書式、Clippyが成功。記録は `experiments/chapter-21-review-2026-11-01.md`。実Pruning・Pruning後IBDは引き続き未検証。次は第22章 `src/part-04-development/chapter-22.md`。
+
+2026-11-01：目次順26番目の第22章を確認。固定版の状態/UTXO照会・NetworkId・wRPC形式へ照合し、通知欠落、再追加を捨てる重複キー、成否不明の送信の説明を修正。独自Readiness教材8テスト成功。記録は `experiments/chapter-22-review-2026-11-01.md`。全API・自動再接続・会計台帳は未検証で、実ノード試験は再実行していない。次は第23章。
+
+2026-11-01：目次順27番目の第23章を確認。固定版のRust/wRPC/WASM境界とfeature、購読正常終了の限界を照合。金額型・完全なTestnet識別とJS変換前の範囲検査を補足し、教材15テスト・web向けWASMビルド・Node境界51項目が成功。記録は `experiments/chapter-23-review-2026-11-01.md`。ブラウザーDOM・実Rust RPCアダプター・全SDKは未検証で、実ノード試験は再実行していない。次は第24章。
+
+2026-11-01：目次順28番目の第24章を確認。gen1/Signer・アドレス接頭辞とBIPの文脈を照合し、完全なNetworkId、復旧探索、xpubの扱い、消去行に到達しないエラー経路を補足。入力予約をIDで分離し、原子性・古い解除等の教材11テスト成功。記録は `experiments/chapter-24-review-2026-11-01.md`。鍵生成・送金は行わず、HD復旧・全経路の消去・機器対応等は未検証。次は第25章。
+
+2026-11-01：目次順29番目の第25章を確認。metadataの59パッケージと実クレート地図、ブロック受信/RPC送信/テンプレートの主要入口を照合。失敗時の無効状態保存とメモリ教材を区別し、DAG教材8テスト・型断片コンパイル成功。記録は `experiments/chapter-25-review-2026-11-01.md`。全経路・公式テスト全体・クラッシュ耐性は未検証。次は第26章。
+
+2026-11-01：目次順30番目の第26章を確認。GHOSTDAGの前提・score/work、ヘッダー保存とVirtual更新の別バッチ、親候補のランダム化を照合し、決定性と一時的な観測を区別。既存DAG教材8テスト・型断片コンパイル成功。記録は `experiments/chapter-26-review-2026-11-01.md`。過去の公式24ケース比較は再実行せず、全ストア・障害復旧・公式Reachabilityは未検証。次は第27章。
+
+2026-11-01：目次順31番目の第27章を確認。最小ノードの適用済みID・自己参照/衝突・index変換と全状態保持を改訂。16テスト、実行表示、書式・Clippy成功。親再送と逆順受信の不一致を関数呼び出しで検査し、本文同期・README・付録Gを更新。記録は `experiments/chapter-27-review-2026-11-01.md`。Kaspa互換性・実P2P・永続化は対象外で、実ノード実験IDの完了とは別。次は第28章。
+
+2026-11-01：目次順32番目の第28章を確認。未同期採掘の隔離Devnet例外と通常の同期要件、既存CIと設計図、実測と未実施の境界を整理。Compose5構成、Rust教材7テスト・SQLite観測ストア7テスト・構文確認成功。記録は `experiments/chapter-28-review-2026-11-01.md`。今回は採掘・送金・分断等を再実行せず、実Pruning後IBD等は未検証。次は第29章。
+
 ## 優先順位と進め方
 
 - **P1**：本書の正確性と実習の前提。最初に進める。

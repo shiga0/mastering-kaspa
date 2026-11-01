@@ -1,8 +1,10 @@
 # Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）
 
 > **Mastering Kaspa / Part IV — Kaspa Development & Implementation**  
-> 原稿バージョン：v0.2（実測手順を反映・章全体のレビューは継続中）\
+> 目次順の本文レビュー：2026-11-01。設定・手順・既存実測と独自教材を確認。全実ノード試験の再実行ではない。\
 > 本章の対象：Kaspa Devnetでの再現可能な統合テスト、RPC、障害注入、検証証跡
+
+今回の記録は `experiments/chapter-28-review-2026-11-01.md`。過去の実ノード実測、今回の設定検査・単体テスト、未実施の障害注入を分ける。
 
 ## 28.1 本章の目的
 
@@ -16,7 +18,7 @@
 4. タイムアウト、再起動、重複通知、ネットワーク分断をテストする。
 5. 実験条件・ログ・結果を保存し、第三者が再現できるようにする。
 
-**注意：** KaspaのCLIフラグ、RPCメソッド、Dockerイメージの挙動はリリースによって変わる。以下のコマンドは実験の雛形であり、使用するバージョンの `--help` と公式ソースを確認してから実行する。実験結果を実測したものとして記述しない。
+**注意：** KaspaのCLIフラグ、RPCメソッド、Dockerイメージの挙動はリリースによって変わる。28.6〜28.14は固定版の実習・過去の実測を含み、それ以外の概念図や計画と区別する。使用版の `--help` と公式ソースを確認し、未実行の計画を実測として記述しない。
 
 ## 28.2 なぜ統合テストが必要なのか
 
@@ -110,7 +112,8 @@ platform: <OS / architecture>
 started-at: <ISO 8601>
 expected-result: <assertions>
 actual-result: <fill after execution>
-artifacts: logs/, metrics/, test-results/
+local-artifacts: <raw logs / metrics / results, kept outside Git>
+public-artifacts: <sanitized summaries only>
 ```
 
 `latest` タグだけでは再現性が弱い。リリースタグやイメージdigest、Gitコミットを固定する。ポート番号・ネットワーク識別子・データディレクトリも記録する。
@@ -150,7 +153,7 @@ npm install --prefix experiments/devnet/.sdk --ignore-scripts --no-audit --no-fu
 export KASPA_SDK_ROOT="$PWD/experiments/devnet/.sdk"
 ```
 
-WebSocketの推移依存までの固定は未完了。ローカルのSDK・仮想環境・DBはGit対象外にしている。SDK配布物とノードイメージの完全な再ビルド一致を確認したものではない。
+WebSocketの推移的依存までの固定は未完了。ローカルのSDK・仮想環境・DBはGit対象外にしている。SDK配布物とノードイメージの完全な再ビルド一致を確認したものではない。
 
 ### 28.6.3 実習の範囲
 
@@ -175,7 +178,7 @@ docker compose -f experiments/devnet/compose.yaml logs --tail=30 node
 experiments/devnet/.venv/bin/python experiments/devnet/probe.py
 ```
 
-wRPC JSONは `ws://127.0.0.1:18310`。返答のネットワークがdevnet、serverVersionが1.0.1、UTXOインデックス有効であることを検査する。同期状態は観測値として表示し、未同期を成功した同期と読み替えない。既存ボリュームがある場合、ブロック数は0には戻らない。
+wRPC JSONは `ws://127.0.0.1:18310`。返答のネットワークがdevnet、serverVersionが1.0.1、UTXOインデックス有効であることを検査する。同期状態は観測値として表示し、未同期を成功した同期と読み替えない。probe.pyの成功は疎通と版・Devnet・indexの確認であり、同期完了の判定ではない。既存ボリュームがある場合、ブロック数は0には戻らない。
 
 標準entrypointがDNS照会するため、この実習はkaspad本体を直接起動する。外部ピア探索とUPnPは無効化するが、bridgeネットワーク自体は外向き通信を遮断する設定ではない。RPCだけをホストの127.0.0.1へ公開する。
 
@@ -185,7 +188,9 @@ wRPC JSONは `ws://127.0.0.1:18310`。返答のネットワークがdevnet、ser
 docker compose -f experiments/devnet/compose.yaml stop node
 ```
 
-停止ではデータを削除しない。以降の送金試験では、未同期採掘とコンテナ内部gRPCを有効にするため追加設定 `mining.yaml` を使う。
+停止では名前付きボリュームを削除しない。同じCompose名で再実行すると以前のデータを再利用する。以下の--appdir=/dataとボリュームは実験用であり、実験の初期状態を毎回同じと仮定しない。
+
+以降の送金試験では、未同期採掘とコンテナ内部gRPCを有効にするため追加設定 `mining.yaml` を使う。
 
 ## 28.8 2ノード構成とピア接続
 
@@ -201,6 +206,8 @@ Node A                     Node B
   │                          │
   │◀──── sync messages ──────│
 ```
+
+実行入口は `experiments/devnet/.venv/bin/python experiments/devnet/two-node.py`。起動・IP取得・停止はスクリプトが扱うため、two-node.yamlだけをupして既定の127.0.0.1接続を使う手順とは区別する。
 
 2ノードで実験すると、単一ノードでは観察できない**伝播遅延・同期差・ネットワーク分断**を検証できる。
 
@@ -248,7 +255,9 @@ State observation
 28.6でSDKを用意してから、成熟資金の準備・署名・送信・受理を一続きで実行する。
 
 ```bash
+docker compose -f experiments/devnet/compose.yaml -f experiments/devnet/mining.yaml --profile mining stop miner
 docker compose -f experiments/devnet/compose.yaml -f experiments/devnet/mining.yaml up -d node
+# 次の3モードは1つずつ選び、終了を確認してから次を実行する
 node experiments/devnet/send.cjs
 # 手数料/お釣りの検算と、残高不足・不正署名・競合の拒否
 node experiments/devnet/send.cjs --checks
@@ -258,6 +267,10 @@ docker compose -f experiments/devnet/compose.yaml -f experiments/devnet/mining.y
 ```
 
 各モードは別々の実験で、実行ごとにメモリ内でランダムな鍵を作る。秘密鍵・シードを保存も表示もしない。終了後の鍵復旧機能はないため、実資産を扱うウォレットとして利用しない。
+Composeのcommandは追加ファイルの一覧へ置き換わり、mining.yamlでは--nogrpcが外れて--enable-unsynced-miningが入る。単独で隔離したDevnetで資金を生成するための例外であり、isSynced=trueを保証したり、通常の未同期ノードを業務利用してよいとする設定ではない。send.cjsはgetServerInfoでdevnet・1.0.1・indexを検査するが、同期済みを開始条件にはしない。
+
+send.cjsは既定のコンテナ名mastering-kaspa-devnet-node-1を前提にする。Compose configのnameがmastering-kaspa-devnetであることを確認し、この実習では-pやCOMPOSE_PROJECT_NAMEで変更しない。
+
 送金用マイナーはスクリプトが起動・停止する。既存のminerサービスは先に停止し、モードを同時実行しない。途中失敗した場合も実習READMEの停止手順で残存を確認する。
 
 実測では1 KASの宛先出力、入力消費、Mempool掲載とvirtual受理を確認した。手数料の算術検算は10000 sompiでSDK値と一致。ブロック包含の独立照会や不可逆な決済確定まで検証した結果ではない。
@@ -294,7 +307,7 @@ B: UTXO / balance observation
 | 段階 | 期待すること | 失敗時の調査先 |
 |---|---|---|
 | UTXO取得 | 入力候補が存在する | UTXO index・同期状態 |
-| 署名 | 対象ネットワークに適した署名が生成される | ウォレット・署名方式 |
+| 署名 | 参照UTXO・金額・Scriptと署名対象が一致する | ウォレット・署名方式・接続NetworkId |
 | RPC送信 | 応答またはエラーを記録できる | RPC・接続・タイムアウト |
 | Mempool | ローカルポリシーに従い取り扱われる | Mempool・競合入力 |
 | ブロック | 対象トランザクションが含まれる | マイニング・テンプレート |
@@ -305,7 +318,9 @@ Devnetではブロック生成の準備が別途必要な場合がある。ノ�
 
 ## 28.11 非同期イベント購読の検証
 
-追加の `experiments/devnet/live-reconciliation.py` は、通知を差分更新として直接適用せず再照会のヒントとして扱う。要求の世代番号で古い結果の上書きを拒否し、再購読時も新しい通知を待たずに完全照会する。実験では稼働中の通知を受けて再照会し、購読停止中の欠落も補完できた。単一書き込み主体の現在UTXO観測を対象とし、複数ワーカーやreorgの会計処理は未検証。詳細は `experiments/devnet-live-reconciliation-2026-10-31.md` を参照する。
+追加の `experiments/devnet/live-reconciliation.py` は、通知を差分更新として直接適用せず再照会のヒントとして扱う。要求の世代番号で古い結果の上書きを拒否し、再購読時も新しい通知を待たずに完全照会する。実験では稼働中の通知を受けて再照会し、購読停止中の欠落も補完できた。要求の世代はノードのDAA scoreではなく単一プロセス内の要求開始順で、永続化された分散ロックではない。完全な成功応答だけを反映し、部分取得やエラーを空集合として全件無効化しない。照会間に作成され消費された出力の全履歴は、現在UTXOの再照会だけでは復元できない。
+
+単一書き込み主体の現在UTXO観測を対象とし、複数ワーカーやreorgの会計処理は未検証。詳細は `experiments/devnet-live-reconciliation-2026-10-31.md` を参照する。
 
 `experiments/devnet/notifications.py` は公式SDKで実UTXO通知を受信し、同じ通知を2回適用してもSQLiteの件数・合計額が変わらないことを確認する。購読停止中に採掘し、別プロセスでDBを再読込した後、採掘停止状態のRPCスナップショットで欠落分を補完できた。これは現在UTXOの観測ストアであり、成熟残高や会計台帳ではない。稼働中の通知と補完の競合・再編成時の会計処理は未検証。実測は `experiments/devnet-notifications-2026-10-31.md` を参照する。
 
@@ -379,7 +394,7 @@ APPLICATION_CONFIRMED
 
 ## 28.14 障害注入テストの計画
 
-両ノード稼働中の分断は、リポジトリの `experiments/devnet/partition.py` で実測した。P2P中継だけ停止し、ピア数0とRPC応答を確認して双方の枝で採掘した。再接続後、両ノードで62ブロック・指定報酬先46件のUTXO内容が一致した。全UTXO集合や、競合送金・台帳の取り消しまで検証した結果ではない。記録は `experiments/devnet-partition-2026-10-31.md` を参照する。
+両ノード稼働中の分断は、リポジトリの `experiments/devnet/partition.py` で実測した。P2P中継だけ停止し、ピア数0とRPC応答を確認して双方の枝で順に採掘した。再接続後、両ノードで62ブロック・指定報酬先46件のUTXO内容が一致した。全UTXO集合や、競合送金・台帳の取り消しまで検証した結果ではない。記録は `experiments/devnet-partition-2026-10-31.md` を参照する。
 
 | 故障 | 操作 | 確認すること |
 |---|---|---|
@@ -402,14 +417,22 @@ APPLICATION_CONFIRMED
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Network {
     Devnet,
-    Testnet,
+    Testnet(u32),
     Mainnet,
+    Simnet,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NodeInfo {
     pub network: Network,
     pub synced: bool,
+    pub has_utxo_index: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SyncPolicy {
+    RequireSynced,
+    AllowUnsyncedDevnetLab,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -428,23 +451,28 @@ pub enum ReadinessError {
     Gateway(GatewayError),
     WrongNetwork,
     NotSynced,
+    MissingUtxoIndex,
 }
 
 pub fn ensure_devnet_ready(
     gateway: &impl NodeGateway,
+    policy: SyncPolicy,
 ) -> Result<(), ReadinessError> {
     let info = gateway.node_info().map_err(ReadinessError::Gateway)?;
     if info.network != Network::Devnet {
         return Err(ReadinessError::WrongNetwork);
     }
-    if !info.synced {
+    if !info.has_utxo_index {
+        return Err(ReadinessError::MissingUtxoIndex);
+    }
+    if !info.synced && policy == SyncPolicy::RequireSynced {
         return Err(ReadinessError::NotSynced);
     }
     Ok(())
 }
 ```
 
-これは実ノードへの接続を行わない**教育用のポート設計**である。実際のRPCクライアントは、この `NodeGateway` を実装するアダプターとして追加する。
+これは実ノードへの接続を行わない**教育用のポート設計**である。RequireSyncedを通常の条件とし、AllowUnsyncedDevnetLabは本章の隔離Devnet採掘だけの明示的な例外とする。実際の採掘フラグを変更するコードではなく、Okでも同期済みの証明にはならない。版・応答鮮度・TLS・index追従等の検査も省略している（[第22章](chapter-22.md)）。実際のRPCクライアントは、この `NodeGateway` を実装するアダプターとして追加する。
 
 ## 28.16 Rust単体テスト
 
@@ -456,58 +484,126 @@ mod tests {
     use super::*;
 
     struct FakeGateway(Result<NodeInfo, GatewayError>);
-
     impl NodeGateway for FakeGateway {
         fn node_info(&self) -> Result<NodeInfo, GatewayError> {
             self.0.clone()
         }
     }
-
+    fn info(network: Network, synced: bool) -> NodeInfo {
+        NodeInfo {
+            network,
+            synced,
+            has_utxo_index: true,
+        }
+    }
     #[test]
     fn accepts_synced_devnet() {
-        let gateway = FakeGateway(Ok(NodeInfo {
-            network: Network::Devnet,
-            synced: true,
-        }));
-        assert_eq!(ensure_devnet_ready(&gateway), Ok(()));
-    }
-
-    #[test]
-    fn rejects_wrong_network() {
-        let gateway = FakeGateway(Ok(NodeInfo {
-            network: Network::Mainnet,
-            synced: true,
-        }));
+        let gateway = FakeGateway(Ok(info(Network::Devnet, true)));
         assert_eq!(
-            ensure_devnet_ready(&gateway),
-            Err(ReadinessError::WrongNetwork)
+            ensure_devnet_ready(&gateway, SyncPolicy::RequireSynced),
+            Ok(())
         );
     }
-
     #[test]
-    fn rejects_unsynced_node() {
-        let gateway = FakeGateway(Ok(NodeInfo {
-            network: Network::Devnet,
-            synced: false,
-        }));
+    fn both_policies_reject_other_networks() {
+        for network in [
+            Network::Mainnet,
+            Network::Testnet(10),
+            Network::Testnet(11),
+            Network::Simnet,
+        ] {
+            let gateway = FakeGateway(Ok(info(network, true)));
+            for policy in [
+                SyncPolicy::RequireSynced,
+                SyncPolicy::AllowUnsyncedDevnetLab,
+            ] {
+                assert_eq!(
+                    ensure_devnet_ready(&gateway, policy),
+                    Err(ReadinessError::WrongNetwork)
+                );
+            }
+        }
+    }
+    #[test]
+    fn rejects_unsynced_node_under_normal_policy() {
+        let gateway = FakeGateway(Ok(info(Network::Devnet, false)));
         assert_eq!(
-            ensure_devnet_ready(&gateway),
+            ensure_devnet_ready(&gateway, SyncPolicy::RequireSynced),
             Err(ReadinessError::NotSynced)
         );
     }
-
     #[test]
-    fn propagates_transport_error() {
-        let gateway = FakeGateway(Err(GatewayError::Timeout));
+    fn explicit_lab_policy_allows_unsynced_devnet() {
+        let gateway = FakeGateway(Ok(info(Network::Devnet, false)));
         assert_eq!(
-            ensure_devnet_ready(&gateway),
-            Err(ReadinessError::Gateway(GatewayError::Timeout))
+            ensure_devnet_ready(&gateway, SyncPolicy::AllowUnsyncedDevnetLab),
+            Ok(())
+        );
+    }
+    #[test]
+    fn propagates_each_gateway_error() {
+        for error in [
+            GatewayError::Unreachable,
+            GatewayError::Timeout,
+            GatewayError::ProtocolRejected,
+        ] {
+            let gateway = FakeGateway(Err(error.clone()));
+            assert_eq!(
+                ensure_devnet_ready(&gateway, SyncPolicy::RequireSynced),
+                Err(ReadinessError::Gateway(error))
+            );
+        }
+    }
+    #[test]
+    fn lab_policy_does_not_bypass_index_requirement() {
+        let gateway = FakeGateway(Ok(NodeInfo {
+            has_utxo_index: false,
+            ..info(Network::Devnet, true)
+        }));
+        for policy in [
+            SyncPolicy::RequireSynced,
+            SyncPolicy::AllowUnsyncedDevnetLab,
+        ] {
+            assert_eq!(
+                ensure_devnet_ready(&gateway, policy),
+                Err(ReadinessError::MissingUtxoIndex)
+            );
+        }
+    }
+    #[test]
+    fn readiness_is_checked_on_each_call() {
+        use std::{cell::RefCell, collections::VecDeque};
+        struct ChangingGateway(RefCell<VecDeque<NodeInfo>>);
+        impl NodeGateway for ChangingGateway {
+            fn node_info(&self) -> Result<NodeInfo, GatewayError> {
+                self.0
+                    .borrow_mut()
+                    .pop_front()
+                    .ok_or(GatewayError::Unreachable)
+            }
+        }
+        let gateway = ChangingGateway(RefCell::new(VecDeque::from([
+            info(Network::Devnet, true),
+            info(Network::Devnet, false),
+            info(Network::Mainnet, true),
+        ])));
+        assert_eq!(
+            ensure_devnet_ready(&gateway, SyncPolicy::RequireSynced),
+            Ok(())
+        );
+        assert_eq!(
+            ensure_devnet_ready(&gateway, SyncPolicy::RequireSynced),
+            Err(ReadinessError::NotSynced)
+        );
+        assert_eq!(
+            ensure_devnet_ready(&gateway, SyncPolicy::AllowUnsyncedDevnetLab),
+            Err(ReadinessError::WrongNetwork)
         );
     }
 }
 ```
 
-この例は標準ライブラリのみを使うため、独立したCargoライブラリに配置して `cargo test` できる構成である。ただし、**本章執筆時点で実行結果は検証していない**。
+本書の外で `cargo new --lib --edition 2021 devnet-readiness-lab` を作り、28.15と28.16のコードをsrc/lib.rsへ順に置く。外部依存なし。Rust/Cargo 1.90.0で7テスト、書式、Clippyが成功した。モック教材であり、実ノードとの接続結果ではない。
 
 ## 28.17 実ノード用アダプターの設計
 
@@ -532,7 +628,7 @@ mod tests {
 - RPCエラーからドメインエラーへの変換
 - ノードのネットワーク・同期状態の確認
 
-SDKの具体的なAPIを本章で固定しないのは、バージョン差を隠して**動かないコードを実装例として掲載しないため**である。対象コミットを固定した後、実APIに合わせた検証済みアダプターを追補する。
+28.6〜28.14では公式v1.0.1 Node.js/WASM SDKを使う既存スクリプトを示した。一方、上のRust traitへ接続する実アダプターは未実装であり、モック教材や既存Node.js実習の成功を、そのRust実装の検証として数えない。
 
 ## 28.18 テストフィクスチャとデータの独立性
 
@@ -586,7 +682,7 @@ fail with diagnostics
 
 ## 28.21 CIへの組み込み
 
-CIでは次の順序で実行する。
+以下はDevnetをCIへ組み込む際の設計例である。現行の.github/workflows/deploy.ymlは書籍・本文同期・観測ストアの単体テストと2つのRust教材を検査するが、Dockerの実ノード・SDK送金・障害注入は実行していない。
 
 ```text
 Lint / Format
@@ -699,7 +795,7 @@ Stop Containers / Cleanup
 
 第27章で構築した教育用ノードと、本章で使用する実際のKaspaノードを比較することで、**プロトコルの概念モデルと実装上の複雑さの差**が見えてくる。
 
-次章からは、より高度なコンセンサス研究とDAGKnightの設計を扱う。
+[次章](../part-05-advanced/chapter-29.md)からは、より高度なコンセンサス研究とDAGKnightの設計を扱う。
 
 ## 28.27 参考資料
 

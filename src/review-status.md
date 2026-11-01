@@ -32,7 +32,15 @@
 | 22 | [第18章](part-03-transactions/chapter-18.md) | 本文・主要テンプレート生成経路・教材を確認 | `experiments/chapter-18-review-2026-11-01.md` |
 | 23 | [第19章](part-03-transactions/chapter-19.md) | 本文・報酬の主要分岐・経済モデル教材を確認 | `experiments/chapter-19-review-2026-11-01.md` |
 | 24 | [第20章](part-03-transactions/chapter-20.md) | 本文・Finality境界・確認ポリシー教材を確認 | `experiments/chapter-20-review-2026-11-01.md` |
-| 25 | [第21章](part-04-development/chapter-21.md) | 次の対象 | — |
+| 25 | [第21章](part-04-development/chapter-21.md) | 本文・同期/保存境界・スナップショット教材を確認 | `experiments/chapter-21-review-2026-11-01.md` |
+| 26 | [第22章](part-04-development/chapter-22.md) | 本文・RPC境界・Readiness教材を確認 | `experiments/chapter-22-review-2026-11-01.md` |
+| 27 | [第23章](part-04-development/chapter-23.md) | 本文・SDK境界・WASM教材を確認 | `experiments/chapter-23-review-2026-11-01.md` |
+| 28 | [第24章](part-04-development/chapter-24.md) | 本文・鍵管理境界・入力予約教材を確認 | `experiments/chapter-24-review-2026-11-01.md` |
+| 29 | [第25章](part-04-development/chapter-25.md) | 本文・実装地図・DAG教材を確認 | `experiments/chapter-25-review-2026-11-01.md` |
+| 30 | [第26章](part-04-development/chapter-26.md) | 本文・GHOSTDAG/保存境界・教材を確認 | `experiments/chapter-26-review-2026-11-01.md` |
+| 31 | [第27章](part-04-development/chapter-27.md) | 本文・改訂最小ノード教材を確認 | `experiments/chapter-27-review-2026-11-01.md` |
+| 32 | [第28章](part-04-development/chapter-28.md) | 本文・Devnet設定/手順・教材を確認 | `experiments/chapter-28-review-2026-11-01.md` |
+| 33 | [第29章](part-05-advanced/chapter-29.md) | 次の対象 | — |
 
 この順番でページを確認したことと、ページに関係する全技術・全コードを検証したことは別です。後続章には、先に重要箇所だけを照合・実行したものがあります。
 
@@ -50,7 +58,7 @@
 
 | 対象 | 確認した範囲 | 主な限界・対象外 |
 |---|---|---|
-| 教育用Rust教材 | DAG解析器8テスト（2026-11-01改訂後）、最小ノード6テスト、書式・Clippy。第3章SHA-256抜き出し教材は実行・書式・2テスト | Kaspa互換性や公式ノードの全規則ではありません。第3章教材は手動検査で、CI対象には追加していません |
+| 教育用Rust教材 | DAG解析器8テスト（2026-11-01改訂後）、最小ノード16テスト（2026-11-01改訂後）、書式・Clippy。第3章SHA-256抜き出し教材は実行・書式・2テスト | Kaspa互換性や公式ノードの全規則ではありません。第3章教材は手動検査で、CI対象には追加していません |
 | GHOSTDAG | 基準版への再照合、公式分類関数と集合モデルの24ケース比較 | 小規模な合成DAG。到達可能性は共通DFS。全DAG・論文の全証明は対象外 |
 | DAA | 算術27ケース、Full窓120ケース、Sampled/Dual288ケースでモデルと一致 | GHOSTDAGメタデータを入力に使う条件付き比較。全ネットワーク・全境界は未検証 |
 | ブロック本体検証 | 公式テスト2件で単独検査・BadMerkleRoot/親不足の扱いを確認 | 親不足等の回帰テストはPoWを無効化。全ブロック検証やPoW込みE2Eではありません |
@@ -92,14 +100,14 @@
 | [Chapter 18 — Mining & Block Template Construction（マイニングとブロックテンプレート構築）](part-03-transactions/chapter-18.md) | 主要生成経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | RPC・キャッシュ・取引選択・Virtualからの候補構築を照合。改訂教材8テスト成功。全選択器の分布・報酬・PoW・更新競合の実行検証は未完了 |
 | [Chapter 19 — Mining Economics & Network Security（マイニング経済とネットワークセキュリティ）](part-03-transactions/chapter-19.md) | 報酬の主要分岐Source-checked（v1.0.1）、本文通読確認（2026-11-01） | Coinbase配分・発行スケジュールの入口を照合。改訂経済モデル8テスト・main実行を確認。公式報酬関数との差分・市場実測・攻撃成功確率は未検証 |
 | [Chapter 20 — Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）](part-03-transactions/chapter-20.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | finality point・sink候補・Devnet/Crescendo定数を照合。改訂確認ポリシー教材8テスト成功。公式Finality実行比較・攻撃モデルの証明・Pruning後IBDは未検証 |
-| [Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）](part-04-development/chapter-21.md) | 主要経路のみSource-checked（v1.0.1） | Devnetの進行条件・削減・証明/UTXO検査をソース照合。実測pointはGenesisのまま。実削減とPruning後IBDは未検証 |
-| [Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）](part-04-development/chapter-22.md) | 未照合 | 固定版の読み取り・送金・成功応答喪失・実通知補完を実測。生wRPCとSDKの形式、全エラー、章全体の照合は未完了 |
-| [Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）](part-04-development/chapter-23.md) | 未照合 | 公式Node.js/WASM配布SDKで送金・実通知を実測。Rust SDKアダプター、独自WASM教材の実ビルド/ブラウザー実行、章全体は未完了 |
-| [Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）](part-04-development/chapter-24.md) | 主要経路のみSource-checked（v1.0.1） | 鍵導出・署名・Generator/Signerの一部を照合。単一署名送金と所定の拒否・応答喪失を実測。HD復旧・鍵管理の監査・全異常系は未完了 |
-| [Chapter 25 — Exploring the rusty-kaspa Codebase（rusty-kaspaのコードベースを読む）](part-04-development/chapter-25.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）](part-04-development/chapter-26.md) | 26.7の経路のみSource-checked（v1.0.1再照合） | 分類関数を24ケースで実行比較。永続化・Virtual State・並行処理の経路は未照合 |
-| [Chapter 27 — Building a Minimal Kaspa-like Node in Rust（Rustによる最小Kaspa型ノードの構築）](part-04-development/chapter-27.md) | 未照合 | 収録サンプル6テスト成功。伝播・受信順の発展課題は未検証 |
-| [Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）](part-04-development/chapter-28.md) | 未照合 | 起動・送金・所定の異常系・2ノード・分断・通知補完・報酬UTXO取り消しを限定条件で実測し本文へ反映。全シナリオ、新規環境、Pruning後IBDは未完了 |
+| [Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）](part-04-development/chapter-21.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 進行条件・証明/UTXO・staging境界を照合。改訂教材8テスト成功。実測pointはGenesisのままで、実削減・Pruning後IBD・耐久性は未検証 |
+| [Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）](part-04-development/chapter-22.md) | Source-checked（主要API） | 目次順で本文・通知/再照会境界を確認。Readiness教材8テスト成功。過去の固定版送金・成功応答喪失・実通知補完とは別。全API・自動再接続・会計台帳は未検証 |
+| [Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）](part-04-development/chapter-23.md) | Source-checked（主要バインディング） | 目次順で本文を確認。独自教材15テスト・web向けWASMビルド・Node境界51項目成功。過去の公式SDK実測とは別。ブラウザーDOM・実Rust RPCアダプター・全SDKは未検証 |
+| [Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）](part-04-development/chapter-24.md) | Source-checked（主要経路） | 目次順で本文・復旧/鍵消去の境界を確認。予約ID付き教材11テスト成功。過去の単一署名実測とは別。HD復旧・全終了経路の消去・機器/全Scriptは未検証 |
+| [Chapter 25 — Exploring the rusty-kaspa Codebase（rusty-kaspaのコードベースを読む）](part-04-development/chapter-25.md) | Source-checked（主要入口） | 目次順で本文・59パッケージのmetadataと主要経路を確認。DAG教材8テスト・型断片のコンパイル成功。全経路・公式テスト全体・クラッシュ耐性は未検証 |
+| [Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）](part-04-development/chapter-26.md) | Source-checked（GHOSTDAG/保存境界） | 目次順で本文・ヘッダー保存/Virtual更新を確認。既存DAG教材8テスト・型断片コンパイル成功。過去の公式24ケース比較は再実行せず。全ストア・障害復旧は未検証 |
+| [Chapter 27 — Building a Minimal Kaspa-like Node in Rust（Rustによる最小Kaspa型ノードの構築）](part-04-development/chapter-27.md) | 教材の実行確認 | 目次順で本文を確認し、ID検査・全状態保持を改訂。16テスト・実行表示・書式・Clippy成功。関数呼び出しの親再送/逆順受信を検査。Kaspa互換性・実P2P・永続化は対象外 |
+| [Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）](part-04-development/chapter-28.md) | 設定・教材の実行確認 | 目次順で本文と既存実測を確認。Compose5構成・Rust教材7/観測ストア7テスト成功。実ノード試験は今回は再実行せず。全Script/HD復旧・会計・実Pruning後IBDは未検証 |
 | [Chapter 29 — GHOSTDAG Security & DAGKnight（GHOSTDAGのセキュリティとDAGKnight）](part-05-advanced/chapter-29.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
 | [Chapter 30 — Kaspa Improvement Proposals（Kaspa改善提案・KIP）](part-05-advanced/chapter-30.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
 | [Chapter 31 — Covenants & Advanced Scripting（Covenantsと高度なスクリプティング）](part-05-advanced/chapter-31.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
@@ -124,6 +132,14 @@
 
 | 対象 | 記録ファイル |
 |---|---|
+| 第28章本文レビューとDevnet設定/教材 | `chapter-28-review-2026-11-01.md` |
+| 第27章本文レビューと改訂最小ノード | `chapter-27-review-2026-11-01.md` |
+| 第26章本文レビューとGHOSTDAG/保存境界 | `chapter-26-review-2026-11-01.md` |
+| 第25章本文レビューとコード探索/DAG教材 | `chapter-25-review-2026-11-01.md` |
+| 第24章本文レビューと入力予約教材 | `chapter-24-review-2026-11-01.md` |
+| 第23章本文レビューとSDK/WASM境界教材 | `chapter-23-review-2026-11-01.md` |
+| 第22章本文レビューとRPCアダプター教材 | `chapter-22-review-2026-11-01.md` |
+| 第21章本文レビューとスナップショット教材 | `chapter-21-review-2026-11-01.md` |
 | 第20章本文レビューと確認ポリシー教材 | `chapter-20-review-2026-11-01.md` |
 | 第19章本文レビューと経済モデル教材 | `chapter-19-review-2026-11-01.md` |
 | 第18章本文レビューとテンプレート教材 | `chapter-18-review-2026-11-01.md` |
@@ -172,6 +188,6 @@
 
 ## 次に確認するページと残作業
 
-目次順の次は[第21章](part-04-development/chapter-21.md)、その次は[第22章](part-04-development/chapter-22.md)です。以前の重要章優先の一覧ではなく、この順番でページを確認します。
+目次順の次は[第29章](part-05-advanced/chapter-29.md)、その次は[第30章](part-05-advanced/chapter-30.md)です。以前の重要章優先の一覧ではなく、この順番でページを確認します。
 
 個別検証として残る主なものは、Finalityの実行時境界、HDウォレット復旧、Pruning後IBD、複数ワーカー/会計処理、新規環境での再現、未照合の説明・数値・出典です。全残作業と完了条件は、リポジトリの `ROADMAP.md` に記録しています。

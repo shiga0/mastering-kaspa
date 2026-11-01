@@ -1,8 +1,10 @@
 # Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）
 
 > **Part IV — Kaspa Development & Implementation**  
-> 原稿バージョン：v0.1（2026年10月、技術レビュー前）  
+> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要APIと照合。全API・全障害系の検証ではない。\
 > 対象：Kaspaノードとバックエンド・Webアプリケーションを接続したい開発者
+
+本文と教材の確認記録は `experiments/chapter-22-review-2026-11-01.md`。既存のDevnet実測と今回のモック教材の実行を分けて扱う。
 
 ## この章で学ぶこと
 
@@ -83,6 +85,8 @@ Remote Procedure Call（RPC）は、別プロセスの機能をネットワー�
 
 wRPCは単に「gRPCをWebSocketで包んだもの」と考えるべきではない。APIの型や通知の扱いを、対象バージョンの実装で確認する。
 
+基準版のwRPCはBorshとSerdeJsonのエンコーディングを区別する（[server/connection.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/wrpc/server/src/connection.rs)）。JSON形式であっても、HTTPのJSON-RPCと同じ通信・要求形式だとは限らない。
+
 また、**HTTPのJSON-RPCがKaspaノードの標準インターフェースだと決めつけない**。BitcoinのRPC経験をそのまま持ち込まないことが大切である。
 
 ## 22.4 RPCとP2Pの責務境界
@@ -115,6 +119,14 @@ RPCの応答は通常、**接続したノードの観測結果**を表す。ネ�
 
 特に**「RPCが応答する」ことと「正しい最新状態を返す」ことは違う**。起動直後やIBD中のノードは、通信できても業務判断に使うべきではない場合がある。
 
+### 22.5.1 基準版の確認に使うAPI
+
+[`GetServerInfoResponse`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/core/src/model/message.rs) はRPC API version/revision、server version、network_id、has_utxo_index、is_synced、virtual_daa_scoreを持つ。SDKの型や生のJSONの表記とは区別する。
+
+[`get_server_info_call`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/service/src/service.rs) のis_syncedはMiningRuleEngineによるsinkの新しさ・接続に関する判定であり、ネットワーク全体の正しさや全インデックスの完了を証明する値ではない。`get_utxos_by_addresses_call` はUTXO indexが無効ならNoUtxoIndexを返す。返却順が要求アドレス順とは限らないため、配列の位置だけでアドレスと対応付けない。
+
+基準版の [`NetworkId`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/network.rs) はnetwork typeとsuffixを組み合わせる。Testnetという種別だけでなく、testnet-10等の番号も照合する。応答の鮮度やAPI互換性は、アダプター・呼び出し元で別途検査する。
+
 ## 22.6 ネットワークと環境の分離
 
 開発環境で使ったアドレスやトランザクションをmainnetで扱わないように、接続設定を明示的に分ける。
@@ -126,7 +138,7 @@ config/
   mainnet.toml
 ```
 
-設定には少なくとも、ネットワーク種別、接続先、タイムアウト、再試行上限、必要な機能を含める。秘密情報が必要な環境では、設定ファイルをGitへコミットしない。
+設定には少なくとも、完全なNetworkId、接続先、タイムアウト、再試行上限、必要な機能を含める。秘密情報が必要な環境では、設定ファイルをGitへコミットしない。
 
 ## 22.7 RPCの代表的な利用フロー
 
@@ -139,17 +151,21 @@ Start
 Connect RPC
   |
   v
-Read network / sync status
+Read network / sync / capabilities
   |
-  +-- mismatch --> Fail closed
+  +-- wrong NetworkId --> Fail closed
+  |
+  +-- stale response --> Not ready
   |
   +-- not synced --> Degraded / Wait
+  |
+  +-- missing required index --> Not ready
   |
   v
 Ready
 ```
 
-ここでの `Ready` は、TCP接続が確立しただけではなく、**アプリケーションが必要とする条件を満たした状態**を意味する。
+ここでの `Ready` は、TCP接続が確立しただけではなく、**アプリケーションが必要とする条件を満たした状態**を意味する。判断時点の観測なので、切断やノード状態の変化で見直す。Readyを通過した後の各RPC呼び出しでもエラー処理を続ける。
 
 ### 22.7.2 UTXOの取得
 
@@ -209,7 +225,7 @@ DISCONNECTED
 
 ## 22.9 イベントの重複と欠落
 
-WebSocket通知は、アプリケーションの永続的なイベントログと同義ではない。切断中の通知を再生できるかどうかは、APIの仕様に依存する。
+WebSocket通知は、アプリケーションの永続的なイベントログと同義ではない。切断中の通知を再生できるかどうかは、APIの仕様に依存する。再接続・再購読が成功しても、切断中のすべての通知が再生されたとの保証にはならない。
 
 そのため、**通知は更新のきっかけとし、必要に応じてRPCで現在状態を再照会する**設計が堅牢である。
 
@@ -229,7 +245,7 @@ Compare persisted state
 Idempotent update
 ```
 
-「少なくとも1回処理される」ことを前提に、重複しても結果が変わらない処理を目指す。
+通知は重複も欠落も起こり得る。少なくとも1回届くという保証を置かず、再照会・補完で状態を照合し、重複しても結果が変わらない反映を設計する。RPCの現在状態から分かる範囲と、切断中の全履歴を復元することも別である。照会の間に作成され、消費された出力は、現在UTXOの完全照会だけでは復元できない。売上・会計には取引履歴や受理状態の別記録が必要になる。
 
 ## 22.10 冪等性（Idempotency）
 
@@ -238,8 +254,10 @@ Idempotent update
 例として、アプリケーションDBに次の一意キーを設ける。
 
 ```text
-(network, transaction_id, output_index, event_kind)
+(network_id, transaction_id, output_index)
 ```
+
+これは現在の出力を識別するキーであり、すべての通知を永久に重複排除するイベントIDではない。追加→削除→再追加が起こり得るため、event_kindを足した同じキーを一度処理済みにしただけでは、正当な再追加まで捨ててしまう。現在状態のupsert/無効化、評価世代、変更履歴を分け、DB更新をトランザクションでまとめる。
 
 ただし、キーの選び方はドメインに依存する。たとえば再編成によって「受理された」「受理されなくなった」が変化する場合、単にトランザクションIDだけで全イベントを同一視してはいけない。
 
@@ -256,16 +274,16 @@ BlockDAG上で観測された状態は、コンセンサスの進行に伴って
 3. **業務上の反映**：リスクに応じた独自ポリシーで入金や配送を確定する。
 4. **再評価**：再編成や同期異常が起きたら状態を見直す。
 
-KaspaのFinality関連パラメータと、サービス独自の入金確定条件は別物である（第20章参照）。
+KaspaのFinality関連パラメータと、サービス独自の入金確定条件は別物である（[第20章](../part-03-transactions/chapter-20.md)参照）。
 
 ## 22.12 RPCエラーの分類
 
 | エラー | 例 | 推奨対応 |
 |---|---|---|
-| 通信障害 | タイムアウト、接続拒否 | 上限付き再試行 |
+| 通信障害 | タイムアウト、接続拒否 | 読み取りは上限付き再試行。送信は成否を確認 |
 | 一時的な利用不可 | ノード起動中、未同期 | Readinessを落とす |
 | 入力不正 | 不正なアドレス・トランザクション | 再試行せず修正 |
-| 業務競合 | UTXOが既に使用済み | 状態再照会と再構築 |
+| 業務競合 | UTXOが既に使用済み | 状態・以前の送信成否を確認してから再選択・再構築 |
 | プロトコル不一致 | 型やメソッドの不一致 | バージョン調査 |
 | 不明な送信結果 | 応答前に切断 | **再送前に状態確認** |
 
@@ -281,7 +299,9 @@ retry_delay = min(base_delay * 2^attempt, max_delay)
 
 実運用ではジッターを加え、複数クライアントの再試行が同時に集中するのを避ける。入力不正など、再試行しても解決しないエラーは除外する。
 
-RPCの再試行は**副作用のない読み取り**と**トランザクション送信**を区別して設計する。
+RPCの再試行は**副作用のない読み取り**と**トランザクション送信**を区別して設計する。送信成否が不明なまま新しい取引を作ると、別の支払いとして二重に送る危険がある。同じ署名済み取引の再送、Mempool・UTXO・受理IDの照会、新規取引の構築を分ける。
+
+バックオフは [RFC 6455 §7.2.3](https://www.rfc-editor.org/rfc/rfc6455#section-7.2.3) の異常切断からの復旧も参照する。指数の計算自体がオーバーフローしないよう、実装ではattempt・遅延・総待機時間を制限する。
 
 ## 22.14 RPCの公開範囲とセキュリティ
 
@@ -341,6 +361,8 @@ RPCの再試行は**副作用のない読み取り**と**トランザクショ�
 
 ここでは**実ネットワーク接続を行わない教育用モデル**を作り、ノードの未同期・通信障害をアプリケーション側で扱う。実際のKaspa RPCメソッドやSDKの型とは独立している。
 
+本書とは別の作業用ディレクトリで `cargo new --lib --edition 2021 kaspa-rpc-boundary-demo` を実行し、以下へ置き換える。Rust 1.90.0で確認した。
+
 `Cargo.toml`：
 
 ```toml
@@ -356,7 +378,8 @@ edition = "2021"
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Network {
     Mainnet,
-    Testnet,
+    Testnet(u32),
+    Simnet,
     Devnet,
 }
 
@@ -364,6 +387,8 @@ pub enum Network {
 pub struct NodeStatus {
     pub network: Network,
     pub synced: bool,
+    pub fresh: bool,
+    pub has_utxo_index: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -371,6 +396,8 @@ pub enum RpcError {
     Unavailable,
     WrongNetwork,
     NotSynced,
+    StaleStatus,
+    MissingUtxoIndex,
 }
 
 pub trait NodeGateway {
@@ -380,13 +407,20 @@ pub trait NodeGateway {
 pub fn check_readiness(
     gateway: &impl NodeGateway,
     expected: Network,
+    require_utxo_index: bool,
 ) -> Result<(), RpcError> {
     let status = gateway.status()?;
     if status.network != expected {
         return Err(RpcError::WrongNetwork);
     }
+    if !status.fresh {
+        return Err(RpcError::StaleStatus);
+    }
     if !status.synced {
         return Err(RpcError::NotSynced);
+    }
+    if require_utxo_index && !status.has_utxo_index {
+        return Err(RpcError::MissingUtxoIndex);
     }
     Ok(())
 }
@@ -408,8 +442,10 @@ mod tests {
         let node = StubNode(Ok(NodeStatus {
             network: Network::Devnet,
             synced: true,
+            fresh: true,
+            has_utxo_index: true,
         }));
-        assert_eq!(check_readiness(&node, Network::Devnet), Ok(()));
+        assert_eq!(check_readiness(&node, Network::Devnet, true), Ok(()));
     }
 
     #[test]
@@ -417,9 +453,11 @@ mod tests {
         let node = StubNode(Ok(NodeStatus {
             network: Network::Mainnet,
             synced: true,
+            fresh: true,
+            has_utxo_index: true,
         }));
         assert_eq!(
-            check_readiness(&node, Network::Devnet),
+            check_readiness(&node, Network::Devnet, true),
             Err(RpcError::WrongNetwork)
         );
     }
@@ -429,18 +467,96 @@ mod tests {
         let node = StubNode(Ok(NodeStatus {
             network: Network::Devnet,
             synced: false,
+            fresh: true,
+            has_utxo_index: true,
         }));
         assert_eq!(
-            check_readiness(&node, Network::Devnet),
+            check_readiness(&node, Network::Devnet, true),
             Err(RpcError::NotSynced)
         );
+    }
+
+    fn healthy(network: Network) -> NodeStatus {
+        NodeStatus {
+            network,
+            synced: true,
+            fresh: true,
+            has_utxo_index: true,
+        }
+    }
+
+    #[test]
+    fn testnet_suffix_must_match() {
+        let node = StubNode(Ok(healthy(Network::Testnet(11))));
+        assert_eq!(
+            check_readiness(&node, Network::Testnet(10), true),
+            Err(RpcError::WrongNetwork)
+        );
+        assert_eq!(check_readiness(&node, Network::Testnet(11), true), Ok(()));
+    }
+
+    #[test]
+    fn utxo_index_is_required_only_when_requested() {
+        let node = StubNode(Ok(NodeStatus {
+            has_utxo_index: false,
+            ..healthy(Network::Devnet)
+        }));
+        assert_eq!(
+            check_readiness(&node, Network::Devnet, true),
+            Err(RpcError::MissingUtxoIndex)
+        );
+        assert_eq!(check_readiness(&node, Network::Devnet, false), Ok(()));
+    }
+
+    #[test]
+    fn stale_status_is_not_ready() {
+        let node = StubNode(Ok(NodeStatus {
+            fresh: false,
+            ..healthy(Network::Devnet)
+        }));
+        assert_eq!(
+            check_readiness(&node, Network::Devnet, true),
+            Err(RpcError::StaleStatus)
+        );
+    }
+
+    #[test]
+    fn readiness_is_rechecked_after_changes() {
+        use std::{cell::RefCell, collections::VecDeque};
+        struct ChangingNode(RefCell<VecDeque<Result<NodeStatus, RpcError>>>);
+        impl NodeGateway for ChangingNode {
+            fn status(&self) -> Result<NodeStatus, RpcError> {
+                self.0
+                    .borrow_mut()
+                    .pop_front()
+                    .unwrap_or(Err(RpcError::Unavailable))
+            }
+        }
+        let node = ChangingNode(RefCell::new(VecDeque::from([
+            Ok(healthy(Network::Devnet)),
+            Ok(NodeStatus {
+                synced: false,
+                ..healthy(Network::Devnet)
+            }),
+            Err(RpcError::Unavailable),
+            Ok(healthy(Network::Devnet)),
+        ])));
+        for expected in [
+            Ok(()),
+            Err(RpcError::NotSynced),
+            Err(RpcError::Unavailable),
+            Ok(()),
+        ] {
+            assert_eq!(check_readiness(&node, Network::Devnet, true), expected);
+        }
+        assert!(node.0.borrow().is_empty());
     }
 
     #[test]
     fn propagate_transport_failure() {
         let node = StubNode(Err(RpcError::Unavailable));
         assert_eq!(
-            check_readiness(&node, Network::Devnet),
+            check_readiness(&node, Network::Devnet, true),
             Err(RpcError::Unavailable)
         );
     }
@@ -453,7 +569,11 @@ mod tests {
 cargo test
 ```
 
-この例の目的は、**ネットワーク接続の詳細をビジネスロジックから切り離す**ことにある。SDKが変わっても `NodeGateway` の実装だけを差し替えられる。
+本文から抽出した教材は8テスト成功（`experiments/chapter-22-review-2026-11-01.md`）。Testnetの番号、必要な機能、古い応答、Readyの後の未同期・切断・回復も検査した。
+
+型は独自モデルであり、freshはアダプターが判断した鮮度を表す。実際のGetServerInfoResponseにfreshフィールドがあるという意味ではない。freshを算出する時計・TTLの実装は教材に含めない。この関数は取得時刻・TLS・ノードの正当性・インデックスの追従完了を証明しない。
+
+この例の目的は、**ネットワーク接続の詳細をビジネスロジックから切り離す**ことにある。SDKへの依存を `NodeGateway` の実装へ集約できるが、APIの意味や保証が変わった場合はアプリケーション側の要件も見直す。
 
 ## 22.18 実際のKaspa RPCへ接続する際の手順
 
@@ -467,7 +587,7 @@ cargo test
 6. Devnetで署名済みトランザクションの送信と状態追跡を試す。
 7. 通知購読を追加し、切断・再接続・重複を試験する。
 
-**注意：** ポート番号、APIメソッド名、データ型、通知名はリリースや起動オプションによって異なる可能性がある。本章では固定値を断定せず、使用するバージョンの公式実装を一次情報とする。
+**注意：** ポート番号、APIメソッド名、データ型、通知名はリリースや起動オプションによって異なる可能性がある。本章の照合対象は冒頭の固定版である。別の版へ適用する前に、使用する版の公式実装・SDKとの互換性を確認する。
 
 ### 実測したAPIへの入口
 
@@ -482,18 +602,21 @@ cargo test
 調査対象の入口：
 
 - [rusty-kaspa（公式リポジトリ）](https://github.com/kaspanet/rusty-kaspa)
-- [rusty-kaspa のRPC関連コード検索](https://github.com/search?q=repo%3Akaspanet%2Frusty-kaspa+rpc&type=code)
+- [固定版のRPC型](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/core/src/model/message.rs)
 - [Kaspa公式ドキュメント](https://docs.kaspa.org/)
 
 ローカルでは次のように調べる。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
-rg 'wRPC|wrpc|RpcApi|GetBlockDAGInfo|SubmitTransaction' .
+# 第1章で取得した固定版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
+git rev-parse HEAD
+grep -n -E 'GetServerInfoResponse|GetSyncStatusResponse' rpc/core/src/model/message.rs
+grep -n -E 'get_server_info_call|get_utxos_by_addresses_call|submit_transaction_call' rpc/service/src/service.rs
+grep -n -E 'Borsh|SerdeJson' rpc/wrpc/server/src/connection.rs
 ```
 
-`rg` の検索語は調査の出発点であり、すべての名称が現在のリビジョンに存在する保証はない。見つかった実装から、公開API、通知経路、エラー処理、コンセンサスへの依存関係をたどる。
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使い、HEADを本章冒頭の完全SHAと照合する。検索語は固定版の探索の入口である。見つかった実装から、公開API、通知経路、エラー処理、コンセンサスへの依存関係をたどる。
 
 ソースを読むときは、以下の表を自分で埋めると理解が深まる。
 
@@ -533,7 +656,7 @@ rg 'wRPC|wrpc|RpcApi|GetBlockDAGInfo|SubmitTransaction' .
 7. 接続を意図的に切り、復旧後に再照会する。
 8. 同じ通知を2回与え、DB更新が冪等であることを確認する。
 
-実験記録には、GitコミットID、ネットワーク種別、ノード起動オプション、SDKバージョン、観測ログを残す。
+実験記録にはGitコミットID、完全なNetworkId、公開可能な設定・SDK版・集計を残す。生ログ・接続認証情報・秘密鍵・シード・DB・内部パスは公開しない。
 
 ## 22.22 設計上の不変条件
 
@@ -569,7 +692,7 @@ A. いいえ。同期状態や接続状況、観測時点に依存する。
 1. RPCとP2Pの責務の違いを説明せよ。
 2. gRPCとwRPCの利用場面を比較せよ。
 3. RPCの応答が正常でも入金処理を止めるべき状況を2つ挙げよ。
-4. トランザクション送信がタイムアウトしたとき、即時再送が危険な理由を述べよ。
+4. トランザクション送信がタイムアウトしたとき、成否不明のまま別の取引を再構築して送る危険と、同一署名済み取引の再送との違いを述べよ。
 5. 通知購読が切断された後、どのように状態を回復するか設計せよ。
 6. 同じ入金通知を2回処理しても残高が二重加算されない仕組みを考えよ。
 7. `NodeGateway` のようなインターフェースを置くメリットを説明せよ。
@@ -586,7 +709,7 @@ Kaspaアプリケーションの設計では、**ノードが提供する事実*
 - RPCアダプターを分離すると、SDK変更や障害テストに対応しやすい。
 - 通知をきっかけに状態を再照会し、冪等に反映する設計が堅牢である。
 
-次章では、KaspaのRust SDKとWASMを使った実装へ進む。
+[次章](chapter-23.md)では、KaspaのRust SDKとWASMを使った実装へ進む。
 
 ## 22.26 参考資料
 
@@ -597,4 +720,4 @@ Kaspaアプリケーションの設計では、**ノードが提供する事実*
 - [RFC 6455 — The WebSocket Protocol](https://www.rfc-editor.org/rfc/rfc6455)
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110)
 
-> **技術レビュー時の確認事項：** RPCメソッドの正確な名称、gRPC/wRPCの利用可能なエンコーディング、購読可能な通知、デフォルトポート、同期状態の意味、取引送信のエラー仕様は、対象とする `rusty-kaspa` のコミット・SDKバージョンで照合すること。ここでのRustコードは教育用の抽象化であり、実際のKaspa RPCクライアントではない。
+主要な状態照会・UTXO照会・wRPCエンコーディングと、独自教材の確認記録は `experiments/chapter-22-review-2026-11-01.md`。全RPC/SDK・自動再接続・欠落履歴の完全復元・TLS/認証・複数ワーカーの会計台帳は今回検証していない。モック教材は実際のRPCクライアントではなく、今回はノード起動・署名・送金・通知購読を再実行していない。
