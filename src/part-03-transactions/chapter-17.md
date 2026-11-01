@@ -1,8 +1,10 @@
 # Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）
 
 > **Mastering Kaspa — Part III: Transactions, Mining & Security**  
-> 原稿バージョン: v0.1（技術レビュー前）  
+> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要な受付・保留・伝播経路を照合。全規則・全経路の検証ではない。\
 > 本章の実験は教育用モデルであり、Kaspaメインネットのコンセンサス互換実装ではない。
+
+固定ソースの確認と教材の実行記録は `experiments/chapter-17-review-2026-11-01.md`。既存DevnetのMempool照会・競合拒否は `experiments/devnet-send-checks-2026-10-31.md`、応答喪失からの復旧は `experiments/devnet-send-retry-2026-10-31.md` を参照する。今回はノード・送金を再実行していない。
 
 ## 学習目標
 
@@ -83,7 +85,7 @@ IncludedInBlock
 AcceptedInVirtualState
 ```
 
-これは説明用の状態機械であり、`rusty-kaspa` 内部の型名・状態列挙をそのまま転記したものではない。実際のMempool実装では、トランザクションの追加・削除・再検査・依存関係処理が複数の経路から発生する。
+これは説明用の状態機械であり、`rusty-kaspa` 内部の型名・状態列挙をそのまま転記したものではない。実際のMempool実装では、トランザクションの追加・削除・再検査・依存関係処理が複数の経路から発生する。各ノードがすべての段階を観測する必要はなく、ブロック経由で初めて取引を知る場合もある。送信成功の応答が失われたときは、拒否ではなく成否不明の状態も必要となる。
 
 ### 17.2.1 「受信」「保持」「採用」「確定」を区別する
 
@@ -104,6 +106,8 @@ Wallet ──> Node A ──> Node B ──> Node D
 ```
 
 実際のKaspaでは、メッセージ種別、在庫通知、要求・応答、経路制御などを含むプロトコルに従う。上図は**概念図**であり、特定バージョンのワイヤープロトコルを表現したものではない。
+
+基準版の [`v5/txrelay/flow.rs`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/protocol/flows/src/v5/txrelay/flow.rs) は `InvTransactions` で通知されたIDについて必要な取引を要求し、`RequestTransactions` に対して本体または `TransactionNotFound` を返す。取得した本体のIDも要求したIDと照合し、MiningManagerのバッチ検証・登録へ渡す。`v5/` はソースの配置であり、接続で合意したプロトコル番号と同一視しない（[第10章](../part-02-consensus/chapter-10.md)）。
 
 ### 17.3.1 Gossipと重複排除
 
@@ -139,7 +143,13 @@ Node A ──tx X──> Node C ──tx X──> Node B
 | Mempool・ポリシー | 重複、競合、容量、依存関係、手数料方針 | ローカル候補として保持するか |
 | コンセンサス | スクリプト、UTXO、金額保存、DAG順序・状態に対する妥当性 | 台帳状態に適用できるか |
 
-実際には検証項目の共有やキャッシュがあり、層が完全に独立しているとは限らない。重要なのは**ローカルのリレー方針をコンセンサスルールと同一視しないこと**である。
+コンセンサス規則の検査はMempool登録前にも行う。Mempoolの保持を、そのままコンセンサスUTXOへの適用とは扱わない。実際には検証項目の共有やキャッシュがあり、層が完全に独立しているとは限らない。重要なのは**ローカルのリレー方針をコンセンサスルールと同一視しないこと**である。
+
+### 17.4.1 基準版の受付境界
+
+[`MiningManager`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/mining/src/manager.rs) は、Mempoolの読み取りロック下で事前検査と入力情報の補完を行い、ロックを外してコンセンサスAPIによるUTXO文脈の検証を行う。その後、書き込みロック下で重複・受理済み判定や競合等を確認して登録する。事前検査の結果だけで、後の挿入が必ず成功するわけではない。
+
+[`Mempool`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/mining/src/mempool/mod.rs) は `transaction_pool`、`orphan_pool`、最近の処理IDを保持する `accepted_transactions` を分ける。通常プールの件数、孤児を含む照会結果、Virtualの受理結果は別の情報である。
 
 ## 17.5 UTXO競合と二重支払い
 
@@ -164,6 +174,12 @@ Tx AとTx Bが同じOutpointを入力に含む場合、両方を同じUTXO状態
 
 **BlockDAGが複数ブロックを保持すること**と、**競合する二重支払いを両方受理すること**は異なる。
 
+### 17.5.2 基準版の置換ポリシー
+
+基準版の [`flow_context.rs`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/protocol/flows/src/flow_context.rs) では、通常のRPC送信は `Priority::High` / `RbfPolicy::Forbidden`、置換用RPCは `Priority::High` / `Orphan::Forbidden` / `RbfPolicy::Mandatory` を使う。P2Pのtx relayは `Priority::Low` / `Orphan::Allowed` / `RbfPolicy::Allowed` を渡す。「同じ入力なら常に拒否」でも「高い総手数料なら必ず置換」でもない。High/Lowは保持・期限・再伝播の扱いに関係し、Highという名前だけで採掘の選択優先度を意味するわけではない。
+
+[`replace_by_fee.rs`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/mining/src/mempool/replace_by_fee.rs) は既存の競合取引のfee/massから閾値を求める。Mandatoryでは競合がちょうど1件であることも要求する。具体的な比較と受付条件は固定版の規則を確認し、BitcoinのRBF規則から推測しない。
+
 ## 17.6 親子トランザクションと依存関係
 
 あるトランザクションの出力を、別のトランザクションが入力として使う場合がある。
@@ -185,7 +201,9 @@ Tx BはTx Aに依存する。Tx Bだけが先に届いた場合、必要なUTXO�
 
 ### 17.6.2 孤立トランザクション・保留トランザクション
 
-参照先のUTXOがまだ見えないトランザクションは、即時拒否されることも、条件付きで保留されることもある。実際の取り扱いは実装バージョンとポリシーに依存するため、ソースコードで確認する。
+参照先のUTXOがまだ見えないトランザクションは、即時拒否されることも、条件付きで保留されることもある。基準版の [`post_validate_and_insert_transaction`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/mining/src/mempool/validate_and_insert_transaction.rs) は、入力不足かつ `Orphan::Allowed` なら孤児プールへの登録を試みる。Forbiddenなら `RejectDisallowedOrphan` とする。通常のRPCでは `allow_orphan` の指定だけでなく、ノードがunsafe RPCを許可している必要もある（[RPC入口](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/service/src/service.rs)）。
+
+通常プールにある親の出力情報を入力へ補完し、親の到着後は孤児の不足情報を埋めて再検証する。孤児プールは正当な取引であるとの保証ではない。Mempoolで親子を保持できることも、同一ブロック内に親子取引を入れてよいという意味ではない（[第15章](chapter-15.md)）。
 
 ## 17.7 手数料とMempoolの資源制約
 
@@ -224,6 +242,12 @@ Mempool容量に余裕があるか？
 
 BlockDAGでは、単純な「最新ブロックに入ったトランザクションを消す」だけでは十分でない。**コンセンサス上の受理状態**と、**Mempoolに残すべき候補**を分けて考える必要がある。
 
+### 17.8.1 基準版で確認した更新経路
+
+`FlowContext` はブロックのVirtual処理を待ってから、ブロック中の取引をMiningManagerへ渡す。[`handle_new_block_transactions`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/mining/src/mempool/handle_new_block_transactions.rs) はCoinbaseを除く取引について、プールからの削除、競合する候補の削除、孤児の再評価、最近のIDの記録等を行う。この内部の `accepted_transactions` という名前だけを、取引のVirtual受理や不可逆な決済確定の証拠にしない。
+
+再編成で外れたすべての取引が自動的にMempoolへ戻るとの保証は、この経路の照合だけでは得られない。再検証・再伝播と、全再編成シナリオの検証を区別する。
+
 ## 17.9 Reorganizationとトランザクションの再評価
 
 Virtual Stateが変化した場合、以前は有効だったトランザクションが無効になることも、その逆もあり得る。
@@ -254,7 +278,7 @@ Mempoolを設計する際は、**状態変更後に古い判定結果を無条�
 | 不正な依存チェーン | 保留領域や検証負荷の増大 | 依存深度・容量の制御 |
 | 不正なトランザクションデータ | パーサや検証器の攻撃面拡大 | 境界での厳密な検証 |
 
-**不変条件:** ネットワークから届く入力を信用せず、失敗したトランザクションが確定済みUTXO状態を変更しないこと。
+**不変条件:** ネットワークから届く入力を信用せず、Mempoolの受付失敗を理由にコンセンサスUTXO状態を書き換えないこと。
 
 ## 17.11 Rustで最小Mempoolを実装する
 
@@ -262,8 +286,10 @@ Mempoolを設計する際は、**状態変更後に古い判定結果を無条�
 
 ### 17.11.1 プロジェクト作成
 
+本書とは別の作業用ディレクトリで実行する。外部依存はなく、Rust 1.90.0で確認した。
+
 ```bash
-cargo new minimal-mempool
+cargo new --lib --edition 2021 minimal-mempool
 cd minimal-mempool
 ```
 
@@ -278,7 +304,7 @@ pub struct Outpoint {
     pub index: u32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Transaction {
     pub id: String,
     pub inputs: Vec<Outpoint>,
@@ -286,6 +312,7 @@ pub struct Transaction {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AdmissionError {
+    EmptyId,
     DuplicateTransaction,
     DuplicateInput,
     ConflictingInput,
@@ -300,6 +327,9 @@ pub struct Mempool {
 
 impl Mempool {
     pub fn admit(&mut self, tx: Transaction) -> Result<(), AdmissionError> {
+        if tx.id.is_empty() {
+            return Err(AdmissionError::EmptyId);
+        }
         if self.transactions.contains_key(&tx.id) {
             return Err(AdmissionError::DuplicateTransaction);
         }
@@ -347,11 +377,17 @@ mod tests {
     use super::*;
 
     fn outpoint() -> Outpoint {
-        Outpoint { txid: "funding".into(), index: 0 }
+        Outpoint {
+            txid: "funding".into(),
+            index: 0,
+        }
     }
 
     fn tx(id: &str) -> Transaction {
-        Transaction { id: id.into(), inputs: vec![outpoint()] }
+        Transaction {
+            id: id.into(),
+            inputs: vec![outpoint()],
+        }
     }
 
     #[test]
@@ -365,7 +401,10 @@ mod tests {
     fn rejects_duplicate_transaction() {
         let mut pool = Mempool::default();
         pool.admit(tx("a")).unwrap();
-        assert_eq!(pool.admit(tx("a")), Err(AdmissionError::DuplicateTransaction));
+        assert_eq!(
+            pool.admit(tx("a")),
+            Err(AdmissionError::DuplicateTransaction)
+        );
         assert_eq!(pool.len(), 1);
     }
 
@@ -380,9 +419,103 @@ mod tests {
     #[test]
     fn rejects_duplicate_inputs_within_one_transaction() {
         let mut pool = Mempool::default();
-        let bad = Transaction { id: "bad".into(), inputs: vec![outpoint(), outpoint()] };
+        let bad = Transaction {
+            id: "bad".into(),
+            inputs: vec![outpoint(), outpoint()],
+        };
         assert_eq!(pool.admit(bad), Err(AdmissionError::DuplicateInput));
         assert!(pool.is_empty());
+    }
+
+    #[test]
+    fn all_admission_errors_preserve_both_maps() {
+        let mut pool = Mempool::default();
+        pool.admit(tx("a")).unwrap();
+        let fresh = Outpoint {
+            txid: "fresh".into(),
+            index: 0,
+        };
+        let before = (pool.transactions.clone(), pool.spent_inputs.clone());
+        for (candidate, error) in [
+            (tx(""), AdmissionError::EmptyId),
+            (
+                Transaction {
+                    id: "empty".into(),
+                    inputs: vec![],
+                },
+                AdmissionError::EmptyInputs,
+            ),
+            (
+                Transaction {
+                    id: "a".into(),
+                    inputs: vec![fresh.clone()],
+                },
+                AdmissionError::DuplicateTransaction,
+            ),
+            (
+                Transaction {
+                    id: "duplicate".into(),
+                    inputs: vec![fresh.clone(), fresh.clone()],
+                },
+                AdmissionError::DuplicateInput,
+            ),
+            (
+                Transaction {
+                    id: "conflict".into(),
+                    inputs: vec![fresh, outpoint()],
+                },
+                AdmissionError::ConflictingInput,
+            ),
+        ] {
+            assert_eq!(pool.admit(candidate), Err(error));
+            assert_eq!(
+                (&pool.transactions, &pool.spent_inputs),
+                (&before.0, &before.1)
+            );
+        }
+    }
+
+    #[test]
+    fn removing_unknown_transaction_preserves_reservations() {
+        let mut pool = Mempool::default();
+        pool.admit(tx("a")).unwrap();
+        let before = (pool.transactions.clone(), pool.spent_inputs.clone());
+        assert!(pool.remove("absent").is_none());
+        assert_eq!(
+            (&pool.transactions, &pool.spent_inputs),
+            (&before.0, &before.1)
+        );
+        assert_eq!(pool.admit(tx("b")), Err(AdmissionError::ConflictingInput));
+    }
+
+    #[test]
+    fn removal_releases_only_its_own_reservations() {
+        let mut pool = Mempool::default();
+        let other = Outpoint {
+            txid: "other".into(),
+            index: 0,
+        };
+        pool.admit(tx("a")).unwrap();
+        pool.admit(Transaction {
+            id: "c".into(),
+            inputs: vec![other.clone()],
+        })
+        .unwrap();
+        assert_eq!(pool.remove("a").unwrap(), tx("a"));
+        assert!(pool.remove("a").is_none());
+        assert_eq!(pool.admit(tx("b")), Ok(()));
+        assert_eq!(
+            pool.admit(Transaction {
+                id: "d".into(),
+                inputs: vec![other.clone()]
+            }),
+            Err(AdmissionError::ConflictingInput)
+        );
+        assert_eq!(
+            pool.spent_inputs,
+            HashMap::from([(outpoint(), "b".into()), (other, "c".into())])
+        );
+        assert_eq!(pool.len(), 2);
     }
 
     #[test]
@@ -401,6 +534,8 @@ mod tests {
 cargo test
 ```
 
+本文から抽出した教材は8テスト成功。空ID、全拒否理由で2つのmapが変わらないこと、未知IDの削除、他の取引の予約を残す削除を確認した（`experiments/chapter-17-review-2026-11-01.md`）。
+
 ### 17.11.2 この実装が保証すること
 
 - 同一トランザクションIDは二重登録されない。
@@ -414,11 +549,13 @@ cargo test
 - 署名・Script検証
 - トランザクションIDの暗号学的計算
 - 手数料やmassの評価
-- 親子トランザクションの管理
+- RBF・容量上限・期限切れ・孤児プール・親子トランザクションの管理
 - コンセンサス状態との同期
 - 並行アクセス・永続化・ネットワーク伝播
 
-このモデルの `spent_inputs` は**Mempool内の入力予約**であり、確定済みUTXO集合そのものではない。
+このモデルの `spent_inputs` は**Mempool内の入力予約**であり、コンセンサスUTXO集合そのものではない。削除で予約を解放しても、実際のUTXOが使用可能になったことは示さない。同じ文字列IDの別内容もDuplicateTransactionとして拒否するが、暗号学的なID・内容の対応は検証しない。
+
+失敗時の集合不変はこの教材の方針である。基準版の `post_validate_and_insert_transaction` には、RBFで既存候補を除いた後に容量制限で新規取引が拒否され、先の削除が残る例外がコメントされている。公式Mempoolの受付失敗は常にプール全体を以前と同じにする、と一般化しない。これはコンセンサスUTXOを消費する処理とは別である。
 
 ## 17.12 状態機械と不変条件
 
@@ -466,7 +603,7 @@ NotSeen ──receive──> Checking
 └──────────────────────────────────────────────────────┘
 ```
 
-上図は学習用の論理的な責務分解であり、実際のRustクレート境界を示したものではない。
+UTXO / Consensusとの線は検証のための参照関係であり、Mempoolの登録がそのままコンセンサスUTXOを書き換える意味ではない。上図は学習用の論理的な責務分解であり、実際のRustクレート境界を示したものではない。
 
 ### 17.13.2 ドメイン用語
 
@@ -486,13 +623,15 @@ NotSeen ──receive──> Checking
 調査は、**固定したコミットを起点**に行う。以下のコマンドは手元で実行する例であり、特定バージョンでのディレクトリ名を保証するものではない。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+# 第1章で取得した固定版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-rg -n 'mempool|Mempool|orphan|transaction relay|submit_transaction' --glob '*.rs' | head -100
+grep -n -E 'validate_and_insert_transaction|handle_new_block_transactions' mining/src/manager.rs
+grep -n -E 'Orphan::|RbfPolicy::|post_validate' mining/src/mempool/validate_and_insert_transaction.rs
+grep -n -E 'InvTransactions|RequestTransactions|TransactionNotFound' protocol/flows/src/v5/txrelay/flow.rs
 ```
 
-次の問いを順番に追う。
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使い、HEADを本章冒頭の完全SHAと照合する。次の問いを順番に追う。
 
 1. RPCでトランザクションを受け取る入口はどこか。
 2. P2Pでトランザクションを受信する入口はどこか。
@@ -522,7 +661,7 @@ rg -n 'mempool|Mempool|orphan|transaction relay|submit_transaction' --glob '*.rs
 
 **症状: ウォレットから送信したのにトランザクションが見つからない**
 
-1. 送信APIが成功したか確認する。
+1. 送信APIの応答が成功・拒否・成否不明のどれかを確認する。応答喪失を拒否と決めつけない。
 2. トランザクションIDを記録する。
 3. 送信先ノードの同期状態を確認する。
 4. Mempool受理結果・拒否理由を確認する。
@@ -537,7 +676,7 @@ rg -n 'mempool|Mempool|orphan|transaction relay|submit_transaction' --glob '*.rs
 
 | 観点 | Bitcoin | Kaspa |
 |---|---|---|
-| 台帳構造 | 線形ブロックチェーン | BlockDAG |
+| 台帳構造 | 競合する枝から採用チェーンを選ぶ | BlockDAG |
 | 未確定トランザクション候補 | ノードごとのMempool | ノードごとのMempool |
 | トランザクション伝播 | P2Pリレー | P2Pリレー |
 | 二重支払い | UTXOとチェーン状態で評価 | UTXOとDAG順序・Virtual Stateで評価 |
@@ -575,7 +714,7 @@ Mempoolの最大件数を設け、上限到達時の動作をテストする。�
 
 ### 課題C: 状態再評価
 
-`ConsensusChanged` イベントを追加し、確定済みUTXO集合に対してMempool内の入力を再検査する処理を設計する。
+`ConsensusChanged` イベントを追加し、現在のコンセンサスUTXO集合に対してMempool内の入力を再検査する処理を設計する。
 
 ### 課題D: 伝播実験
 
@@ -602,7 +741,7 @@ Mempoolの最大件数を設け、上限到達時の動作をテストする。�
 - BlockDAG上でブロックを保持することと、そのトランザクションをVirtual Stateへ適用することは別である。
 - Rustで設計する際は、**原子性・重複排除・競合検出・状態再評価・資源制限**を不変条件として明示する。
 
-次章では、Mempoolの候補からマイナーがブロックテンプレートを構築する流れを扱う。
+[次章](chapter-18.md)では、Mempoolの候補からマイナーがブロックテンプレートを構築する流れを扱う。
 
 ## 参考資料
 
@@ -613,4 +752,4 @@ Mempoolの最大件数を設け、上限到達時の動作をテストする。�
 5. [Bitcoin Developer Reference](https://developer.bitcoin.org/reference/)
 6. [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
 
-> **技術レビュー時の確認事項:** Kaspaの具体的なP2Pメッセージ名、Mempoolの内部型、依存取引の保留規則、手数料・massに基づく取引選択、再編成時の再投入条件は、採用する `rusty-kaspa` のコミットを固定して検証する。本章はそれらの未検証事項を断定していない。
+今回の照合は基準版の主要なRPC/P2P受付、競合/孤児管理、ブロック後処理の範囲である。全RBF条件・孤児上限・期限・mass/手数料・全再編成時の再投入や、公式関数との実行時差分は未検証。本文確認・教材8テスト・ソース識別情報は `experiments/chapter-17-review-2026-11-01.md` に記録した。

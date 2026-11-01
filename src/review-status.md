@@ -26,7 +26,13 @@
 | 16 | [第12章](part-02-consensus/chapter-12.md) | 本文・集合の定義・教材を確認 | `experiments/chapter-12-review-2026-11-01.md` |
 | 17 | [第13章](part-02-consensus/chapter-13.md) | 本文・計算説明・簡易DAA教材を確認 | `experiments/chapter-13-review-2026-11-01.md` |
 | 18 | [第14章](part-02-consensus/chapter-14.md) | 本文・Virtualと受理規則・UTXO教材を確認 | `experiments/chapter-14-review-2026-11-01.md` |
-| 19 | [第15章](part-03-transactions/chapter-15.md) | 次の対象 | — |
+| 19 | [第15章](part-03-transactions/chapter-15.md) | 本文・検証の依存関係・UTXO教材を確認 | `experiments/chapter-15-review-2026-11-01.md` |
+| 20 | [第16章](part-03-transactions/chapter-16.md) | 本文・署名対象・検証境界の教材を確認 | `experiments/chapter-16-review-2026-11-01.md` |
+| 21 | [第17章](part-03-transactions/chapter-17.md) | 本文・主要受付/保留/伝播経路・教材を確認 | `experiments/chapter-17-review-2026-11-01.md` |
+| 22 | [第18章](part-03-transactions/chapter-18.md) | 本文・主要テンプレート生成経路・教材を確認 | `experiments/chapter-18-review-2026-11-01.md` |
+| 23 | [第19章](part-03-transactions/chapter-19.md) | 本文・報酬の主要分岐・経済モデル教材を確認 | `experiments/chapter-19-review-2026-11-01.md` |
+| 24 | [第20章](part-03-transactions/chapter-20.md) | 本文・Finality境界・確認ポリシー教材を確認 | `experiments/chapter-20-review-2026-11-01.md` |
+| 25 | [第21章](part-04-development/chapter-21.md) | 次の対象 | — |
 
 この順番でページを確認したことと、ページに関係する全技術・全コードを検証したことは別です。後続章には、先に重要箇所だけを照合・実行したものがあります。
 
@@ -80,12 +86,12 @@
 | [Chapter 12 — GHOSTDAG Internals（GHOSTDAGの内部構造）](part-02-consensus/chapter-12.md) | 主要規則Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 改訂DAG解析器8テスト成功。別ハーネスの既存24ケースで親選択・blue/red・score/workが一致。全DAG・全規則・論文の証明は未検証 |
 | [Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）](part-02-consensus/chapter-13.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | Full/Sampled・整数target計算・DAA scoreを照合。改訂教材7テスト・実行出力を確認。Full/Sampled算術27ケース・計54回でbits一致。Full窓/non-DAA/DAA scoreは120ケースで一致。Sampled/Dualは288ケースで一致。全ネットワーク・全境界・Pruning後IBDは未完了 |
 | [Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）](part-02-consensus/chapter-14.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 合意順序・virtual・UTXO処理を照合。改訂教材7テストと実行出力を確認。公式実行との差分・クラッシュ耐久性・全規則は未検証 |
-| [Chapter 15 — UTXO Model & Transaction Processing（UTXOモデルとトランザクション処理）](part-03-transactions/chapter-15.md) | 主要経路のみSource-checked（v1.0.1） | UTXO・TX検証の主要経路を照合。教材4テスト成功。公式実行との差分・全subnetwork・章全体は未完了 |
-| [Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）](part-03-transactions/chapter-16.md) | 主要経路のみSource-checked（v1.0.1） | 署名/Script・gen1導出・Generator/Signerの一部を照合。単一署名送金・所定の拒否・応答喪失を実測。HD復旧・全Script・全異常系・章全体は未完了 |
-| [Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）](part-03-transactions/chapter-17.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Chapter 18 — Mining & Block Template Construction（マイニングとブロックテンプレート構築）](part-03-transactions/chapter-18.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Chapter 19 — Mining Economics & Network Security（マイニング経済とネットワークセキュリティ）](part-03-transactions/chapter-19.md) | 未照合 | 目次順で本文・出典・図・コードを確認予定 |
-| [Chapter 20 — Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）](part-03-transactions/chapter-20.md) | 主要経路のみSource-checked（v1.0.1） | finality point・sink候補・Devnet/Crescendo定数を照合。教材4テスト成功。公式Finality実行比較・攻撃モデルの証明は未完了 |
+| [Chapter 15 — UTXO Model & Transaction Processing（UTXOモデルとトランザクション処理）](part-03-transactions/chapter-15.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | UTXO・TX検証を照合。改訂教材7テスト成功。初期出力の上書き・不正入力・手数料を確認。公式実行との差分・全subnetwork・全規則は未検証 |
+| [Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）](part-03-transactions/chapter-16.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 既存の署名/Script照合とDevnet実測を参照。改訂教材9テスト成功。モックが出力変更を検出できない限界も確認。HD復旧・全Script・全異常系は未検証 |
+| [Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）](part-03-transactions/chapter-17.md) | 主要受付/保留/伝播経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 改訂教材8テスト成功。RPC/P2PのRBF条件、孤児、事後再検査、更新を照合。公式実行との差分・全RBF/再編成条件は未検証 |
+| [Chapter 18 — Mining & Block Template Construction（マイニングとブロックテンプレート構築）](part-03-transactions/chapter-18.md) | 主要生成経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | RPC・キャッシュ・取引選択・Virtualからの候補構築を照合。改訂教材8テスト成功。全選択器の分布・報酬・PoW・更新競合の実行検証は未完了 |
+| [Chapter 19 — Mining Economics & Network Security（マイニング経済とネットワークセキュリティ）](part-03-transactions/chapter-19.md) | 報酬の主要分岐Source-checked（v1.0.1）、本文通読確認（2026-11-01） | Coinbase配分・発行スケジュールの入口を照合。改訂経済モデル8テスト・main実行を確認。公式報酬関数との差分・市場実測・攻撃成功確率は未検証 |
+| [Chapter 20 — Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）](part-03-transactions/chapter-20.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | finality point・sink候補・Devnet/Crescendo定数を照合。改訂確認ポリシー教材8テスト成功。公式Finality実行比較・攻撃モデルの証明・Pruning後IBDは未検証 |
 | [Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）](part-04-development/chapter-21.md) | 主要経路のみSource-checked（v1.0.1） | Devnetの進行条件・削減・証明/UTXO検査をソース照合。実測pointはGenesisのまま。実削減とPruning後IBDは未検証 |
 | [Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）](part-04-development/chapter-22.md) | 未照合 | 固定版の読み取り・送金・成功応答喪失・実通知補完を実測。生wRPCとSDKの形式、全エラー、章全体の照合は未完了 |
 | [Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）](part-04-development/chapter-23.md) | 未照合 | 公式Node.js/WASM配布SDKで送金・実通知を実測。Rust SDKアダプター、独自WASM教材の実ビルド/ブラウザー実行、章全体は未完了 |
@@ -118,6 +124,12 @@
 
 | 対象 | 記録ファイル |
 |---|---|
+| 第20章本文レビューと確認ポリシー教材 | `chapter-20-review-2026-11-01.md` |
+| 第19章本文レビューと経済モデル教材 | `chapter-19-review-2026-11-01.md` |
+| 第18章本文レビューとテンプレート教材 | `chapter-18-review-2026-11-01.md` |
+| 第17章本文レビューとMempool教材 | `chapter-17-review-2026-11-01.md` |
+| 第16章本文レビューと署名検証境界の教材 | `chapter-16-review-2026-11-01.md` |
+| 第15章本文レビューとUTXO・手数料教材 | `chapter-15-review-2026-11-01.md` |
 | 第14章本文レビューとUTXO教材 | `chapter-14-review-2026-11-01.md` |
 | 第13章本文レビューと簡易DAA教材 | `chapter-13-review-2026-11-01.md` |
 | 第12章本文レビューと改訂DAG解析器 | `chapter-12-review-2026-11-01.md` |
@@ -160,6 +172,6 @@
 
 ## 次に確認するページと残作業
 
-目次順の次は[第15章](part-03-transactions/chapter-15.md)、その次は[第16章](part-03-transactions/chapter-16.md)です。以前の重要章優先の一覧ではなく、この順番でページを確認します。
+目次順の次は[第21章](part-04-development/chapter-21.md)、その次は[第22章](part-04-development/chapter-22.md)です。以前の重要章優先の一覧ではなく、この順番でページを確認します。
 
 個別検証として残る主なものは、Finalityの実行時境界、HDウォレット復旧、Pruning後IBD、複数ワーカー/会計処理、新規環境での再現、未照合の説明・数値・出典です。全残作業と完了条件は、リポジトリの `ROADMAP.md` に記録しています。

@@ -1,8 +1,10 @@
 # Chapter 19 — Mining Economics & Network Security（マイニング経済とネットワークセキュリティ）
 
 > **Mastering Kaspa — Part III: Transactions, Mining & Security**  
-> 原稿バージョン：v0.1（技術レビュー前）  
+> 目次順の本文レビュー：2026-11-01。報酬の主要処理は基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` と照合。経済モデルは仮定値による教材で、全規則・全市場データの検証ではない。\
 > 対象読者：PoW・UTXO・BlockDAGの基礎を学んだ開発者
+
+確認範囲・教材の実行記録は `experiments/chapter-19-review-2026-11-01.md`。価格・機器・電力契約・現行Mainnetの報酬やハッシュレートを今回の実測値として扱わない。
 
 ## この章で学ぶこと
 
@@ -28,6 +30,20 @@ Proof of Work（PoW）では、マイナーは計算資源を投入してブロ�
 - **トランザクション手数料（fees）**：ネットワーク利用者がトランザクションに支払う手数料。
 
 報酬の実際の帰属や支払条件は、ブロックの扱い、Coinbaseの仕組み、マイニングプールの契約・配分方法に依存する。Bitcoinの「最長チェーンに採用されたブロック」という直感を、そのままKaspaのすべてのブロックに当てはめない。
+
+### 19.1.1 基準版で確認した報酬配分
+
+[`CoinbaseManager::expected_coinbase_transaction`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/coinbase.rs) は、処理文脈のmerge setとnon-DAA集合、各ブロックの報酬情報を使う。主な分岐は次のとおり。
+
+| 対象 | 基準版の主な配分 |
+|---|---|
+| blueかつnon-DAAでない | subsidyと受理された取引の手数料を、そのブロックの報告したScriptへ出力 |
+| redかつnon-DAAでない | subsidyと手数料を合算し、取り込むブロックのminer dataのScriptへ出力 |
+| redかつnon-DAA | Crescendo前は対象外、有効化後は手数料分を上のred報酬へ加算 |
+
+合計が正の場合に出力を作る。blue/redは文脈に依存する分類であり、redを作ったマイナー本人へ必ず支払うという意味ではない。現在のブロック自身のsubsidyはCoinbase payloadにも記載し、その候補の全手数料を単純に同じ候補のマイナーへ即時加算する説明とは区別する。
+
+この表は固定ソースの主要分岐の照合であり、すべての報酬適格性・成熟条件・実際の受け取り時点を検証した結果ではない。プールからの入金時点とも別である。
 
 ### 経済的な因果関係
 
@@ -56,7 +72,7 @@ KAS市場価格 ─────┐
 - `H_m`：自分のハッシュレート
 - `H_n`：ネットワークのハッシュレート
 - `B`：ネットワーク全体の1日当たりの期待ブロック数
-- `R`：1ブロック当たりの**平均的な期待受取報酬**（KAS、発行報酬と手数料を含む。採掘・報酬の実際のルールを簡略化）
+- `R`：1ブロック当たりの**プール手数料控除前の平均有効報酬**（KAS、発行報酬と取引手数料を含み、報酬適格性等の影響を平均化した仮定）
 - `P`：KAS価格（円/KAS）
 - `W`：消費電力（W）
 - `E`：電力単価（円/kWh）
@@ -71,7 +87,11 @@ KAS市場価格 ─────┐
 営業寄与（円/日） ≈ 期待売上 - 電力費 - その他日次運用費
 ```
 
-**重要な制限**：この式は個々のKaspaブロックの実際の報酬配分を再現しない。`R` を「観測された平均的な有効受取報酬」として扱うための教育用モデルである。また、発行報酬・手数料・採掘条件は時期とネットワーク設定で変わる。
+**重要な制限**：この式は個々のKaspaブロックの実際の報酬配分を再現しない。`R` はプール手数料控除前とし、控除済みの実入金からそのまま求めて再び `(1 - C)` を掛けると二重控除になる。モデルは全報酬へ一律のプール手数料率を適用しており、支払方式の詳細を再現しない。また、発行報酬・手数料・採掘条件は時期とネットワーク設定で変わる。
+
+`H_m` と `H_n` は同じアルゴリズム・時間帯・単位を使い、`H_n` は自分の分も含む。ハッシュシェアに比例した報酬を仮定するもので、個別マイナーの報酬配分を保証しない。
+
+ここでの営業寄与は売上から電力費とその他日次費用を引いた値であり、設備投資・減価償却・税額・売却時点等を含まない。会計上の営業利益や実際の入出金とは区別する。
 
 ### 例：仮定した数値で計算する
 
@@ -81,7 +101,7 @@ KAS市場価格 ─────┐
 |---|---:|
 | 自分のハッシュレート比率 | 0.0001%（0.000001） |
 | 1日当たり期待ブロック数 | 864,000 |
-| 平均的な有効報酬 | 0.5 KAS/ブロック |
+| 平均有効報酬（プール手数料控除前） | 0.5 KAS/ブロック |
 | KAS価格 | 10円/KAS |
 | 消費電力 | 100 W |
 | 電力単価 | 30円/kWh |
@@ -138,7 +158,7 @@ KAS市場価格 ─────┐
 目標生成ペースに近づく
 ```
 
-「ハッシュレートが2倍なら、いつまでもブロックが2倍生成される」という理解は誤りである。詳細は第13章を参照。
+「ハッシュレートが2倍なら、いつまでもブロックが2倍生成される」という理解は誤りである。詳細は[第13章](../part-02-consensus/chapter-13.md)を参照。
 
 また、**ハッシュレートの単位（H/s、TH/s、PH/sなど）と消費電力（W）は別**であり、機器の効率（J/TH等）で結び付ける。
 
@@ -176,7 +196,7 @@ KAS市場価格 ─────┐
 
 一定の短期間に採掘できるブロック数は確定値ではない。単純化した独立試行モデルでは、成功回数は確率変数になる。期待獲得数が少ないマイナーほど、実績と期待値が大きく乖離しやすい。
 
-たとえば期待採掘数が1ブロック/日であっても、毎日必ず1ブロック得られるわけではない。ポアソン近似を用いると、1日でゼロ件の確率は約 `e^-1 ≈ 36.8%` となる。ただし、実際のネットワークと報酬配分には追加条件がある。
+たとえば期待採掘数が1ブロック/日であっても、毎日必ず1ブロック得られるわけではない。ポアソン近似を用いると、一定のハッシュレートと成功率を仮定した1日でゼロ件の確率は約 `e^-1 ≈ 36.8%` となる。ただし、実際のネットワークと報酬配分には追加条件がある。
 
 **期待値と確実性は異なる。**
 
@@ -251,25 +271,33 @@ KaspaのBlockDAGは並行生成ブロックを扱うが、ネットワーク遅�
 
 参加主体のシェアを百分率 `s_i` で表すと、HHIは `Σ s_i²` と定義できる。たとえば4主体がそれぞれ25%なら `4 × 25² = 2500`。1主体が100%なら `10000`。
 
+HHIの定義は [米国司法省の解説](https://www.justice.gov/atr/herfindahl-hirschman-index) を参照する。比率を0〜1で表す場合はこの百分率版と10000倍の差がある。同じ時点・期間の全主体で合計100%となる母集団を示し、不明な主体を「その他」へまとめたかも記録する。HHIは攻撃成功確率や安全・危険の閾値そのものではない。
+
 これは**主体をどう定義するか**で結果が変わる。プールを1主体と数えるのか、実際のハッシュ所有者で分けるのかを明記すること。
 
 ## 19.13 発行報酬の減少と長期的な安全性
 
-Kaspaは発行報酬が時間とともに減少する設計を採用している。長期的には新規発行に由来するマイナー収入が縮小し、手数料収入の相対的重要性が増す。
+Kaspaは発行報酬が時間とともに減少する設計を採用している。新規発行の減少に対し、取引手数料が同程度なら報酬に占める手数料の比率は上がる。ただし手数料額やKAS価格も変わるため、将来の収入規模はこの関係だけでは決まらない。
 
 ```text
-初期：発行報酬が主な収入源
+模式例：発行報酬が主な収入源
               │
               ▼
 時間経過：発行報酬の減少
               │
               ▼
-将来：手数料収入の重要性が増す
+手数料が同程度なら、その相対比率が増す
 ```
 
 しかし「手数料が発行報酬を必ず補う」とは限らない。トランザクション需要、手数料水準、ネットワーク容量、KAS価格、ASIC効率、電力価格などが関係する。
 
 **安全性の持続可能性は、発行スケジュールだけでは判断できない。** 実際の発行量・報酬規則は、調査対象時点の公式仕様と実装で確認する。
+
+### 19.13.1 基準版の発行スケジュールの入口
+
+`calc_block_subsidy(daa_score)` は、deflationary phaseより前は設定されたbase subsidyを返す。その後はDAA scoreをBPS設定で換算し、固定の月次テーブルから整数sompiで取り出す。Crescendoをまたぐ換算では移行前後のBPSを分け、1か月は2629800秒相当として計算する。テーブルもBPSに応じて切り上げ除算している。
+
+これはローカル時計のカレンダー月や、今日の日付だけから報酬を決める処理ではない。対象ネットワークの設定と評価対象のDAA scoreを指定し、現在のMainnetや教材のRへ数値をそのまま一般化しない。
 
 ## 19.14 セキュリティ予算（Security Budget）
 
@@ -324,9 +352,14 @@ struct DailyEstimate {
 
 fn estimate_daily(a: MiningAssumptions) -> Result<DailyEstimate, &'static str> {
     let values = [
-        a.miner_hashrate, a.network_hashrate, a.expected_blocks_per_day,
-        a.average_effective_reward_kas, a.kas_price_jpy,
-        a.pool_fee_rate, a.power_watts, a.electricity_jpy_per_kwh,
+        a.miner_hashrate,
+        a.network_hashrate,
+        a.expected_blocks_per_day,
+        a.average_effective_reward_kas,
+        a.kas_price_jpy,
+        a.pool_fee_rate,
+        a.power_watts,
+        a.electricity_jpy_per_kwh,
         a.other_cost_jpy_per_day,
     ];
     if values.iter().any(|x| !x.is_finite() || *x < 0.0) {
@@ -340,17 +373,28 @@ fn estimate_daily(a: MiningAssumptions) -> Result<DailyEstimate, &'static str> {
     }
 
     let share = a.miner_hashrate / a.network_hashrate;
-    let expected_kas = a.expected_blocks_per_day
-        * a.average_effective_reward_kas * share * (1.0 - a.pool_fee_rate);
+    let gross_reward_kas = a.expected_blocks_per_day * a.average_effective_reward_kas;
+    let expected_kas = gross_reward_kas * share * (1.0 - a.pool_fee_rate);
     let revenue_jpy = expected_kas * a.kas_price_jpy;
-    let electricity_jpy = a.power_watts / 1000.0 * 24.0
-        * a.electricity_jpy_per_kwh;
+    let electricity_jpy = a.power_watts / 1000.0 * 24.0 * a.electricity_jpy_per_kwh;
+    let operating_margin_jpy = revenue_jpy - electricity_jpy - a.other_cost_jpy_per_day;
+    if [
+        gross_reward_kas,
+        expected_kas,
+        revenue_jpy,
+        electricity_jpy,
+        operating_margin_jpy,
+    ]
+    .iter()
+    .any(|x| !x.is_finite())
+    {
+        return Err("calculated values must be finite");
+    }
     Ok(DailyEstimate {
         expected_kas,
         revenue_jpy,
         electricity_jpy,
-        operating_margin_jpy: revenue_jpy - electricity_jpy
-            - a.other_cost_jpy_per_day,
+        operating_margin_jpy,
     })
 }
 
@@ -400,20 +444,138 @@ mod tests {
         let second = estimate_daily(MiningAssumptions {
             kas_price_jpy: a.kas_price_jpy * 2.0,
             ..a
-        }).unwrap();
+        })
+        .unwrap();
         assert!((second.revenue_jpy - first.revenue_jpy * 2.0).abs() < 1e-10);
         assert_eq!(second.electricity_jpy, first.electricity_jpy);
     }
 
     #[test]
     fn rejects_invalid_network_hashrate() {
-        let a = MiningAssumptions { network_hashrate: 0.0, ..sample() };
+        let a = MiningAssumptions {
+            network_hashrate: 0.0,
+            ..sample()
+        };
         assert!(estimate_daily(a).is_err());
     }
 
     #[test]
+    fn example_matches_all_estimates() {
+        let e = estimate_daily(sample()).unwrap();
+        assert!((e.expected_kas - 0.42768).abs() < 1e-10);
+        assert!((e.revenue_jpy - 4.2768).abs() < 1e-10);
+        assert!((e.operating_margin_jpy - (-67.7232)).abs() < 1e-10);
+    }
+
+    #[test]
+    fn rejects_nonfinite_and_out_of_range_assumptions() {
+        for a in [
+            MiningAssumptions {
+                miner_hashrate: f64::NAN,
+                ..sample()
+            },
+            MiningAssumptions {
+                expected_blocks_per_day: f64::INFINITY,
+                ..sample()
+            },
+            MiningAssumptions {
+                kas_price_jpy: f64::NEG_INFINITY,
+                ..sample()
+            },
+            MiningAssumptions {
+                power_watts: -1.0,
+                ..sample()
+            },
+            MiningAssumptions {
+                other_cost_jpy_per_day: -1.0,
+                ..sample()
+            },
+            MiningAssumptions {
+                pool_fee_rate: -0.01,
+                ..sample()
+            },
+            MiningAssumptions {
+                pool_fee_rate: 1.01,
+                ..sample()
+            },
+            MiningAssumptions {
+                miner_hashrate: 2.0,
+                network_hashrate: 1.0,
+                ..sample()
+            },
+        ] {
+            assert!(estimate_daily(a).is_err());
+        }
+    }
+
+    #[test]
+    fn rejects_nonfinite_calculations_from_finite_inputs() {
+        for a in [
+            MiningAssumptions {
+                expected_blocks_per_day: 2.0,
+                average_effective_reward_kas: f64::MAX,
+                ..sample()
+            },
+            MiningAssumptions {
+                expected_blocks_per_day: 2.0,
+                average_effective_reward_kas: f64::MAX,
+                pool_fee_rate: 1.0,
+                ..sample()
+            },
+            MiningAssumptions {
+                kas_price_jpy: f64::MAX,
+                miner_hashrate: 1.0,
+                network_hashrate: 1.0,
+                ..sample()
+            },
+            MiningAssumptions {
+                power_watts: f64::MAX,
+                electricity_jpy_per_kwh: f64::MAX,
+                ..sample()
+            },
+            MiningAssumptions {
+                power_watts: 1000.0,
+                electricity_jpy_per_kwh: 1e306,
+                other_cost_jpy_per_day: f64::MAX,
+                ..sample()
+            },
+        ] {
+            assert!(estimate_daily(a).is_err());
+        }
+    }
+
+    #[test]
+    fn fee_and_zero_activity_boundaries() {
+        let all_fee = estimate_daily(MiningAssumptions {
+            pool_fee_rate: 1.0,
+            ..sample()
+        })
+        .unwrap();
+        assert_eq!(all_fee.expected_kas, 0.0);
+        assert!((all_fee.electricity_jpy - 72.0).abs() < 1e-10);
+        let idle = estimate_daily(MiningAssumptions {
+            miner_hashrate: 0.0,
+            power_watts: 0.0,
+            electricity_jpy_per_kwh: 0.0,
+            ..sample()
+        })
+        .unwrap();
+        assert_eq!(idle.operating_margin_jpy, 0.0);
+        assert!(estimate_daily(MiningAssumptions {
+            miner_hashrate: 1.0,
+            network_hashrate: 1.0,
+            pool_fee_rate: 0.0,
+            ..sample()
+        })
+        .is_ok());
+    }
+
+    #[test]
     fn zero_miner_hashrate_yields_zero_revenue() {
-        let a = MiningAssumptions { miner_hashrate: 0.0, ..sample() };
+        let a = MiningAssumptions {
+            miner_hashrate: 0.0,
+            ..sample()
+        };
         let estimate = estimate_daily(a).unwrap();
         assert_eq!(estimate.revenue_jpy, 0.0);
     }
@@ -422,12 +584,17 @@ mod tests {
 
 ### 実行方法
 
-1. `cargo new mining-economics`
-2. 上記コードを `src/main.rs` に保存
-3. `cargo run`
-4. `cargo test`
+本書とは別の作業用ディレクトリで実行する。
 
-外部クレートは不要。コードは教育用のサンプルであり、実際のKaspaノード・プール・ASICとは接続しない。
+1. `cargo new --bin --edition 2021 mining-economics`
+2. `cd mining-economics`
+3. 上記コードを `src/main.rs` に保存
+4. `cargo run`
+5. `cargo test`
+
+外部クレートは不要。Rust 1.90.0で本文から抽出し、8テスト・書式・Clippy・mainの実行を確認した（`experiments/chapter-19-review-2026-11-01.md`）。
+
+入力だけでなく、中間の総報酬と最終結果が有限かも検査する。極端な入力で途中の積がオーバーフローする場合、最終的な式を代数的に変形すれば有限になり得ても、この教材はエラーとする。f64の丸めや極小値のアンダーフローは残り、正確な送金・会計計算を実装するものではない。実際のノード・プール・ASICにも接続しない。
 
 ## 19.17 感度分析の進め方
 
@@ -441,6 +608,8 @@ mod tests {
 | 消費電力を半分 | 電力費は半分 |
 | 平均有効報酬を半分 | KAS建て期待受取は半分 |
 | プール手数料を増やす | 手取り期待報酬が減る |
+
+Bを固定してネットワークハッシュレートを変える比較は、DAAが追従した定常状態の近似である。追従前の生成率、稼働率、報酬のばらつき、実際の売却や入金時点はこの関数に含まれない。
 
 **注意**：現実には変数が相関する。たとえば価格上昇は新規参入とハッシュレート上昇を誘発し得る。単一変数分析は「予測」ではなく「依存関係の確認」に使う。
 
@@ -493,11 +662,14 @@ External Data Sources
 6. 単体テスト・テストネット設定・仕様文書と照合する。
 
 ```bash
-# ローカルにrusty-kaspaをclone済みの場合
-rg -n 'subsidy|coinbase|reward|difficulty|daa' consensus mining
+# 第1章で取得した固定版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
+git rev-parse HEAD
+grep -n -E 'expected_coinbase_transaction|calc_block_subsidy|subsidy_month' consensus/src/processes/coinbase.rs
+grep -n -E 'deflationary_phase|base_subsidy|coinbase_maturity' consensus/core/src/config/params.rs
 ```
 
-上記は**調査用の検索例**であり、ディレクトリ構造やシンボル名はバージョンによって変わる。見つからなければリポジトリ全体を対象に検索する。最新の実装に関する断定は、対象コミットを固定して確認すること。
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使い、HEADを本章冒頭の完全SHAと照合する。ソースの条件を確認したことと、報酬の全テーブル・境界を実行比較したことは区別する。
 
 ## 19.20 運用上のセキュリティ
 
@@ -566,7 +738,7 @@ rg -n 'subsidy|coinbase|reward|difficulty|daa' consensus mining
 - 長期的な安全性は、発行報酬だけでなく、手数料需要やマイナーの費用構造にも依存する。
 - 分析ツールでは、**仮定値・実測値・計算式・単位・取得時点**を分離することが重要である。
 
-次章では、マイニング経済の議論を踏まえ、**Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）**を扱う。
+次章では、マイニング経済の議論を踏まえ、**[Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）](chapter-20.md)**を扱う。
 
 ## 19.25 参考資料
 
@@ -580,9 +752,9 @@ rg -n 'subsidy|coinbase|reward|difficulty|daa' consensus mining
 
 ### 論文・研究
 
-- Yonatan Sompolinsky, Aviv Zohar, **Secure High-Rate Transaction Processing in Bitcoin**（GHOSTに関する研究）
-- Yonatan Sompolinsky, Yoad Lewenberg, Aviv Zohar, **SPECTRE: A Fast and Scalable Cryptocurrency Protocol**
-- Yonatan Sompolinsky ほか, **PHANTOM / GHOSTDAG に関連する論文・研究**（実装と論文の対応は対象バージョンで要確認）
-- Ittay Eyal, Emin Gün Sirer, **Majority is not Enough: Bitcoin Mining is Vulnerable**（selfish mining）
+- Yonatan Sompolinsky, Aviv Zohar, **[Secure High-Rate Transaction Processing in Bitcoin](https://eprint.iacr.org/2013/881)**（GHOSTに関する研究）
+- Yonatan Sompolinsky, Yoad Lewenberg, Aviv Zohar, **[SPECTRE: A Fast and Scalable Cryptocurrency Protocol](https://eprint.iacr.org/2016/1159)**
+- Yonatan Sompolinsky, Shai Wyborski, Aviv Zohar, **[PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104)**（実装と論文の対応は対象バージョンで要確認）
+- Ittay Eyal, Emin Gün Sirer, **[Majority is not Enough: Bitcoin Mining is Vulnerable](https://arxiv.org/abs/1311.0243)**（Bitcoinを対象とするselfish miningの研究。Kaspaの攻撃閾値を示す論文ではない）
 
-> **執筆上の注意**：本章の経済計算は教育用の単純化モデルである。投資・設備購入の推奨ではない。実際の報酬規則、発行量、ハッシュレート、価格、プールの支払方式は変化するため、公開前に対象日時・ネットワーク・実装コミットを指定して検証すること。
+主要な報酬分岐のSource-checked記録と教材8テストは `experiments/chapter-19-review-2026-11-01.md`。市場価格・現行ハッシュレート・ASIC・電力契約・プールの実測や、攻撃成功確率の証明、公式報酬関数との実行時差分は今回確認していない。

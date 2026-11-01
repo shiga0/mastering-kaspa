@@ -1,7 +1,7 @@
 # Chapter 20 — Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）
 
 > **Part III — Transactions, Mining & Security**  
-> 原稿バージョン：v0.2（基準版のFinality主要経路を照合・章全体はレビュー継続中）\
+> 目次順の本文レビュー：2026-11-01。Finalityの主要経路は基準版と照合。ページの確認と全規則・全経路の検証は区別する。\
 > 対象読者：Rust・バックエンド開発の経験があり、Kaspaの安全性を設計・実装の観点から理解したい読者
 
 ## この章で学ぶこと
@@ -43,6 +43,8 @@ Virtual UTXO Stateで受理
       ▼
 アプリケーションがリスクに応じて決済完了と判断
 ```
+
+この図は観測・依存関係の整理であり、実際の関数実行順ではない。GHOSTDAGはヘッダー検証内でも計算される。
 
 ここでいう「決済完了」はアプリケーションの判断であり、プロトコルがすべてのトランザクションに対して絶対的・即時の不可逆性を保証するという意味ではない。
 
@@ -105,7 +107,7 @@ Kaspaはブロックを一本のチェーンに限定せず、**BlockDAG**とし
 - トランザクションの受理状態は、virtual stateの更新・再編成に伴って変わり得る。
 - ノードが同じDAGをまだ見ていなければ、一時的に異なるvirtual viewを持つことがある。
 
-詳細な順序付けは第12章、virtual stateは第14章、UTXOの状態遷移は第15章で扱った。
+詳細な順序付けは[第12章](../part-02-consensus/chapter-12.md)、Virtual Stateは[第14章](../part-02-consensus/chapter-14.md)、UTXOの状態遷移は[第15章](chapter-15.md)で扱った。
 
 ## 20.5 二重支払い攻撃の流れ
 
@@ -129,7 +131,7 @@ Kaspaはブロックを一本のチェーンに限定せず、**BlockDAG**とし
 
 ## 20.6 PoWと攻撃コスト
 
-PoWは「ハッシュ計算を大量に実施した」という検証可能な証拠を与える。攻撃者が履歴の見解を変えようとする場合、単なる偽メッセージ送信だけでは足りず、コンセンサスのルールに従うPoWが問題になる。
+PoWは規定の計算結果がターゲット条件を満たすことを検証可能にする。困難さに応じた期待仕事量は評価できるが、マイナーが実際に何回試行したかを直接証明するものではない。攻撃者が履歴の見解を変えようとする場合、単なる偽メッセージ送信だけでは足りず、コンセンサスのルールに従うPoWが問題になる。
 
 ただし「攻撃にはネットワーク全体の51%以上が必ず必要」という単純化は不正確。攻撃成功確率や必要資源は、攻撃戦略、観測時間、ネットワーク遅延、ノード分断、プロトコルの安全性条件に依存する。
 
@@ -154,13 +156,13 @@ P2Pネットワークではブロック伝播に時間がかかる。同じ時�
 
 | 状況 | Safetyへの懸念 | Livenessへの懸念 |
 |---|---|---|
-| 一時的な通信遅延 | 観測差・順序変更 | トランザクション受理が遅れる |
+| 一時的な通信遅延 | 仮の観測差と確定済み結果の矛盾を区別 | トランザクション受理が遅れる |
 | 長期ネットワーク分断 | 分断間で異なる履歴が進行 | 一部ノードが十分な情報を得られない |
 | 大量の悪意あるピア | Eclipse・誤情報の注入 | 接続枠や処理資源の枯渇 |
 | ハッシュパワー集中 | 履歴操作の能力集中 | 検閲・トランザクション遅延 |
 | ノードの実装不一致 | 異なるコンセンサス判断 | 同期停止・拒否 |
 
-安全性と活性の評価には、攻撃者の資源上限とネットワークの同期仮定を合わせて示す必要がある。
+一時的にVirtual viewが違うことだけでSafety違反とは判定しない。安全性と活性の評価には、攻撃者の資源上限とネットワークの同期仮定を合わせて示す必要がある。
 
 ## 20.9 KaspaのFinalityルールと実用上の確定性
 
@@ -177,6 +179,8 @@ P2Pネットワークではブロック伝播に時間がかかる。同じ時�
 | Crescendo用depth導出 | finality depthはBPS×duration。pruning depthはBPS×durationと安全性の下限式の大きい方 |
 
 12時間・30時間は、基準版Devnetにそのまま適用する待ち時間ではない。depthは実装上の進行尺度で、一定の実時間で到達する保証もない。現在のMainnetの有効設定をこの固定ソースの確認だけで断定しない。
+
+`calc_finality_point` には初期・境界の分岐もある。selected parentがORIGINならORIGIN、blue scoreがdepth未満ならGenesisを返す。Pruning pointとの距離やchain条件によってはORIGINとなる。フォークでdepthが増える場合もselected parentの既存の点から進めるため、単純な数値の引き算だけで点を求めない。
 
 VirtualProcessorはsink候補にfinality pointがselected parent chain上の祖先であることを要求し、UTXO状態も評価する。finalityに違反する候補はVirtual chainから除外する経路を持つ。違反候補が存在したことを、すべて同じ `StatusInvalid` へ記録する説明にはしない。IBD開始時にはpruning pointをvirtual finality pointとして使う分岐もある。
 
@@ -207,7 +211,7 @@ Kaspaのような継続的に成長するDAGでは、全履歴を永遠に保持
 
 ただし、Pruningは「過去のブロックがすべて不要になった」という意味ではない。新規ノードが信頼できる状態に同期するための証明、現在のUTXO状態、必要なヘッダーなどを適切に扱う必要がある。
 
-このテーマは第21章で詳しく扱う。
+このテーマは[第21章](../part-04-development/chapter-21.md)で詳しく扱う。既存の `experiments/devnet-pruning-review-2026-10-31.md` ではPruning pointはGenesisのままで、Pruning後IBDの成功は実測していない。
 
 ## 20.11 Eclipse攻撃・Sybil攻撃・DoS
 
@@ -246,7 +250,7 @@ PoWネットワークでは、ブロック生成に影響を与えるのはピ�
 | `reverted` | 再編成等で受理が覆った | 仮反映を取り消す |
 | `investigation` | 同期不良・競合・異常検知 | 自動確定を停止 |
 
-この状態機械は**業務アプリケーションの例**であり、KaspaのRPCが同名の状態を返すという意味ではない。
+この状態機械は**業務アプリケーションの例**であり、KaspaのRPCが同名の状態を返すという意味ではない。settledも自社ポリシーの判断であり、その後の異常検出・調査・訂正を無条件に無視する終端状態にはしない。
 
 ```text
 observed → accepted → confirming → settled
@@ -254,11 +258,13 @@ observed → accepted → confirming → settled
    └──────────┴────────────┴──→ investigation
               │
               └───────────────→ reverted
+
+settled後の受理喪失・異常 → investigation / 訂正処理
 ```
 
 **不変条件の例**：
 
-1. 同じトランザクションIDに対して入金残高を二重計上しない。
+1. 入金の識別単位を定めて二重計上しない。出力単位ならネットワーク・TX ID・出力index等を使う。同一取引の複数出力をTX IDだけで誤って捨てない。
 2. ノードが同期していないときは自動確定しない。
 3. `settled`へ移る判断には、評価時点の根拠を記録する。
 4. `accepted`から`reverted`への変更を扱える。
@@ -268,21 +274,24 @@ observed → accepted → confirming → settled
 
 以下は**教育用の業務ロジック**であり、Kaspaの実際のfinality判定や攻撃成功確率を計算しない。コンセンサス状態を外部から正しく取得できることを前提に、アプリケーションが条件を組み合わせる例である。
 
-`Cargo.toml`は追加依存なしでよい。
+本書とは別の作業用ディレクトリで `cargo new --lib --edition 2021 payment-policy` を実行し、以下を `src/lib.rs` に保存する。外部依存はなく、Rust 1.90.0で確認した。
+
+この関数は、すでに観測した支払いについて現在の証拠を評価する。戻り値は判断であり、入金台帳の更新や過去からの状態遷移ではない。
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PaymentState {
+pub enum PolicyDecision {
     Observed,
     Accepted,
     Confirming,
-    Settled,
+    PolicySatisfied,
     Investigation,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct Evidence {
     pub node_synced: bool,
+    pub evidence_fresh: bool,
     pub accepted_in_virtual_state: bool,
     pub confirmations: u64,
     pub conflicting_tx_seen: bool,
@@ -293,20 +302,24 @@ pub struct Policy {
     pub min_confirmations: u64,
 }
 
-pub fn evaluate(evidence: Evidence, policy: Policy) -> PaymentState {
-    if !evidence.node_synced || evidence.conflicting_tx_seen {
-        return PaymentState::Investigation;
+pub fn evaluate(evidence: Evidence, policy: Policy) -> PolicyDecision {
+    if policy.min_confirmations == 0
+        || !evidence.evidence_fresh
+        || !evidence.node_synced
+        || evidence.conflicting_tx_seen
+    {
+        return PolicyDecision::Investigation;
     }
     if !evidence.accepted_in_virtual_state {
-        return PaymentState::Observed;
+        return PolicyDecision::Observed;
     }
     if evidence.confirmations == 0 {
-        return PaymentState::Accepted;
+        return PolicyDecision::Accepted;
     }
     if evidence.confirmations < policy.min_confirmations {
-        return PaymentState::Confirming;
+        return PolicyDecision::Confirming;
     }
-    PaymentState::Settled
+    PolicyDecision::PolicySatisfied
 }
 
 #[cfg(test)]
@@ -316,6 +329,7 @@ mod tests {
     fn base() -> Evidence {
         Evidence {
             node_synced: true,
+            evidence_fresh: true,
             accepted_in_virtual_state: true,
             confirmations: 5,
             conflicting_tx_seen: false,
@@ -323,29 +337,137 @@ mod tests {
     }
 
     #[test]
-    fn enough_confirmations_can_settle() {
+    fn enough_confirmations_can_satisfy_policy() {
         assert_eq!(
-            evaluate(base(), Policy { min_confirmations: 3 }),
-            PaymentState::Settled
+            evaluate(
+                base(),
+                Policy {
+                    min_confirmations: 3
+                }
+            ),
+            PolicyDecision::PolicySatisfied
         );
     }
 
     #[test]
     fn unsynced_node_never_settles() {
-        let evidence = Evidence { node_synced: false, ..base() };
+        let evidence = Evidence {
+            node_synced: false,
+            ..base()
+        };
         assert_eq!(
-            evaluate(evidence, Policy { min_confirmations: 3 }),
-            PaymentState::Investigation
+            evaluate(
+                evidence,
+                Policy {
+                    min_confirmations: 3
+                }
+            ),
+            PolicyDecision::Investigation
         );
     }
 
     #[test]
     fn conflict_requires_investigation() {
-        let evidence = Evidence { conflicting_tx_seen: true, ..base() };
+        let evidence = Evidence {
+            conflicting_tx_seen: true,
+            ..base()
+        };
         assert_eq!(
-            evaluate(evidence, Policy { min_confirmations: 3 }),
-            PaymentState::Investigation
+            evaluate(
+                evidence,
+                Policy {
+                    min_confirmations: 3
+                }
+            ),
+            PolicyDecision::Investigation
         );
+    }
+
+    #[test]
+    fn zero_threshold_requires_investigation() {
+        for confirmations in [0, u64::MAX] {
+            assert_eq!(
+                evaluate(
+                    Evidence {
+                        confirmations,
+                        ..base()
+                    },
+                    Policy {
+                        min_confirmations: 0
+                    }
+                ),
+                PolicyDecision::Investigation
+            );
+        }
+    }
+
+    #[test]
+    fn confirmation_boundaries_are_explicit() {
+        for (confirmations, expected) in [
+            (0, PolicyDecision::Accepted),
+            (2, PolicyDecision::Confirming),
+            (3, PolicyDecision::PolicySatisfied),
+            (u64::MAX, PolicyDecision::PolicySatisfied),
+        ] {
+            assert_eq!(
+                evaluate(
+                    Evidence {
+                        confirmations,
+                        ..base()
+                    },
+                    Policy {
+                        min_confirmations: 3
+                    }
+                ),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn stale_evidence_never_satisfies_policy() {
+        assert_eq!(
+            evaluate(
+                Evidence {
+                    evidence_fresh: false,
+                    confirmations: u64::MAX,
+                    ..base()
+                },
+                Policy {
+                    min_confirmations: 3
+                }
+            ),
+            PolicyDecision::Investigation
+        );
+    }
+
+    #[test]
+    fn decision_can_change_when_evidence_changes() {
+        let policy = Policy {
+            min_confirmations: 3,
+        };
+        assert_eq!(evaluate(base(), policy), PolicyDecision::PolicySatisfied);
+        assert_eq!(
+            evaluate(
+                Evidence {
+                    confirmations: 1,
+                    ..base()
+                },
+                policy
+            ),
+            PolicyDecision::Confirming
+        );
+        assert_eq!(
+            evaluate(
+                Evidence {
+                    accepted_in_virtual_state: false,
+                    ..base()
+                },
+                policy
+            ),
+            PolicyDecision::Observed
+        );
+        assert_eq!(evaluate(base(), policy), PolicyDecision::PolicySatisfied);
     }
 
     #[test]
@@ -355,8 +477,13 @@ mod tests {
             ..base()
         };
         assert_eq!(
-            evaluate(evidence, Policy { min_confirmations: 3 }),
-            PaymentState::Observed
+            evaluate(
+                evidence,
+                Policy {
+                    min_confirmations: 3
+                }
+            ),
+            PolicyDecision::Observed
         );
     }
 }
@@ -365,13 +492,17 @@ mod tests {
 実行例：
 
 ```bash
-cargo new payment-policy --lib
+cargo new --lib --edition 2021 payment-policy
 cd payment-policy
 # 上記コードを src/lib.rs に保存
 cargo test
 ```
 
-**注意**：この例の`confirmations`は外部から与えられる抽象的な指標であり、Kaspaで実際にどのRPC値を採用し、どのように計算するかは別途仕様確認が必要。`min_confirmations: 3`はテストの便宜上の値で、安全な運用推奨値ではない。
+本文から抽出した教材は8テスト成功（`experiments/chapter-20-review-2026-11-01.md`）。閾値は正の値とし、ゼロはInvestigationとする。未同期・古い証拠・競合の検知も、他の条件より先に`Investigation` を返す。
+
+`PolicySatisfied` は現在の条件一致だけを示し、永続化や会計上のsettledを自動更新しない。前回の受理・不受理を保持しないため、revertedの検出、冪等な残高更新、古い通知の除外は別の処理である。
+
+**注意**：この例の`confirmations`は外部から与えられる抽象的な指標であり、Kaspaで実際にどのRPC値を採用し、どのように計算するかは別途仕様確認が必要。`min_confirmations: 3`はテストの便宜上の値で、安全な運用推奨値ではない。`evidence_fresh` も呼び出し元の判断を表すだけで、証拠の取得・時刻・viewの整合性をこの関数が検証するわけではない。
 
 ## 20.15 セキュリティテストの設計
 
@@ -387,7 +518,9 @@ cargo test
 | 競合トランザクション | 同じUTXOを使う2トランザクション | 状態を矛盾なく処理 |
 | 高負荷 | 大量のトランザクション通知 | キュー・再試行・監視が機能 |
 
-再現性を高めるには、DevnetやSimnetを使い、使用した`rusty-kaspa`のコミットハッシュ・設定・ログ・観測結果を保存する。
+再現性を高めるには、DevnetやSimnetの条件、コミットハッシュ、設定、公開可能な集計を記録する。生ログ・秘密鍵・シード・内部接続情報を公開物へ追加しない。
+
+既存の `experiments/devnet-partition-2026-10-31.md` は分断・再接続後のDAGと指定報酬先UTXOの収束、`experiments/devnet-reorg-observer-2026-10-31.md` は報酬UTXOの削除と観測状態の補正を確認した範囲である。全UTXO・競合送金・会計台帳・確定性の保証とは区別し、今回は再実行していない。
 
 ## 20.16 観測可能性：何を監視するか
 
@@ -434,15 +567,15 @@ cargo test
 ソースコード調査は、特定の関数名を暗記するより、責務と不変条件を追うとよい。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
-
-git checkout --detach fcd9c28f9b211b9872a0c90a8c94f79466ffb063
+# 第1章で取得した固定版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-rg 'finality_depth|FINALITY_DURATION|pruning_depth' consensus
-rg 'virtual|accepted_transaction|reorg' consensus
-rg 'pruning_point|pruning proof' consensus
+grep -n -E 'calc_finality_point|finality_depth|required_blue_score' consensus/src/processes/block_depth.rs
+grep -n -E 'virtual_finality_point|are_pruning_points_violating_finality' consensus/src/pipeline/virtual_processor/processor.rs
+grep -n -E 'prior_finality_depth|prior_pruning_depth|crescendo_activation' consensus/core/src/config/params.rs
 ```
+
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使い、HEADを本章の完全SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` と照合する。
 
 調査順序：
 
@@ -527,7 +660,7 @@ Kaspaのネットワークセキュリティは、PoWだけでも、GHOSTDAGだ�
 2. **攻撃モデルとネットワーク条件を明示せずに、確定性を秒数だけで語れない**。
 3. **ノードのコンセンサスとアプリケーションの決済ポリシーは責務を分離する**。
 
-次章では、この安全性を支えるデータ管理として、Pruning・ストレージ・ノード同期を掘り下げる。
+[次章](../part-04-development/chapter-21.md)では、この安全性を支えるデータ管理として、Pruning・ストレージ・ノード同期を掘り下げる。
 
 ---
 
@@ -538,9 +671,10 @@ Kaspaのネットワークセキュリティは、PoWだけでも、GHOSTDAGだ�
 3. [rusty-kaspa: Consensus Constants](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)
 4. [rusty-kaspa: Consensus Parameters](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)
 5. [rusty-kaspa: Releases](https://github.com/kaspanet/rusty-kaspa/releases)
-6. [Kaspa Research — GHOSTDAG関連論文・資料](https://github.com/kaspanet/docs)
+6. [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104) — 設計・証明の一次資料。固定実装との完全照合は別の作業。
 7. [Bitcoin: A Peer-to-Peer Electronic Cash System — Satoshi Nakamoto](https://bitcoin.org/bitcoin.pdf)
+8. [Eclipse Attacks on Bitcoin’s Peer-to-Peer Network — USENIX Security 2015](https://www.usenix.org/conference/usenixsecurity15/technical-sessions/presentation/heilman) — Bitcoinを対象とする攻撃の背景研究。現在のKaspaの脆弱性の実証ではない。
 
-> **残る確認**：Finalityの全分岐・攻撃モデルの証明・Pruning後の同期・入金確認指標の実装は、追加のコード照合と実行検証が必要。今回の主要経路の読み取りだけで確定稿とはしない。
+> **残る確認**：Finalityの全分岐・攻撃モデルの証明・Pruning後の同期・入金確認指標の実装は、追加のコード照合と実行検証が必要。主要経路の読み取り・本文の通読・教材の実行から、全プロトコルの検証へ範囲を広げない。
 
-基準版のFinality主要経路の照合と教材4テストの記録は `experiments/core-validation-review-2026-10-31.md`。攻撃成功確率の証明・全フォーク境界・公式Finality経路の実行時差分テストは今回未実施。
+目次順の本文レビューと改訂教材8テストは `experiments/chapter-20-review-2026-11-01.md`。基準版のFinality主要経路と旧教材4テストの記録は `experiments/core-validation-review-2026-10-31.md`。攻撃成功確率の証明・全フォーク境界・公式Finality経路の実行時差分テストは今回未実施。

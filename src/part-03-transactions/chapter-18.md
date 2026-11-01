@@ -1,8 +1,10 @@
 # Chapter 18 — Mining & Block Template Construction（マイニングとブロックテンプレート構築）
 
 > **Mastering Kaspa / Part III — Transactions, Mining & Security**  
-> 原稿ステータス：v0.1（技術レビュー前）  
+> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要なテンプレート生成経路と照合。全規則・全経路の検証ではない。\
 > この章のRustコードは教育用モデルであり、Kaspaメインネットのブロック生成・PoWを再現するものではない。
+
+固定ソースの照合と教材の記録は `experiments/chapter-18-review-2026-11-01.md`。既存のDevnet実験とは分け、今回はノード起動・採掘・送金を実行していない。
 
 ## この章で学ぶこと
 
@@ -69,7 +71,7 @@ Kaspa（概念図）
         └──▶ C ──┘
 ```
 
-この図は構造の違いを示すための簡略化である。実際のKaspaの親集合の選択には、DAGの状態、親候補の制約、コンセンサス規則が関与する。単に「見えている先端を全部親にする」わけではない。
+図の矢印は親から子への生成関係を示し、実際のヘッダー参照は子から親へ向かう。この図は構造の違いを示すための簡略化である。実際のKaspaの親集合の選択には、DAGの状態、親候補の制約、コンセンサス規則が関与する。単に「見えている先端を全部親にする」わけではない。
 
 ## 18.4 ブロックテンプレートとは
 
@@ -86,9 +88,15 @@ Kaspa（概念図）
 | Hash commitments | トランザクション等に対するコミットメント | 正式なフィールド・ハッシュ計算は実装仕様を参照 |
 | Coinbase | ブロック報酬に関するトランザクション | 通常の送金トランザクションとは異なるルール |
 
-**テンプレートは確定済みブロックではない。** 親ブロックやMempoolが変化すると、候補を作り直す必要がある。
+### 18.4.1 基準版の生成経路
 
-### 18.4.1 依存関係を先に見る
+[`get_block_template_call`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/service/src/service.rs) は報酬先アドレスのネットワーク接頭辞を確認し、Scriptとextra dataをMinerDataとしてMiningManagerへ渡す。応答の `block` と `is_synced` は別の項目で、候補が返ったことだけで同期済みと判断しない。
+
+[`MiningManager`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/mining/src/manager.rs) はキャッシュ利用と新規生成を分ける。キャッシュのminer dataが違う場合は複製を変更し、Coinbase payload、必要な報酬出力、Merkle root、時刻等を更新する。新規生成で候補取引が無効ならMempoolから除いて再試行する経路もある。キャッシュを変更する処理と、Virtualを更新する処理は同一ではない。
+
+**テンプレートは確定済みブロックではない。** 親ブロックやMempoolの変化に応じて、更新方針に従った再利用・変更・再生成が必要になる。
+
+### 18.4.2 依存関係を先に見る
 
 ```text
 Consensus State ──┐
@@ -100,7 +108,7 @@ Mempool ──────────┤
 Network Params ───┘
 ```
 
-テンプレート生成器は、複数の状態の**整合したスナップショット**を必要とする。親だけ新しく、難易度やトランザクション選択だけ古いといった不整合を防ぐ設計が重要になる。
+テンプレート生成器は、参照する複数の状態の整合性を保つ必要がある。基準版は最初の候補選択をVirtualのread lock取得前に行い、取得後のUTXO viewで検証する。MempoolとVirtualのすべてを一度に固定する単一スナップショットという意味ではない。親だけ新しく、難易度やトランザクション選択だけ古いといった不整合を防ぐ設計が重要になる。
 
 ## 18.5 親ブロックの選択
 
@@ -113,7 +121,9 @@ BlockDAGでは、並行して発見された複数のブロックが存在する
 - **Parents**：新しいブロックが直接参照する親集合。
 - **Past / Anticone**：ブロック間の到達可能性から定まる関係。
 
-親集合の決定は、単なるP2P処理ではなく、コンセンサスに関係する操作である。第12章のGHOSTDAG、第14章のVirtual Stateと合わせて読むと理解しやすい。
+親集合の決定は、単なるP2P処理ではなく、コンセンサスに関係する操作である。[第12章](../part-02-consensus/chapter-12.md)のGHOSTDAG、[第14章](../part-02-consensus/chapter-14.md)のVirtual Stateと合わせて読むと理解しやすい。
+
+基準版の [`build_block_template_from_virtual_state`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/processor.rs) はVirtualの親群からレベル別の親を構築し、同じVirtualのbits、DAA score、blue score/work、UTXO commitment、受理IDのコミットメント等をヘッダーへ入れる。Coinbaseを先頭へ追加し、本体のHash Merkle Rootも計算する。時刻はpast median time + 1とローカル時刻の大きい方、初期nonceは0とする。
 
 ## 18.6 Mempoolからのトランザクション選択
 
@@ -121,21 +131,27 @@ BlockDAGでは、並行して発見された複数のブロックが存在する
 
 1. トランザクションの構造・署名・スクリプト・UTXOに関する検証
 2. 同一UTXOの二重消費を防ぐこと
-3. 親子トランザクションなどの依存関係
+3. 同一ブロック内に親子トランザクションを含めないこと
 4. ブロックのサイズ・質量（mass）等の制限
 5. 手数料とブロック内でのトランザクション選択方針
 6. 新しいVirtual Stateに対して再評価が必要なトランザクション
 
 Kaspaの**mass**は単純なバイト数と同義ではない。正確な計算式や制限値は、対象ネットワークとノード実装のバージョンを確認する。
 
-### 18.6.1 トランザクション選択の不変条件
+### 18.6.1 基準版の候補選択
+
+Mempoolの [`ready frontier`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/mining/src/mempool/model/frontier.rs) は、候補の合計massとブロックの制限に応じて、全件選択、事前サンプリングした列、重み付き選択器を使い分ける。[`RebalancingWeightedTransactionSelector`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/mining/src/block_template/selector.rs) は乱数を使う。したがって、同じ状態でテンプレートの取引集合が常に同一になることは、コンセンサス上の要件ではない。
+
+選ばれた取引はVirtualのUTXO viewで検証される。Mempoolに親子を保持できても、単に親を先に並べて同じブロックへ入れる方式ではない（[第15章](chapter-15.md)）。なお、builder.rs冒頭には入力の年齢やfee/kilobyteを述べる長いコメントがあるが、本文では実際のselectorの呼び出しと本体を基準に読む。
+
+### 18.6.2 トランザクション選択の不変条件
 
 ```text
 選択済み取引集合 S について：
 
 - 同じOutpointを二度消費しない
 - 各取引が適用時点で有効である
-- 依存関係を満たす順序で評価する
+- 同一ブロック内の出力を同じブロックの別取引から消費しない
 - ブロック全体の制約を超えない
 - 失敗した取引を含めない
 ```
@@ -155,7 +171,7 @@ Kaspaでは、複数のブロックが並行して存在するBlockDAG構造と�
 - **報酬の適格性・計算**：Kaspa固有のコンセンサス規則に依存
 - **プールからの支払い**：プール運営者の会計・分配ポリシーに依存
 
-> **実装確認ポイント**：Coinbase payload、報酬計算、受理・支払い条件は`rusty-kaspa`の対象リリースで検証する。数値や例外条件を推測で固定しない。
+基準版の候補生成は、VirtualのGHOSTDAGデータ、merge setの報酬情報とnon-DAA集合を `expected_coinbase_transaction` へ渡す。現在の候補に新しく入れた通常取引の手数料を、その候補のCoinbaseへ単純に足すBitcoin型の説明とは区別する。報酬の詳細と適格性は[第19章](chapter-19.md)で扱い、本章では全計算の照合完了とはしない。
 
 ## 18.8 PoW：ハッシュ探索とTarget
 
@@ -184,7 +200,7 @@ Header / PoW Input
 - **ネットワークハッシュレートが高い**：単位時間当たりの試行回数が多い。
 - **DAA**：観測されたブロック履歴等から、ネットワークのブロック生成ペースを制御する。
 
-難易度調整の詳細は第13章を参照。
+ブロック識別子のハッシュとPoW値は別の計算である。難易度調整の詳細は[第13章](../part-02-consensus/chapter-13.md)を参照。
 
 ## 18.9 ブロックを見つけた後の処理
 
@@ -222,6 +238,8 @@ Other Nodes Validate Independently
 - 古いトランザクションが削除・再評価される
 
 したがって、テンプレートには**鮮度**の概念が必要になる。新しい親集合に基づく仕事が発行された後、古い仕事に対する結果が到着することもある。古い仕事をどう扱うかは、ローカルノードの受理規則とプール側のシェア管理を分けて検討する。
+
+基準版の `submit_block_call` は同期状態や `allow_non_daa_blocks` に応じた古さの検査も行う。ローカルの提出受付条件、コンセンサス規則、プールのシェア受付は別であり、古い仕事を一律にコンセンサス無効とみなさない。
 
 ### 18.10.1 競合のタイムライン
 
@@ -273,10 +291,15 @@ BlockDAGでは並行して生成されたブロックを構造上保持できる
 
 以下は**コンセンサス非互換**の学習用コード。実際のKaspaでは署名・UTXO・mass・親選択・報酬・PoWを正式なルールで処理する必要がある。ここでは、テンプレート生成時の「トランザクションの重複入力排除」と「容量制約」に絞る。
 
-`cargo new template-lab` で作成したプロジェクトの `src/lib.rs` に配置する。
+本書とは別の作業用ディレクトリで作成し、`src/lib.rs` に配置する。外部依存はなく、Rust 1.90.0で確認した。
+
+```bash
+cargo new --lib --edition 2021 template-lab
+cd template-lab
+```
 
 ```rust
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Tx {
@@ -293,11 +316,24 @@ pub struct Template {
     pub total_mass: u64,
 }
 
-pub fn build_template(
-    parent_ids: Vec<u64>,
-    mut candidates: Vec<Tx>,
-    max_mass: u64,
-) -> Template {
+pub fn build_template(parent_ids: Vec<u64>, candidates: Vec<Tx>, max_mass: u64) -> Template {
+    // 同一データの再送は1件へまとめる。同じIDの別内容は全候補を除外する。
+    let mut by_id: HashMap<u64, Tx> = HashMap::new();
+    let mut ambiguous_ids = HashSet::new();
+    for tx in candidates {
+        if let Some(previous) = by_id.get(&tx.id) {
+            if previous != &tx {
+                ambiguous_ids.insert(tx.id);
+            }
+        } else {
+            by_id.insert(tx.id, tx);
+        }
+    }
+    let mut candidates: Vec<_> = by_id
+        .into_values()
+        .filter(|tx| !ambiguous_ids.contains(&tx.id))
+        .collect();
+
     // 教育用の単純な優先度。実際のKaspaの選択方式ではない。
     candidates.sort_by(|a, b| {
         let lhs = (a.fee as u128) * (b.mass.max(1) as u128);
@@ -344,16 +380,17 @@ mod tests {
     use super::*;
 
     fn tx(id: u64, input: u64, fee: u64, mass: u64) -> Tx {
-        Tx { id, inputs: vec![input], fee, mass }
+        Tx {
+            id,
+            inputs: vec![input],
+            fee,
+            mass,
+        }
     }
 
     #[test]
     fn selects_transactions_within_mass_limit() {
-        let result = build_template(
-            vec![100, 101],
-            vec![tx(1, 10, 10, 4), tx(2, 20, 20, 5)],
-            8,
-        );
+        let result = build_template(vec![100, 101], vec![tx(1, 10, 10, 4), tx(2, 20, 20, 5)], 8);
         assert_eq!(result.parent_ids, vec![100, 101]);
         assert_eq!(result.transactions.len(), 1);
         assert!(result.total_mass <= 8);
@@ -361,20 +398,120 @@ mod tests {
 
     #[test]
     fn rejects_conflicting_inputs() {
-        let result = build_template(
-            vec![100],
-            vec![tx(1, 10, 10, 2), tx(2, 10, 20, 2)],
-            10,
-        );
+        let result = build_template(vec![100], vec![tx(1, 10, 10, 2), tx(2, 10, 20, 2)], 10);
         assert_eq!(result.transactions.len(), 1);
         assert_eq!(result.transactions[0].id, 2);
     }
 
     #[test]
     fn rejects_duplicate_inputs_inside_one_transaction() {
-        let bad = Tx { id: 1, inputs: vec![7, 7], fee: 100, mass: 1 };
+        let bad = Tx {
+            id: 1,
+            inputs: vec![7, 7],
+            fee: 100,
+            mass: 1,
+        };
         let result = build_template(vec![100], vec![bad], 10);
         assert!(result.transactions.is_empty());
+    }
+
+    #[test]
+    fn duplicate_ids_are_handled_before_selection() {
+        let first = tx(1, 10, 10, 1);
+        let result = build_template(
+            vec![100],
+            vec![
+                first.clone(),
+                first,
+                tx(2, 20, 9, 1),
+                tx(3, 30, 8, 1),
+                tx(3, 31, 8, 1),
+            ],
+            10,
+        );
+        assert_eq!(
+            result.transactions.iter().map(|t| t.id).collect::<Vec<_>>(),
+            vec![1, 2]
+        );
+        assert_eq!(result.total_mass, 2);
+    }
+
+    #[test]
+    fn candidate_reordering_preserves_the_template() {
+        let candidates = vec![
+            tx(1, 10, 2, 2),
+            tx(2, 20, 3, 3),
+            tx(1, 10, 2, 2),
+            tx(3, 30, 1, 1),
+            tx(3, 31, 1, 1),
+        ];
+        let expected = build_template(vec![100], candidates.clone(), 5);
+        let mut reversed = candidates.clone();
+        reversed.reverse();
+        let mut rotated = candidates;
+        rotated.rotate_left(2);
+        assert_eq!(build_template(vec![100], reversed, 5), expected);
+        assert_eq!(build_template(vec![100], rotated, 5), expected);
+        assert_eq!(
+            expected
+                .transactions
+                .iter()
+                .map(|t| t.id)
+                .collect::<Vec<_>>(),
+            vec![1, 2]
+        );
+    }
+
+    #[test]
+    fn mass_boundaries_and_invalid_shapes() {
+        assert!(build_template(vec![100], vec![tx(1, 10, 1, 1)], 0)
+            .transactions
+            .is_empty());
+        assert!(build_template(
+            vec![100],
+            vec![
+                tx(1, 10, 1, 0),
+                Tx {
+                    id: 2,
+                    inputs: vec![],
+                    fee: 1,
+                    mass: 1
+                }
+            ],
+            10
+        )
+        .transactions
+        .is_empty());
+        let exact = build_template(vec![100], vec![tx(1, 10, 4, 4), tx(2, 20, 5, 5)], 9);
+        assert_eq!((exact.transactions.len(), exact.total_mass), (2, 9));
+        let overflow = build_template(
+            vec![100],
+            vec![tx(1, 10, u64::MAX, u64::MAX), tx(2, 20, 0, 1)],
+            u64::MAX,
+        );
+        assert_eq!(
+            (overflow.transactions.len(), overflow.total_mass),
+            (1, u64::MAX)
+        );
+    }
+
+    #[test]
+    fn skipped_candidates_do_not_reserve_inputs() {
+        let oversized = tx(1, 10, 100, 11);
+        let duplicate_input = Tx {
+            id: 2,
+            inputs: vec![10, 10],
+            fee: 50,
+            mass: 1,
+        };
+        let valid = tx(3, 10, 1, 1);
+        let result = build_template(
+            vec![100],
+            vec![oversized, duplicate_input, valid.clone()],
+            10,
+        );
+        assert_eq!(result.transactions, vec![valid]);
+        assert_eq!(result.total_mass, 1);
     }
 
     #[test]
@@ -392,7 +529,11 @@ mod tests {
 cargo test
 ```
 
-> **モデルの限界**：入力の存在確認、署名、Coinbase、親子取引、UTXOセット、DAG状態、手数料の実際の計算、Kaspaのmass規則は実装していない。特に`inputs: Vec<u64>`は本来のOutpointを代用したものである。
+本文から抽出した教材は8テスト成功（`experiments/chapter-18-review-2026-11-01.md`）。同じIDの同一データは1件にまとめ、別内容ならそのIDの全候補を除外する。これは任意の数値IDを受け取る教材の方針であり、実ノードのハッシュ照合の代用ではない。
+
+教材の選択はfee/massの降順、同率ではID昇順。u128の交差積で比較するため浮動小数点は使わない。候補順を変えても同じ結果になるが、最大手数料となる組み合わせを保証する最適化ではない。
+
+> **モデルの限界**：入力の存在確認、署名、Coinbase、親子取引、UTXOセット、DAG状態、手数料の実際の計算、Kaspaのmass規則は実装していない。特に`inputs: Vec<u64>`は本来のOutpointを代用したものである。parent_idsは入力をそのまま返し、親の存在・重複・数・選択規則は検査しない。total_massは通常取引の申告massだけを合計し、Coinbaseの負荷を含まない。空の選択結果も実KaspaのCoinbaseなしブロックを示さない。
 
 ## 18.14 ステートマシンで理解する
 
@@ -436,14 +577,16 @@ cargo test
 実装の構成はリリースによって変わりうるため、まず対象コミットを固定する。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+# 第1章で取得した固定版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
-rg -n 'get_block_template|submit_block|BlockTemplate|coinbase|pow' .
-rg -n 'mining|template|mass|mempool' consensus mining* rpc* 2>/dev/null
+grep -n -E 'get_block_template_call|submit_block_call' rpc/service/src/service.rs
+grep -n -E 'get_block_template|build_selector' mining/src/manager.rs
+grep -n -E 'build_selector|TakeAllSelector|SequenceSelector' mining/src/mempool/model/frontier.rs
+grep -n -E 'build_block_template|expected_coinbase_transaction' consensus/src/pipeline/virtual_processor/processor.rs
 ```
 
-`rg` の検索結果を起点に、次の呼び出し関係を追う。
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使い、HEADを本章冒頭の完全SHAと照合する。検索結果を起点に、次の呼び出し関係を追う。
 
 1. RPC等からブロックテンプレートを要求する入口
 2. DAGの親・難易度を取得する処理
@@ -466,7 +609,7 @@ PoW検証の責務:
 未確認事項:
 ```
 
-> `rg` の語句は調査用の手がかりであり、特定の関数名やディレクトリの存在を保証するものではない。
+検索結果やコメントだけでなく、実際に選ばれる処理と本体を追う。
 
 ## 18.17 観測・障害調査
 
@@ -487,7 +630,7 @@ PoW検証の責務:
 
 | 観点 | Bitcoin | Kaspa |
 |---|---|---|
-| ブロックの構造 | 線形チェーン | BlockDAG |
+| ブロックの構造 | 競合する枝から採用チェーンを選ぶ | BlockDAG |
 | 親参照 | 通常は直前ブロック1つ | 複数の親を参照できる |
 | 並行生成ブロック | 主チェーン外の競合ブロックが生じる | DAG上に並行ブロックを表現できる |
 | 順序決定 | チェーン順序 | GHOSTDAGに基づくコンセンサス順序 |
@@ -505,7 +648,7 @@ PoW検証の責務:
 
 ### 課題B：トランザクション依存関係を追加する
 
-親トランザクションが作る出力を子トランザクションが消費するケースをモデル化する。単純な手数料順ソートでは不十分になる理由を説明する。
+親トランザクションが作る出力を子トランザクションが消費するケースをモデル化する。単純な手数料順ソートでは不十分になる理由を説明する。Kaspaの同一ブロック内では親子を同梱せず、先行ブロックの出力として使用可能になるまで子を待たせる設計と、一般的な親子同梱モデルを区別する。
 
 ### 課題C：障害注入
 
@@ -534,7 +677,7 @@ PoW検証の責務:
 
 Kaspaでは、BlockDAGの状態に基づく親選択、Mempoolからのトランザクション選択、Coinbase、難易度、PoW探索、提出後の独立検証が一つの処理系としてつながる。しかし、それぞれの責務と信頼境界は異なる。テンプレートは一時点の候補にすぎず、ネットワーク上の最終的な受理はコンセンサスが決める。
 
-次章「Chapter 19 — Mining Economics & Network Security」では、報酬・費用・ハッシュレート・マイニングの集中化がネットワークの安全性にどう影響するかを扱う。
+[次章「Chapter 19 — Mining Economics & Network Security」](chapter-19.md)では、報酬・費用・ハッシュレート・マイニングの集中化がネットワークの安全性にどう影響するかを扱う。
 
 ## 18.22 参考資料
 
@@ -547,8 +690,10 @@ Kaspaでは、BlockDAGの状態に基づく親選択、Mempoolからのトラン
 
 ### 技術レビュー時の確認項目
 
-- [ ] 対象`rusty-kaspa`コミットとネットワーク（mainnet/testnet/devnet）を記録したか
+- [x] 対象コミットを固定し、現在のMainnetや実測Devnetとの同一性へ一般化していないか
 - [ ] PoW方式・テンプレートフィールド・Coinbaseの説明を現行実装で確認したか
 - [ ] ブロック報酬の適格性と手数料の扱いをソースで確認したか
-- [ ] 概念図と実装上の処理順序を混同していないか
-- [ ] 教育用Rustコードをコンセンサス互換と誤認させていないか
+- [x] 概念図と主要な実装経路・選択ポリシーを区別したか
+- [x] 教育用Rustコードの独自方針と未実装の条件を明記したか
+
+主要経路のソース照合と教材8テストは `experiments/chapter-18-review-2026-11-01.md`。全選択器の分布・キャッシュ/更新競合・報酬計算・PoWの既知値・公式関数との差分実行・実際の採掘は今回検証していない。

@@ -1,12 +1,12 @@
 # Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）
 
 > **Mastering Kaspa / Part III — Transactions, Mining & Security**  
-> 原稿ステータス：**v0.2（主要経路を基準版ソースと照合・章全体のレビューは継続中）**\
+> 目次順の本文レビュー：2026-11-01。主要経路は基準版と照合。ページの確認と全規則・全経路の検証は区別する。\
 > 本章では、KaspaのUTXOを支出するための**権限の証明**を、鍵・署名・スクリプト・トランザクション検証という責務に分解する。プロトコル固有のバイト列、署名ハッシュ、opcode、ネットワーク別ルールは変更され得るため、対象バージョンの`rusty-kaspa`で必ず確認する。コードは教育用であり、実際のKaspaトランザクションの署名・検証には使用しない。
 
 ## 照合した実装
 
-2026年10月31日、[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要ソースを照合した。以下の固定ソースへの参照はSource-checkedの範囲を示す。別途、ランダム鍵による単一署名のDevnet送金・virtual受理は実測した（`experiments/devnet-send-review-2026-10-31.md`）。HD鍵導出・復旧・異常系と章全体の技術レビューは未完了。記録はリポジトリの `experiments/signing-wallet-review-2026-10-31.md` を参照する。
+2026年10月31日、[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要ソースを照合した。以下の固定ソースへの参照はSource-checkedの範囲を示す。別途、ランダム鍵による単一署名のDevnet送金・virtual受理は実測した（`experiments/devnet-send-review-2026-10-31.md`）。所定の拒否は `experiments/devnet-send-checks-2026-10-31.md`、送信成功応答の喪失からの復旧は `experiments/devnet-send-retry-2026-10-31.md` に記録済み。これらは以前の実行結果で、今回は再実行していない。HD復旧・全Script・全異常系・現在のMainnetとの一致は未検証。記録はリポジトリの `experiments/signing-wallet-review-2026-10-31.md` を参照する。
 
 ## この章で学ぶこと
 
@@ -23,7 +23,7 @@
 
 ## 16.1 「コインを持つ」とは何か
 
-第15章では、Kaspaの残高はUTXOの集合から導かれると説明した。では、UTXOを使える人はどう決まるのだろうか。
+[第15章](chapter-15.md)では、Kaspaの残高はUTXOの集合から導かれると説明した。では、UTXOを使える人はどう決まるのだろうか。
 
 UTXOは通常、単なるアドレス宛の残高ではなく、**支出条件を持つ出力**である。トランザクションの入力は、過去の出力を参照し、その支出条件を満たす証拠を提示する。
 
@@ -91,7 +91,7 @@ message ┘                              │
 
 Bitcoinの歴史的なトランザクション署名ではECDSAが広く使われ、TaprootではSchnorr署名が導入された。Kaspaの署名・スクリプト設計を理解する際も、**SchnorrとECDSAは異なるアルゴリズム**であることを押さえる必要がある。
 
-両者は同じ楕円曲線の数学を利用し得るが、署名形式、検証式、メッセージ処理、運用上の注意点が異なる。特にSchnorr署名ではノンスの扱いが重大であり、暗号ライブラリの規定に従わず独自生成することは避ける。
+両者は同じ楕円曲線の数学を利用し得るが、署名形式、検証式、メッセージ処理、運用上の注意点が異なる。両方式とも署名用ノンスの扱いが重大であり、暗号ライブラリの規定に従わず独自生成することは避ける。
 
 > **実装上の注意**：Kaspaのどのトランザクション種別・Script opcodeでどの署名方式が許可されるかは、対象のネットワークとノードバージョンのコンセンサス実装を確認する。BitcoinのTaprootルールをKaspaにそのまま当てはめてはいけない。
 
@@ -174,7 +174,7 @@ Transaction B
 
 ## 16.7 署名は「何」に対して行うのか
 
-最も重要な設計ポイントの一つが**署名対象メッセージ（Signing Preimage / Sighash）**である。
+最も重要な設計ポイントの一つが**署名対象メッセージ**である。ハッシュへ入れるデータ（signing preimage）と、その計算結果である署名用ダイジェスト（sighash）は区別する。
 
 署名対象が曖昧だと、ユーザーが承認していない出力や金額に変更されても、署名が有効なままになり得る。そのためプロトコルは、どのフィールドをどの順序・エンコーディングで署名に結び付けるかを厳密に定義する。
 
@@ -196,6 +196,8 @@ Transaction B
 
 SIGHASH種別により、集約ハッシュの一部はゼロになる。native subnetworkかつ空payloadも専用のゼロハッシュ分岐を持つ。ECDSA用の[calc_ecdsa_signature_hash](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/hashing/sighash.rs)はSchnorr用ダイジェストをさらにECDSA用ハッシュへ通す。同じ入力でも、両方式の署名対象を無条件に同一視しない。
 
+基準版の `SigHashReusedValues` は入力群・出力・payloadのハッシュをキャッシュする。同じ取引の複数入力での再利用と、取引を書き換えた後の再利用を区別し、入力や出力を変更したらキャッシュも作り直す。
+
 この説明はソースの主要構成の確認であり、ハッシュ用ドメインやエンコードも含めた互換実装・既知値テストの完了を意味しない。
 
 ### 16.7.1 Transaction IDと署名ハッシュは別物
@@ -204,7 +206,7 @@ SIGHASH種別により、集約ハッシュの一部はゼロになる。native 
 |---|---|
 | Transaction ID | トランザクションを識別する |
 | Sighash | 署名により承認する内容を規定する |
-| Block Hash | ブロックを識別しPoWなどに用いる |
+| Block Hash | ブロックを識別する。KaspaのPoW値とは別の計算 |
 
 これらは同じ「ハッシュ」と呼ばれても、**対象データ・ドメイン・計算規則が異なる**。Transaction IDをそのまま署名してよいと決めつけてはいけない。
 
@@ -226,44 +228,35 @@ UTXO系プロトコルでは、署名が承認する入力・出力の範囲を�
 Wallet / Application
        │
        ▼
-UTXO Selection ────────────────┐
-       │                       │
-       ▼                       │
-Transaction Construction      │
-       │                       │
-       ▼                       │
-Signing Payload Calculation   │
-       │                       │
-       ▼                       │
-Private-key Signing           │
-       │                       │
-       ▼                       │
-Input Signature Assembly      │
-       │                       │
-       ▼                       │
-Local Verification            │
-       │                       │
-       ▼                       │
-Broadcast ────────────────────┤
-       │                       │
-       ▼                       │
-Node Script Validation        │
-       │                       │
-       ▼                       │
-Mempool Policy Checks         │
-       │                       │
-       ▼                       │
-Block / Consensus Evaluation  │
-       │                       │
-       ▼                       │
-Virtual UTXO State            │
+UTXO Selection
+       │
+       ▼
+Transaction Construction / UTXO Resolution
+       │
+       ▼
+Signing Digest Calculation
+       │
+       ▼
+Private-key Signing / Input Signature Assembly
+       │
+       ▼
+Local Verification → Broadcast
+       │
+       ▼
+Node Validation / Mempool Policy
+       │
+       ▼
+Block / Consensus Evaluation
+       │
+       ▼
+Virtual UTXO State
 ```
 
-図は概念モデルである。ノード内部の検証順序や並列化、Mempoolポリシーは実装により異なる。
+図は概念モデルであり、Mempoolを含む全段階をすべてのノードが観測するわけではない。ノード内部の金額・ポリシー検査がScript検証より先に行われる場合もある。厳密な順序や並列化は固定版の検証経路を参照する。
 
 ### 16.8.1 署名の前に確定させるもの
 
-署名後に出力金額や送金先を変更すると、通常は署名が無効になる。ウォレットは**入力・出力・手数料・変更出力・ネットワーク**を確認してから署名する必要がある。
+たとえばSIGHASH_ALLで承認した出力金額や送金先を署名後に変更すると、その署名は変更後の内容に対応しなくなる。NONE/SINGLE等では承認する範囲が異なるため、すべての変更で必ず無効になると一般化しない。ウォレットは**入力・出力・手数料・変更出力・ネットワーク**を確認してから署名する必要がある。
 
 複数入力を持つトランザクションでは、入力ごとに必要な署名が異なる場合がある。すべての入力が同じ鍵で署名できるとは限らない。
 
@@ -292,7 +285,7 @@ Scriptが成功しても、次のような問題が残り得る。
 | 支出条件 | Script系の検証 | Script系の検証 |
 | 署名 | ECDSA、TaprootではSchnorr | 対応署名方式はKaspaの規則に従う |
 | 署名ハッシュ | Bitcoin固有の仕様 | Kaspa固有の仕様 |
-| ブロック構造 | 線形チェーン | BlockDAG |
+| ブロック構造 | 競合する枝から採用チェーンを選ぶ | BlockDAG |
 | トランザクションの最終的な受理 | チェーン上の順序とUTXO状態 | コンセンサス順序とVirtual UTXO状態 |
 
 両者の概念は似ていても、**トランザクションのバイナリ形式、署名メッセージ、Scriptルールに互換性があるとは限らない**。
@@ -329,12 +322,14 @@ Script VMをデータベース更新と直接結び付けず、**評価結果を
 
 ### 16.12.1 プロジェクト作成
 
+本書とは別の作業用ディレクトリで実行する。
+
 ```bash
-cargo new script-boundary-lab
+cargo new --lib --edition 2021 script-boundary-lab
 cd script-boundary-lab
 ```
 
-`src/lib.rs`に以下を記述する。
+`src/lib.rs`に以下を記述する。外部依存はなく、Rust 1.90.0で確認した。検証器には取引・入力位置・参照UTXOも渡すが、モックは文脈を無視する。その限界もテストで示す。
 
 ```rust
 use std::collections::HashMap;
@@ -372,6 +367,8 @@ pub struct Transaction {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ValidationError {
+    EmptyInputs,
+    EmptyOutputs,
     MissingUtxo,
     InvalidSignature,
     DuplicateInput,
@@ -382,7 +379,14 @@ pub enum ValidationError {
 /// 実際の暗号署名検証の代わりとなる教育用インターフェース。
 /// `signature` を本物の署名として扱ってはならない。
 pub trait SignatureVerifier {
-    fn verify(&self, signer: &str, signature: &[u8]) -> bool;
+    fn verify(
+        &self,
+        signer: &str,
+        tx: &Transaction,
+        input_index: usize,
+        previous_utxo: &Utxo,
+        signature: &[u8],
+    ) -> bool;
 }
 
 pub fn validate_transaction<V: SignatureVerifier>(
@@ -391,10 +395,16 @@ pub fn validate_transaction<V: SignatureVerifier>(
     verifier: &V,
 ) -> Result<u64, ValidationError> {
     use std::collections::HashSet;
+    if tx.inputs.is_empty() {
+        return Err(ValidationError::EmptyInputs);
+    }
+    if tx.outputs.is_empty() {
+        return Err(ValidationError::EmptyOutputs);
+    }
     let mut seen = HashSet::new();
     let mut total_in = 0u64;
 
-    for input in &tx.inputs {
+    for (input_index, input) in tx.inputs.iter().enumerate() {
         if !seen.insert(&input.previous_outpoint) {
             return Err(ValidationError::DuplicateInput);
         }
@@ -403,7 +413,13 @@ pub fn validate_transaction<V: SignatureVerifier>(
             .ok_or(ValidationError::MissingUtxo)?;
 
         if input.claimed_signer != prev.required_signer
-            || !verifier.verify(&prev.required_signer, &input.signature)
+            || !verifier.verify(
+                &prev.required_signer,
+                tx,
+                input_index,
+                prev,
+                &input.signature,
+            )
         {
             return Err(ValidationError::InvalidSignature);
         }
@@ -430,18 +446,31 @@ mod tests {
 
     struct FakeVerifier;
     impl SignatureVerifier for FakeVerifier {
-        fn verify(&self, signer: &str, signature: &[u8]) -> bool {
+        fn verify(
+            &self,
+            signer: &str,
+            _tx: &Transaction,
+            _input_index: usize,
+            _previous_utxo: &Utxo,
+            signature: &[u8],
+        ) -> bool {
             signature == format!("approved:{signer}").as_bytes()
         }
     }
 
     fn fixture() -> (HashMap<Outpoint, Utxo>, Outpoint) {
-        let outpoint = Outpoint { txid: "tx-a".into(), index: 0 };
+        let outpoint = Outpoint {
+            txid: "tx-a".into(),
+            index: 0,
+        };
         let mut utxos = HashMap::new();
-        utxos.insert(outpoint.clone(), Utxo {
-            value: 100,
-            required_signer: "alice".into(),
-        });
+        utxos.insert(
+            outpoint.clone(),
+            Utxo {
+                value: 100,
+                required_signer: "alice".into(),
+            },
+        );
         (utxos, outpoint)
     }
 
@@ -463,23 +492,30 @@ mod tests {
     fn valid_authorization_returns_fee() {
         let (utxos, outpoint) = fixture();
         let transaction = tx(outpoint, "alice", b"approved:alice", 90);
-        assert_eq!(validate_transaction(&transaction, &utxos, &FakeVerifier), Ok(10));
+        assert_eq!(
+            validate_transaction(&transaction, &utxos, &FakeVerifier),
+            Ok(10)
+        );
     }
 
     #[test]
     fn wrong_signer_is_rejected() {
         let (utxos, outpoint) = fixture();
         let transaction = tx(outpoint, "mallory", b"approved:mallory", 90);
-        assert_eq!(validate_transaction(&transaction, &utxos, &FakeVerifier),
-            Err(ValidationError::InvalidSignature));
+        assert_eq!(
+            validate_transaction(&transaction, &utxos, &FakeVerifier),
+            Err(ValidationError::InvalidSignature)
+        );
     }
 
     #[test]
     fn overspend_is_rejected() {
         let (utxos, outpoint) = fixture();
         let transaction = tx(outpoint, "alice", b"approved:alice", 101);
-        assert_eq!(validate_transaction(&transaction, &utxos, &FakeVerifier),
-            Err(ValidationError::Overspend));
+        assert_eq!(
+            validate_transaction(&transaction, &utxos, &FakeVerifier),
+            Err(ValidationError::Overspend)
+        );
     }
 
     #[test]
@@ -487,8 +523,128 @@ mod tests {
         let (utxos, outpoint) = fixture();
         let mut transaction = tx(outpoint, "alice", b"approved:alice", 90);
         transaction.inputs.push(transaction.inputs[0].clone());
-        assert_eq!(validate_transaction(&transaction, &utxos, &FakeVerifier),
-            Err(ValidationError::DuplicateInput));
+        assert_eq!(
+            validate_transaction(&transaction, &utxos, &FakeVerifier),
+            Err(ValidationError::DuplicateInput)
+        );
+    }
+
+    #[test]
+    fn empty_transactions_are_rejected() {
+        let (utxos, outpoint) = fixture();
+        let mut transaction = tx(outpoint, "alice", b"approved:alice", 90);
+        transaction.inputs.clear();
+        assert_eq!(
+            validate_transaction(&transaction, &utxos, &FakeVerifier),
+            Err(ValidationError::EmptyInputs)
+        );
+        let mut transaction = tx(
+            Outpoint {
+                txid: "tx-a".into(),
+                index: 0,
+            },
+            "alice",
+            b"approved:alice",
+            90,
+        );
+        transaction.outputs.clear();
+        assert_eq!(
+            validate_transaction(&transaction, &utxos, &FakeVerifier),
+            Err(ValidationError::EmptyOutputs)
+        );
+    }
+
+    #[test]
+    fn missing_utxos_and_overflow_are_rejected() {
+        let (mut utxos, outpoint) = fixture();
+        let missing = tx(
+            Outpoint {
+                txid: "absent".into(),
+                index: 0,
+            },
+            "alice",
+            b"approved:alice",
+            90,
+        );
+        assert_eq!(
+            validate_transaction(&missing, &utxos, &FakeVerifier),
+            Err(ValidationError::MissingUtxo)
+        );
+        let large = Outpoint {
+            txid: "large".into(),
+            index: 0,
+        };
+        utxos.insert(
+            large.clone(),
+            Utxo {
+                value: u64::MAX,
+                required_signer: "alice".into(),
+            },
+        );
+        let mut transaction = tx(outpoint.clone(), "alice", b"approved:alice", 90);
+        transaction.inputs.push(Input {
+            previous_outpoint: large,
+            claimed_signer: "alice".into(),
+            signature: b"approved:alice".to_vec(),
+        });
+        assert_eq!(
+            validate_transaction(&transaction, &utxos, &FakeVerifier),
+            Err(ValidationError::ArithmeticOverflow)
+        );
+        let mut transaction = tx(outpoint, "alice", b"approved:alice", u64::MAX);
+        transaction.outputs.push(Output {
+            value: 1,
+            required_signer: "bob".into(),
+        });
+        assert_eq!(
+            validate_transaction(&transaction, &utxos, &FakeVerifier),
+            Err(ValidationError::ArithmeticOverflow)
+        );
+    }
+
+    #[test]
+    fn invalid_later_input_rejects_the_transaction() {
+        let (mut utxos, outpoint) = fixture();
+        let second = Outpoint {
+            txid: "second".into(),
+            index: 0,
+        };
+        utxos.insert(
+            second.clone(),
+            Utxo {
+                value: 10,
+                required_signer: "carol".into(),
+            },
+        );
+        let before = utxos.clone();
+        let mut transaction = tx(outpoint, "alice", b"approved:alice", 90);
+        transaction.inputs.push(Input {
+            previous_outpoint: second,
+            claimed_signer: "carol".into(),
+            signature: b"invalid".to_vec(),
+        });
+        assert_eq!(
+            validate_transaction(&transaction, &utxos, &FakeVerifier),
+            Err(ValidationError::InvalidSignature)
+        );
+        assert_eq!(utxos, before);
+    }
+
+    #[test]
+    fn mock_accepts_changed_outputs_to_show_its_limit() {
+        let (utxos, outpoint) = fixture();
+        let mut transaction = tx(outpoint, "alice", b"approved:alice", 90);
+        assert_eq!(
+            validate_transaction(&transaction, &utxos, &FakeVerifier),
+            Ok(10)
+        );
+        transaction.outputs[0].value = 80;
+        transaction.outputs[0].required_signer = "mallory".into();
+        // このモックは取引内容を署名に結び付けていない。
+        assert_eq!(
+            validate_transaction(&transaction, &utxos, &FakeVerifier),
+            Ok(20)
+        );
     }
 
     #[test]
@@ -508,7 +664,9 @@ mod tests {
 cargo test
 ```
 
-> **安全上の警告**：`FakeVerifier`は文字列を比較しているだけであり、**暗号署名ではない**。秘密鍵、公開鍵、ハッシュ、Kaspaの署名方式を実装していない。テスト対象は「権限検証をUTXO検証から分離する設計」である。送金、ウォレット、実ネットワークには絶対に流用しない。
+本文から抽出した教材は9テスト成功（`experiments/chapter-16-review-2026-11-01.md`）。検証器へ取引・入力位置・参照UTXOを渡すが、`FakeVerifier` はそれらを無視して文字列だけを比較する。出力を変更しても通るテストは、その限界を示す反例であり、暗号署名の改変検出に成功した結果ではない。
+
+このモデルには秘密鍵・公開鍵・Sighash・本物の署名検証がない。UTXO集合は読み取り専用の参照で渡し、検証が成功しても入力を消費しない。したがって同じ取引を再検証できるが、コンセンサス上の再支出を受理したことにはならない。
 
 ### 16.12.2 このモデルに欠けているもの
 
@@ -572,24 +730,18 @@ cargo test
 
 公式リポジトリ：[kaspanet/rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
 
-まずリポジトリを取得する。
+[第1章](../part-01-foundations/chapter-01.md)で取得した固定版を再利用する。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
+# 基準版ソースの親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
+grep -n -E 'calc_schnorr_signature_hash|calc_ecdsa_signature_hash|outputs_hash' consensus/core/src/hashing/sighash.rs
+grep -n -E 'SIG_HASH_|ALLOWED_SIG_HASH_TYPES' consensus/core/src/hashing/sighash_type.rs
+grep -n -E 'pay_to_address_script|PubKeyECDSA|ScriptHash' crypto/txscript/src/standard.rs
 ```
 
-次に、次のキーワードを検索する。
-
-```bash
-rg -n 'signature_script|signatureScript|script_public_key|scriptPubKey' .
-rg -n 'sighash|SigHash|SignatureHash' .
-rg -n 'Schnorr|ECDSA|checksig|CheckSig' .
-rg -n 'script.*engine|ScriptEngine|ScriptPublicKey' .
-```
-
-> リポジトリのディレクトリ構成やシンボル名はバージョンによって変わる。検索結果を起点に、実際の呼び出し関係を追うこと。
+HEADが本章冒頭の完全SHAと一致することを確認する。固定版の検索結果から、呼び出し元・データ構造・テストまで追う。
 
 ### 16.16.1 調査の順序
 
@@ -689,7 +841,7 @@ Signed
 Broadcast
     │
     ▼
-Locally Validated
+Node Validation
     │
     ├─ invalid ──> Rejected
     ▼
@@ -706,6 +858,8 @@ Evaluated in Consensus Order
 Accepted in Virtual State
 ```
 
+送信成功の応答が失われた場合は、拒否ではなく受理の成否が不明な状態も必要となる。所定の応答喪失・照会・同一取引の再送は、冒頭の既存Devnet記録を参照する。
+
 これは**説明用の状態遷移**であり、Kaspaノードの正式な状態列挙ではない。また、BlockDAGでは後続ブロックによりコンセンサス上の評価が変わる場合があるため、最後の状態を無条件に永久確定とみなさない。
 
 ## 16.19 よくある誤解
@@ -717,7 +871,7 @@ Accepted in Virtual State
 いいえ。UTXOの存在、未使用状態、手数料、コンセンサス上の順序などの検証が必要になる。
 
 **Q3. Transaction IDと署名ハッシュは同じ？**  
-同じとは限らない。目的と計算規則が異なる。
+別の値である。目的と計算規則が異なる。
 
 **Q4. BitcoinのScriptをKaspaでそのまま動かせる？**  
 互換性を前提にしてはいけない。opcode、署名規則、トランザクション形式、コンセンサスルールを確認する。
@@ -743,7 +897,7 @@ Accepted in Virtual State
 
 ### 課題B：失敗ケースを増やす
 
-第16.12節の教育用コードに次のテストを追加する。
+16.12節の追加済みテストを読み、次の入力がどの検証で拒否されるか説明する。さらに、検証器へ渡された取引・入力位置・参照UTXOを記録するモックを作り、呼び出し内容を確認する。
 
 - 存在しないOutpointを指定したら`MissingUtxo`
 - `u64::MAX`を超える入力合計で`ArithmeticOverflow`
@@ -760,7 +914,7 @@ Accepted in Virtual State
 
 1. 署名前に送金先と金額を記録する。
 2. SDKで署名したトランザクションを検証する。
-3. 署名後に送金先を変更した場合の検証失敗を観察する。
+3. SIGHASH_ALLを使い、署名後に送金先を変更した場合の検証失敗を観察する。FakeVerifierの反例と混同しない。
 4. トランザクションID・署名対象・入力UTXOの違いを記録する。
 
 ## 16.21 理解度チェック
@@ -796,7 +950,7 @@ Accepted in Virtual State
 - 正しい署名だけではトランザクションの受理は保証されない。
 - 教育用コードと、実際のKaspaコンセンサス互換実装は明確に区別する。
 
-次章の**Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）**では、署名済みトランザクションがP2Pネットワークへ流れ、各ノードのMempoolでどのように扱われるかを学ぶ。
+次章の**[Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）](chapter-17.md)**では、署名済みトランザクションがP2Pネットワークへ流れ、各ノードのMempoolでどのように扱われるかを学ぶ。
 
 ## 16.23 参考資料
 
@@ -817,9 +971,11 @@ Accepted in Virtual State
 
 ### 原稿を技術レビューする際の確認項目
 
-- [ ] 対象ネットワークと`rusty-kaspa`コミットを明記したか。
+- [x] 対象ネットワークと`rusty-kaspa`コミットを明記したか。
 - [ ] 実際に許可される署名方式・Script opcodeをコードとテストで照合したか。
 - [ ] Sighashの対象フィールド、シリアライズ、ドメイン分離を一次資料で確認したか。
 - [ ] アドレス種別とScript生成の対応をSDKで検証したか。
-- [ ] 教育用コードをコンセンサス互換と誤認させる記述がないか。
-- [ ] Devnetの実験ログとテストベクトルを追加したか。
+- [x] 教育用コードの範囲を示し、出力の改変が通るモックの反例も確認したか。
+- [x] Devnetの所定の実測結果と未確認事項を記録したか（生ログ・秘密情報は公開しない）。
+
+目次順の本文レビューと教材9テストは `experiments/chapter-16-review-2026-11-01.md`。上の未チェック項目は全方式・全opcodeやバイト単位の照合を含み、主要経路のソース確認・単一署名送金だけで完了とはしない。今回は鍵生成・署名・送金・ノードの起動を新規に実行していない。

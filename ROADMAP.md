@@ -57,6 +57,18 @@
 
 2026-11-01：SUMMARY順の18ページ目、第14章を通読。GHOSTDAGの処理段階、VirtualStateの内容、受理IDの並びのactivation判定、既存ブロックとVirtualのselected parentを区別。UTXO教材は空の取引・出力数の変換を検査し、競合の逆順・独立取引・依存取引・拒否時の集合維持を含む7テストと出力を確認。記録は `experiments/chapter-14-review-2026-11-01.md`。Part II第9〜14章の目次順の本文確認を終え、次はPart III第15章。全規則の検証完了を意味しない。
 
+2026-11-01：SUMMARY順の19ページ目、Part III第15章を通読。変更出力が必須ではないこと、金額上限・Coinbase成熟の文脈、UTXO解決とScript検証の依存関係、Mempoolと受理・確定性を整理。教材の初期出力は上書きを拒否し、空IDも検査。初期値・9種類の不正入力・手数料と依存出力を含む7テスト、書式、Clippyが成功。記録は `experiments/chapter-15-review-2026-11-01.md`。次は第16章 `src/part-03-transactions/chapter-16.md`。
+
+2026-11-01：SUMMARY順の20ページ目、第16章を通読。preimageとsighash、識別子とPoW値、SIGHASHごとの承認範囲、取引変更時のキャッシュ、過去のDevnet検証範囲を整理。教材の検証器へ取引・入力位置・参照UTXOを渡し、空取引を拒否。モックの改変検出不能も含む9テスト、書式、Clippyが成功。記録は `experiments/chapter-16-review-2026-11-01.md`。新しい鍵生成・署名・送金は実行していない。次は第17章 `src/part-03-transactions/chapter-17.md`。
+
+2026-11-01：SUMMARY順の21ページ目、第17章を通読し、基準版のRPC/P2P受付・RBF・孤児・ブロック後処理を照合。Mempool保持とVirtual受理、High/Lowの意味、置換後に拒否されても削除が残る例外を区別。教材は空IDを拒否し、全拒否理由の2map維持・未知ID削除・予約の分離を含む8テスト、書式、Clippyが成功。記録は `experiments/chapter-17-review-2026-11-01.md`。次は第18章 `src/part-03-transactions/chapter-18.md`。
+
+2026-11-01：SUMMARY順の22ページ目、第18章を通読。基準版のRPC・キャッシュ・動的な選択器・Virtualからのヘッダー/Coinbase構築を照合。親子取引の同一ブロックへの同梱、候補生成の確率的選択とコンセンサス検証を区別。教材は同一IDの重複/別内容を整理し、候補順・mass境界/オーバーフロー・不採用時の予約を含む8テスト、書式、Clippyが成功。記録は `experiments/chapter-18-review-2026-11-01.md`。次は第19章 `src/part-03-transactions/chapter-19.md`。
+
+2026-11-01：SUMMARY順の23ページ目、第19章を通読。基準版のblue/red/non-DAA報酬と発行スケジュール入口を照合。Rのプール料控除前後、営業寄与と利益/入出金、HHIと攻撃確率、仮定と市場実測を区別。教材の中間/結果の有限性を検査し、丸め比較を修正後8テスト・main・書式・Clippyが成功。記録は `experiments/chapter-19-review-2026-11-01.md`。次は第20章 `src/part-03-transactions/chapter-20.md`。
+
+2026-11-01：SUMMARY順の24ページ目、第20章を通読。Finalityの初期/Pruning境界、PoWと試行回数、仮のview差とSafety、ポリシー判断と実際の入金台帳を区別。教材はPolicyDecision/PolicySatisfiedへ整理し、古い証拠と閾値ゼロを調査対象にした。8テスト・書式・Clippyが成功。記録は `experiments/chapter-20-review-2026-11-01.md`。Part III第15〜20章の本文確認は一区切り。全技術の検証完了ではなく、次は第21章 `src/part-04-development/chapter-21.md`。
+
 ## 優先順位と進め方
 
 - **P1**：本書の正確性と実習の前提。最初に進める。

@@ -1,7 +1,7 @@
 # Chapter 15 — UTXO Model & Transaction Processing（UTXOモデルとトランザクション処理）
 
 > **Mastering Kaspa / Part III — Transactions, Mining & Security**  
-> 原稿ステータス：**v0.2（主要経路を基準版ソースと照合・章全体のレビューは継続中）**\
+> 目次順の本文レビュー：2026-11-01。主要経路は基準版と照合。ページの確認と全規則・全経路の検証は区別する。\
 > 本章はKaspaのUTXOモデルとトランザクション処理を理解するための原稿である。Rustの実装例は**教育用の簡略モデル**であり、Kaspaの署名、スクリプト、トランザクション形式、コンセンサス規則を完全再現しない。プロトコル依存の詳細は対象バージョンの`rusty-kaspa`で照合すること。
 
 ## 照合した実装
@@ -52,6 +52,8 @@
   新しい出力 TxX:1 ── 2.99 KAS
 ```
 
+変更出力は必須のフィールドではない。差額を自分の出力として残さなければ、その分も手数料になる。例の0.01 KASは説明用の値であり、実際の必要手数料を示さない。
+
 この仕組みがトランザクション検証、並列処理、二重支払い防止、ウォレット設計の基礎となる。
 
 ## 15.2 アカウントモデルとの比較
@@ -68,7 +70,7 @@
 
 ## 15.3 Kaspaの金額単位
 
-Kaspaのネイティブ資産はKASであり、プロトコルでは整数の最小単位を扱う。一般に **1 KAS = 100,000,000 sompi** である。
+Kaspaのネイティブ資産はKASであり、プロトコルでは整数の最小単位を扱う。基準版の [SOMPI_PER_KASPA](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/constants.rs) は **1 KAS = 100,000,000 sompi** と定義する。
 
 ```text
 1 KAS        = 100,000,000 sompi
@@ -121,7 +123,7 @@ Transaction
 └── Payload
 ```
 
-この図は主要項目の見取り図である。基準版の[Transaction](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/tx.rs)は `version: u16`、inputs、outputs、`lock_time: u64`、subnetwork_id、`gas: u64`、payloadを持ち、さらにmassのコミットメントとIDキャッシュを保持する。Inputはprevious_outpoint、signature_script、sequence、sig_op_count、Outputはvalueとscript_public_keyを持つ。メモリ上のフィールド列を、そのままシリアライズやIDのハッシュ対象と見なさない。ハッシュ・署名対象の完全照合は第16章で行う。
+この図は主要項目の見取り図である。基準版の[Transaction](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/tx.rs)は `version: u16`、inputs、outputs、`lock_time: u64`、subnetwork_id、`gas: u64`、payloadを持ち、さらにmassのコミットメントとIDキャッシュを保持する。Inputはprevious_outpoint、signature_script、sequence、sig_op_count、Outputはvalueとscript_public_keyを持つ。メモリ上のフィールド列を、そのままシリアライズやIDのハッシュ対象と見なさない。ハッシュ・署名対象については[第16章](chapter-16.md)で扱う範囲と検証記録を参照する。
 
 ### Inputの責務
 
@@ -151,7 +153,7 @@ TxA:0 -> { value: 500000000, script: ... }
 TxB:1 -> { value: 200000000, script: ... }
 ```
 
-ウォレットは自分に関係するUTXOを把握したいが、**ウォレットのローカル記録と、ノードが認識するコンセンサスUTXO集合は同一ではない**。同期遅延、未確定トランザクション、再編成などにより見え方が異なることがある。
+ウォレットは自分に関係するUTXOを把握したいが、**ウォレットのローカル記録と、ノードが認識するコンセンサスUTXO集合は同一ではない**。同期遅延、未確定トランザクション、再編成などにより見え方が異なることがある。未使用でもCoinbaseの成熟などを満たすまで使えない場合があり、未使用であることと即座に使用可能であることも区別する。
 
 ## 15.7 トランザクションのライフサイクル
 
@@ -179,6 +181,8 @@ Transaction Acceptance Evaluation
   ▼
 Virtual UTXO State
 ```
+
+これは代表的な流れであり、各ノードが必ずすべての段階を観測するわけではない。Mempoolで見ていない取引をブロック経由で知る場合もある。
 
 この図の各段階は異なる責務を持つ。**P2Pで受信した、Mempoolに入った、ブロックに含まれた、コンセンサス状態に受理された**という表現を混同してはいけない。
 
@@ -246,7 +250,7 @@ U3 = 4.0 KAS
 - `U3`だけを使う：入力が少なくて済むが、変更出力が大きい。
 - `U1 + U2`を使う：入力が増えるが、変更出力を小さくできる。
 
-どちらが適切かは、手数料、入力数、UTXO断片化、プライバシー、将来の支出予定による。UTXO選択は単なる金額合わせではなく、**ウォレットのポリシーと最適化問題**である。
+いずれも送金額に加えて必要な手数料を賄えることが前提となる。どちらが適切かは、手数料、入力数、UTXO断片化、プライバシー、将来の支出予定による。UTXO選択は単なる金額合わせではなく、**ウォレットのポリシーと最適化問題**である。
 
 ### プライバシー上の注意
 
@@ -280,7 +284,7 @@ Genesis                 Merge
           Block B: Tx-B
 ```
 
-この図は概念図であり、具体的なGHOSTDAGの順序や受理結果を表すものではない。
+図は左が親、右が子で、実際の参照は右から左へ向かう。具体的なGHOSTDAGの順序や受理結果を表すものではない。
 
 同じUTXOを消費するトランザクションが別々の並行ブロックに含まれた場合でも、コンセンサスが導く処理順序に沿って状態を評価する必要がある。**DAGに複数ブロックを保持できることと、二重支払いを認めることは全く違う**。
 
@@ -291,7 +295,7 @@ Genesis                 Merge
 ```text
 旧Virtual UTXO Set
         │
-        │ コンセンサスで受理される取引を順序に沿って適用
+        │ 旧状態との差分を戻し、新しい文脈で再評価・適用
         ▼
 新Virtual UTXO Set
 ```
@@ -313,7 +317,11 @@ Genesis                 Merge
 
 [ブロックbodyの検証](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/body_processor/body_validation_in_isolation.rs)は、同一ブロック内の二重消費と、同じブロック内の出力を入力にする親子トランザクションを拒否する。UTXO文脈では、独立な通常トランザクションを同じviewに対して並列検証できる。後半の教材はこのbody検証を省略しており、先に適用したトランザクションの出力を同じ教材内で続けて消費できることをKaspaの仕様と解釈しない。
 
-merge set全体の処理は第14章14.5.1を参照する。selected parentのCoinbaseを特別に適用した後、通常トランザクションの受理を評価する。ブロック自身のUTXO妥当性の検証と、後続のmerge setでの各トランザクションの受理を区別する。
+入力解決後のCoinbase成熟では、基準版は `entry.block_daa_score + maturity(block_daa_score) <= pov_daa_score` を必要とする。エントリの受理スコア、成熟パラメータを選ぶスコア、評価時点のスコアを同じ変数とみなさない。
+
+入力合計はu64に収まるだけでなく `MAX_SOMPI` 以下かも確認する。後半の教材はchecked arithmeticだけで、公式の金額上限や成熟条件は再現しない。
+
+merge set全体の処理は[第14章14.5.1](../part-02-consensus/chapter-14.md#1451-基準版の実際の処理順)を参照する。selected parentのCoinbaseを特別に適用した後、通常トランザクションの受理を評価する。ブロック自身のUTXO妥当性の検証と、後続のmerge setでの各トランザクションの受理を区別する。
 
 ## 15.14 Reorganizationと状態の巻き戻し
 
@@ -325,7 +333,7 @@ merge set全体の処理は第14章14.5.1を参照する。selected parentのCoi
 - 状態差分（差分ログ）を用いて巻き戻しと適用を行う。
 - 適切なチェックポイントから状態を再構築する。
 
-この一覧は一般的な選択肢である。基準版は[UtxoDiffの逆差分・合成](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/utxo/utxo_diff.rs)と[virtual processorの相対状態計算](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/processor.rs)を使う。実際の更新・保存経路は第14章14.11.1で扱う。
+この一覧は一般的な選択肢である。基準版は[UtxoDiffの逆差分・合成](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/utxo/utxo_diff.rs)と[virtual processorの相対状態計算](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/processor.rs)を使う。実際の更新・保存経路は[第14章14.11.1](../part-02-consensus/chapter-14.md#14111-基準版の差分処理)で扱う。
 
 ### ウォレット側で起きること
 
@@ -336,7 +344,7 @@ merge set全体の処理は第14章14.5.1を参照する。selected parentのCoi
 | 対象 | 役割 |
 |---|---|
 | コンセンサスUTXO集合 | コンセンサスが認識する利用可能な出力を表す |
-| Mempool | まだブロック内で確定的に受理されていないトランザクション候補を扱う |
+| Mempool | ノードが中継・採掘等のために保持する取引候補。保持はコンセンサス上の受理・決済確定ではない |
 | ウォレットのUTXO表示 | アドレスに関連する資金をユーザーに示す |
 
 未確定トランザクションが使うUTXOを別の未確定トランザクションが使おうとする場合、Mempoolでは競合管理が必要になる。また、親トランザクションが未確定のまま、その出力を子トランザクションが参照することも概念的には可能だが、**具体的な受け入れ条件は実装・ポリシーに依存する**。
@@ -345,7 +353,7 @@ merge set全体の処理は第14章14.5.1を参照する。selected parentのCoi
 
 通常のトランザクションは既存UTXOを入力として消費する。一方、Coinbaseはマイニング報酬等を扱う特別なトランザクションであり、通常の「入力合計−出力合計＝手数料」という説明をそのまま適用できない。
 
-また、Kaspaではブロック報酬、手数料、Coinbaseの扱いがDAG上のコンセンサスと関係する。BitcoinのCoinbase処理を単純にコピーして説明しないこと。詳細は第18章・第19章で扱う。
+また、Kaspaではブロック報酬、手数料、Coinbaseの扱いがDAG上のコンセンサスと関係する。BitcoinのCoinbase処理を単純にコピーして説明しないこと。詳細は[第18章](chapter-18.md)・[第19章](chapter-19.md)で扱う。
 
 ## 15.17 Rustで最小UTXO状態遷移を作る
 
@@ -353,8 +361,10 @@ merge set全体の処理は第14章14.5.1を参照する。selected parentのCoi
 
 ### プロジェクト作成
 
+本書とは別の作業用ディレクトリで実行する。Rust 1.90.0で確認した。
+
 ```bash
-cargo new utxo-lab
+cargo new --lib --edition 2021 utxo-lab
 cd utxo-lab
 ```
 
@@ -384,6 +394,7 @@ pub struct Transaction {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ApplyError {
+    EmptyTransactionId,
     EmptyInputs,
     EmptyOutputs,
     DuplicateInput,
@@ -399,8 +410,20 @@ pub struct UtxoSet {
 }
 
 impl UtxoSet {
-    pub fn insert_genesis(&mut self, outpoint: Outpoint, output: Output) {
+    // 教材の初期状態を用意する補助。通常取引の検証ではない。
+    pub fn insert_initial_output(
+        &mut self,
+        outpoint: Outpoint,
+        output: Output,
+    ) -> Result<(), ApplyError> {
+        if outpoint.txid.is_empty() {
+            return Err(ApplyError::EmptyTransactionId);
+        }
+        if self.entries.contains_key(&outpoint) {
+            return Err(ApplyError::DuplicateOutput);
+        }
         self.entries.insert(outpoint, output);
+        Ok(())
     }
 
     pub fn get(&self, outpoint: &Outpoint) -> Option<&Output> {
@@ -408,6 +431,9 @@ impl UtxoSet {
     }
 
     pub fn apply(&mut self, tx: &Transaction) -> Result<u64, ApplyError> {
+        if tx.txid.is_empty() {
+            return Err(ApplyError::EmptyTransactionId);
+        }
         if tx.inputs.is_empty() {
             return Err(ApplyError::EmptyInputs);
         }
@@ -453,7 +479,7 @@ impl UtxoSet {
         for (index, output) in tx.outputs.iter().enumerate() {
             let outpoint = Outpoint {
                 txid: tx.txid.clone(),
-                index: index as u32,
+                index: u32::try_from(index).expect("output index checked before mutation"),
             };
             self.entries.insert(outpoint, output.clone());
         }
@@ -466,15 +492,22 @@ mod tests {
     use super::*;
 
     fn original() -> Outpoint {
-        Outpoint { txid: "genesis".into(), index: 0 }
+        Outpoint {
+            txid: "genesis".into(),
+            index: 0,
+        }
     }
 
     fn funded() -> UtxoSet {
         let mut set = UtxoSet::default();
-        set.insert_genesis(
+        set.insert_initial_output(
             original(),
-            Output { value: 100, owner: "alice".into() },
-        );
+            Output {
+                value: 100,
+                owner: "alice".into(),
+            },
+        )
+        .unwrap();
         set
     }
 
@@ -485,13 +518,43 @@ mod tests {
             txid: "tx1".into(),
             inputs: vec![original()],
             outputs: vec![
-                Output { value: 60, owner: "bob".into() },
-                Output { value: 35, owner: "alice".into() },
+                Output {
+                    value: 60,
+                    owner: "bob".into(),
+                },
+                Output {
+                    value: 35,
+                    owner: "alice".into(),
+                },
             ],
         };
         assert_eq!(set.apply(&tx), Ok(5));
         assert_eq!(set.get(&original()), None);
-        assert_eq!(set.get(&Outpoint { txid: "tx1".into(), index: 0 }).unwrap().value, 60);
+        assert_eq!(
+            set.entries,
+            HashMap::from([
+                (
+                    Outpoint {
+                        txid: "tx1".into(),
+                        index: 0
+                    },
+                    Output {
+                        value: 60,
+                        owner: "bob".into()
+                    }
+                ),
+                (
+                    Outpoint {
+                        txid: "tx1".into(),
+                        index: 1
+                    },
+                    Output {
+                        value: 35,
+                        owner: "alice".into()
+                    }
+                ),
+            ])
+        );
     }
 
     #[test]
@@ -500,12 +563,18 @@ mod tests {
         let first = Transaction {
             txid: "first".into(),
             inputs: vec![original()],
-            outputs: vec![Output { value: 90, owner: "bob".into() }],
+            outputs: vec![Output {
+                value: 90,
+                owner: "bob".into(),
+            }],
         };
         let second = Transaction {
             txid: "second".into(),
             inputs: vec![original()],
-            outputs: vec![Output { value: 90, owner: "carol".into() }],
+            outputs: vec![Output {
+                value: 90,
+                owner: "carol".into(),
+            }],
         };
         assert_eq!(set.apply(&first), Ok(10));
         assert_eq!(set.apply(&second), Err(ApplyError::MissingInput));
@@ -518,10 +587,225 @@ mod tests {
         let tx = Transaction {
             txid: "invalid".into(),
             inputs: vec![original()],
-            outputs: vec![Output { value: 101, owner: "bob".into() }],
+            outputs: vec![Output {
+                value: 101,
+                owner: "bob".into(),
+            }],
         };
         assert_eq!(set.apply(&tx), Err(ApplyError::Overspend));
         assert_eq!(set.entries, before.entries);
+    }
+
+    #[test]
+    fn initial_outputs_cannot_overwrite_existing_entries() {
+        let mut set = funded();
+        let before = set.entries.clone();
+        assert_eq!(
+            set.insert_initial_output(
+                original(),
+                Output {
+                    value: 999,
+                    owner: "other".into()
+                }
+            ),
+            Err(ApplyError::DuplicateOutput)
+        );
+        assert_eq!(
+            set.insert_initial_output(
+                Outpoint {
+                    txid: "".into(),
+                    index: 0
+                },
+                Output {
+                    value: 1,
+                    owner: "alice".into()
+                }
+            ),
+            Err(ApplyError::EmptyTransactionId)
+        );
+        assert_eq!(set.entries, before);
+    }
+
+    #[test]
+    fn validation_errors_preserve_all_entries() {
+        let mut set = funded();
+        let large = Outpoint {
+            txid: "large".into(),
+            index: 0,
+        };
+        set.insert_initial_output(
+            large.clone(),
+            Output {
+                value: u64::MAX,
+                owner: "alice".into(),
+            },
+        )
+        .unwrap();
+        let before = set.entries.clone();
+        let output = Output {
+            value: 90,
+            owner: "bob".into(),
+        };
+        for (tx, expected) in [
+            (
+                Transaction {
+                    txid: "".into(),
+                    inputs: vec![original()],
+                    outputs: vec![output.clone()],
+                },
+                ApplyError::EmptyTransactionId,
+            ),
+            (
+                Transaction {
+                    txid: "empty-inputs".into(),
+                    inputs: vec![],
+                    outputs: vec![output.clone()],
+                },
+                ApplyError::EmptyInputs,
+            ),
+            (
+                Transaction {
+                    txid: "empty-outputs".into(),
+                    inputs: vec![original()],
+                    outputs: vec![],
+                },
+                ApplyError::EmptyOutputs,
+            ),
+            (
+                Transaction {
+                    txid: "duplicate-input".into(),
+                    inputs: vec![original(), original()],
+                    outputs: vec![output.clone()],
+                },
+                ApplyError::DuplicateInput,
+            ),
+            (
+                Transaction {
+                    txid: "missing".into(),
+                    inputs: vec![
+                        original(),
+                        Outpoint {
+                            txid: "absent".into(),
+                            index: 0,
+                        },
+                    ],
+                    outputs: vec![output.clone()],
+                },
+                ApplyError::MissingInput,
+            ),
+            (
+                Transaction {
+                    txid: "input-overflow".into(),
+                    inputs: vec![original(), large],
+                    outputs: vec![output.clone()],
+                },
+                ApplyError::ValueOverflow,
+            ),
+            (
+                Transaction {
+                    txid: "output-overflow".into(),
+                    inputs: vec![original()],
+                    outputs: vec![
+                        Output {
+                            value: u64::MAX,
+                            owner: "bob".into(),
+                        },
+                        Output {
+                            value: 1,
+                            owner: "alice".into(),
+                        },
+                    ],
+                },
+                ApplyError::ValueOverflow,
+            ),
+            (
+                Transaction {
+                    txid: "genesis".into(),
+                    inputs: vec![original()],
+                    outputs: vec![output.clone()],
+                },
+                ApplyError::DuplicateOutput,
+            ),
+            (
+                Transaction {
+                    txid: "overspend".into(),
+                    inputs: vec![original()],
+                    outputs: vec![Output {
+                        value: 101,
+                        owner: "bob".into(),
+                    }],
+                },
+                ApplyError::Overspend,
+            ),
+        ] {
+            assert_eq!(set.apply(&tx), Err(expected));
+            assert_eq!(set.entries, before);
+        }
+    }
+
+    #[test]
+    fn fees_and_dependent_outputs_preserve_value() {
+        let mut set = funded();
+        let first = Transaction {
+            txid: "first".into(),
+            inputs: vec![original()],
+            outputs: vec![
+                Output {
+                    value: 60,
+                    owner: "bob".into(),
+                },
+                Output {
+                    value: 35,
+                    owner: "alice".into(),
+                },
+            ],
+        };
+        let second = Transaction {
+            txid: "second".into(),
+            inputs: vec![Outpoint {
+                txid: "first".into(),
+                index: 0,
+            }],
+            outputs: vec![Output {
+                value: 50,
+                owner: "carol".into(),
+            }],
+        };
+        let before = set.entries.clone();
+        assert_eq!(set.apply(&second), Err(ApplyError::MissingInput));
+        assert_eq!(set.entries, before);
+        let first_fee = set.apply(&first).unwrap();
+        let second_fee = set.apply(&second).unwrap();
+        assert_eq!((first_fee, second_fee), (5, 10));
+        assert_eq!(
+            set.entries.values().map(|o| o.value).sum::<u64>() + first_fee + second_fee,
+            100
+        );
+        assert_eq!(
+            set.entries,
+            HashMap::from([
+                (
+                    Outpoint {
+                        txid: "first".into(),
+                        index: 1
+                    },
+                    Output {
+                        value: 35,
+                        owner: "alice".into()
+                    }
+                ),
+                (
+                    Outpoint {
+                        txid: "second".into(),
+                        index: 0
+                    },
+                    Output {
+                        value: 50,
+                        owner: "carol".into()
+                    }
+                ),
+            ])
+        );
     }
 
     #[test]
@@ -530,7 +814,10 @@ mod tests {
         let tx = Transaction {
             txid: "duplicate".into(),
             inputs: vec![original(), original()],
-            outputs: vec![Output { value: 100, owner: "bob".into() }],
+            outputs: vec![Output {
+                value: 100,
+                owner: "bob".into(),
+            }],
         };
         assert_eq!(set.apply(&tx), Err(ApplyError::DuplicateInput));
     }
@@ -543,7 +830,13 @@ mod tests {
 cargo test
 ```
 
-このサンプルは`txid`を文字列で直接受け取るため、**本物のトランザクションIDの一意性や署名の正当性を保証しない**。また、所有者`owner`も単なる文字列であり、支出権限を検証していない。実サービスの決済ロジックに転用しないこと。
+本文から抽出した教材は7テスト成功。初期出力の上書き拒否、検査エラー時の集合全体の維持、手数料と変更出力、依存先到着前後の再試行を確認した（`experiments/chapter-15-review-2026-11-01.md`）。
+
+`insert_initial_output` は教材の初期状態を作る補助であり、取引検証や実KaspaのGenesis報酬を再現しない。`genesis`、100、ownerは架空の入力である。
+
+このサンプルは`txid`を文字列で直接受け取るため、**本物のトランザクションIDの一意性や署名の正当性を保証しない**。また、所有者`owner`も単なる文字列であり、支出権限を検証していない。現在のUTXOとの衝突を検査するだけで、消費済みIDの履歴管理や再送の冪等な応答は持たない。
+
+出力番号の範囲を超える巨大入力、MAX_SOMPI、成熟条件、mass、永続化・クラッシュは今回の教材テストでは扱わない。Errでのメモリ内の状態維持と、障害時の耐久性は区別する。
 
 ## 15.18 Rust実装の責務を分離する
 
@@ -556,10 +849,10 @@ Transaction Decoder
 Structural Validator
         │
         ▼
-Signature / Script Validator
+UTXO Resolver
         │
         ▼
-UTXO Resolver
+Signature / Script Validator
         │
         ▼
 Contextual Validator
@@ -570,6 +863,8 @@ State Transition
         ▼
 Persistent Storage / Indexes
 ```
+
+この図は責務の整理であり、公式関数の実行順ではない。Script検証には入力が参照するUTXOの金額・スクリプト等が必要なため、入力の解決を先に示した。
 
 ### 依存関係の設計
 
@@ -643,17 +938,15 @@ Increasing Confirmation / Confidence
 リポジトリのディレクトリ名や関数名は更新されるため、上記は**探索の手掛かり**であって固定のAPI仕様ではない。
 
 ```bash
-git clone https://github.com/kaspanet/rusty-kaspa.git
-cd rusty-kaspa
-rg 'struct (Transaction|TransactionOutpoint|UtxoEntry)' .
-rg 'utxo_diff|validate_transaction|mempool' .
-```
-
-可能なら調査時のコミットハッシュを記録する。
-
-```bash
+# 第1章で取得した基準版の親ディレクトリから実行する
+cd rusty-kaspa-v1.0.1
 git rev-parse HEAD
+grep -n -E 'struct (Transaction|TransactionOutpoint|UtxoEntry)' consensus/core/src/tx.rs
+grep -n -E 'validate_tx_in_isolation|MAX_SOMPI|check_duplicate' consensus/src/processes/transaction_validator/tx_validation_in_isolation.rs
+grep -n -E 'coinbase_maturity|input_amounts|check_scripts|feerate' consensus/src/processes/transaction_validator/tx_validation_in_utxo_context.rs
 ```
+
+未取得なら[第1章](../part-01-foundations/chapter-01.md)の手順を使う。HEADが本章冒頭の完全SHAと一致することを確認する。
 
 ### ソースコード読解の順序
 
@@ -670,7 +963,7 @@ git rev-parse HEAD
 UTXOモデルでは、残高は通常、関連する未使用出力の合計として導かれる。
 
 **誤解2：「入力UTXOの一部分だけを消費できる」**  
-入力として参照したUTXOは全体を消費する。差額は変更出力で表現する。
+入力として参照したUTXOは全体を消費する。手元に残す差額は変更出力で表現し、入力と全出力の差額は手数料となる。
 
 **誤解3：「トランザクションがMempoolにあれば確定している」**\
 Mempoolは未確定トランザクションを扱う。コンセンサス状態への受理とは異なる。
@@ -716,7 +1009,7 @@ blue/redはGHOSTDAGのブロック分類であり、個々のトランザクシ�
 
 1. UTXOとウォレット残高は何が違うか。
 2. Outpointは何によって一意に識別されるか。
-3. 4 KASのUTXOから1 KASを支払うとき、なぜ変更出力が必要か。
+3. 4 KASのUTXOから1 KASを支払い、手数料以外の差額を手元に残すには、なぜ変更出力が必要か。
 4. 通常トランザクションの手数料はどこから求められるか。
 5. 同じOutpointを消費する2つのトランザクションが同時に存在した場合、何が問題になるか。
 6. Mempoolに入ったことと、Virtual UTXO Stateに反映されたことはどう違うか。
@@ -750,7 +1043,7 @@ UTXO集合
 
 Kaspaでは、これにBlockDAG、GHOSTDAG、Virtual Stateという要素が重なる。**ブロックの順序、トランザクションの受理、UTXO状態の更新を分離して理解する**ことが、ノード実装を読むための土台になる。
 
-次章では、UTXOを使うための条件を記述する**Kaspa Scriptとトランザクション署名**を扱う。
+次章では、UTXOを使うための条件を記述する**[Kaspa Scriptとトランザクション署名](chapter-16.md)**を扱う。
 
 ## 15.26 参考資料
 
@@ -767,3 +1060,5 @@ Kaspaでは、これにBlockDAG、GHOSTDAG、Virtual Stateという要素が重�
 ---
 
 > **残る確認:** ハッシュ・シリアライズ・署名の完全照合、subnetwork固有の規則、報酬生成の詳細、公式実装との実行時の差分テストは未完了。主要な型と状態計算をソースで確認した範囲を章全体へ拡張しない。
+
+目次順の本文レビューと改訂教材7テストは `experiments/chapter-15-review-2026-11-01.md`。主要経路と旧教材4テストの記録は `experiments/consensus-state-review-2026-10-31.md` を参照する。今回、公式テストやノードを新規に実行したものではない。
