@@ -364,8 +364,11 @@ Bitcoinの構造を理解するために、UTXOの消費と生成だけを再現
 
 ### 13.1 最小モデル
 
+以下は関数と型の定義で、`main`関数は含まない。Cargoでは`src/lib.rs`へ配置して`cargo check`で確認できる。PlaygroundではEditionを2021にし、「Test」でコンパイルを確認できる。ただし、このコードにテスト関数はないため実行件数は0になる。送金結果を表示するには、別途呼び出し用の`main`関数が必要になる。
+
 ```rust
 use std::collections::{HashMap, HashSet};
+use std::convert::TryFrom;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct OutPoint {

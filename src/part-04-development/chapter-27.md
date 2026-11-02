@@ -116,6 +116,7 @@ minimal-kaspa-like-node/
 
 ```rust
 use std::collections::{HashMap, HashSet};
+use std::convert::TryFrom;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct OutPoint {

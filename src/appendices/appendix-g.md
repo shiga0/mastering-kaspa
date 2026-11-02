@@ -120,6 +120,7 @@ edition = "2021"
 
 ```rust
 use std::collections::{HashMap, HashSet};
+use std::convert::TryFrom;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Outpoint {

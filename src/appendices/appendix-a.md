@@ -103,6 +103,8 @@ rustup --version
 
 本書のRust教材は1.90.0 / edition 2021で検証した。変化するstableへ一括変更せず、固定版を追加して明示的に呼び分ける。
 
+Playgroundで試す場合もEditionを2021に設定する。本文で分割しているコードは、指定された順に結合する。`src/lib.rs`向けのコードには`main`関数がないため、通常の「Run」ではなく「Test」でコンパイルと付属テストを確認する。テスト関数がない断片は0件の実行になる。外部依存がある例は、各章の`Cargo.toml`と依存バージョンに従ってCargoで確認する。
+
 ```bash
 rustup toolchain install 1.90.0 --profile minimal --component rustfmt --component clippy
 rustc +1.90.0 --version

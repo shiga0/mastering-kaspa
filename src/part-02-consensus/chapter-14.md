@@ -397,6 +397,7 @@ cd consensus-state-lab
 
 ```rust
 use std::collections::{HashMap, HashSet};
+use std::convert::TryFrom;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Outpoint {

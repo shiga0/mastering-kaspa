@@ -50,7 +50,7 @@ RustのGit依存を追加する場合は、同じ完全なrevisionを指定し�
 
 | 項目 | 記録した版・条件 | 確認範囲 |
 |---|---|---|
-| Rust教材 | Rust 1.90.0、edition 2021 | `examples/dag-relations/` と `examples/minimal-node/` でテスト・Clippy・書式を確認 |
+| Rust教材 | Rust 1.90.0、edition 2021 | 本文・付録の全59 Rustブロックをコンパイルし、271テストと`main`の実行を確認。`examples/dag-relations/` と `examples/minimal-node/` ではClippy・書式も確認 |
 | mdBook | 0.5.4 | ローカルでHTMLビルドを確認 |
 | DevnetのDocker環境 | macOS Apple Silicon、Docker Desktop 4.37.2 / Engine 27.4.0 | ノード・マイナーを `linux/arm64` 指定で実行。Linuxホスト・amd64は未確認 |
 | Python実習・比較スクリプト | Python 3.11 | Devnet検査と公式関数比較の実行に使用。Devnet用の `websockets==14.1` は `experiments/devnet/requirements.txt` で固定 |
@@ -59,6 +59,8 @@ RustのGit依存を追加する場合は、同じ完全なrevisionを指定し�
 CIのRust検査ジョブにはRust 1.90.0、書籍ビルドにはmdBook 0.5.4を指定しています。一方、書籍ビルドジョブでmdBookをインストールするRustと、Pythonの実行版はrunnerの環境を使い、同じ版へ固定していません。CI設定があることと、GitHub上の実ジョブの成功を確認したことは別です。GitHub上の実行・Pages公開は未確認です。
 
 このページの版は実測時の記録です。読者の環境での再現性は、対象OS・CPU・依存関係を合わせて確認してください。
+
+本文・付録のRustコードの再検査には、リポジトリのルートで`python3 scripts/check-rust-snippets.py`を実行します。本文の指定に従って断片を結合し、一時Cargoプロジェクトでコンパイル・テストと、`main`がある例の実行を行います。`sha2 = 0.10.9`と`wasm-bindgen = 0.2.100`および間接依存をCargoキャッシュに取得済みであることが必要です。オフラインで検査し、WASMのブラウザ実行や実ノードへの接続は含みません。
 
 ## 実測したDockerイメージ
 
