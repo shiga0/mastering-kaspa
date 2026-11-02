@@ -1,0 +1,14 @@
+[package]
+name = "book-silverscript-vm"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.94.0"
+
+[dependencies]
+silverscript-lang = { path = __LANG_PATH__ }
+silverscript-abi = { path = __ABI_PATH__ }
+kaspa-consensus-core = { git = "https://github.com/kaspanet/rusty-kaspa", rev = "a41a333b08848f41bf737b72592e463a6011b8ac" }
+kaspa-txscript = { git = "https://github.com/kaspanet/rusty-kaspa", rev = "a41a333b08848f41bf737b72592e463a6011b8ac" }
+rand = "=0.8.6"
+secp256k1 = { version = "=0.29.1", features = ["global-context", "rand-std"] }
+serde_json = "=1.0.150"

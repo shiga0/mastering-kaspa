@@ -1,0 +1,76 @@
+{
+  "network": "devnet",
+  "address": "kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99",
+  "outputs": [
+    {
+      "transaction_id": "e3c9b24dcc15086974867b2a53c747832cb178d6eb88b98c0359d80652b60ab5",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "081cd2a8f12aee5c60d48be74100146d5f51cbccf8956befa4eca52373a7cf43",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "36ecf68a5dbdc2b1396710a0bfeff02b8dbe996a4097fa5b939653217d9f28a0",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "67d72348294796f5581a6e2b15410a49b0983e143c9322a4dfd8842c0da18ccc",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "4ea87bcdc2d5a53e5f68569e6152b55754304ef212701a6a2838b79f5e9d0e6a",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "630b09c826af27f77e7a968633bd64acc97f703e4db3c0583c6cd56193f2a777",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "a82f01672848a677a7dded5852029fe7a9057b77c80aa32e3ec266432a804eb4",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "1c506da798e6730354e929a600ae1eca48a5884703c812c2f4473a6894cb37cf",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "d31849a1e75fb3c3ed6f8f104ee80958e4d63388422dd99183a57fe9a5a7e38c",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "9464a59e31ba4dec64f353476d1e600ab0a6cb80be0bd2d21b92f3c2a41edfc1",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "2ab09b16640fb2f4f38149763867f523d93ea222764e840eb971320dc655bcbc",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "8864ae938a4f19804242807f15a02ef624f9aac94015e1717043fbe3d14df097",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "907b7de5ef13d1569aed89c21332e4c567878961f5c59cb64d664e20b35cf0e5",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    },
+    {
+      "transaction_id": "daac5e19d2ff59aad024ed84638e4bbd387f150cf2cb29d5dce5990bc251ca6d",
+      "output_index": 0,
+      "amount_sompi": "50000000000"
+    }
+  ]
+}

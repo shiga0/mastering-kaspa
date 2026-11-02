@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PAIRS = (
     ("src/part-02-consensus/chapter-12.md", "examples/dag-relations/src/lib.rs", "dag-relations"),
     ("src/part-04-development/chapter-27.md", "examples/minimal-node/src/main.rs", "minimal-node"),
+    ("src/part-06-contributing/chapter-35.md", "examples/payment-candidates/src/lib.rs", "payment-domain"),
 )
 
 

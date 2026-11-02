@@ -1,0 +1,39 @@
+{
+  "allChecksPassed": true,
+  "cases": [
+    {
+      "accepted": true,
+      "case": "both-valid",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "missing-second",
+      "stage": "abi"
+    },
+    {
+      "accepted": false,
+      "case": "same-signer-twice",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "swapped-signatures",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "changed-output-after-signing",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "corrupted-signature",
+      "stage": "vm"
+    }
+  ],
+  "compiledScriptBytes": 168,
+  "compilerCommit": "3ed973335b59269293564805cc2c58a14595ec03",
+  "kaspaCommit": "a41a333b08848f41bf737b72592e463a6011b8ac",
+  "sourceSha256": "053386573632516c0bbd53daaea5da73932b26116002e43b642ed7929db7c2d5"
+}

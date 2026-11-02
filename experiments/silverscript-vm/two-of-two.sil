@@ -1,0 +1,9 @@
+pragma silverscript ^0.1.0;
+
+contract TwoOfTwoVault(pubkey ownerA, pubkey ownerB) {
+    entry spend(sig signatureA, sig signatureB) {
+        require(ownerA != ownerB);
+        require(checkSig(signatureA, ownerA));
+        require(checkSig(signatureB, ownerB));
+    }
+}

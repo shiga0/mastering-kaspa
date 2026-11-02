@@ -27,6 +27,7 @@ function worker(sdk, input) {
   const owned = [], own = x => { owned.push(x); return x; };
   try {
     phase = 'restore';
+    // ANCHOR: restore-hd-keys
     check(sdk.Mnemonic.validate(input.phrase));
     const mnemonic = own(new sdk.Mnemonic(input.phrase));
     const root = own(new sdk.XPrv(mnemonic.toSeed(input.passphrase)));
@@ -36,8 +37,10 @@ function worker(sdk, input) {
       keys[name] = own(child.toPrivateKey());
       addresses[name] = own(keys[name].toAddress('devnet')).toString();
     }
+    // ANCHOR_END: restore-hd-keys
     if (input.mode === 'addresses') return { addresses };
     phase = 'address-match-before-signing';
+    // ANCHOR: sign-restored-transaction
     check(JSON.stringify(addresses) === JSON.stringify(input.expectedAddresses));
     phase = 'sign-restored-transaction';
     check(input.branch === 'receive' || input.branch === 'change');
@@ -46,6 +49,7 @@ function worker(sdk, input) {
     const signed = own(sdk.signTransaction(transaction, [keys[input.branch]], true));
     signed.finalize();
     return { addresses, signed: signed.serializeToSafeJSON(), localSignatureVerified: true };
+    // ANCHOR_END: sign-restored-transaction
   } finally { for (const item of owned.reverse()) item.free(); }
 }
 function invoke(input, expectAddressMismatch = false) {

@@ -744,7 +744,7 @@ fail with diagnostics
 
 ## 28.21 CIへの組み込み
 
-以下はDevnetをCIへ組み込む際の設計例である。現行の.github/workflows/deploy.ymlは書籍・本文同期・観測ストアの単体テストと2つのRust教材を検査するが、Dockerの実ノード・SDK送金・障害注入は実行していない。
+以下はDevnetをCIへ組み込む際の設計例である。現行の.github/workflows/deploy.ymlは書籍・本文同期・観測ストアの単体テストと3つのRustサンプルを検査するが、Dockerの実ノード・SDK送金・障害注入は実行していない。
 
 ```text
 Lint / Format

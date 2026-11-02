@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        example: [minimal-node, dag-relations]
+        example: [minimal-node, dag-relations, payment-candidates]
     defaults:
       run:
         working-directory: examples/${{ matrix.example }}

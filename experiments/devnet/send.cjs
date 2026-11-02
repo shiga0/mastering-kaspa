@@ -58,10 +58,12 @@ async function main() {
       throw new Error('Expected indexed Devnet v1.0.1');
     }
     phase = 'key-generation';
+    // ANCHOR: temporary-keys
     sourceKey = new sdk.PrivateKey(crypto.randomBytes(32).toString('hex'));
     destinationKey = new sdk.PrivateKey(crypto.randomBytes(32).toString('hex'));
     const source = sourceKey.toKeypair().toAddress('devnet').toString();
     const destination = destinationKey.toKeypair().toAddress('devnet').toString();
+    // ANCHOR_END: temporary-keys
     phase = 'start-miner';
     const startMiner = () => { docker(['run', '--rm', '-d', '--name', minerName, '--cpus=1', '--platform=linux/arm64',
       '--network=container:mastering-kaspa-devnet-node-1', minerImage,
@@ -69,6 +71,7 @@ async function main() {
       '--mining-address=' + source]);
     minerStarted = true; activeMiner = true; };
     startMiner();
+    // ANCHOR: mature-input
     const maturity = sdk.getNetworkParams('devnet').coinbaseTransactionMaturityPeriodDaa;
     phase = 'wait-for-mature-utxo';
     const funded = await waitFor(async () => {
@@ -77,9 +80,11 @@ async function main() {
       const mature = entries.filter(e => info.virtualDaaScore >= e.blockDaaScore + maturity);
       return mature.length ? { entries: [mature[0]], daa: info.virtualDaaScore } : null;
     });
+    // ANCHOR_END: mature-input
     if (runChecks || runRetryChecks) stopMiner();
     phase = 'build';
     const before = await bounded(rpc.getBlockDagInfo());
+    // ANCHOR: build-and-fee
     const amount = 100_000_000n;
     const { transactions } = await sdk.createTransactions({ entries: funded.entries,
       outputs: [{ address: destination, amount }], priorityFee: 0n,
@@ -93,6 +98,7 @@ async function main() {
     if (independentFee < 0n || independentFee !== pending.feeAmount || expectedChange <= 0n) {
       throw new Error('Independent fee calculation failed');
     }
+    // ANCHOR_END: build-and-fee
     const checks = {};
     async function rejected(label, action, pattern) {
       try { await action(); } catch (error) {
@@ -111,6 +117,7 @@ async function main() {
       await rejected('insufficientFunds', () => sdk.createTransactions({ entries: funded.entries,
         outputs: [{ address: destination, amount: inputTotal + 1n }], priorityFee: 0n,
         changeAddress: source, networkId: 'devnet' }), /insufficient|not enough|balance/i);
+      // ANCHOR: reject-invalid-signature
       phase = 'invalid-signature';
       await pending.sign([sourceKey]);
       phase = 'clone-invalid-signature';
@@ -131,6 +138,7 @@ async function main() {
         throw new Error('Failed signature consumed input');
       }
       checks.failedSignaturePreservedInput = true;
+      // ANCHOR_END: reject-invalid-signature
       phase = 'build-competing';
       const built = await sdk.createTransactions({ entries: funded.entries,
         outputs: [{ address: destination, amount: amount + 1n }], priorityFee: 0n,
@@ -183,6 +191,7 @@ async function main() {
       await rejected('competingSpend', () => bounded(competing.submit(rpc)), /double.spend|already.spent|already.used|orphan|missing.*outpoint|conflict/i);
       startMiner();
     }
+    // ANCHOR: observe-transfer
     phase = 'receive';
     const received = await waitFor(async () => {
       const { entries } = await bounded(rpc.getUtxosByAddresses({ addresses: [destination] }));
@@ -201,6 +210,7 @@ async function main() {
     const changeEntries = remaining.entries.filter(e => e.outpoint.transactionId === txid);
     const actualChange = changeEntries.reduce((sum, e) => sum + e.amount, 0n);
     if (actualChange !== expectedChange) throw new Error('Observed change differs from independent calculation');
+    // ANCHOR_END: observe-transfer
     if (runRetryChecks) {
       phase = 'duplicate-observations';
       const observed = await bounded(rpc.getUtxosByAddresses({ addresses: [destination] }));

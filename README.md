@@ -63,6 +63,10 @@ mdbook build
 
 [公式SDKのDevnet監視サンプル](examples/sdk-monitor/README.md)では、Node.js/WASM SDK v1.0.1を使って接続・情報取得・UTXO通知受信・切断と再接続を実行できます。第28章28.6.4に手順と実APIの説明を掲載しています。
 
+[第35章の入金候補への変換サンプル](examples/payment-candidates/README.md)では、公式SDKの現在UTXOをJSON経由でRustの集計モデルへ取り込みます。保存済みの実データでも実行でき、UTXOの観測と請求の支払い済み判定を分けています。
+
+[第32章のSilverScript/VM実習](experiments/silverscript-vm/README.md)では、本文の2-of-2コントラクトを公式コンパイラーでコンパイルし、ローカルのScript VMで正常署名・署名後の改変などを検査できます。Rust 1.94.0と別の固定Kaspa依存を使う手動実習です。
+
 完成したウォレット・報酬アプリは本書の収録対象外です。HD復旧・送金などの限定した検証コードと記録は `experiments/` に保存しています。
 
 章・付録別の確認範囲と既知の制限は[技術レビューの進捗](src/review-status.md)を参照してください。
@@ -119,4 +123,4 @@ Devnetの起動・読み取りwRPC・再起動の検証手順は[Devnet実習](e
 python3 scripts/check-book-examples.py
 ```
 
-第12章・第27章の `example:…:start/end` コメントで囲んだ範囲からRustコードを取り出し、対応するサンプルと比較します。サンプルを修正したら本文も更新してください。同期検査はCIでも実行します。
+第12章・第27章・第35章の `example:…:start/end` コメントで囲んだ範囲からRustコードを取り出し、対応するサンプルと比較します。第35章の対象は集計モデルとtrait定義です。サンプルを修正したら本文も更新してください。同期検査はCIでも実行します。

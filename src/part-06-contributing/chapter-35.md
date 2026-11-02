@@ -301,6 +301,8 @@ UTXOのremovedや現在スナップショットからの消失は、後の支出
 
 本書外で `cargo new payment-domain --lib --edition 2021` で作成した `src/lib.rs` を次のように置き換える。
 
+<!-- example:payment-domain:start -->
+
 ```rust
 use std::collections::HashMap;
 
@@ -653,6 +655,67 @@ revisionはingesterが正規化した同一出力の単調な版で、RPCが提�
 
 **保証していないこと**：出力が本当にKaspaチェーン上に存在すること、対象アドレスへの支払いであること、受理・確定の正しさ、実ネットワーク識別の真正性・版番号の正しい割当て、永続化、複数ワーカーの競合制御。これらはアダプターとアプリケーション層の責務になる。
 
+### 35.11.1 公式SDKの現在UTXOをRustの入金候補へ変換する
+
+集計モデルだけでは、SDKから返る値をどのように`Observation`へ渡すかが分からない。そこで`examples/payment-candidates/`に、**公式SDKで取得した現在UTXO → JSON → Rustの入力検査 → `Candidate`としての取り込み**を実行するサンプルを収録した。Rust側の`src/lib.rs`は35.11と35.12のコードと同期している。
+
+#### 保存済みの実データから動かす
+
+最初はDocker・SDKを使わず、実際のSDK応答を変換して保存したfixtureで試せる。リポジトリのルートで実行する。Rust 1.90.0 / edition 2021で確認し、JSON入力にはserde 1.0.228とserde_json 1.0.150を使う。依存の初回取得にはネットワーク接続が必要になる。
+
+```bash
+cargo run --locked --manifest-path examples/payment-candidates/Cargo.toml -- \
+  kaspadev:qpumuen7l8wthtz45p3ftn58pvrs9xlumvkuu2xet8egzkcklqtese6y7tc99 100000000 \
+  < examples/payment-candidates/fixtures/devnet-snapshot.json
+```
+
+引数は請求に割り当てたDevnetアドレスと請求額（sompi）である。この実習では採掘用アドレスを仮の請求先として使う。保存済みfixtureの実行結果は次のとおり。
+
+```json
+{"candidateOutputCount":14,"eligibleTotalSompi":"0","invoiceStatus":"Observed","network":"devnet"}
+```
+
+14件のUTXOが見つかっても`Paid`にはならない。ここで確認したのは現在UTXOの存在であり、請求に対する業務上の確認ポリシーはまだ適用していないためである。
+
+#### 実際のSDK応答からJSONを作る
+
+[第28章28.6.4](../part-04-development/chapter-28.md#2864-公式sdkを使った最小監視サンプル)と同じローカルDevnet・公式SDKを使う。新しく収録した`export.cjs`はサーバーのネットワーク・版・UTXO indexを検査し、監視アドレスを一つだけ照会して次の変換を行う。
+
+```javascript
+{{#include ../../examples/payment-candidates/export.cjs:export-candidates}}
+```
+
+金額はSDKの`bigint`から文字列へ変換する。各エントリのアドレスも照会先と一致することを確認し、ノード応答の金額を浮動小数点数に変換しない。
+
+SDK導入・ノード起動後、リポジトリのルートでJSONを出力する。
+
+```bash
+export KASPA_SDK_ROOT="$PWD/experiments/devnet/.sdk"
+node examples/payment-candidates/export.cjs > /tmp/mastering-kaspa-candidates.json
+```
+
+取得が成功したら、最初の`cargo run`の入力ファイルを`/tmp/mastering-kaspa-candidates.json`へ変えて実行する。起動・停止を含む一連のコマンドは[サンプルREADME](https://github.com/shiga0/mastering-kaspa/blob/main/examples/payment-candidates/README.md)にまとめた。取得が失敗したJSONを空の正常結果として扱わない。未採掘のノードで候補0件・`Pending`になるのは正常である。
+
+#### Rustの型とアプリ側の判断へ対応付ける
+
+Rustの[変換処理](https://github.com/shiga0/mastering-kaspa/blob/main/examples/payment-candidates/src/main.rs)は、次の規則で集計モデルへ渡す。
+
+| JSONの値・情報 | Rust側の検査・対応 |
+|---|---|
+| `network` | `devnet`であることを検査し、`Network::Devnet`へ変換 |
+| `address` | 別途引数で指定した請求先アドレスとの一致を確認 |
+| `transaction_id` | 64文字の16進数を検査し、32バイトの`OutputId.tx`へ変換 |
+| `output_index` | u32として読み、`OutputId.index`へ設定 |
+| `amount_sompi` | 正のu64範囲の10進文字列を検査し、`Observation.amount_sompi`へ変換 |
+| `revision` | JSONから受け取らず、初回インポートとして0を割り当てる |
+| `state` | JSONから受け取らず、常に`Candidate`へ設定 |
+
+同じOutpoint・同じ金額の重複は候補を増やさず、異なる金額の重複は拒否する。各実行で新しいメモリ内の請求を作るため、これは継続監視の版管理やDB永続化の実装ではない。JSONのアドレス一致は設定した請求との対応確認であり、ノード応答やJSONの真正性を暗号学的に証明するものでもない。
+
+**`Candidate`から`Eligible`へ進める判断は、この変換とは別に実装する。** 今回の候補には未成熟の採掘報酬も含む。請求専用アドレスの割当て、支払期限・履歴との照合、受理・取消・業務上の確認ポリシーを定義するまでは、現在UTXOの合計を支払い済み額として扱わない。後でUTXOが消えた場合も、支出なのか採用取消なのかを調べず`Retracted`へ変えてはいけない。
+
+2026-11-02、公式SDKから実Devnetの14件のUTXOを取得し、Rustの集計モデルへ渡して`Observed`・集計対象額0になることを実測した。保存済み応答でも同じ処理を検査し、元の12テストと変換処理の7テストが成功した。記録は`experiments/payment-candidates-review-2026-11-02.md`。実アプリへ進む際は、35.10の履歴・再照合、35.13のDB更新、35.14の確認ポリシーをこの入力経路へ組み込む。
+
 ## 35.12 外部依存をtraitで分離する
 
 ドメインロジックをKaspa SDKやデータベースから切り離す。
@@ -672,6 +735,8 @@ pub trait ChainReader {
     fn observations_for_address(&self, address: &str) -> Result<Vec<Observation>, Self::Error>;
 }
 ```
+
+<!-- example:payment-domain:end -->
 
 これは設計を示すインターフェースであり、**Kaspa RPCの実際の型や同期APIを模したものではない**。実装では非同期処理、購読、タイムアウト、キャンセル、接続プール、リトライを考慮する。
 
@@ -833,7 +898,7 @@ COMMIT
 
 実アプリへ進む場合は、READMEに目的・対象ネットワーク・起動とテストの手順・検証済みバージョン・未実装機能を記載する。請求の状態遷移、確認ポリシー、通知欠落時の再照合方法も設計書に残す。
 
-本章で収録する実装は35.11の集計ロジックと35.12のインターフェース定義である。Payment Tracker全体の実行用プロジェクトは収録していない。DB・RPC・APIを追加した場合は、どこまで動作を確認したかを明記し、他の人が再現できる手順を添える。
+本章で収録する実装は35.11の集計ロジック、35.11.1のSDK応答から入金候補への変換、35.12のインターフェース定義である。Payment Tracker全体の実行用プロジェクトは収録していない。DB・RPC・APIを追加した場合は、どこまで動作を確認したかを明記し、他の人が再現できる手順を添える。
 
 ## 35.22 開発の順序：縦に小さく作る
 

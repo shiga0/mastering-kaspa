@@ -47,7 +47,7 @@
 | 33 | [第29章](part-05-advanced/chapter-29.md) | 主要出典・教材を確認 | 目次順で本文と公開要旨/書誌・固定版kの扱いを確認。数値教材9テスト成功。証明の全面照合・DAGKnight実装/本番有効化・攻撃実験は未検証 | `experiments/chapter-29-review-2026-11-01.md` |
 | 34 | [第30章](part-05-advanced/chapter-30.md) | 主要文書・教材を確認 | 固定KIPの主要説明/Status・PRの区別・基準版の規則選択を照合。教材4テスト成功。全KIPの実装/証明・全ネットワーク有効化は未検証 | `experiments/chapter-30-review-2026-11-01.md` |
 | 35 | [第31章](part-05-advanced/chapter-31.md) | 主要文書・教材を確認 | KIP-10/17/20と基準版の内省/有効化経路・手数料を照合。独自支出教材11テスト成功。実Vault・全命令/現行本番有効化・SDK利用は未検証 | `experiments/chapter-31-review-2026-11-01.md` |
-| 36 | [第32章](part-05-advanced/chapter-32.md) | 主要文書・教材を確認 | Silverscript v1.0.0のCLIビルド/コンパイル・生成物一致/拒否を確認。独自承認教材10テスト成功。実VM・本番/Devnet適用は未検証 | `experiments/chapter-32-review-2026-11-01.md` |
+| 36 | [第32章](part-05-advanced/chapter-32.md) | 主要文書・教材を確認 | Silverscript v1.0.0のCLIビルド/コンパイル・生成物一致/拒否を確認。独自承認教材10テスト成功。追加で2-of-2のローカルVM5件・ABI拒否1件を確認（2026-11-02）。本番/Devnet適用は未検証 | `experiments/chapter-32-review-2026-11-01.md`、`experiments/silverscript-vm-review-2026-11-02.md` |
 | 37 | [Argent補足](part-05-advanced/argent.md) | 主要文書・ローカル例を確認 | 固定CLIで本文例build/inspect、Counter/2 Actorデモ・不正次状態の拒否、公式runtime単体1件を確認。ICC全体/Genesis・実ノード/E2E・署名経路の監査は未実施 | `experiments/argent-review-2026-11-01.md` |
 | 38 | [第33章](part-05-advanced/chapter-33.md) | 主要資料・教材を確認 | Rollup/外部DA、公開入力・Replay/成否不明の境界を整理。状態遷移9テスト・API型検査成功。実ブリッジ/回路/本番有効化・DA/退出は未検証 | `experiments/chapter-33-review-2026-11-01.md` |
 | 39 | [第34章](part-05-advanced/chapter-34.md) | 主要資料・教材を確認 | 公開案内と固定プロトタイプ/APIの境界・61パッケージmetadataを確認。独自教材9テスト成功。公式全テスト/証明・実アプリ間原子性・本番動作は未検証 | `experiments/chapter-34-review-2026-11-01.md` |
@@ -77,6 +77,8 @@ Part I〜VIと付録の扉ページ7件を、各部の概要・前提知識・�
 `Source-checked` は、左欄に示す範囲のソース照合を表します。実行済みの個別検査があっても、その結果は右欄に限定して記録し、章全体の `Verified` へは広げません。個々の主張の判定基準は[付録H](appendices/appendix-h.md)を参照してください。
 
 ## 主な検証結果と限界
+
+第35章35.11.1には、公式SDKから取得した現在UTXOをJSON経由でRustの集計モデルへ渡す実行例を追加した（2026-11-02）。実Devnetの14件をCandidateとして取り込み、Observed・集計対象額0になることを確認。ドメイン12テストと変換7テストも成功した。履歴・確認ポリシー・DBを含む完成Payment Trackerの実装ではない。記録は`experiments/payment-candidates-review-2026-11-02.md`。
 
 2026-11-02に[第28章28.6.4](part-04-development/chapter-28.md#2864-公式sdkを使った最小監視サンプル)へ公式SDKの監視サンプルを追加した。Node.js/WASM SDK v1.0.1で2セッションの接続・情報取得・UTXO通知・切断と再接続・再購読・再照会を実測した。記録は`experiments/sdk-monitor-review-2026-11-02.md`。意図的な切断を使う読み取り専用デモであり、Rustアダプター・自動障害復旧・完成Payment Trackerの検証とは別である。
 

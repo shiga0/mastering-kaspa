@@ -1,9 +1,9 @@
 # Chapter 32 — Silverscript & Smart Contract Design（Silverscriptとスマートコントラクト設計）
 
-> **目次順の本文レビュー：2026-11-01。固定Silverscript文書/CLIの主要箇所と独自Rust教材を確認。CLIコンパイルも確認。実VM・本番利用は未検証。**
+> **目次順の本文レビュー：2026-11-01。固定Silverscript文書/CLIの主要箇所と独自Rust教材を確認。CLIコンパイルも確認。追加検証2026-11-02：2-of-2のローカルVM評価5件・ABI拒否1件を確認。本番利用は未検証。**
 > 本章は設計の考え方と検証方法を中心に扱う。Silverscriptの文法、対応オペコード、コンパイラの仕様、Kaspaメインネットでの利用可能性は、使用する実装のバージョンと有効化状況を必ず確認する。第32.10節は固定CLIでのコンパイル確認例であり、他の概念図や独自Rustモデルと検証範囲を分ける。
 
-Silverscriptの参照版はv1.0.0 / `3ed973335b59269293564805cc2c58a14595ec03`。本書のノード基準版v1.0.1とは別の資料である。確認記録は `experiments/chapter-32-review-2026-11-01.md`。
+Silverscriptの参照版はv1.0.0 / `3ed973335b59269293564805cc2c58a14595ec03`。本書のノード基準版v1.0.1とは別の資料である。確認記録は `experiments/chapter-32-review-2026-11-01.md`。追加のVM検査は `experiments/silverscript-vm-review-2026-11-02.md`。
 
 ## 32.1 この章で学ぶこと
 
@@ -207,23 +207,15 @@ INV-05は通常、個別のスクリプトだけでなく**UTXOモデルとコ�
 
 ## 32.10 支出条件をSilverscriptで書く
 
-以下は固定v1.0.0のCLIでコンパイルを確認した学習用ソースである。署名を使った支出、実VM、資金投入は試していない。出力先や継続状態のCovenantを実装した例でもない。
+以下は固定v1.0.0のCLIでコンパイルを確認した学習用ソースである。32.15.1では、同じソースから生成したScriptへ実際の署名を渡し、ローカルVMでの許可・拒否まで確認する。出力先や継続状態のCovenantを実装した例ではなく、資金投入やノードへの送信は行わない。
 
 ```text
-pragma silverscript ^0.1.0;
-
-contract TwoOfTwoVault(pubkey ownerA, pubkey ownerB) {
-    entry spend(sig signatureA, sig signatureB) {
-        require(ownerA != ownerB);
-        require(checkSig(signatureA, ownerA));
-        require(checkSig(signatureB, ownerB));
-    }
-}
+{{#include ../../experiments/silverscript-vm/two-of-two.sil}}
 ```
 
 [COMPILER_VERSION](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/silverscript-lang/src/compiler/mod.rs)はこの版で0.1.0。リリース/パッケージのv1.0.0とは別で、生成JSONのcompiler_versionも0.1.0だった。^1.0.0のpragmaは拒否されたため、タグ名から言語pragmaを作らない。
 
-constructor引数のpubkeyは、[portable ABI](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/docs/CONSTRUCTOR_ARGS.md)ではkind: bytesの配列で表す。kind: pubkeyは拒否される。今回の試験では既知の公開点G/2Gをx-onlyの32-byte引数に使用した。鍵生成・署名・ネットワークへの送信は行っていない。
+constructor引数のpubkeyは、[portable ABI](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/docs/CONSTRUCTOR_ARGS.md)ではkind: bytesの配列で表す。kind: pubkeyは拒否される。初回のCLI試験では既知の公開点G/2Gをx-onlyの32-byte引数に使用した。そのCLI試験では鍵生成・署名・ネットワークへの送信は行っていない。32.15.1のVM試験では、別途一時鍵を生成して署名する。
 
 2回のコンパイルでJSONは同一、デコードしたScriptは168 bytesだった。これは同一の実行環境での再実行一致であり、異なるマシン間の再現ビルドや意味の正しさを証明しない。JSON/Scriptのhashと引数は確認記録へ残した。--ast-onlyの出力と、不正文法・不正なABIのkind・未対応pragmaの拒否も確認した。
 
@@ -498,6 +490,62 @@ Rustの参照モデルと実際のコントラクトの間にはギャップが�
 
 検証済みIDだけを受ける参照モデルと、署名/取引を評価するVMでは入力領域が異なる。署名検証結果からIDへの写像を定義したうえで、両者に対応するテストベクトルを与え、判定が一致するか比較する。これは**差分テスト**の基本形である。ただし、実コントラクトが表現できない条件を参照モデルに含めた場合、比較以前に設計を見直す必要がある。
 
+### 32.15.1 同じソースを公式コンパイラーとScript VMで検査する
+
+Rustの参照モデルだけで終わらず、32.10の`TwoOfTwoVault`を実際にコンパイルし、署名付きの取引入力をVMへ渡す実習を`experiments/silverscript-vm/`へ収録した。本文のソースは同ディレクトリの`two-of-two.sil`を直接読み込んでいる。
+
+この実習は公式コンパイラー・ABI・Kaspaの`TxScriptEngine`を使う。固定版はSilverscript v1.0.0 / `3ed973335b59269293564805cc2c58a14595ec03`と、その依存先Kaspa `a41a333b08848f41bf737b72592e463a6011b8ac`である。本書の基準ノードv1.0.1とは別の版なので、生成物を既存Devnetへ送る手順とは分ける。
+
+#### 実行する
+
+Rust 1.94.0 / edition 2024、Python 3.11、C/C++ビルド環境を使う。Rustの既定は変更せず、`+1.94.0`で指定する。まず本書の外へ公式ソースを取得する。
+
+```bash
+rustup toolchain install 1.94.0 --profile minimal
+git clone --branch v1.0.0 --depth 1 https://github.com/kaspanet/silverscript.git /tmp/mastering-kaspa-silverscript-v1.0.0
+git -C /tmp/mastering-kaspa-silverscript-v1.0.0 rev-parse HEAD
+```
+
+既に取得済みなら再cloneせず、固定コミットと作業ツリーを確認する。本書リポジトリのルートで次を実行する。
+
+```bash
+python3 experiments/silverscript-vm/run.py \
+  --source /tmp/mastering-kaspa-silverscript-v1.0.0 \
+  --work-dir /tmp/mastering-kaspa-silverscript-vm-build
+```
+
+初回は依存取得のためのネットワーク接続とビルド時間・空き容量が必要になる。依存取得済みなら`--offline`を追加できる。runnerはコミットと作業ツリーを検査し、専用work-dirへCargoプロジェクトを生成して、収録したハーネス用Cargo.lockで`cargo +1.94.0 run --locked --jobs 2`を実行する。公式ソースとそのCargo.lockは変更しない。詳しい条件は[実習README](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/silverscript-vm/README.md)を参照する。
+
+#### 参照モデルから置き換わる処理
+
+| 段階 | 実習で行うこと |
+|---|---|
+| 所有者の用意 | 一時鍵を2本生成し、x-only公開鍵をconstructorへ渡す |
+| コンパイル | `compile_to_sil_abi_artifact_with_options`でScriptを生成する |
+| 署名対象 | 取引入力と参照UTXOを用意し、`calc_schnorr_signature_hash`で`SIG_HASH_ALL`のハッシュを計算する |
+| 署名 | 各鍵でSchnorr署名を作り、署名種別のバイトを付ける |
+| 引数の組立て | `encode_contract_entry_sig_script`で`spend`へ渡す引数をエンコードする |
+| 条件の評価 | `TxScriptEngine::execute`で生成Scriptを評価する |
+
+文字列の`alice`・`bob`を数える代わりに、実際の公開鍵・署名・取引・参照UTXOを評価する。[ハーネスの実装](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/silverscript-vm/main.rs)は、固定公式テストのAPIの使い方を基にしている。秘密鍵・署名は実行ごとにメモリ内で生成し、出力へ含めない。
+
+#### 結果と失敗する層を読む
+
+2026-11-02、macOS/ARM64・Rust 1.94.0で次の6ケースが期待どおりになった。生成Scriptは168 bytesだった。
+
+| ケース | 結果 | 判定した層 |
+|---|---|---|
+| A・B両方の正常署名 | 許可 | Script VM |
+| Bの署名引数を空にする | 拒否 | ABI。65-byte長を要求するためVM未到達 |
+| Aの署名を両方へ渡す | 拒否 | Script VM |
+| A・Bの署名を逆順に渡す | 拒否 | Script VM |
+| 署名後に出力額を変更する | 拒否 | Script VM |
+| 署名の1ビットを変える | 拒否 | Script VM |
+
+結果JSONの`allChecksPassed: true`は、これらの期待結果との一致を表す。ABIでの拒否1件とVMでの評価5件を`stage`で区別している。特に、参照モデルの「同じ承認者IDを二度数えない」という検査と、「Bの公開鍵にAの署名を渡しても通らない」というVMの検査は、同じ処理ではない。
+
+入力取引・UTXOは合成データで、VMの`covenants_enabled`を明示的に有効にしている。**ローカルVMで通ることと、実ノードが現在のネットワーク規則で受理することは別である。** 成熟・Mass・全コンセンサス規則・ネットワークの有効化・Devnetでの送信はこの実習では確認しない。記録は`experiments/silverscript-vm-review-2026-11-02.md`に残す。
+
 ## 32.16 テストベクトルを設計する
 
 | ケース | 承認者 | 期待結果 | 目的 |
@@ -704,4 +752,4 @@ Silverscriptは、その過程の「高水準の記述とコンパイル」を�
 - [Bitcoin Developer Guide — Transactions](https://developer.bitcoin.org/devguide/transactions.html)
 - [Rust公式ドキュメント](https://doc.rust-lang.org/book/)
 
-**確認範囲：** 固定公式文書・CLIの主要箇所と独自Rust教材。公式CLIのビルド・2-of-2教材コンパイル・生成JSONの再実行一致と拒否ケースまで確認。生成ScriptのVM試験・Devnet/本番利用・暗号方式の全面照合は未実施。記録は `experiments/chapter-32-review-2026-11-01.md`。
+**確認範囲：** 固定公式文書・CLIの主要箇所と独自Rust教材。公式CLIのビルド・2-of-2教材コンパイル・生成JSONの再実行一致と拒否ケースまで確認。2026-11-02には同じ2-of-2ソースで、ローカルVM評価5件とABI拒否1件も確認した。Devnet/本番利用・暗号方式の全面照合は未実施。記録は `experiments/chapter-32-review-2026-11-01.md` と `experiments/silverscript-vm-review-2026-11-02.md`。

@@ -52,6 +52,8 @@ RustのGit依存を追加する場合は、同じ完全なrevisionを指定し�
 |---|---|---|
 | Rust教材 | Rust 1.90.0、edition 2021 | 本文・付録の全59 Rustブロックをコンパイルし、271テストと`main`の実行を確認。`examples/dag-relations/` と `examples/minimal-node/` ではClippy・書式も確認 |
 | 公式SDK監視サンプル | Node.js 20.0.0、公式Node.js/WASM SDK v1.0.1、`websocket@1.0.34` | `examples/sdk-monitor/`で接続・情報取得・UTXO通知・意図的な切断と再接続・再購読・再照会をDevnet実測 |
+| SDKからRustへの入金候補変換 | 上記SDK環境とRust 1.90.0、serde 1.0.228、serde_json 1.0.150 | `examples/payment-candidates/`で実UTXOのCandidate取り込みを確認。ドメイン12件・変換7件のテスト、書式・Clippy成功 |
+| 第32章のコンパイラー/VM実習 | Rust 1.94.0、Silverscript v1.0.0、依存Kaspa `a41a333b…` | 2-of-2ソースのローカルVM評価5件・ABI拒否1件。本書のノードv1.0.1 Devnetとは別環境 |
 | mdBook | 0.5.4 | ローカルでHTMLビルドを確認 |
 | DevnetのDocker環境 | macOS Apple Silicon、Docker Desktop 4.37.2 / Engine 27.4.0 | ノード・マイナーを `linux/arm64` 指定で実行。Linuxホスト・amd64は未確認 |
 | Python実習・比較スクリプト | Python 3.11 | Devnet検査と公式関数比較の実行に使用。Devnet用の `websockets==14.1` は `experiments/devnet/requirements.txt` で固定 |
