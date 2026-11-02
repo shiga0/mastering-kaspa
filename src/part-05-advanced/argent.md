@@ -86,7 +86,7 @@ Actorは自身の状態レイアウトと、許可された状態遷移を定義
 
 ### 例：チケット購入（学習用）
 
-以下は固定Argent CLIでbuild/inspectを確認した本書独自の簡略例。公式examples/tickets.agはIssuerの発行とredeemを扱う別のアプリである。この例は購入/譲渡の説明に絞り、価格を正にし、Ticketの価値を維持する条件を置く。
+以下は固定Argent CLIでbuild/inspectを確認した本書独自の簡略例。公式examples/tickets.agはIssuerの発行とredeemを扱う別のアプリである。この例は購入/譲渡の説明に絞り、価格を正にし、Ticketの価値を維持する条件を置く。この例の署名・支払いを伴うランタイム実行や、実ノードへの送信・受理は確認していない。後述のCounter等のローカル実行結果とは区別する。
 
 ```text
 state EventState {
@@ -327,6 +327,6 @@ Argentは**EVMそのものでも、L2そのものでもない**。KaspaのCovena
 - [Range設計と実装状況](https://github.com/argent-lang/argent/blob/2796809f167144902f04a4b3333a4c144f91fdaf/docs/entry-clause-ranges.md)
 - [Argent Playground固定ソース](https://github.com/argent-lang/argent-playground/tree/86d5453ee525e7aa743d0b3bb21d1bb8d96c3558)
 
-次は[第36章 — Kaspaへのコントリビュート](../part-06-contributing/chapter-36.md)。第33〜35章はすでにレビュー済みのため、繰り返さずに先へ進む。
+次は[第33章 — Layer 2, Bridges & Zero-Knowledge Proofs](chapter-33.md)へ進み、L1上のActor・Covenantとは異なる実行・資産連携・証明の信頼条件を学ぶ。
 
 **確認範囲：** 固定文書・主要コードと本節の学習例。全security invariant・暗号方式・実ネットワークの有効化、実資金を扱うアプリの監査ではない。記録は `experiments/argent-review-2026-11-01.md`。

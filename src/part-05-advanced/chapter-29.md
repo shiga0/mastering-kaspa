@@ -15,7 +15,7 @@
 2. ネットワーク遅延、攻撃者のハッシュレート、ブロック生成率が与える影響を説明する。
 3. GHOSTDAGの`k`が表す役割と、固定パラメータのトレードオフを理解する。
 4. DAGKnightが目指す改善を、既存GHOSTDAGとの関係で整理する。
-5. 小規模シミュレーションで仮説を検証し、結果の限界を明記できる。
+5. 確率モデルを評価し、シミュレーションへの拡張と検証範囲の限界を説明できる。
 
 > **重要：** BlockDAGはブロック間の参照関係を表すデータ構造であり、GHOSTDAGとDAGKnightは、そのDAGから合意に必要な順序・選択を導くためのプロトコルである。
 
@@ -294,140 +294,46 @@ Chapter 25〜28で扱ったコード調査方法を、セキュリティの観�
 
 > この図は責務の比較であり、実行順序ではない。基準版ではGHOSTDAGはヘッダー処理中に計算され、ヘッダー保存とVirtual更新も別のバッチになる。[第26章](../part-04-development/chapter-26.md)の固定ソースと照合範囲を参照する。
 
-## 29.15 最小実験：遅延中にブロックが増える確率
+## 29.15 最小実験：平均遅延だけで評価してよいか
 
-この実験は**GHOSTDAGやDAGKnightの安全性を証明しない**。ブロック生成率と伝播遅延の関係を理解するための導入である。
+[第6章の確率教材](../part-01-foundations/chapter-06.md#12-実践追加ブロックの発見確率を計算する)を再利用し、この章では**遅延の分布を平均値だけに置き換えると何が変わるか**を調べる。これは解析式の評価であり、GHOSTDAG・DAGKnightの実装や安全性の証明ではない。
 
-### 29.15.1 Rustプロジェクト
+### 29.15.1 同じ平均遅延を持つ二つの条件
 
-本書のリポジトリとは別の作業用ディレクトリで作成する。外部依存は不要である。
+一定の生成率 `λ=1 block/s` と、次の仮想的な遅延条件を考える。
 
-```bash
-cargo new --bin --edition 2021 dag-delay-experiment
-cd dag-delay-experiment
+| 条件 | 遅延Δ | 平均遅延 |
+|---|---|---|
+| A：固定遅延 | 常に0.2秒 | 0.2秒 |
+| B：二つの遅延 | 0.05秒と0.35秒がそれぞれ確率1/2 | 0.2秒 |
+
+第6章の `probability_of_additional_block` は生成率ではなく平均生成間隔を受け取る。ここでは `1 / λ = 1.0` 秒を第1引数に渡し、遅延を第2引数に渡す。同章の実行手順で、それぞれの遅延について式を評価する。
+
+```text
+p(Δ) = 1 − exp(−λΔ)
+
+Aの確率 = p(0.2)
+Bの確率 = 0.5 × p(0.05) + 0.5 × p(0.35)
 ```
 
-`src/main.rs`：
+| 評価 | 値（四捨五入） |
+|---|---:|
+| `p(0.05)` | 4.8771% |
+| `p(0.35)` | 29.5312% |
+| A：平均遅延を式へ代入 | 18.1269% |
+| B：各遅延の確率を重み付き平均 | 17.2041% |
 
-```rust
-#[derive(Debug, PartialEq, Eq)]
-enum ProbabilityError {
-    InvalidInput,
-    MeanOverflow,
-}
-
-fn probability_at_least_one(lambda: f64, delay_seconds: f64) -> Result<f64, ProbabilityError> {
-    if !lambda.is_finite() || !delay_seconds.is_finite() || lambda < 0.0 || delay_seconds < 0.0 {
-        return Err(ProbabilityError::InvalidInput);
-    }
-    let mean = lambda * delay_seconds;
-    if !mean.is_finite() {
-        return Err(ProbabilityError::MeanOverflow);
-    }
-    Ok(-(-mean).exp_m1())
-}
-
-fn main() -> Result<(), ProbabilityError> {
-    let rates = [0.1, 1.0, 10.0];
-    let delays = [0.05, 0.2, 1.0];
-    println!("rate(block/s), delay(s), P(N>=1)");
-    for rate in rates {
-        for delay in delays {
-            println!(
-                "{rate:.2}, {delay:.2}, {:.4}",
-                probability_at_least_one(rate, delay)?
-            );
-        }
-    }
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn zero_rate_means_zero_probability() {
-        assert_eq!(probability_at_least_one(0.0, 1.0), Ok(0.0));
-    }
-    #[test]
-    fn zero_delay_means_zero_probability() {
-        assert_eq!(probability_at_least_one(f64::MAX, 0.0), Ok(0.0));
-    }
-    #[test]
-    fn probability_increases_with_rate() {
-        assert!(
-            probability_at_least_one(10.0, 0.2).unwrap()
-                > probability_at_least_one(1.0, 0.2).unwrap()
-        );
-    }
-    #[test]
-    fn probability_increases_with_delay() {
-        assert!(
-            probability_at_least_one(1.0, 1.0).unwrap()
-                > probability_at_least_one(1.0, 0.1).unwrap()
-        );
-    }
-    #[test]
-    fn matches_independent_decimal_reference() {
-        let expected = 0.18126924692201815;
-        assert!((probability_at_least_one(1.0, 0.2).unwrap() - expected).abs() < 1e-15);
-    }
-    #[test]
-    fn tiny_mean_does_not_cancel_to_zero() {
-        let actual = probability_at_least_one(1e-20, 1.0).unwrap();
-        assert!(actual > 0.0);
-        assert!((actual / 1e-20 - 1.0).abs() < 1e-14);
-    }
-    #[test]
-    fn rejects_invalid_inputs_on_either_side() {
-        for value in [-1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-            assert_eq!(
-                probability_at_least_one(value, 1.0),
-                Err(ProbabilityError::InvalidInput)
-            );
-            assert_eq!(
-                probability_at_least_one(1.0, value),
-                Err(ProbabilityError::InvalidInput)
-            );
-        }
-    }
-    #[test]
-    fn rejects_overflow_of_finite_inputs() {
-        assert_eq!(
-            probability_at_least_one(f64::MAX, 2.0),
-            Err(ProbabilityError::MeanOverflow)
-        );
-    }
-    #[test]
-    fn finite_grid_is_bounded_and_large_mean_saturates() {
-        for rate in [0.0, 0.1, 1.0, 10.0] {
-            for delay in [0.0, 0.05, 0.2, 1.0] {
-                assert!((0.0..=1.0).contains(&probability_at_least_one(rate, delay).unwrap()));
-            }
-        }
-        assert_eq!(probability_at_least_one(1_000.0, 1.0), Ok(1.0));
-    }
-}
-```
-
-```bash
-cargo test
-cargo run
-```
-
-これは解析式の評価であり、乱数を用いるネットワークシミュレーションではない。exp_m1を使い、微小なλΔで1−exp(−λΔ)の引き算が0へ丸められる問題を避ける。負値・NaN・無限大を拒否し、有限な入力同士でも積がoverflowしたらErrにする。正の極小積のunderflow等、浮動小数点演算の全誤差を解消したわけではない。
-
-Rust/Cargo 1.90.0で本文を抽出し、9テスト・main・書式・Clippyを確認した。λ=1、Δ=0.2の値はPython Decimalの60桁計算とも照合した。
+平均遅延は同じでも、少なくとも1ブロックが追加生成される確率は一致しない。一方、このモデルでの期待追加生成数は両条件とも `λ × E[Δ] = 0.2` である。期待件数と「1件以上」の確率も区別する。
 
 ### 29.15.2 観察と限界
 
-表示の1.0000は四捨五入であり、確実に発生する証拠ではない。大きな平均ではf64自体が1.0へ丸められることもあるが、有限の正の平均に対する数学上の確率は1未満である。
+差が生じるのは、`p(Δ)`が遅延に対して線形ではないためである。条件Bの二点分布は乱数を使わず正確に重み付けできる。実測した遅延標本を使う場合も、平均遅延を一度代入する計算と、標本ごとの確率を平均する計算を分けて比較する。
 
-期待される観察は、生成率と遅延が大きいほど、伝播中に別ブロックが生じやすくなること。ただし、ここでは伝播時間を固定値とし、ネットワークトポロジー、攻撃者、ブロックサイズ、相関、ノードの検証時間を省略している。
+ここではλを一定とし、遅延条件の下でも同じポアソン生成モデルが成立すると仮定している。ネットワークトポロジー、攻撃者、ブロックサイズ、相関、ノードの検証時間は再現しない。追加生成数はAnticoneサイズ・blue/red分類・攻撃成功確率ではなく、この表から実ネットワークの安全性や優劣を判断しない。
 
-遅延が分布を持つ場合、平均遅延を一度この式へ代入することと、遅延ごとの確率を計算して平均することは一般に異なる。
+第6章のコードは `exp_m1` を使って微小な値での桁落ちを抑えるが、浮動小数点の丸めは残る。表示が100%へ丸められることと、数学上の確率が1であることも区別する。
 
-**発展課題では**遅延を確率分布に変更し、ノードごとの観測DAGの違いを記録する。
+次節では、確率式の評価から、ブロック生成・配送イベントを持つシミュレーションの設計へ進む。次節のシミュレーターは本章に完成実装を収録したものではない。
 
 ## 29.16 発展実験：攻撃者を含むDAGシミュレーター
 
@@ -577,7 +483,7 @@ GHOSTDAGとDAGKnightの論文を読み、それぞれのネットワークモデ
 
 ### 課題B：遅延実験を拡張する
 
-29.15のプログラムを拡張し、遅延を固定値から分布に変更する。乱数シードを固定し、10回以上の試行で平均・分散・分位点を比較する。
+29.15で再利用した第6章のプログラムを拡張し、二点分布の重み付き計算を再現する。次に、乱数シードと標本数を記録して遅延標本を生成し、平均遅延から求めた確率と、標本ごとの確率の平均を比較する。複数シードで結果のばらつきも調べ、遅延の平均・分散・分位点と確率の集計を分けて記録する。
 
 ### 課題C：Rust実装の不変条件を特定する
 

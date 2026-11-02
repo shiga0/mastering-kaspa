@@ -463,7 +463,7 @@ Consensus / P2P / RPC / Storageへの影響
 4. Wallet・Mempool・Consensusの各責務を表にする。
 5. 対応するRust実装とテストを探し、コミットを記録する。
 
-**成果物：** `experiments/kip-reviews/kip-0009.md`
+**成果物：** KIP-9の調査ノート。調査中のメモは本書リポジトリの外へ保存する。公開可能な内容に整理し、出典・コミット・確認範囲を添えた記録を本書へ収録する場合の配置例は `experiments/kip-reviews/kip-0009.md` とする。
 
 ## 30.25 実践演習B：KIP-2とKIP-14を比較する
 

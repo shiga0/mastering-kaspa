@@ -210,288 +210,37 @@ API / Transaction Gateway
 
 これは処理順や単一の原子的保存を表す図ではない。学習用の設計例であり、公式リポジトリのディレクトリ構造をそのまま再現したものではない。
 
-## 34.13 Rustで最小の状態遷移を実装する
+## 34.13 第33章の状態遷移で順序依存を確かめる
 
-まずZK証明を実装する前に、**決定的な業務ルール**を作る。以下は標準ライブラリだけで動く教育用モデルであり、Kaspa SDKやvProgsランタイムとの互換性はない。
+[第33章33.20の残高移転教材](chapter-33.md#3320-rustで最小の状態遷移を作る)を再利用し、この章では**操作の順序と、複数操作をまとめる境界**に注目する。Kaspa SDKやvProgsランタイムとの互換性を持つコードではなく、単一プロセス内のアカウント残高モデルである。
 
-```rust
-use std::collections::BTreeMap;
+### 同じ操作でも順序によって成否が変わる
 
-#[derive(Clone, Debug, PartialEq, Eq, Default)]
-pub struct State {
-    pub balances: BTreeMap<String, u64>,
-}
+第33章の `Balances` と `apply_transfer` を使い、初期状態をAlice=100、Bob=20とする。次の2操作を用意する。
 
-#[derive(Clone, Debug)]
-pub struct Transfer {
-    pub from: String,
-    pub to: String,
-    pub amount: u64,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum Error {
-    EmptyAccount,
-    ZeroAmount,
-    InsufficientFunds,
-    Overflow,
-}
-
-pub fn apply(state: &State, tx: &Transfer) -> Result<State, Error> {
-    if tx.from.is_empty() || tx.to.is_empty() {
-        return Err(Error::EmptyAccount);
-    }
-    if tx.amount == 0 {
-        return Err(Error::ZeroAmount);
-    }
-    let mut next = state.clone();
-    if tx.from == tx.to {
-        let balance = *next.balances.get(&tx.from).unwrap_or(&0);
-        if balance < tx.amount {
-            return Err(Error::InsufficientFunds);
-        }
-        return Ok(next);
-    }
-    let sender = *next.balances.get(&tx.from).unwrap_or(&0);
-    let receiver = *next.balances.get(&tx.to).unwrap_or(&0);
-    if sender < tx.amount {
-        return Err(Error::InsufficientFunds);
-    }
-    let new_receiver = receiver.checked_add(tx.amount).ok_or(Error::Overflow)?;
-    next.balances.insert(tx.from.clone(), sender - tx.amount);
-    next.balances.insert(tx.to.clone(), new_receiver);
-    Ok(next)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn initial() -> State {
-        State {
-            balances: BTreeMap::from([("alice".into(), 100), ("bob".into(), 20)]),
-        }
-    }
-
-    #[test]
-    fn transfer_preserves_total() {
-        let before = initial();
-        let after = apply(
-            &before,
-            &Transfer {
-                from: "alice".into(),
-                to: "bob".into(),
-                amount: 30,
-            },
-        )
-        .unwrap();
-        assert_eq!(after.balances["alice"], 70);
-        assert_eq!(after.balances["bob"], 50);
-        assert_eq!(
-            after
-                .balances
-                .values()
-                .map(|v| u128::from(*v))
-                .sum::<u128>(),
-            before
-                .balances
-                .values()
-                .map(|v| u128::from(*v))
-                .sum::<u128>()
-        );
-    }
-
-    #[test]
-    fn rejected_transfer_does_not_change_input() {
-        let before = initial();
-        let snapshot = before.clone();
-        let result = apply(
-            &before,
-            &Transfer {
-                from: "alice".into(),
-                to: "bob".into(),
-                amount: 101,
-            },
-        );
-        assert_eq!(result, Err(Error::InsufficientFunds));
-        assert_eq!(before, snapshot);
-    }
-
-    #[test]
-    fn self_transfer_does_not_mint_money() {
-        let before = initial();
-        let after = apply(
-            &before,
-            &Transfer {
-                from: "alice".into(),
-                to: "alice".into(),
-                amount: 10,
-            },
-        )
-        .unwrap();
-        assert_eq!(before, after);
-    }
-
-    #[test]
-    fn overflow_is_rejected() {
-        let before = State {
-            balances: BTreeMap::from([("alice".into(), 1), ("bob".into(), u64::MAX)]),
-        };
-        assert_eq!(
-            apply(
-                &before,
-                &Transfer {
-                    from: "alice".into(),
-                    to: "bob".into(),
-                    amount: 1
-                }
-            ),
-            Err(Error::Overflow)
-        );
-    }
-
-    #[test]
-    fn rejects_zero_and_empty_account_labels() {
-        let before = initial();
-        assert_eq!(
-            apply(
-                &before,
-                &Transfer {
-                    from: "alice".into(),
-                    to: "bob".into(),
-                    amount: 0
-                }
-            ),
-            Err(Error::ZeroAmount)
-        );
-        for (from, to) in [("", "bob"), ("alice", "")] {
-            assert_eq!(
-                apply(
-                    &before,
-                    &Transfer {
-                        from: from.into(),
-                        to: to.into(),
-                        amount: 1
-                    }
-                ),
-                Err(Error::EmptyAccount)
-            );
-        }
-    }
-
-    #[test]
-    fn self_transfer_requires_available_funds() {
-        assert_eq!(
-            apply(
-                &initial(),
-                &Transfer {
-                    from: "alice".into(),
-                    to: "alice".into(),
-                    amount: 101
-                }
-            ),
-            Err(Error::InsufficientFunds)
-        );
-        assert_eq!(
-            apply(
-                &initial(),
-                &Transfer {
-                    from: "missing".into(),
-                    to: "missing".into(),
-                    amount: 1
-                }
-            ),
-            Err(Error::InsufficientFunds)
-        );
-    }
-
-    #[test]
-    fn order_changes_which_operations_can_succeed() {
-        let before = initial();
-        let first = Transfer {
-            from: "alice".into(),
-            to: "bob".into(),
-            amount: 80,
-        };
-        let second = Transfer {
-            from: "bob".into(),
-            to: "alice".into(),
-            amount: 50,
-        };
-        let after_first = apply(&before, &first).unwrap();
-        let after_both = apply(&after_first, &second).unwrap();
-        assert_eq!(after_both.balances["alice"], 70);
-        assert_eq!(after_both.balances["bob"], 50);
-        assert_eq!(apply(&before, &second), Err(Error::InsufficientFunds));
-    }
-
-    #[test]
-    fn finite_grid_preserves_total_and_complete_input() {
-        let mut successes = 0;
-        for a in [0, 1, 10, u64::MAX] {
-            for b in [0, 1, 10, u64::MAX] {
-                for amount in [0, 1, 10, u64::MAX] {
-                    let before = State {
-                        balances: BTreeMap::from([("alice".into(), a), ("bob".into(), b)]),
-                    };
-                    let snapshot = before.clone();
-                    if let Ok(after) = apply(
-                        &before,
-                        &Transfer {
-                            from: "alice".into(),
-                            to: "bob".into(),
-                            amount,
-                        },
-                    ) {
-                        assert_eq!(
-                            after
-                                .balances
-                                .values()
-                                .map(|v| u128::from(*v))
-                                .sum::<u128>(),
-                            u128::from(a) + u128::from(b)
-                        );
-                        successes += 1;
-                    }
-                    assert_eq!(before, snapshot);
-                }
-            }
-        }
-        assert!(successes > 0);
-    }
-
-    #[test]
-    fn replay_is_not_prevented_by_this_model() {
-        let tx = Transfer {
-            from: "alice".into(),
-            to: "bob".into(),
-            amount: 30,
-        };
-        let once = apply(&initial(), &tx).unwrap();
-        let twice = apply(&once, &tx).unwrap();
-        assert_eq!(twice.balances["alice"], 40);
-        assert_eq!(twice.balances["bob"], 80);
-    }
-}
+```text
+T1: AliceからBobへ80を送る
+T2: BobからAliceへ50を送る
 ```
 
-### 実行方法
+| 順序 | 1件目の結果 | 2件目の結果 | 成功した操作だけを反映した最終残高 |
+|---|---|---|---|
+| T1 → T2 | T1成功：Alice=20、Bob=100 | T2成功 | Alice=70、Bob=50 |
+| T2 → T1 | T2失敗：Bobの残高不足 | 元の状態からT1成功 | Alice=20、Bob=100 |
 
-本書外の調査用ディレクトリでlibを作り、src/lib.rsへ配置する。空のmainを持つ実行例にしない。
+この表では、失敗した操作を記録して処理を続ける教材上の方針を使う。第33章のプロジェクトへテストを追加し、順序ごとの結果と、失敗時に入力状態が変わらないことを確認する。同じ初期状態・操作列・規則なら同じ結果になることと、操作順を変えても同じ結果になることは別である。
 
-```bash
-cargo new minimal-vprog-model --lib --edition 2021
-cd minimal-vprog-model
-cargo test --offline
-cargo fmt --all -- --check
-cargo clippy --offline --all-targets -- -D warnings
-```
+### 順序の一致とバッチ原子性を分ける
 
-Rust/Cargo 1.90.0、edition 2021、外部依存なしの一時libで本文を検査した。総量のテストはu128を使い、テスト自体の加算overflowを避ける。
+複数アプリが同じ順序を見ていても、一方だけ状態をコミットすれば、操作全体の原子性は成立しない。34.20の課題Bでは、同じ移転関数を使い、複数操作を一つのバッチとして扱う。
 
-from/toは架空のラベルで、アカウント残高の教材である。KaspaのUTXOや公式vProgの状態所有権は再現しない。同じ操作の再適用を防がず、操作順を変えると成否も変わることをテストしている。残高0のentryは残るため、経済的に等しい状態と辞書の同一性・rootの同一性も別に定義する。
+候補状態へ順に適用し、全操作が成功した場合だけ新状態を返す。途中で失敗したら候補全体を破棄する方針なら、上の `T2 → T1` はT2でバッチ全体を拒否し、公開状態をAlice=100、Bob=20のまま維持する。操作単位で失敗を飛ばす場合とは結果が異なるため、どちらの規則かを明示してテストする。
 
-この実装が保証するのは、**この関数に渡された状態と操作についてのローカルな規則**だけである。署名、二重実行、順序、永続化、ZK証明、Kaspa L1へのコミットは未実装。
+順序が後から変わった場合は、既に反映した状態へ新しい順序の操作を追加するのではなく、共通の基準状態へ戻して再評価する。巻き戻しの範囲と再実行は課題Cで設計する。
+
+### この比較で確認できる範囲
+
+学ぶのは、決定的なローカル状態遷移・順序依存・メモリ内のバッチ境界である。署名、権限、nonce、永続化、証明生成、Kaspa L1へのコミット、独立アプリ間の原子性は実装しない。第33章のnonce追加課題は別の拡張であり、この比較がリプレイ防止を備えるという意味ではない。
 
 ## 34.14 次の段階：証明対象の仕様を定義する
 
@@ -652,7 +401,7 @@ Account App                 Order App
 2つのアプリが持つ状態、書き込み権限、不変条件を表にする。
 
 **課題B：Rust実装**  
-第34.13節の `apply` を、複数操作のバッチに拡張する。途中で1件失敗した場合、バッチ全体を拒否する。
+34.13で再利用する第33章の `apply_transfer` を、複数操作のバッチへ拡張する。候補状態に順に適用し、途中で1件失敗した場合はバッチ全体を拒否する。先行操作が成功した後に失敗する例も用意し、公開する残高集合が全体として維持されることを確認する。これは単一プロセスのメモリ内モデルであり、複数アプリ・永続DB・外部作用の原子性を実装したものではない。
 
 **課題C：再編成**  
 順序が `T1 → T2` から `T2 → T1` に変わった場合、どの状態を巻き戻し、何を再実行するかを設計する。

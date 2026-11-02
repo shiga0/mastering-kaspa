@@ -6,6 +6,16 @@ GHOSTDAGの安全性とDAGKnight、KIP、Covenants、Silverscript、Argent、L2�
 
 Part II・IIIのコンセンサスとトランザクション、およびPart IVの実装・SDKの基礎を使います。個々の分野を調べる場合は、関連する章から読むこともできます。
 
+## 目的に合わせた読み進め方
+
+| 目的 | 読み進め方 |
+|---|---|
+| コンセンサスの安全性と研究を読む | [第29章](chapter-29.md)のGHOSTDAG・DAGKnight → [第30章](chapter-30.md)の提案・実装・有効化の調査 |
+| Script・コントラクト開発を学ぶ | [第30章](chapter-30.md)のKIP → [第31章](chapter-31.md)のCovenants → [第32章](chapter-32.md)のSilverScript・VM実習 → [Argent](argent.md)のActorモデル |
+| L2やアプリ間連携を設計する | [第33章](chapter-33.md)のL2・ブリッジ・ZK → [第34章](chapter-34.md)のvProgs・計算依存・原子的合成 |
+
+本書のノード基準版、SilverScript、Argent、vProgsは、それぞれ異なる版・依存関係を参照しています。同じ環境で一続きに動く実習ではありません。各ページに示したコミット・ツールチェーン・実行環境を使い、ローカル検査の成功と対象ネットワークでの受理・有効化を区別してください。
+
 ## この部の各章
 
 - [Chapter 29 — GHOSTDAG Security & DAGKnight（GHOSTDAGのセキュリティとDAGKnight）](chapter-29.md)
