@@ -167,6 +167,68 @@ WebSocketの推移的依存までの固定は未完了。ローカルのSDK・�
 
 実測条件と結果は `experiments/devnet/README.md` と各検証記録に保存している。章全体の検証完了を示す表ではない。
 
+### 28.6.4 公式SDKを使った最小監視サンプル
+
+第22・23章の独自Rust教材から、実際のKaspa APIへ進むために、`examples/sdk-monitor/monitor.cjs`を収録した。公式v1.0.1 Node.js/WASM SDKを使い、接続・サーバー情報取得・UTXO照会・実通知受信・切断と再接続を一続きで実行する。RustネイティブのRPCアダプターとは別の実装であり、SDKやRPCの呼び出しをモックへ置き換えていない。
+
+#### まず動かす
+
+28.6.2のSDK導入を済ませ、Dockerを起動する。このサンプル自体はPythonを使わない。以下はリポジトリのルートで実行する。専用のComposeプロジェクトを使うが、18310番ポートは通常の単一ノード実習と共通なので、そちらが動いている場合は先に停止する。
+
+ターミナルA：
+
+```bash
+export KASPA_SDK_ROOT="$PWD/experiments/devnet/.sdk"
+docker compose -p mastering-kaspa-sdk-demo -f experiments/devnet/compose.yaml -f experiments/devnet/mining.yaml up -d node
+node examples/sdk-monitor/monitor.cjs
+```
+
+起動直後に接続を拒否された場合は、ノードのログでwRPC待受を確認してからサンプルを再実行する。
+
+```bash
+docker compose -p mastering-kaspa-sdk-demo -f experiments/devnet/compose.yaml -f experiments/devnet/mining.yaml logs --tail=30 node
+```
+
+`"step":"subscribed","session":1`が出たら、ターミナルBで採掘を開始する。
+
+```bash
+docker compose -p mastering-kaspa-sdk-demo -f experiments/devnet/compose.yaml -f experiments/devnet/mining.yaml --profile mining up -d miner
+```
+
+監視先は既存の採掘実習用アドレスに固定している。採掘報酬のUTXO追加を観測するので、署名・秘密鍵・送金は不要。サンプルは通知を1回受けたら再照会・切断し、2秒待って新しいクライアントで再接続する。再購読・初回照会・2回目の通知と再照会が終わると、`"step":"complete","sessions":2`で終了する。接続・照会の待ち時間は各10秒、通知待ちは各60秒で打ち切る。
+
+**成功・失敗にかかわらず、最後に採掘とノードを停止する。** サンプルの終了だけでは採掘は止まらない。データボリュームは保持するため、再実行時のUTXO件数は0とは限らない。
+
+```bash
+docker compose -p mastering-kaspa-sdk-demo -f experiments/devnet/compose.yaml -f experiments/devnet/mining.yaml --profile mining stop -t 2 miner node
+```
+
+#### 実際のAPIと教材の対応
+
+サンプルの各セッションは、次の処理を行う。以下は実装からの抜粋であり、`rpc`・通知待ち・タイムアウト関数の定義を含む全体は[monitor.cjs](https://github.com/shiga0/mastering-kaspa/blob/main/examples/sdk-monitor/monitor.cjs)を参照する。
+
+```javascript
+{{#include ../../examples/sdk-monitor/monitor.cjs:connect-and-observe}}
+```
+
+| 設計上の責務 | 実際に使うAPIと処理 |
+|---|---|
+| 接続先を検証する | `getServerInfo()`の`networkId`・`serverVersion`・`hasUtxoIndex`を検査 |
+| 同期状態を知る | `isSynced`を表示。接続成功と同期完了は区別する |
+| 更新のきっかけを得る | ハンドラーを登録し、`subscribeUtxosChanged([address])`で購読 |
+| 状態を取り直す | `getUtxosByAddresses({ addresses: [address] })`で現在UTXOを取得 |
+| 接続を作り直す | 新しいクライアントで同じ検査・購読・照会を繰り返す |
+
+SDKの`entries`は`UtxoEntryReference`の配列で、金額は`entry.amount`から取得する。Python実習で使う生のJSON応答の`utxoEntry.amount`とは形が異なる。`bigint`は精度を保つため文字列へ変換して出力する。
+
+#### 実測結果と次の段階
+
+2026-11-02、Node.js 20.0.0・Docker Engine 27.4.0・macOS/ARM64の専用Devnetで、2セッションとも接続・購読・実通知・照会・切断に成功した。新規ボリュームでは初回0件、最初の通知後1件、再接続直後5件、次の通知後6件のUTXOを観測した。件数と金額は採掘タイミングで変わるため固定の期待値ではない。詳細はリポジトリの`experiments/sdk-monitor-review-2026-11-02.md`に記録する。
+
+再接続時の照会は現在状態の取り直しであり、切断中の通知の再配送ではない。採掘報酬には未成熟な出力も含み、この合計を利用可能残高や請求の入金確定額として使わない。
+
+ここで実装したのは意図的な切断・再接続を行う有限の実習である。突然の通信断からの自動復旧、永続化、通知と照会の競合制御、過去の入金履歴の復元は含まない。継続監視での再照合は28.11、請求との対応や業務上の確認ポリシーは[第35章](../part-06-contributing/chapter-35.md)へ進む。
+
 ## 28.7 Dockerで単一ノードを起動する
 
 実行確認した設定を使う。Compose内のイメージはdigest固定で、データ保存先は `--appdir=/data` と名前付きボリュームを対応づけている。

@@ -1,0 +1,96 @@
+{
+  "network": "devnet",
+  "sdkVersion": "1.0.1",
+  "nodeVersion": "v20.0.0",
+  "messages": [
+    {
+      "step": "connected",
+      "session": 1,
+      "network": "devnet",
+      "serverVersion": "1.0.1",
+      "isSynced": false
+    },
+    {
+      "step": "snapshot",
+      "session": 1,
+      "reason": "initial",
+      "utxoCount": 0,
+      "observedAmountSompi": "0"
+    },
+    {
+      "step": "subscribed",
+      "session": 1
+    },
+    {
+      "step": "notification",
+      "session": 1,
+      "added": 1,
+      "removed": 0
+    },
+    {
+      "step": "snapshot",
+      "session": 1,
+      "reason": "after-notification",
+      "utxoCount": 1,
+      "observedAmountSompi": "50000000000"
+    },
+    {
+      "step": "disconnected",
+      "session": 1
+    },
+    {
+      "step": "offline-gap",
+      "milliseconds": 2000
+    },
+    {
+      "step": "connected",
+      "session": 2,
+      "network": "devnet",
+      "serverVersion": "1.0.1",
+      "isSynced": true
+    },
+    {
+      "step": "snapshot",
+      "session": 2,
+      "reason": "after-reconnect",
+      "utxoCount": 5,
+      "observedAmountSompi": "250000000000"
+    },
+    {
+      "step": "subscribed",
+      "session": 2
+    },
+    {
+      "step": "notification",
+      "session": 2,
+      "added": 1,
+      "removed": 0
+    },
+    {
+      "step": "snapshot",
+      "session": 2,
+      "reason": "after-notification",
+      "utxoCount": 6,
+      "observedAmountSompi": "300000000000"
+    },
+    {
+      "step": "disconnected",
+      "session": 2
+    },
+    {
+      "step": "complete",
+      "sessions": 2
+    }
+  ],
+  "date": "2026-11-02",
+  "dockerEngine": "27.4.0",
+  "platform": "macOS Apple Silicon / linux/arm64 containers",
+  "sdkSha256": "70679fe150689eedd588a475ae93f1135cfb99bd7b205dc2661d104d5db564d0",
+  "websocketVersion": "1.0.34",
+  "checks": {
+    "twoSessionsCompleted": true,
+    "realUtxoNotificationInEachSession": true,
+    "snapshotAfterReconnect": true,
+    "dedicatedMinerAndNodeStopped": true
+  }
+}

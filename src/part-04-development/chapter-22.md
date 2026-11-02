@@ -591,6 +591,8 @@ cargo test
 
 ### 実測したAPIへの入口
 
+まず手を動かす場合は、[第28章28.6.4の公式SDK監視サンプル](chapter-28.md#2864-公式sdkを使った最小監視サンプル)へ進む。収録したNode.jsプログラムで、Devnetへの接続・情報取得・UTXO通知受信・再接続と再照会を実行できる。本章のRust教材で分けた責務を、実際のSDK呼び出しへ対応付けて説明している。
+
 [第28章](chapter-28.md)の28.6〜28.10は、基準版1.0.1で起動・読み取り・送金を再現する手順である。API名と応答の要点は[付録D](../appendices/appendix-d.md)に整理した。
 
 生のJSON wRPCでは `getBlockDagInfo` を使う。公式Node.js/WASM SDKではJSON接続に `Encoding.SerdeJson` を指定し、UTXO購読には `subscribeUtxosChanged([address])` を使う。生RPCとSDKで名前・引数・UTXOエントリの形が同一とは限らない。

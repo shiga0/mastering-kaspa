@@ -698,6 +698,8 @@ grep -n -E 'wasm32-sdk|wasm32-rpc|crate-type' wasm/Cargo.toml
 
 ### 公式配布SDKで確認した範囲
 
+[第28章28.6.4](chapter-28.md#2864-公式sdkを使った最小監視サンプル)には、公式Node.js/WASM SDKで接続・UTXO購読・照会・切断と再接続を実行するサンプルを収録している。SDKを実際に呼ぶ小さなプログラムを先に動かしたい場合は、そちらの手順を使う。本章の独自Rust/WASM教材との違いと、実APIへの対応も整理した。
+
 [第28章](chapter-28.md)の28.6で、v1.0.1公式Node.js/WASM SDKの取得・SHA-256照合・WebSocket依存の導入を行う。Node.js 20.0.0で単一署名送金とUTXO通知を実測した。JSON接続のenumは `Encoding.SerdeJson`。金額はsompiの整数として扱い、SDKから返る `bigint` をJavaScriptの `number` へ無条件に変換しない。
 
 この過去の実測は、本章の独自Rust/WASMモジュールのビルドやブラウザー実行とは別である。公式SDK配布物の利用検証と、独自WASMモジュールの開発・ビルド検証を分ける。HDウォレット復旧と全Scriptへの対応も未検証である。

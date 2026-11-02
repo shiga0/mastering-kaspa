@@ -51,6 +51,7 @@ RustのGit依存を追加する場合は、同じ完全なrevisionを指定し�
 | 項目 | 記録した版・条件 | 確認範囲 |
 |---|---|---|
 | Rust教材 | Rust 1.90.0、edition 2021 | 本文・付録の全59 Rustブロックをコンパイルし、271テストと`main`の実行を確認。`examples/dag-relations/` と `examples/minimal-node/` ではClippy・書式も確認 |
+| 公式SDK監視サンプル | Node.js 20.0.0、公式Node.js/WASM SDK v1.0.1、`websocket@1.0.34` | `examples/sdk-monitor/`で接続・情報取得・UTXO通知・意図的な切断と再接続・再購読・再照会をDevnet実測 |
 | mdBook | 0.5.4 | ローカルでHTMLビルドを確認 |
 | DevnetのDocker環境 | macOS Apple Silicon、Docker Desktop 4.37.2 / Engine 27.4.0 | ノード・マイナーを `linux/arm64` 指定で実行。Linuxホスト・amd64は未確認 |
 | Python実習・比較スクリプト | Python 3.11 | Devnet検査と公式関数比較の実行に使用。Devnet用の `websockets==14.1` は `experiments/devnet/requirements.txt` で固定 |
