@@ -30,9 +30,23 @@ Bitcoinの[原論文](https://bitcoin.org/bitcoin.pdf)は、Proof of Work（PoW�
 
 実装編では、プログラミングの基礎、Rustの基本文法、ターミナル操作、ネットワークの基礎知識を使います。実習によってはPythonやNode.jsも必要です。必要なツールと動作確認環境は[本書の対象バージョン](baseline.md)、準備手順は[付録A](appendices/appendix-a.md)と各実習を確認してください。
 
+Rustのコードでは、所有権と借用、`Result`によるエラー処理、trait、単体テストを使います。Rustが初めての場合は、[公式入門「The Rust Programming Language」](https://doc.rust-lang.org/book/)でこれらの基礎を学びながら、実装編へ進んでください。
+
 ## 本書の読み方
 
-初めて読む場合は、目次の上から進めてください。このページの次に[本書の対象バージョン](baseline.md)で基準を確認し、[技術レビューの進捗](review-status.md)で確認済みの範囲を把握します。[エコシステムマップ](ecosystem-map.md)で全体像をつかんだら、[第1章](part-01-foundations/chapter-01.md)から基礎を学びます。
+基礎から順に学ぶ場合は、目次の上から進めてください。このページの次に[本書の対象バージョン](baseline.md)で基準を確認し、[技術レビューの進捗](review-status.md)で確認済みの範囲を把握します。[エコシステムマップ](ecosystem-map.md)で全体像をつかんだら、[第1章](part-01-foundations/chapter-01.md)から基礎を学びます。
+
+### まず動かしたい方へ
+
+**最初の実習は、付録A → 28.6の環境準備 → 28.6.4のSDK監視サンプルです。** 全36章を読み終える前に取り組めます。
+
+1. [付録A](appendices/appendix-a.md)で実習環境の前提を確認します。この実習で使うのはDockerとNode.jsです。
+2. [28.6「ローカル環境の準備」](part-04-development/chapter-28.md#286-ローカル環境の準備)のうち、28.6.2で公式SDKを準備し、28.6.3で実習の範囲を確認します。Python環境の準備は、この監視サンプルには不要です。既存のDocker構成はlinux/arm64専用です。
+3. [28.6.4「公式SDKを使った最小監視サンプル」](part-04-development/chapter-28.md#2864-公式sdkを使った最小監視サンプル)でローカルDevnetへ接続し、採掘報酬のUTXO通知と再接続後の再照会を確認します。
+
+成功すると、ターミナルに通知とUTXOの照会結果が表示され、最後に `"step":"complete","sessions":2` が出ます。秘密鍵や送金は不要です。実習後は同節の手順で採掘とノードを停止してください。動作を確かめたら、第1章から原理を学ぶか、第22・23章でRPC・SDKの仕組みを読み進められます。
+
+### 各部の役割
 
 各部の役割は次のとおりです。
 
