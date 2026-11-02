@@ -1,0 +1,36 @@
+# Mastering Kaspa — BlockDAGの原理と実装 — ライセンスの適用範囲
+
+Copyright (c) 2026 shiga0 and contributors
+
+本リポジトリの自作部分には、内容に応じて次のライセンスを適用します。
+
+## 本文・図・検証記録：CC BY 4.0
+
+本文、図、README等の説明文、および実験・レビューの記録（記録用JSONを含む）は、
+Creative Commons Attribution 4.0 International（CC BY 4.0）で提供します。
+下記の自作コード・設定例はこの区分から除きます。
+
+条文：LICENSES/CC-BY-4.0.txt
+公式URL：https://creativecommons.org/licenses/by/4.0/
+
+クレジットには、作品名「Mastering Kaspa — BlockDAGの原理と実装」、著者「shiga0 and contributors」、
+元の作品へのリンク https://shiga0.github.io/mastering-kaspa/ 、ライセンスへのリンクを
+含めてください。改変した場合は変更した旨を示し、既存の著作権・出典表示を保持してください。
+その他の条件はCC BY 4.0の条文に従います。
+
+## 自作コード・設定例：MIT
+
+自作のプログラム、スクリプト、テスト、スタイルシート、CI/ビルド設定、
+および本文中のプログラム・コマンド・設定のコード例はMIT Licenseで提供します。
+これは examples/、scripts/、experiments/ 内の自作コードにも適用します。
+図を表現するMermaid等の記述、実行結果、記録用データは上記の文書・記録の区分です。
+
+条文：LICENSES/MIT.txt
+コードを利用・再配布する際は、MITの著作権表示とライセンス条文を保持してください。
+
+## 外部由来の資料・コード・依存物
+
+引用・転載した文章、図、コード、外部のテストベクトル、依存ライブラリ、
+SDKや配布イメージ等には、各権利者の条件が適用されます。
+本書のライセンスを外部由来の部分へ上書きしません。
+個別の著作権・ライセンス・出典表示がある場合は、その表示と条件を優先してください。

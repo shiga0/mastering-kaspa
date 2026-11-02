@@ -2,7 +2,7 @@
 
 ## 本書について
 
-『Mastering Kaspa』は、Kaspaの基礎からBlockDAGとコンセンサス、トランザクション、マイニング、ノードの内部構造、アプリケーション開発までを学ぶために公開している、執筆中の技術書です。
+『Mastering Kaspa — BlockDAGの原理と実装』は、Kaspaの基礎からBlockDAGとコンセンサス、トランザクション、マイニング、ノードの内部構造、アプリケーション開発までを学ぶために公開している、執筆中の技術書です。
 
 本書では、仕組みの説明を、設計上の理由・ソースコード・検証結果につなげて読み進めます。目指すのは、**なぜその仕組みが必要で、実装では何を確かめればよいかを、自分で説明できるようになること**です。
 
@@ -64,3 +64,19 @@ Bitcoinの[原論文](https://bitcoin.org/bitcoin.pdf)は、Proof of Work（PoW�
 原稿には、未レビューの説明や実行確認前のコードが含まれています。個別のソース照合、教材のテスト成功、章全体のレビュー完了はそれぞれ別の状態です。確認できた範囲は[技術レビューの進捗](review-status.md)と各検証記録を参照してください。
 
 誤りや説明の不足を見つけた場合は、GitHubのIssueやPull Requestで、該当箇所と確認した根拠を知らせていただけると幸いです。
+
+
+## ライセンスと貢献
+
+Copyright (c) 2026 shiga0 and contributors。自作の本文・図・検証記録は [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) で提供します。再利用の際は作品名「Mastering Kaspa — BlockDAGの原理と実装」、著者、[元の作品](https://shiga0.github.io/mastering-kaspa/)、ライセンスを表示し、改変した場合はその旨を示してください。
+
+自作コードと本文中のプログラム・コマンド・設定例はMITです。外部由来の資料・コードには元の出典・条件を維持します。適用範囲はリポジトリの [LICENSE](https://github.com/shiga0/mastering-kaspa/blob/main/LICENSE)、訂正・提案の投稿方法は [CONTRIBUTING](https://github.com/shiga0/mastering-kaspa/blob/main/CONTRIBUTING.md) を参照してください。
+
+<details>
+<summary>自作コードのMITライセンス条文</summary>
+
+```text
+{{#include ../LICENSES/MIT.txt}}
+```
+
+</details>
