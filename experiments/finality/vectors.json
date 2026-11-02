@@ -1,0 +1,3258 @@
+[
+  {
+    "name": "origin-parent",
+    "pre": 3,
+    "post": 3,
+    "activation": 10,
+    "nodes": [],
+    "previous": [],
+    "queries": [
+      {
+        "name": "origin-parent",
+        "parent": 0,
+        "blue": 0,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      0
+    ]
+  },
+  {
+    "name": "genesis-depth-2",
+    "pre": 3,
+    "post": 3,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      }
+    ],
+    "previous": [
+      [
+        2,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "genesis-depth-2",
+        "parent": 2,
+        "blue": 2,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      1
+    ]
+  },
+  {
+    "name": "genesis-depth-3",
+    "pre": 3,
+    "post": 3,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      }
+    ],
+    "previous": [
+      [
+        3,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "genesis-depth-3",
+        "parent": 3,
+        "blue": 3,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      1
+    ]
+  },
+  {
+    "name": "genesis-depth-4",
+    "pre": 3,
+    "post": 3,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      }
+    ],
+    "previous": [
+      [
+        4,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "genesis-depth-4",
+        "parent": 4,
+        "blue": 4,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      1
+    ]
+  },
+  {
+    "name": "genesis-depth-5",
+    "pre": 3,
+    "post": 3,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      }
+    ],
+    "previous": [
+      [
+        5,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "genesis-depth-5",
+        "parent": 5,
+        "blue": 5,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      2
+    ]
+  },
+  {
+    "name": "pruning-distance-6",
+    "pre": 3,
+    "post": 3,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      }
+    ],
+    "previous": [
+      [
+        6,
+        0
+      ]
+    ],
+    "queries": [
+      {
+        "name": "pruning-distance-6",
+        "parent": 6,
+        "blue": 6,
+        "pruning": 5
+      }
+    ],
+    "expected_points": [
+      0
+    ]
+  },
+  {
+    "name": "pruning-distance-7",
+    "pre": 3,
+    "post": 3,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      }
+    ],
+    "previous": [
+      [
+        7,
+        0
+      ]
+    ],
+    "queries": [
+      {
+        "name": "pruning-distance-7",
+        "parent": 7,
+        "blue": 7,
+        "pruning": 5
+      }
+    ],
+    "expected_points": [
+      5
+    ]
+  },
+  {
+    "name": "pruning-distance-8",
+    "pre": 3,
+    "post": 3,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      }
+    ],
+    "previous": [
+      [
+        8,
+        0
+      ]
+    ],
+    "queries": [
+      {
+        "name": "pruning-distance-8",
+        "parent": 8,
+        "blue": 8,
+        "pruning": 5
+      }
+    ],
+    "expected_points": [
+      5
+    ]
+  },
+  {
+    "name": "pruning-distance-9",
+    "pre": 3,
+    "post": 3,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      }
+    ],
+    "previous": [
+      [
+        9,
+        0
+      ]
+    ],
+    "queries": [
+      {
+        "name": "pruning-distance-9",
+        "parent": 9,
+        "blue": 9,
+        "pruning": 5
+      }
+    ],
+    "expected_points": [
+      6
+    ]
+  },
+  {
+    "name": "off-chain-pruning",
+    "pre": 3,
+    "post": 3,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      },
+      {
+        "id": 100,
+        "parent": 1,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 101,
+        "parent": 10,
+        "blue": 12,
+        "daa": 11,
+        "merges": [
+          100
+        ]
+      }
+    ],
+    "previous": [
+      [
+        101,
+        0
+      ]
+    ],
+    "queries": [
+      {
+        "name": "off-chain-pruning",
+        "parent": 101,
+        "blue": 13,
+        "pruning": 100
+      }
+    ],
+    "expected_points": [
+      0
+    ]
+  },
+  {
+    "name": "genesis-before-pruning-guard",
+    "pre": 3,
+    "post": 3,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      },
+      {
+        "id": 100,
+        "parent": 1,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 101,
+        "parent": 10,
+        "blue": 12,
+        "daa": 11,
+        "merges": [
+          100
+        ]
+      }
+    ],
+    "previous": [
+      [
+        2,
+        0
+      ]
+    ],
+    "queries": [
+      {
+        "name": "genesis-before-pruning-guard",
+        "parent": 2,
+        "blue": 2,
+        "pruning": 100
+      }
+    ],
+    "expected_points": [
+      1
+    ]
+  },
+  {
+    "name": "sparse-threshold-19",
+    "pre": 11,
+    "post": 11,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 2,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 5,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 9,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 14,
+        "daa": 4
+      }
+    ],
+    "previous": [
+      [
+        5,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "sparse-threshold-19",
+        "parent": 5,
+        "blue": 19,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      3
+    ]
+  },
+  {
+    "name": "sparse-threshold-20",
+    "pre": 11,
+    "post": 11,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 2,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 5,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 9,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 14,
+        "daa": 4
+      }
+    ],
+    "previous": [
+      [
+        5,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "sparse-threshold-20",
+        "parent": 5,
+        "blue": 20,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      3
+    ]
+  },
+  {
+    "name": "sparse-threshold-21",
+    "pre": 11,
+    "post": 11,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 2,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 5,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 9,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 14,
+        "daa": 4
+      }
+    ],
+    "previous": [
+      [
+        5,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "sparse-threshold-21",
+        "parent": 5,
+        "blue": 21,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      4
+    ]
+  },
+  {
+    "name": "parent-daa-9",
+    "pre": 3,
+    "post": 7,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      }
+    ],
+    "previous": [
+      [
+        10,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "parent-daa-9",
+        "parent": 10,
+        "blue": 10,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      7
+    ]
+  },
+  {
+    "name": "parent-daa-10",
+    "pre": 3,
+    "post": 7,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 10
+      }
+    ],
+    "previous": [
+      [
+        10,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "parent-daa-10",
+        "parent": 10,
+        "blue": 10,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      3
+    ]
+  },
+  {
+    "name": "parent-daa-11",
+    "pre": 3,
+    "post": 7,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 11
+      }
+    ],
+    "previous": [
+      [
+        10,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "parent-daa-11",
+        "parent": 10,
+        "blue": 10,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      3
+    ]
+  },
+  {
+    "name": "hold-existing-point",
+    "pre": 7,
+    "post": 7,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      }
+    ],
+    "previous": [
+      [
+        10,
+        6
+      ]
+    ],
+    "queries": [
+      {
+        "name": "hold-existing-point",
+        "parent": 10,
+        "blue": 10,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      6
+    ]
+  },
+  {
+    "name": "devnet-depth-86399",
+    "pre": 86400,
+    "post": 86400,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 86398,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 86399,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 86400,
+        "daa": 4
+      }
+    ],
+    "previous": [
+      [
+        3,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "devnet-depth-86399",
+        "parent": 3,
+        "blue": 86399,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      1
+    ]
+  },
+  {
+    "name": "devnet-depth-86400",
+    "pre": 86400,
+    "post": 86400,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 86398,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 86399,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 86400,
+        "daa": 4
+      }
+    ],
+    "previous": [
+      [
+        4,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "devnet-depth-86400",
+        "parent": 4,
+        "blue": 86400,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      1
+    ]
+  },
+  {
+    "name": "devnet-depth-86401",
+    "pre": 86400,
+    "post": 86400,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 86398,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 86399,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 86400,
+        "daa": 4
+      }
+    ],
+    "previous": [
+      [
+        5,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "devnet-depth-86401",
+        "parent": 5,
+        "blue": 86401,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      1
+    ]
+  },
+  {
+    "name": "devnet-depth-86402",
+    "pre": 86400,
+    "post": 86400,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 86398,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 86399,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 86400,
+        "daa": 4
+      }
+    ],
+    "previous": [
+      [
+        5,
+        1
+      ]
+    ],
+    "queries": [
+      {
+        "name": "devnet-depth-86402",
+        "parent": 5,
+        "blue": 86402,
+        "pruning": 1
+      }
+    ],
+    "expected_points": [
+      2
+    ]
+  },
+  {
+    "name": "increasing-depth",
+    "pre": 3,
+    "post": 7,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      },
+      {
+        "id": 17,
+        "parent": 16,
+        "blue": 16,
+        "daa": 16
+      },
+      {
+        "id": 18,
+        "parent": 17,
+        "blue": 17,
+        "daa": 17
+      },
+      {
+        "id": 19,
+        "parent": 18,
+        "blue": 18,
+        "daa": 18
+      },
+      {
+        "id": 20,
+        "parent": 19,
+        "blue": 19,
+        "daa": 19
+      },
+      {
+        "id": 21,
+        "parent": 20,
+        "blue": 20,
+        "daa": 20
+      },
+      {
+        "id": 22,
+        "parent": 21,
+        "blue": 21,
+        "daa": 21
+      },
+      {
+        "id": 23,
+        "parent": 22,
+        "blue": 22,
+        "daa": 22
+      },
+      {
+        "id": 24,
+        "parent": 23,
+        "blue": 23,
+        "daa": 23
+      },
+      {
+        "id": 25,
+        "parent": 24,
+        "blue": 24,
+        "daa": 24
+      },
+      {
+        "id": 26,
+        "parent": 25,
+        "blue": 25,
+        "daa": 25
+      },
+      {
+        "id": 27,
+        "parent": 26,
+        "blue": 26,
+        "daa": 26
+      },
+      {
+        "id": 28,
+        "parent": 27,
+        "blue": 27,
+        "daa": 27
+      },
+      {
+        "id": 29,
+        "parent": 28,
+        "blue": 28,
+        "daa": 28
+      },
+      {
+        "id": 30,
+        "parent": 29,
+        "blue": 29,
+        "daa": 29
+      },
+      {
+        "id": 31,
+        "parent": 30,
+        "blue": 30,
+        "daa": 30
+      }
+    ],
+    "previous": [
+      [
+        1,
+        0
+      ]
+    ],
+    "queries": [
+      {
+        "name": "step-1",
+        "parent": 1,
+        "blue": 1,
+        "pruning": 1,
+        "store_as": 2
+      },
+      {
+        "name": "step-2",
+        "parent": 2,
+        "blue": 2,
+        "pruning": 1,
+        "store_as": 3
+      },
+      {
+        "name": "step-3",
+        "parent": 3,
+        "blue": 3,
+        "pruning": 1,
+        "store_as": 4
+      },
+      {
+        "name": "step-4",
+        "parent": 4,
+        "blue": 4,
+        "pruning": 1,
+        "store_as": 5
+      },
+      {
+        "name": "step-5",
+        "parent": 5,
+        "blue": 5,
+        "pruning": 1,
+        "store_as": 6
+      },
+      {
+        "name": "step-6",
+        "parent": 6,
+        "blue": 6,
+        "pruning": 1,
+        "store_as": 7
+      },
+      {
+        "name": "step-7",
+        "parent": 7,
+        "blue": 7,
+        "pruning": 1,
+        "store_as": 8
+      },
+      {
+        "name": "step-8",
+        "parent": 8,
+        "blue": 8,
+        "pruning": 1,
+        "store_as": 9
+      },
+      {
+        "name": "step-9",
+        "parent": 9,
+        "blue": 9,
+        "pruning": 1,
+        "store_as": 10
+      },
+      {
+        "name": "step-10",
+        "parent": 10,
+        "blue": 10,
+        "pruning": 1,
+        "store_as": 11
+      },
+      {
+        "name": "step-11",
+        "parent": 11,
+        "blue": 11,
+        "pruning": 1,
+        "store_as": 12
+      },
+      {
+        "name": "step-12",
+        "parent": 12,
+        "blue": 12,
+        "pruning": 1,
+        "store_as": 13
+      },
+      {
+        "name": "step-13",
+        "parent": 13,
+        "blue": 13,
+        "pruning": 1,
+        "store_as": 14
+      },
+      {
+        "name": "step-14",
+        "parent": 14,
+        "blue": 14,
+        "pruning": 1,
+        "store_as": 15
+      },
+      {
+        "name": "step-15",
+        "parent": 15,
+        "blue": 15,
+        "pruning": 1,
+        "store_as": 16
+      },
+      {
+        "name": "step-16",
+        "parent": 16,
+        "blue": 16,
+        "pruning": 1,
+        "store_as": 17
+      },
+      {
+        "name": "step-17",
+        "parent": 17,
+        "blue": 17,
+        "pruning": 1,
+        "store_as": 18
+      },
+      {
+        "name": "step-18",
+        "parent": 18,
+        "blue": 18,
+        "pruning": 1,
+        "store_as": 19
+      },
+      {
+        "name": "step-19",
+        "parent": 19,
+        "blue": 19,
+        "pruning": 1,
+        "store_as": 20
+      },
+      {
+        "name": "step-20",
+        "parent": 20,
+        "blue": 20,
+        "pruning": 1,
+        "store_as": 21
+      },
+      {
+        "name": "step-21",
+        "parent": 21,
+        "blue": 21,
+        "pruning": 1,
+        "store_as": 22
+      },
+      {
+        "name": "step-22",
+        "parent": 22,
+        "blue": 22,
+        "pruning": 1,
+        "store_as": 23
+      },
+      {
+        "name": "step-23",
+        "parent": 23,
+        "blue": 23,
+        "pruning": 1,
+        "store_as": 24
+      },
+      {
+        "name": "step-24",
+        "parent": 24,
+        "blue": 24,
+        "pruning": 1,
+        "store_as": 25
+      },
+      {
+        "name": "step-25",
+        "parent": 25,
+        "blue": 25,
+        "pruning": 1,
+        "store_as": 26
+      },
+      {
+        "name": "step-26",
+        "parent": 26,
+        "blue": 26,
+        "pruning": 1,
+        "store_as": 27
+      },
+      {
+        "name": "step-27",
+        "parent": 27,
+        "blue": 27,
+        "pruning": 1,
+        "store_as": 28
+      },
+      {
+        "name": "step-28",
+        "parent": 28,
+        "blue": 28,
+        "pruning": 1,
+        "store_as": 29
+      },
+      {
+        "name": "step-29",
+        "parent": 29,
+        "blue": 29,
+        "pruning": 1,
+        "store_as": 30
+      },
+      {
+        "name": "step-30",
+        "parent": 30,
+        "blue": 30,
+        "pruning": 1,
+        "store_as": 31
+      }
+    ]
+  },
+  {
+    "name": "decreasing-depth",
+    "pre": 7,
+    "post": 3,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 1,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 2,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 3,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 4,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 5,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 6,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 7,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 8,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 9,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 10,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 11,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 12,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 13,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 14,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 15,
+        "daa": 15
+      },
+      {
+        "id": 17,
+        "parent": 16,
+        "blue": 16,
+        "daa": 16
+      },
+      {
+        "id": 18,
+        "parent": 17,
+        "blue": 17,
+        "daa": 17
+      },
+      {
+        "id": 19,
+        "parent": 18,
+        "blue": 18,
+        "daa": 18
+      },
+      {
+        "id": 20,
+        "parent": 19,
+        "blue": 19,
+        "daa": 19
+      },
+      {
+        "id": 21,
+        "parent": 20,
+        "blue": 20,
+        "daa": 20
+      },
+      {
+        "id": 22,
+        "parent": 21,
+        "blue": 21,
+        "daa": 21
+      },
+      {
+        "id": 23,
+        "parent": 22,
+        "blue": 22,
+        "daa": 22
+      },
+      {
+        "id": 24,
+        "parent": 23,
+        "blue": 23,
+        "daa": 23
+      },
+      {
+        "id": 25,
+        "parent": 24,
+        "blue": 24,
+        "daa": 24
+      },
+      {
+        "id": 26,
+        "parent": 25,
+        "blue": 25,
+        "daa": 25
+      },
+      {
+        "id": 27,
+        "parent": 26,
+        "blue": 26,
+        "daa": 26
+      },
+      {
+        "id": 28,
+        "parent": 27,
+        "blue": 27,
+        "daa": 27
+      },
+      {
+        "id": 29,
+        "parent": 28,
+        "blue": 28,
+        "daa": 28
+      },
+      {
+        "id": 30,
+        "parent": 29,
+        "blue": 29,
+        "daa": 29
+      },
+      {
+        "id": 31,
+        "parent": 30,
+        "blue": 30,
+        "daa": 30
+      }
+    ],
+    "previous": [
+      [
+        1,
+        0
+      ]
+    ],
+    "queries": [
+      {
+        "name": "step-1",
+        "parent": 1,
+        "blue": 1,
+        "pruning": 1,
+        "store_as": 2
+      },
+      {
+        "name": "step-2",
+        "parent": 2,
+        "blue": 2,
+        "pruning": 1,
+        "store_as": 3
+      },
+      {
+        "name": "step-3",
+        "parent": 3,
+        "blue": 3,
+        "pruning": 1,
+        "store_as": 4
+      },
+      {
+        "name": "step-4",
+        "parent": 4,
+        "blue": 4,
+        "pruning": 1,
+        "store_as": 5
+      },
+      {
+        "name": "step-5",
+        "parent": 5,
+        "blue": 5,
+        "pruning": 1,
+        "store_as": 6
+      },
+      {
+        "name": "step-6",
+        "parent": 6,
+        "blue": 6,
+        "pruning": 1,
+        "store_as": 7
+      },
+      {
+        "name": "step-7",
+        "parent": 7,
+        "blue": 7,
+        "pruning": 1,
+        "store_as": 8
+      },
+      {
+        "name": "step-8",
+        "parent": 8,
+        "blue": 8,
+        "pruning": 1,
+        "store_as": 9
+      },
+      {
+        "name": "step-9",
+        "parent": 9,
+        "blue": 9,
+        "pruning": 1,
+        "store_as": 10
+      },
+      {
+        "name": "step-10",
+        "parent": 10,
+        "blue": 10,
+        "pruning": 1,
+        "store_as": 11
+      },
+      {
+        "name": "step-11",
+        "parent": 11,
+        "blue": 11,
+        "pruning": 1,
+        "store_as": 12
+      },
+      {
+        "name": "step-12",
+        "parent": 12,
+        "blue": 12,
+        "pruning": 1,
+        "store_as": 13
+      },
+      {
+        "name": "step-13",
+        "parent": 13,
+        "blue": 13,
+        "pruning": 1,
+        "store_as": 14
+      },
+      {
+        "name": "step-14",
+        "parent": 14,
+        "blue": 14,
+        "pruning": 1,
+        "store_as": 15
+      },
+      {
+        "name": "step-15",
+        "parent": 15,
+        "blue": 15,
+        "pruning": 1,
+        "store_as": 16
+      },
+      {
+        "name": "step-16",
+        "parent": 16,
+        "blue": 16,
+        "pruning": 1,
+        "store_as": 17
+      },
+      {
+        "name": "step-17",
+        "parent": 17,
+        "blue": 17,
+        "pruning": 1,
+        "store_as": 18
+      },
+      {
+        "name": "step-18",
+        "parent": 18,
+        "blue": 18,
+        "pruning": 1,
+        "store_as": 19
+      },
+      {
+        "name": "step-19",
+        "parent": 19,
+        "blue": 19,
+        "pruning": 1,
+        "store_as": 20
+      },
+      {
+        "name": "step-20",
+        "parent": 20,
+        "blue": 20,
+        "pruning": 1,
+        "store_as": 21
+      },
+      {
+        "name": "step-21",
+        "parent": 21,
+        "blue": 21,
+        "pruning": 1,
+        "store_as": 22
+      },
+      {
+        "name": "step-22",
+        "parent": 22,
+        "blue": 22,
+        "pruning": 1,
+        "store_as": 23
+      },
+      {
+        "name": "step-23",
+        "parent": 23,
+        "blue": 23,
+        "pruning": 1,
+        "store_as": 24
+      },
+      {
+        "name": "step-24",
+        "parent": 24,
+        "blue": 24,
+        "pruning": 1,
+        "store_as": 25
+      },
+      {
+        "name": "step-25",
+        "parent": 25,
+        "blue": 25,
+        "pruning": 1,
+        "store_as": 26
+      },
+      {
+        "name": "step-26",
+        "parent": 26,
+        "blue": 26,
+        "pruning": 1,
+        "store_as": 27
+      },
+      {
+        "name": "step-27",
+        "parent": 27,
+        "blue": 27,
+        "pruning": 1,
+        "store_as": 28
+      },
+      {
+        "name": "step-28",
+        "parent": 28,
+        "blue": 28,
+        "pruning": 1,
+        "store_as": 29
+      },
+      {
+        "name": "step-29",
+        "parent": 29,
+        "blue": 29,
+        "pruning": 1,
+        "store_as": 30
+      },
+      {
+        "name": "step-30",
+        "parent": 30,
+        "blue": 30,
+        "pruning": 1,
+        "store_as": 31
+      }
+    ]
+  },
+  {
+    "name": "sparse-increasing-depth",
+    "pre": 3,
+    "post": 7,
+    "activation": 10,
+    "nodes": [
+      {
+        "id": 1,
+        "parent": 0,
+        "blue": 0,
+        "daa": 0
+      },
+      {
+        "id": 2,
+        "parent": 1,
+        "blue": 2,
+        "daa": 1
+      },
+      {
+        "id": 3,
+        "parent": 2,
+        "blue": 4,
+        "daa": 2
+      },
+      {
+        "id": 4,
+        "parent": 3,
+        "blue": 6,
+        "daa": 3
+      },
+      {
+        "id": 5,
+        "parent": 4,
+        "blue": 8,
+        "daa": 4
+      },
+      {
+        "id": 6,
+        "parent": 5,
+        "blue": 10,
+        "daa": 5
+      },
+      {
+        "id": 7,
+        "parent": 6,
+        "blue": 12,
+        "daa": 6
+      },
+      {
+        "id": 8,
+        "parent": 7,
+        "blue": 14,
+        "daa": 7
+      },
+      {
+        "id": 9,
+        "parent": 8,
+        "blue": 16,
+        "daa": 8
+      },
+      {
+        "id": 10,
+        "parent": 9,
+        "blue": 18,
+        "daa": 9
+      },
+      {
+        "id": 11,
+        "parent": 10,
+        "blue": 20,
+        "daa": 10
+      },
+      {
+        "id": 12,
+        "parent": 11,
+        "blue": 22,
+        "daa": 11
+      },
+      {
+        "id": 13,
+        "parent": 12,
+        "blue": 24,
+        "daa": 12
+      },
+      {
+        "id": 14,
+        "parent": 13,
+        "blue": 26,
+        "daa": 13
+      },
+      {
+        "id": 15,
+        "parent": 14,
+        "blue": 28,
+        "daa": 14
+      },
+      {
+        "id": 16,
+        "parent": 15,
+        "blue": 30,
+        "daa": 15
+      },
+      {
+        "id": 17,
+        "parent": 16,
+        "blue": 32,
+        "daa": 16
+      },
+      {
+        "id": 18,
+        "parent": 17,
+        "blue": 34,
+        "daa": 17
+      },
+      {
+        "id": 19,
+        "parent": 18,
+        "blue": 36,
+        "daa": 18
+      },
+      {
+        "id": 20,
+        "parent": 19,
+        "blue": 38,
+        "daa": 19
+      },
+      {
+        "id": 21,
+        "parent": 20,
+        "blue": 40,
+        "daa": 20
+      },
+      {
+        "id": 22,
+        "parent": 21,
+        "blue": 42,
+        "daa": 21
+      },
+      {
+        "id": 23,
+        "parent": 22,
+        "blue": 44,
+        "daa": 22
+      },
+      {
+        "id": 24,
+        "parent": 23,
+        "blue": 46,
+        "daa": 23
+      },
+      {
+        "id": 25,
+        "parent": 24,
+        "blue": 48,
+        "daa": 24
+      },
+      {
+        "id": 26,
+        "parent": 25,
+        "blue": 50,
+        "daa": 25
+      },
+      {
+        "id": 27,
+        "parent": 26,
+        "blue": 52,
+        "daa": 26
+      },
+      {
+        "id": 28,
+        "parent": 27,
+        "blue": 54,
+        "daa": 27
+      },
+      {
+        "id": 29,
+        "parent": 28,
+        "blue": 56,
+        "daa": 28
+      },
+      {
+        "id": 30,
+        "parent": 29,
+        "blue": 58,
+        "daa": 29
+      },
+      {
+        "id": 31,
+        "parent": 30,
+        "blue": 60,
+        "daa": 30
+      }
+    ],
+    "previous": [
+      [
+        1,
+        0
+      ]
+    ],
+    "queries": [
+      {
+        "name": "step-1",
+        "parent": 1,
+        "blue": 2,
+        "pruning": 1,
+        "store_as": 2
+      },
+      {
+        "name": "step-2",
+        "parent": 2,
+        "blue": 4,
+        "pruning": 1,
+        "store_as": 3
+      },
+      {
+        "name": "step-3",
+        "parent": 3,
+        "blue": 6,
+        "pruning": 1,
+        "store_as": 4
+      },
+      {
+        "name": "step-4",
+        "parent": 4,
+        "blue": 8,
+        "pruning": 1,
+        "store_as": 5
+      },
+      {
+        "name": "step-5",
+        "parent": 5,
+        "blue": 10,
+        "pruning": 1,
+        "store_as": 6
+      },
+      {
+        "name": "step-6",
+        "parent": 6,
+        "blue": 12,
+        "pruning": 1,
+        "store_as": 7
+      },
+      {
+        "name": "step-7",
+        "parent": 7,
+        "blue": 14,
+        "pruning": 1,
+        "store_as": 8
+      },
+      {
+        "name": "step-8",
+        "parent": 8,
+        "blue": 16,
+        "pruning": 1,
+        "store_as": 9
+      },
+      {
+        "name": "step-9",
+        "parent": 9,
+        "blue": 18,
+        "pruning": 1,
+        "store_as": 10
+      },
+      {
+        "name": "step-10",
+        "parent": 10,
+        "blue": 20,
+        "pruning": 1,
+        "store_as": 11
+      },
+      {
+        "name": "step-11",
+        "parent": 11,
+        "blue": 22,
+        "pruning": 1,
+        "store_as": 12
+      },
+      {
+        "name": "step-12",
+        "parent": 12,
+        "blue": 24,
+        "pruning": 1,
+        "store_as": 13
+      },
+      {
+        "name": "step-13",
+        "parent": 13,
+        "blue": 26,
+        "pruning": 1,
+        "store_as": 14
+      },
+      {
+        "name": "step-14",
+        "parent": 14,
+        "blue": 28,
+        "pruning": 1,
+        "store_as": 15
+      },
+      {
+        "name": "step-15",
+        "parent": 15,
+        "blue": 30,
+        "pruning": 1,
+        "store_as": 16
+      },
+      {
+        "name": "step-16",
+        "parent": 16,
+        "blue": 32,
+        "pruning": 1,
+        "store_as": 17
+      },
+      {
+        "name": "step-17",
+        "parent": 17,
+        "blue": 34,
+        "pruning": 1,
+        "store_as": 18
+      },
+      {
+        "name": "step-18",
+        "parent": 18,
+        "blue": 36,
+        "pruning": 1,
+        "store_as": 19
+      },
+      {
+        "name": "step-19",
+        "parent": 19,
+        "blue": 38,
+        "pruning": 1,
+        "store_as": 20
+      },
+      {
+        "name": "step-20",
+        "parent": 20,
+        "blue": 40,
+        "pruning": 1,
+        "store_as": 21
+      },
+      {
+        "name": "step-21",
+        "parent": 21,
+        "blue": 42,
+        "pruning": 1,
+        "store_as": 22
+      },
+      {
+        "name": "step-22",
+        "parent": 22,
+        "blue": 44,
+        "pruning": 1,
+        "store_as": 23
+      },
+      {
+        "name": "step-23",
+        "parent": 23,
+        "blue": 46,
+        "pruning": 1,
+        "store_as": 24
+      },
+      {
+        "name": "step-24",
+        "parent": 24,
+        "blue": 48,
+        "pruning": 1,
+        "store_as": 25
+      },
+      {
+        "name": "step-25",
+        "parent": 25,
+        "blue": 50,
+        "pruning": 1,
+        "store_as": 26
+      },
+      {
+        "name": "step-26",
+        "parent": 26,
+        "blue": 52,
+        "pruning": 1,
+        "store_as": 27
+      },
+      {
+        "name": "step-27",
+        "parent": 27,
+        "blue": 54,
+        "pruning": 1,
+        "store_as": 28
+      },
+      {
+        "name": "step-28",
+        "parent": 28,
+        "blue": 56,
+        "pruning": 1,
+        "store_as": 29
+      },
+      {
+        "name": "step-29",
+        "parent": 29,
+        "blue": 58,
+        "pruning": 1,
+        "store_as": 30
+      },
+      {
+        "name": "step-30",
+        "parent": 30,
+        "blue": 60,
+        "pruning": 1,
+        "store_as": 31
+      }
+    ]
+  }
+]

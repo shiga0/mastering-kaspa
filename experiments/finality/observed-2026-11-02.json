@@ -1,0 +1,619 @@
+{
+  "baselineCommit": "fcd9c28f9b211b9872a0c90a8c94f79466ffb063",
+  "allComparisonsMatched": true,
+  "caseCount": 25,
+  "counts": {
+    "originParent": 1,
+    "queriesCompared": 112,
+    "belowDepth": 12,
+    "storedPreviousPoint": 94,
+    "heldAheadOfThreshold": 10,
+    "exactThresholdOnChain": 65,
+    "selectedChainPoint": 97,
+    "pruningTooClose": 1,
+    "originFallback": 3,
+    "parentDaaAfterActivation": 5,
+    "pruningOffChain": 1,
+    "parentDaaBeforeActivation": 5,
+    "parentDaaAtActivation": 4,
+    "monotonicSequences": 3
+  },
+  "scope": "synthetic finality-point function/Reachability queries; not VirtualProcessor or Devnet E2E",
+  "officialSourceArchiveSha256": "4585123204609640af4f7482ea8851ced912c2bfae5f36955c808c14210fbe2a",
+  "officialCargoLockSha256": "14108c8c41a84a1a9c8cd8648238047a0620ca390058f9d8a176fefc78beeabf",
+  "officialFilesSha256": {
+    "consensus/src/processes/block_depth.rs": "e09e4186b20aec3fedb3dec898000a6f29da690e851a844c35edfdfda06d5111",
+    "consensus/src/model/services/reachability.rs": "737aeed155f7d35692fbc8a08eda9c10889bb7279ec4a48ce7ebd1f4d02414c2",
+    "consensus/src/processes/reachability/inquirer.rs": "3772fb90e2dd5b048e214ceecabefdce1d945f3e403afe106f055589cb1db4c8",
+    "consensus/src/model/stores/reachability.rs": "77b1213c4466e9fffc752f8f0142f47454026bdf931a077edcd850f114079446",
+    "consensus/core/src/config/params.rs": "9b9a88195e530888de6543004a241c136c142a0bf606e27de4c527901b17ffea"
+  },
+  "filesSha256": {
+    "compare.rs": "2c11484f72ae9a55466a217834b3ad2704fbe6deb40ccba7562c939e1c2484a3",
+    "oracle.py": "bd2d2011edafbf25a2d8e08616899b4697f3645c4e4f5c4e43654a7413eddeea",
+    "run.py": "308c844a5f902253a82ec48cca5fca044d9c9784f73f982dbcae220a7c37560a",
+    "make_vectors.py": "016cffbc269f2385f57ffd4cdd3e0ce56ef61285213a7b4ab85db8fbcdad9e2a",
+    "vectors.json": "0156ee02e6363ab016c815d35150364dfd74c2d7ec9a798ca7207e83d472616b"
+  },
+  "sharedRunnerSha256": "962c9802bdc8762d23ca1cd4da02859a7dd0684d65d63e1dbb4ecf1642c1fbee",
+  "environment": {
+    "os": "Darwin",
+    "architecture": "arm64",
+    "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)"
+  },
+  "results": [
+    {
+      "name": "origin-parent",
+      "outcomes": [
+        {
+          "name": "origin-parent",
+          "point": 0
+        }
+      ]
+    },
+    {
+      "name": "genesis-depth-2",
+      "outcomes": [
+        {
+          "name": "genesis-depth-2",
+          "point": 1
+        }
+      ]
+    },
+    {
+      "name": "genesis-depth-3",
+      "outcomes": [
+        {
+          "name": "genesis-depth-3",
+          "point": 1
+        }
+      ]
+    },
+    {
+      "name": "genesis-depth-4",
+      "outcomes": [
+        {
+          "name": "genesis-depth-4",
+          "point": 1
+        }
+      ]
+    },
+    {
+      "name": "genesis-depth-5",
+      "outcomes": [
+        {
+          "name": "genesis-depth-5",
+          "point": 2
+        }
+      ]
+    },
+    {
+      "name": "pruning-distance-6",
+      "outcomes": [
+        {
+          "name": "pruning-distance-6",
+          "point": 0
+        }
+      ]
+    },
+    {
+      "name": "pruning-distance-7",
+      "outcomes": [
+        {
+          "name": "pruning-distance-7",
+          "point": 5
+        }
+      ]
+    },
+    {
+      "name": "pruning-distance-8",
+      "outcomes": [
+        {
+          "name": "pruning-distance-8",
+          "point": 5
+        }
+      ]
+    },
+    {
+      "name": "pruning-distance-9",
+      "outcomes": [
+        {
+          "name": "pruning-distance-9",
+          "point": 6
+        }
+      ]
+    },
+    {
+      "name": "off-chain-pruning",
+      "outcomes": [
+        {
+          "name": "off-chain-pruning",
+          "point": 0
+        }
+      ]
+    },
+    {
+      "name": "genesis-before-pruning-guard",
+      "outcomes": [
+        {
+          "name": "genesis-before-pruning-guard",
+          "point": 1
+        }
+      ]
+    },
+    {
+      "name": "sparse-threshold-19",
+      "outcomes": [
+        {
+          "name": "sparse-threshold-19",
+          "point": 3
+        }
+      ]
+    },
+    {
+      "name": "sparse-threshold-20",
+      "outcomes": [
+        {
+          "name": "sparse-threshold-20",
+          "point": 3
+        }
+      ]
+    },
+    {
+      "name": "sparse-threshold-21",
+      "outcomes": [
+        {
+          "name": "sparse-threshold-21",
+          "point": 4
+        }
+      ]
+    },
+    {
+      "name": "parent-daa-9",
+      "outcomes": [
+        {
+          "name": "parent-daa-9",
+          "point": 7
+        }
+      ]
+    },
+    {
+      "name": "parent-daa-10",
+      "outcomes": [
+        {
+          "name": "parent-daa-10",
+          "point": 3
+        }
+      ]
+    },
+    {
+      "name": "parent-daa-11",
+      "outcomes": [
+        {
+          "name": "parent-daa-11",
+          "point": 3
+        }
+      ]
+    },
+    {
+      "name": "hold-existing-point",
+      "outcomes": [
+        {
+          "name": "hold-existing-point",
+          "point": 6
+        }
+      ]
+    },
+    {
+      "name": "devnet-depth-86399",
+      "outcomes": [
+        {
+          "name": "devnet-depth-86399",
+          "point": 1
+        }
+      ]
+    },
+    {
+      "name": "devnet-depth-86400",
+      "outcomes": [
+        {
+          "name": "devnet-depth-86400",
+          "point": 1
+        }
+      ]
+    },
+    {
+      "name": "devnet-depth-86401",
+      "outcomes": [
+        {
+          "name": "devnet-depth-86401",
+          "point": 1
+        }
+      ]
+    },
+    {
+      "name": "devnet-depth-86402",
+      "outcomes": [
+        {
+          "name": "devnet-depth-86402",
+          "point": 2
+        }
+      ]
+    },
+    {
+      "name": "increasing-depth",
+      "outcomes": [
+        {
+          "name": "step-1",
+          "point": 1
+        },
+        {
+          "name": "step-2",
+          "point": 1
+        },
+        {
+          "name": "step-3",
+          "point": 1
+        },
+        {
+          "name": "step-4",
+          "point": 1
+        },
+        {
+          "name": "step-5",
+          "point": 2
+        },
+        {
+          "name": "step-6",
+          "point": 3
+        },
+        {
+          "name": "step-7",
+          "point": 4
+        },
+        {
+          "name": "step-8",
+          "point": 5
+        },
+        {
+          "name": "step-9",
+          "point": 6
+        },
+        {
+          "name": "step-10",
+          "point": 7
+        },
+        {
+          "name": "step-11",
+          "point": 7
+        },
+        {
+          "name": "step-12",
+          "point": 7
+        },
+        {
+          "name": "step-13",
+          "point": 7
+        },
+        {
+          "name": "step-14",
+          "point": 7
+        },
+        {
+          "name": "step-15",
+          "point": 8
+        },
+        {
+          "name": "step-16",
+          "point": 9
+        },
+        {
+          "name": "step-17",
+          "point": 10
+        },
+        {
+          "name": "step-18",
+          "point": 11
+        },
+        {
+          "name": "step-19",
+          "point": 12
+        },
+        {
+          "name": "step-20",
+          "point": 13
+        },
+        {
+          "name": "step-21",
+          "point": 14
+        },
+        {
+          "name": "step-22",
+          "point": 15
+        },
+        {
+          "name": "step-23",
+          "point": 16
+        },
+        {
+          "name": "step-24",
+          "point": 17
+        },
+        {
+          "name": "step-25",
+          "point": 18
+        },
+        {
+          "name": "step-26",
+          "point": 19
+        },
+        {
+          "name": "step-27",
+          "point": 20
+        },
+        {
+          "name": "step-28",
+          "point": 21
+        },
+        {
+          "name": "step-29",
+          "point": 22
+        },
+        {
+          "name": "step-30",
+          "point": 23
+        }
+      ]
+    },
+    {
+      "name": "decreasing-depth",
+      "outcomes": [
+        {
+          "name": "step-1",
+          "point": 1
+        },
+        {
+          "name": "step-2",
+          "point": 1
+        },
+        {
+          "name": "step-3",
+          "point": 1
+        },
+        {
+          "name": "step-4",
+          "point": 1
+        },
+        {
+          "name": "step-5",
+          "point": 1
+        },
+        {
+          "name": "step-6",
+          "point": 1
+        },
+        {
+          "name": "step-7",
+          "point": 1
+        },
+        {
+          "name": "step-8",
+          "point": 1
+        },
+        {
+          "name": "step-9",
+          "point": 2
+        },
+        {
+          "name": "step-10",
+          "point": 3
+        },
+        {
+          "name": "step-11",
+          "point": 8
+        },
+        {
+          "name": "step-12",
+          "point": 9
+        },
+        {
+          "name": "step-13",
+          "point": 10
+        },
+        {
+          "name": "step-14",
+          "point": 11
+        },
+        {
+          "name": "step-15",
+          "point": 12
+        },
+        {
+          "name": "step-16",
+          "point": 13
+        },
+        {
+          "name": "step-17",
+          "point": 14
+        },
+        {
+          "name": "step-18",
+          "point": 15
+        },
+        {
+          "name": "step-19",
+          "point": 16
+        },
+        {
+          "name": "step-20",
+          "point": 17
+        },
+        {
+          "name": "step-21",
+          "point": 18
+        },
+        {
+          "name": "step-22",
+          "point": 19
+        },
+        {
+          "name": "step-23",
+          "point": 20
+        },
+        {
+          "name": "step-24",
+          "point": 21
+        },
+        {
+          "name": "step-25",
+          "point": 22
+        },
+        {
+          "name": "step-26",
+          "point": 23
+        },
+        {
+          "name": "step-27",
+          "point": 24
+        },
+        {
+          "name": "step-28",
+          "point": 25
+        },
+        {
+          "name": "step-29",
+          "point": 26
+        },
+        {
+          "name": "step-30",
+          "point": 27
+        }
+      ]
+    },
+    {
+      "name": "sparse-increasing-depth",
+      "outcomes": [
+        {
+          "name": "step-1",
+          "point": 1
+        },
+        {
+          "name": "step-2",
+          "point": 1
+        },
+        {
+          "name": "step-3",
+          "point": 2
+        },
+        {
+          "name": "step-4",
+          "point": 3
+        },
+        {
+          "name": "step-5",
+          "point": 4
+        },
+        {
+          "name": "step-6",
+          "point": 5
+        },
+        {
+          "name": "step-7",
+          "point": 6
+        },
+        {
+          "name": "step-8",
+          "point": 7
+        },
+        {
+          "name": "step-9",
+          "point": 8
+        },
+        {
+          "name": "step-10",
+          "point": 9
+        },
+        {
+          "name": "step-11",
+          "point": 9
+        },
+        {
+          "name": "step-12",
+          "point": 9
+        },
+        {
+          "name": "step-13",
+          "point": 10
+        },
+        {
+          "name": "step-14",
+          "point": 11
+        },
+        {
+          "name": "step-15",
+          "point": 12
+        },
+        {
+          "name": "step-16",
+          "point": 13
+        },
+        {
+          "name": "step-17",
+          "point": 14
+        },
+        {
+          "name": "step-18",
+          "point": 15
+        },
+        {
+          "name": "step-19",
+          "point": 16
+        },
+        {
+          "name": "step-20",
+          "point": 17
+        },
+        {
+          "name": "step-21",
+          "point": 18
+        },
+        {
+          "name": "step-22",
+          "point": 19
+        },
+        {
+          "name": "step-23",
+          "point": 20
+        },
+        {
+          "name": "step-24",
+          "point": 21
+        },
+        {
+          "name": "step-25",
+          "point": 22
+        },
+        {
+          "name": "step-26",
+          "point": 23
+        },
+        {
+          "name": "step-27",
+          "point": 24
+        },
+        {
+          "name": "step-28",
+          "point": 25
+        },
+        {
+          "name": "step-29",
+          "point": 26
+        },
+        {
+          "name": "step-30",
+          "point": 27
+        }
+      ]
+    }
+  ]
+}

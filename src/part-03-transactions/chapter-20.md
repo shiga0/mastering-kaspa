@@ -182,6 +182,12 @@ P2Pネットワークではブロック伝播に時間がかかる。同じ時�
 
 `calc_finality_point` には初期・境界の分岐もある。selected parentがORIGINならORIGIN、blue scoreがdepth未満ならGenesisを返す。Pruning pointとの距離やchain条件によってはORIGINとなる。フォークでdepthが増える場合もselected parentの既存の点から進めるため、単純な数値の引き算だけで点を求めない。
 
+固定版の関数を合成メタデータで実行すると、探索は `required_blue_score = candidate.blue_score - depth` **以上の点へ進む直前で止まる**。以前の点が閾値より手前なら、selected parent chain上の閾値未満の点まで進む。以前の点が閾値以上でも後退しない。例えばscoreが0, 2, 5, 9, 14のchainで、候補scoreが20、depthが11、以前の点がGenesisなら、閾値9と一致する点ではなくscore 5の点を返す。
+
+小さな合成フォークでdepthを3→7へ増やした連続計算では、候補score 10で得たscore 6の点を、activation後の候補score 11〜14でも保持し、候補score 15でscore 7へ進んだ。適用depthの切り替えは選択親DAAで決まる。この例の値は境界検査用で、実ネットワークの設定ではない。
+
+2026年11月2日、公式 `calc_finality_point` と公式メモリReachabilityを使う25ケース・112回の比較が、別のchain列挙モデルと一致した。ORIGIN、depth/pruning距離、DAG祖先とchain祖先の違い、activation前後、点の保持を含む。これは関数単位の実行検査であり、以下のVirtualProcessorやPruning Proofの実行検証とは区別する。再実行方法・入力・結果はリポジトリの `experiments/finality/`、範囲は `experiments/finality-comparison-2026-11-02.md` に保存した。
+
 VirtualProcessorはsink候補にfinality pointがselected parent chain上の祖先であることを要求し、UTXO状態も評価する。finalityに違反する候補はVirtual chainから除外する経路を持つ。違反候補が存在したことを、すべて同じ `StatusInvalid` へ記録する説明にはしない。IBD開始時にはpruning pointをvirtual finality pointとして使う分岐もある。
 
 根拠：[block_depth.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/block_depth.rs)、[virtual_processor/processor.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/processor.rs)、[params.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)、[constants.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)、[bps.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/bps.rs)。
@@ -677,4 +683,4 @@ Kaspaのネットワークセキュリティは、PoWだけでも、GHOSTDAGだ�
 
 > **残る確認**：Finalityの全分岐・攻撃モデルの証明・Pruning後の同期・入金確認指標の実装は、追加のコード照合と実行検証が必要。主要経路の読み取り・本文の通読・教材の実行から、全プロトコルの検証へ範囲を広げない。
 
-目次順の本文レビューと改訂教材8テストは `experiments/chapter-20-review-2026-11-01.md`。基準版のFinality主要経路と旧教材4テストの記録は `experiments/core-validation-review-2026-10-31.md`。攻撃成功確率の証明・全フォーク境界・公式Finality経路の実行時差分テストは今回未実施。
+目次順の本文レビューと改訂教材8テストは `experiments/chapter-20-review-2026-11-01.md`。基準版のFinality主要経路と旧教材4テストの記録は `experiments/core-validation-review-2026-10-31.md`。公式finality point関数の限定した実行比較は `experiments/finality-comparison-2026-11-02.md`（25ケース・112回）。攻撃成功確率の証明・全フォーク境界・VirtualProcessorによる候補拒否・Pruning後IBDの実行検証は引き続き未完了。

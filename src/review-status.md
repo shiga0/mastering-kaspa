@@ -115,7 +115,7 @@
 | [Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）](part-03-transactions/chapter-17.md) | 主要受付/保留/伝播経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 改訂教材8テスト成功。RPC/P2PのRBF条件、孤児、事後再検査、更新を照合。公式実行との差分・全RBF/再編成条件は未検証 |
 | [Chapter 18 — Mining & Block Template Construction（マイニングとブロックテンプレート構築）](part-03-transactions/chapter-18.md) | 主要生成経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | RPC・キャッシュ・取引選択・Virtualからの候補構築を照合。改訂教材8テスト成功。全選択器の分布・報酬・PoW・更新競合の実行検証は未完了 |
 | [Chapter 19 — Mining Economics & Network Security（マイニング経済とネットワークセキュリティ）](part-03-transactions/chapter-19.md) | 報酬の主要分岐Source-checked（v1.0.1）、本文通読確認（2026-11-01） | Coinbase配分・発行スケジュールの入口を照合。改訂経済モデル8テスト・main実行を確認。公式報酬関数との差分・市場実測・攻撃成功確率は未検証 |
-| [Chapter 20 — Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）](part-03-transactions/chapter-20.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | finality point・sink候補・Devnet/Crescendo定数を照合。改訂確認ポリシー教材8テスト成功。公式Finality実行比較・攻撃モデルの証明・Pruning後IBDは未検証 |
+| [Chapter 20 — Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）](part-03-transactions/chapter-20.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | finality point・sink候補・Devnet/Crescendo定数を照合。改訂確認ポリシー教材8テスト成功。公式finality point関数/Reachabilityの合成25ケース・112回が別モデルと一致（2026-11-02）。VirtualProcessorの拒否・攻撃モデルの証明・Pruning後IBDは未検証 |
 | [Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）](part-04-development/chapter-21.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 進行条件・証明/UTXO・staging境界を照合。改訂教材8テスト成功。実測pointはGenesisのままで、実削減・Pruning後IBD・耐久性は未検証 |
 | [Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）](part-04-development/chapter-22.md) | Source-checked（主要API） | 目次順で本文・通知/再照会境界を確認。Readiness教材8テスト成功。過去の固定版送金・成功応答喪失・実通知補完とは別。全API・自動再接続・会計台帳は未検証 |
 | [Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）](part-04-development/chapter-23.md) | Source-checked（主要バインディング） | 目次順で本文を確認。独自教材15テスト・web向けWASMビルド・Node境界51項目成功。過去の公式SDK実測とは別。ブラウザーDOM・実Rust RPCアダプター・全SDKは未検証 |
@@ -173,6 +173,7 @@
 | 第23章本文レビューとSDK/WASM境界教材 | `chapter-23-review-2026-11-01.md` |
 | 第22章本文レビューとRPCアダプター教材 | `chapter-22-review-2026-11-01.md` |
 | 第21章本文レビューとスナップショット教材 | `chapter-21-review-2026-11-01.md` |
+| Finality pointの境界・連続計算 | `finality-comparison-2026-11-02.md`、`finality/` |
 | 第20章本文レビューと確認ポリシー教材 | `chapter-20-review-2026-11-01.md` |
 | 第19章本文レビューと経済モデル教材 | `chapter-19-review-2026-11-01.md` |
 | 第18章本文レビューとテンプレート教材 | `chapter-18-review-2026-11-01.md` |
@@ -223,6 +224,8 @@
 
 導入4ページ・第1〜36章・[Argent補足](part-05-advanced/argent.md)・付録A〜Hの計49ページを、SUMMARY順に通読・修正しました。目次順の未確認ページはなくなりましたが、各ページ内の全主張・実装/暗号方式・実ネットワークの検証が完了した意味ではありません。付録A〜Hと進捗/ROADMAP・個別記録はコミット `c86e88e` に保存済みです。
 
-個別検証として残る主なものは、Finalityの実行時境界、HDウォレット復旧、Pruning後IBD、複数ワーカー/会計処理、新規環境での再現、未照合の説明・数値・出典です。全残作業と完了条件は、リポジトリの `ROADMAP.md` に記録しています。
+個別検証として残る主なものは、FinalityのVirtualProcessor/Pruning検査経路と未試験の境界、HDウォレット復旧、Pruning後IBD、複数ワーカー/会計処理、新規環境での再現、未照合の説明・数値・出典です。全残作業と完了条件は、リポジトリの `ROADMAP.md` に記録しています。
 
 2026年11月2日：同一macOS/ARM64ホスト上でPython/SDKとノードDBを新規作成し、初期0ブロックから採掘・送金/主要異常系・virtual受理・再起動保持・停止を再確認しました。165ブロックと報酬UTXO 40件が再起動前後で一致し、送金先UTXOも保持。新規OS/Docker導入や他環境の確認は残ります。[検証記録](../experiments/devnet-fresh-review-2026-11-02.md)を参照してください。
+
+2026年11月2日：固定版finality point関数の25ケース・112回を別モデルと実行比較し、全件一致しました。公式Reachabilityを使用し、depth/Pruning距離・選択親DAAのactivation境界・depth増減時の連続計算を含みます。VirtualProcessor・Pruning後IBD・安全性証明の完了には広げません。

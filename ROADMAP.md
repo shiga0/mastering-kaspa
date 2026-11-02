@@ -123,6 +123,8 @@
 
 2026-11-02：進捗表の古い未コミット表記とREADMEの異常系/2ノード要約を整理。同一macOS/ARM64ホストでPython/SDK・ノードDBを新規作成し、起動（0ブロック）・採掘・成熟待機・送金/異常系・受理・再起動保持・停止を確認。Composeの既存コンテナ再利用を検出し、fresh.yamlと強制再作成/マウント確認を手順化。記録は `experiments/devnet-fresh-review-2026-11-02.md`。E9/A2の部分進捗であり、新規OS導入・他環境・Pruning後IBDやE8全体の完了ではない。
 
+2026-11-02：C20の公式 `calc_finality_point` と公式メモリReachabilityを使い、25ケース・112回を独立したchain列挙モデルと比較して全件一致。depth/Pruning距離の境界、選択親DAAのactivation前後、depth増減時の連続計算を確認し、第20章へ厳密な閾値と保持の例を追加。記録は `experiments/finality-comparison-2026-11-02.md`、再実行コードと入力は `experiments/finality/`。VirtualProcessorの候補拒否・Pruning検査/IBD・全境界・安全性証明は継続。
+
 ## 優先順位と進め方
 
 - **P1**：本書の正確性と実習の前提。最初に進める。
@@ -130,7 +132,7 @@
 - **P3**：正式版として公開するまでの編集・運用整備。
 - ライセンスと外部貢献の方針は著者が決定する。push・公開などの外部操作は、実行を依頼された段階で行う。
 
-`src/SUMMARY.md` 順の49ページのレビューは完了（コミット `c86e88e`）。以下の古い日付の記録にある「次は」「未完了」は記録時点の状態であり、現在の残作業は進捗表と各項目の完了条件で判断する。次は新規Devnet環境の実習再現を優先し、その後にFinality境界・HD復旧・Pruning後IBD・複数ワーカー/会計を個別に検証する。
+`src/SUMMARY.md` 順の49ページのレビューは完了（コミット `c86e88e`）。以下の古い日付の記録にある「次は」「未完了」は記録時点の状態であり、現在の残作業は進捗表と各項目の完了条件で判断する。新規Devnet環境の一連の実習再現とFinality point関数の限定比較は2026-11-02に実施済み。HD復旧、Finalityの残るVirtualProcessor/Pruning経路、Pruning後IBD、複数ワーカー/会計、他環境の再現を個別に検証する。
 
 ## 完了済みの基盤
 
