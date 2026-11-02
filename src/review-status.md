@@ -79,7 +79,7 @@
 | DAA | 算術27ケース、Full窓120ケース、Sampled/Dual288ケースでモデルと一致 | GHOSTDAGメタデータを入力に使う条件付き比較。全ネットワーク・全境界は未検証 |
 | ブロック本体検証 | 公式テスト2件で単独検査・BadMerkleRoot/親不足の扱いを確認 | 親不足等の回帰テストはPoWを無効化。全ブロック検証やPoW込みE2Eではありません |
 | Devnetの起動・保持 | 起動・読み取りwRPC・採掘・再起動後のDAG/報酬UTXO保持 | 確認したmacOS/ARM64構成に限定 |
-| 単一署名送金 | 送金・Mempool/virtual受理・入力消費・出力・手数料/お釣り、所定の拒否と成功応答喪失からの復旧 | HD復旧・全Script・ブロック包含の独立照会・不可逆な決済確定は未検証 |
+| 単一署名送金 | 送金・Mempool/virtual受理・入力消費・出力・手数料/お釣り、所定の拒否と成功応答喪失からの復旧 | gen1 HD復旧鍵での受取/変更からの送金2件は別実験で成功（2026-11-02）。全Script・ブロック包含の独立照会・不可逆な決済確定は未検証 |
 | 2ノード・分断 | 伝播・片側停止復帰・両側採掘後の収束・報酬UTXOの消失 | 指定報酬先のUTXOを観測。全UTXO集合・競合送金の勝敗・会計処理は対象外 |
 | 通知と観測ストア | 重複適用・購読中断・SQLite再読込・再照会補完・古い結果の拒否・観測UTXOの取り消し | 単一書き込み主体の現在UTXO観測。複数ワーカーや会計台帳ではありません |
 | Pruning前提 | 固定ソースの条件と、実測pointがGenesisのままであることを確認 | Pruningは未達。実際のデータ削減・Pruning後IBDは未検証 |
@@ -111,7 +111,7 @@
 | [Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）](part-02-consensus/chapter-13.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | Full/Sampled・整数target計算・DAA scoreを照合。改訂教材7テスト・実行出力を確認。Full/Sampled算術27ケース・計54回でbits一致。Full窓/non-DAA/DAA scoreは120ケースで一致。Sampled/Dualは288ケースで一致。全ネットワーク・全境界・Pruning後IBDは未完了 |
 | [Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）](part-02-consensus/chapter-14.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 合意順序・virtual・UTXO処理を照合。改訂教材7テストと実行出力を確認。公式実行との差分・クラッシュ耐久性・全規則は未検証 |
 | [Chapter 15 — UTXO Model & Transaction Processing（UTXOモデルとトランザクション処理）](part-03-transactions/chapter-15.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | UTXO・TX検証を照合。改訂教材7テスト成功。初期出力の上書き・不正入力・手数料を確認。公式実行との差分・全subnetwork・全規則は未検証 |
-| [Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）](part-03-transactions/chapter-16.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 既存の署名/Script照合とDevnet実測を参照。改訂教材9テスト成功。モックが出力変更を検出できない限界も確認。HD復旧・全Script・全異常系は未検証 |
+| [Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）](part-03-transactions/chapter-16.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 既存の署名/Script照合とDevnet実測を参照。改訂教材9テスト成功。モックが出力変更を検出できない限界も確認。gen1の鍵/アドレス復旧・メッセージ署名は別実験で確認（2026-11-02）。gen1 HD復旧鍵による送金2件も別実験で成功。全Script・全異常系は未検証 |
 | [Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）](part-03-transactions/chapter-17.md) | 主要受付/保留/伝播経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 改訂教材8テスト成功。RPC/P2PのRBF条件、孤児、事後再検査、更新を照合。公式実行との差分・全RBF/再編成条件は未検証 |
 | [Chapter 18 — Mining & Block Template Construction（マイニングとブロックテンプレート構築）](part-03-transactions/chapter-18.md) | 主要生成経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | RPC・キャッシュ・取引選択・Virtualからの候補構築を照合。改訂教材8テスト成功。全選択器の分布・報酬・PoW・更新競合の実行検証は未完了 |
 | [Chapter 19 — Mining Economics & Network Security（マイニング経済とネットワークセキュリティ）](part-03-transactions/chapter-19.md) | 報酬の主要分岐Source-checked（v1.0.1）、本文通読確認（2026-11-01） | Coinbase配分・発行スケジュールの入口を照合。改訂経済モデル8テスト・main実行を確認。公式報酬関数との差分・市場実測・攻撃成功確率は未検証 |
@@ -119,11 +119,11 @@
 | [Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）](part-04-development/chapter-21.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 進行条件・証明/UTXO・staging境界を照合。改訂教材8テスト成功。実測pointはGenesisのままで、実削減・Pruning後IBD・耐久性は未検証 |
 | [Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）](part-04-development/chapter-22.md) | Source-checked（主要API） | 目次順で本文・通知/再照会境界を確認。Readiness教材8テスト成功。過去の固定版送金・成功応答喪失・実通知補完とは別。全API・自動再接続・会計台帳は未検証 |
 | [Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）](part-04-development/chapter-23.md) | Source-checked（主要バインディング） | 目次順で本文を確認。独自教材15テスト・web向けWASMビルド・Node境界51項目成功。過去の公式SDK実測とは別。ブラウザーDOM・実Rust RPCアダプター・全SDKは未検証 |
-| [Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）](part-04-development/chapter-24.md) | Source-checked（主要経路） | 目次順で本文・復旧/鍵消去の境界を確認。予約ID付き教材11テスト成功。過去の単一署名実測とは別。HD復旧・全終了経路の消去・機器/全Scriptは未検証 |
+| [Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）](part-04-development/chapter-24.md) | Source-checked（主要経路） | 目次順で本文・復旧/鍵消去の境界を確認。予約ID付き教材11テスト成功。過去の単一署名実測とは別。gen1の160鍵/アドレスを独立プロセスで再構成し、メッセージ署名と明示パス/xpubを照合（2026-11-02）。Unicode入力のNFKDとの差を記録。復旧受取/変更鍵によるDevnet送金2件も受理まで確認。履歴探索・全終了経路の消去・機器/全Scriptは未検証 |
 | [Chapter 25 — Exploring the rusty-kaspa Codebase（rusty-kaspaのコードベースを読む）](part-04-development/chapter-25.md) | Source-checked（主要入口） | 目次順で本文・59パッケージのmetadataと主要経路を確認。DAG教材8テスト・型断片のコンパイル成功。全経路・公式テスト全体・クラッシュ耐性は未検証 |
 | [Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）](part-04-development/chapter-26.md) | Source-checked（GHOSTDAG/保存境界） | 目次順で本文・ヘッダー保存/Virtual更新を確認。既存DAG教材8テスト・型断片コンパイル成功。過去の公式24ケース比較は再実行せず。全ストア・障害復旧は未検証 |
 | [Chapter 27 — Building a Minimal Kaspa-like Node in Rust（Rustによる最小Kaspa型ノードの構築）](part-04-development/chapter-27.md) | 教材の実行確認 | 目次順で本文を確認し、ID検査・全状態保持を改訂。16テスト・実行表示・書式・Clippy成功。関数呼び出しの親再送/逆順受信を検査。Kaspa互換性・実P2P・永続化は対象外 |
-| [Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）](part-04-development/chapter-28.md) | 設定・教材の実行確認 | 目次順で本文と既存実測を確認。Compose5構成・Rust教材7/観測ストア7テスト成功。実ノード試験は今回は再実行せず。全Script/HD復旧・会計・実Pruning後IBDは未検証 |
+| [Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）](part-04-development/chapter-28.md) | 設定・教材の実行確認 | 目次順で本文と既存実測を確認。Compose5構成・Rust教材7/観測ストア7テスト成功。実ノード試験は今回は再実行せず。HD復旧受取/変更鍵によるDevnet送金2件は別実験で確認。全Script・会計・実Pruning後IBDは未検証 |
 | [Chapter 29 — GHOSTDAG Security & DAGKnight（GHOSTDAGのセキュリティとDAGKnight）](part-05-advanced/chapter-29.md) | 主要出典・教材を確認 | 目次順で本文と公開要旨/書誌・固定版kの扱いを確認。数値教材9テスト成功。証明の全面照合・DAGKnight実装/本番有効化・攻撃実験は未検証 |
 | [Chapter 30 — Kaspa Improvement Proposals（Kaspa改善提案・KIP）](part-05-advanced/chapter-30.md) | 主要文書・教材を確認 | 固定KIPの主要説明/Status・PRの区別・基準版の規則選択を照合。教材4テスト成功。全KIPの実装/証明・全ネットワーク有効化は未検証 |
 | [Chapter 31 — Covenants & Advanced Scripting（Covenantsと高度なスクリプティング）](part-05-advanced/chapter-31.md) | 主要文書・教材を確認 | KIP-10/17/20と基準版の内省/有効化経路・手数料を照合。独自支出教材11テスト成功。実Vault・全命令/現行本番有効化・SDK利用は未検証 |
@@ -169,6 +169,8 @@
 | 第27章本文レビューと改訂最小ノード | `chapter-27-review-2026-11-01.md` |
 | 第26章本文レビューとGHOSTDAG/保存境界 | `chapter-26-review-2026-11-01.md` |
 | 第25章本文レビューとコード探索/DAG教材 | `chapter-25-review-2026-11-01.md` |
+| HD復旧受取/変更鍵によるDevnet送金 | `hd-send-review-2026-11-02.md`、`hd-recovery/send.cjs` |
+| gen1のHD鍵・アドレス復旧とUnicode境界 | `hd-recovery-review-2026-11-02.md`、`hd-recovery/` |
 | 第24章本文レビューと入力予約教材 | `chapter-24-review-2026-11-01.md` |
 | 第23章本文レビューとSDK/WASM境界教材 | `chapter-23-review-2026-11-01.md` |
 | 第22章本文レビューとRPCアダプター教材 | `chapter-22-review-2026-11-01.md` |
@@ -224,8 +226,12 @@
 
 導入4ページ・第1〜36章・[Argent補足](part-05-advanced/argent.md)・付録A〜Hの計49ページを、SUMMARY順に通読・修正しました。目次順の未確認ページはなくなりましたが、各ページ内の全主張・実装/暗号方式・実ネットワークの検証が完了した意味ではありません。付録A〜Hと進捗/ROADMAP・個別記録はコミット `c86e88e` に保存済みです。
 
-個別検証として残る主なものは、FinalityのVirtualProcessor/Pruning検査経路と未試験の境界、HDウォレット復旧、Pruning後IBD、複数ワーカー/会計処理、新規環境での再現、未照合の説明・数値・出典です。全残作業と完了条件は、リポジトリの `ROADMAP.md` に記録しています。
+個別検証として残る主なものは、FinalityのVirtualProcessor/Pruning検査経路と未試験の境界、HDウォレットの未知index/履歴探索と暗号化バックアップ復旧、Pruning後IBD、複数ワーカー/会計処理、新規環境での再現、未照合の説明・数値・出典です。全残作業と完了条件は、リポジトリの `ROADMAP.md` に記録しています。
 
 2026年11月2日：同一macOS/ARM64ホスト上でPython/SDKとノードDBを新規作成し、初期0ブロックから採掘・送金/主要異常系・virtual受理・再起動保持・停止を再確認しました。165ブロックと報酬UTXO 40件が再起動前後で一致し、送金先UTXOも保持。新規OS/Docker導入や他環境の確認は残ります。[検証記録](../experiments/devnet-fresh-review-2026-11-02.md)を参照してください。
 
 2026年11月2日：固定版finality point関数の25ケース・112回を別モデルと実行比較し、全件一致しました。公式Reachabilityを使用し、depth/Pruning距離・選択親DAAのactivation境界・depth増減時の連続計算を含みます。VirtualProcessor・Pruning後IBD・安全性証明の完了には広げません。
+
+2026年11月2日：公式v1.0.1 SDKで160個のgen1鍵/アドレスを独立プロセス間で再構成し、明示パス・アカウントxpub・メッセージ署名を照合。Node cryptoのPBKDF2と比較し、追加パスフレーズのNFKD正規化が自動では行われない差を再現しました。実ノードでの探索や復旧鍵の送金とは分けて記録しています。
+
+2026年11月2日：gen1 HD復旧受取鍵で1 KASを送り、さらに新しいプロセスで復旧した変更鍵で第一TXのお釣りから1 KASを送金。2件とも署名/未署名項目照合、Mempool・virtual受理・入力消費・宛先/変更UTXOと手数料を確認しました。未知index/履歴探索・暗号化バックアップ復旧は残ります。

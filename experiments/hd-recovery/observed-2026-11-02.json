@@ -1,0 +1,183 @@
+{
+  "sdkVersion": "1.0.1",
+  "allChecksPassed": true,
+  "scope": "offline gen1 key/address reconstruction and message signing; no wallet discovery or transaction submission",
+  "mnemonicWordCounts": [
+    12,
+    24
+  ],
+  "accounts": [
+    0,
+    1
+  ],
+  "branches": [
+    "receive",
+    "change"
+  ],
+  "indices": [
+    0,
+    1,
+    20,
+    21,
+    2147483647
+  ],
+  "scenarioCount": 8,
+  "freshWorkerProcesses": 16,
+  "recoveredKeys": 160,
+  "keyDerivationsAcrossBothProcesses": 320,
+  "originalSignaturesVerifiedWithRecoveredPublicKey": 160,
+  "expectedUnicodeNormalizationDifferenceObserved": true,
+  "sdkFilesSha256": {
+    "kaspa.js": "9a4043072f9afebb06b2c15acd7b4650707424ab95c754da9991cc9111296cf1",
+    "kaspa_bg.wasm": "013ecead3156adfda76f75c6b2600d77f9c45c634b2a24db39066c1bb59fd711",
+    "kaspa.d.ts": "45d1c8c7b93da4575bb0b9a49d21fab3d64be24f05b26853887f05b30bba4cc2"
+  },
+  "harnessSha256": "175f58636e8d80b6524984ecb3f5fdbdefe758ec5bd20c6a616239cff47c90d6",
+  "environment": {
+    "node": "v20.0.0",
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "scenarios": [
+    {
+      "words": 12,
+      "passphraseProfile": "empty",
+      "recoveredKeys": 20,
+      "addressesUnique": true,
+      "samePrivateAndExplicitPath": true,
+      "accountXpubAndMasterPublicPathsMatch": true,
+      "networkAndAddressTypeDiffer": true,
+      "seedMatchesRawPbkdf2": true,
+      "seedMatchesNfkdReference": true,
+      "explicitNfkdMatchesReference": true,
+      "originalSignaturesVerifyAfterRecovery": true,
+      "wrongMessageAndWrongKeyRejected": true,
+      "rejectionChecksPerProcess": 6,
+      "publicResultsSha256": "62a15104c6cd8a6d454be45195c46b09721960bc511e85e431f7c4238091a959"
+    },
+    {
+      "words": 12,
+      "passphraseProfile": "ascii",
+      "recoveredKeys": 20,
+      "addressesUnique": true,
+      "samePrivateAndExplicitPath": true,
+      "accountXpubAndMasterPublicPathsMatch": true,
+      "networkAndAddressTypeDiffer": true,
+      "seedMatchesRawPbkdf2": true,
+      "seedMatchesNfkdReference": true,
+      "explicitNfkdMatchesReference": true,
+      "originalSignaturesVerifyAfterRecovery": true,
+      "wrongMessageAndWrongKeyRejected": true,
+      "rejectionChecksPerProcess": 6,
+      "publicResultsSha256": "0e435c2e421530b485113541915dcb3fb4ead0c2362f0c4f7c7937dbdeae9565"
+    },
+    {
+      "words": 12,
+      "passphraseProfile": "unicode-composed",
+      "recoveredKeys": 20,
+      "addressesUnique": true,
+      "samePrivateAndExplicitPath": true,
+      "accountXpubAndMasterPublicPathsMatch": true,
+      "networkAndAddressTypeDiffer": true,
+      "seedMatchesRawPbkdf2": true,
+      "seedMatchesNfkdReference": false,
+      "explicitNfkdMatchesReference": true,
+      "originalSignaturesVerifyAfterRecovery": true,
+      "wrongMessageAndWrongKeyRejected": true,
+      "rejectionChecksPerProcess": 6,
+      "publicResultsSha256": "6fe5f6e1dd7cad2a331ac7b228b2347b37b623e99f783892730e43f25a0b07db"
+    },
+    {
+      "words": 12,
+      "passphraseProfile": "unicode-decomposed",
+      "recoveredKeys": 20,
+      "addressesUnique": true,
+      "samePrivateAndExplicitPath": true,
+      "accountXpubAndMasterPublicPathsMatch": true,
+      "networkAndAddressTypeDiffer": true,
+      "seedMatchesRawPbkdf2": true,
+      "seedMatchesNfkdReference": true,
+      "explicitNfkdMatchesReference": true,
+      "originalSignaturesVerifyAfterRecovery": true,
+      "wrongMessageAndWrongKeyRejected": true,
+      "rejectionChecksPerProcess": 6,
+      "publicResultsSha256": "197fd625ea6f4b4a707632bebaf34c5d30fcc9aaeabfda23d8879dc525178b03"
+    },
+    {
+      "words": 24,
+      "passphraseProfile": "empty",
+      "recoveredKeys": 20,
+      "addressesUnique": true,
+      "samePrivateAndExplicitPath": true,
+      "accountXpubAndMasterPublicPathsMatch": true,
+      "networkAndAddressTypeDiffer": true,
+      "seedMatchesRawPbkdf2": true,
+      "seedMatchesNfkdReference": true,
+      "explicitNfkdMatchesReference": true,
+      "originalSignaturesVerifyAfterRecovery": true,
+      "wrongMessageAndWrongKeyRejected": true,
+      "rejectionChecksPerProcess": 6,
+      "publicResultsSha256": "80444dc2ea13ecb37a4768059ac1f1b33fbc11c1752c0ec2a5b0d637a1d1b9a4"
+    },
+    {
+      "words": 24,
+      "passphraseProfile": "ascii",
+      "recoveredKeys": 20,
+      "addressesUnique": true,
+      "samePrivateAndExplicitPath": true,
+      "accountXpubAndMasterPublicPathsMatch": true,
+      "networkAndAddressTypeDiffer": true,
+      "seedMatchesRawPbkdf2": true,
+      "seedMatchesNfkdReference": true,
+      "explicitNfkdMatchesReference": true,
+      "originalSignaturesVerifyAfterRecovery": true,
+      "wrongMessageAndWrongKeyRejected": true,
+      "rejectionChecksPerProcess": 6,
+      "publicResultsSha256": "5755ce910db184c2fa7c0dcb377d8a62511248de3e74408911a9e7b4e2bd25f9"
+    },
+    {
+      "words": 24,
+      "passphraseProfile": "unicode-composed",
+      "recoveredKeys": 20,
+      "addressesUnique": true,
+      "samePrivateAndExplicitPath": true,
+      "accountXpubAndMasterPublicPathsMatch": true,
+      "networkAndAddressTypeDiffer": true,
+      "seedMatchesRawPbkdf2": true,
+      "seedMatchesNfkdReference": false,
+      "explicitNfkdMatchesReference": true,
+      "originalSignaturesVerifyAfterRecovery": true,
+      "wrongMessageAndWrongKeyRejected": true,
+      "rejectionChecksPerProcess": 6,
+      "publicResultsSha256": "f9d958c7ae87b36cf0abef12b5836f1397317f09ea75bdbbed8f555d49541528"
+    },
+    {
+      "words": 24,
+      "passphraseProfile": "unicode-decomposed",
+      "recoveredKeys": 20,
+      "addressesUnique": true,
+      "samePrivateAndExplicitPath": true,
+      "accountXpubAndMasterPublicPathsMatch": true,
+      "networkAndAddressTypeDiffer": true,
+      "seedMatchesRawPbkdf2": true,
+      "seedMatchesNfkdReference": true,
+      "explicitNfkdMatchesReference": true,
+      "originalSignaturesVerifyAfterRecovery": true,
+      "wrongMessageAndWrongKeyRejected": true,
+      "rejectionChecksPerProcess": 6,
+      "publicResultsSha256": "fc82461ef43f0b2227bacf3d8b463ca33d8175a86d6dc3ab49259b17a637951e"
+    }
+  ],
+  "baselineCommit": "fcd9c28f9b211b9872a0c90a8c94f79466ffb063",
+  "officialSdkArchiveSha256": "70679fe150689eedd588a475ae93f1135cfb99bd7b205dc2661d104d5db564d0",
+  "sourceFilesSha256": {
+    "wallet/bip32/src/mnemonic/phrase.rs": "47e2dca53199f46453d38f4939816ba7479e88224310f13bd2e85b84a535352a",
+    "wallet/keys/src/derivation/gen1/hd.rs": "2c585e06a671a2b1009c06b334077d814f8930003dc4ebb54f87df256d932f5b",
+    "wallet/keys/src/privkeygen.rs": "cd9d0629936b4945267f36de2b3bc3278e9b341b7c042cdf968c586898983c54",
+    "wallet/keys/src/pubkeygen.rs": "1132c94538a640f4d63a9988d2fb9454ab1d6cf6bdc571dbf43e519a1d9bc702",
+    "wallet/keys/src/xprv.rs": "421a6513269d9029d4927572f8c63fe35cce832326e70be5e27f08607a7a9266",
+    "wallet/keys/src/xpub.rs": "faf62e899c6cef0433bcfe71c35429a68a7e60bf190347c6ac743ef134ce05bf"
+  },
+  "bip39Reference": "https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki",
+  "bip39AccessedDate": "2026-11-02"
+}

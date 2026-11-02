@@ -125,6 +125,10 @@
 
 2026-11-02：C20の公式 `calc_finality_point` と公式メモリReachabilityを使い、25ケース・112回を独立したchain列挙モデルと比較して全件一致。depth/Pruning距離の境界、選択親DAAのactivation前後、depth増減時の連続計算を確認し、第20章へ厳密な閾値と保持の例を追加。記録は `experiments/finality-comparison-2026-11-02.md`、再実行コードと入力は `experiments/finality/`。VirtualProcessorの候補拒否・Pruning検査/IBD・全境界・安全性証明は継続。
 
+2026-11-02：C24のgen1 HD鍵/アドレスを公式v1.0.1 SDKでオフライン復旧。12/24語・4パスフレーズ条件・2アカウント・受取/変更・5 indexの160鍵が独立プロセス間で一致し、明示パス/xpub・メッセージ署名も確認。PBKDF2をNode cryptoと比較し、Unicode合成/分解形に対するNFKDとの差を再現して本文へ反映。記録は `experiments/hd-recovery-review-2026-11-02.md`。残高/履歴の探索・復旧鍵での送金・暗号化バックアップ・legacy/機器対応は継続。
+
+2026-11-02：C24のHD復旧鍵によるDevnet送金を実施。作成用worker終了後に成熟資金を準備し、復旧受取鍵で1 KAS、さらに別workerの復旧変更鍵で第一TXのお釣りから1 KASを送金。2件ともローカル署名検証・未署名項目一致・Mempool・virtual受理・入力消費・宛先/変更UTXO・手数料を確認し、ノード/マイナーを停止。誤パスフレーズの署名前拒否も確認。記録は `experiments/hd-send-review-2026-11-02.md`。未知index/履歴探索・暗号化バックアップ・全失敗経路・複数ノード/再編成は継続。
+
 ## 優先順位と進め方
 
 - **P1**：本書の正確性と実習の前提。最初に進める。
@@ -132,7 +136,7 @@
 - **P3**：正式版として公開するまでの編集・運用整備。
 - ライセンスと外部貢献の方針は著者が決定する。push・公開などの外部操作は、実行を依頼された段階で行う。
 
-`src/SUMMARY.md` 順の49ページのレビューは完了（コミット `c86e88e`）。以下の古い日付の記録にある「次は」「未完了」は記録時点の状態であり、現在の残作業は進捗表と各項目の完了条件で判断する。新規Devnet環境の一連の実習再現とFinality point関数の限定比較は2026-11-02に実施済み。HD復旧、Finalityの残るVirtualProcessor/Pruning経路、Pruning後IBD、複数ワーカー/会計、他環境の再現を個別に検証する。
+`src/SUMMARY.md` 順の49ページのレビューは完了（コミット `c86e88e`）。以下の古い日付の記録にある「次は」「未完了」は記録時点の状態であり、現在の残作業は進捗表と各項目の完了条件で判断する。新規Devnet環境の一連の実習再現とFinality point関数の限定比較は2026-11-02に実施済み。HD復旧の未知index/履歴探索と暗号化バックアップ、Finalityの残るVirtualProcessor/Pruning経路、Pruning後IBD、複数ワーカー/会計、他環境の再現を個別に検証する。
 
 ## 完了済みの基盤
 

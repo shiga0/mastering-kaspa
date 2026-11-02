@@ -9,6 +9,7 @@
 | 起動 | `probe.py` | Devnet・ノード版・読み取りRPC |
 | 状態保持 | `persistence.py` | 短時間採掘後の再起動での保持 |
 | 送金 | `send.cjs`、`--checks`、`--retry-checks` | 単一署名・主要な拒否・応答喪失 |
+| HD復旧送金 | `../hd-recovery/send.cjs` | 復旧受取鍵と復旧変更鍵からの送金・受理 |
 | 伝播 | `two-node.py` | 2ノードの停止復帰 |
 | 分断 | `partition.py` | 両側採掘後の収束 |
 | 通知補完 | `notifications.py`、`live-reconciliation.py` | 重複・欠落・古い照会結果の拒否 |
@@ -293,3 +294,7 @@ pointがGenesisのままならJSONを表示して終了コード2を返す。今
 
 実測：`pruning-observed-2026-10-31.json`。固定ソースと次の完了条件：`../devnet-pruning-review-2026-10-31.md`。
 長時間の生成、削減後の新規ノード同期、不正な集合の注入は今回実行していない。
+
+## HD復旧鍵による送金
+
+既存のランダム鍵による送金とは別に、gen1の復旧受取鍵で1 KAS、さらに復旧変更鍵でそのお釣りから1 KASを送る実習を追加した。[HD復旧実習](../hd-recovery/README.md)を参照。スクリプト自身が既定の単一ノードを起動/停止するため、他の単一ノード実習を停止してから実行する。[2026-11-02の記録](../hd-send-review-2026-11-02.md)では2件の受理・UTXO変化を確認した。未知index/履歴探索、暗号化バックアップ、再編成時の復旧は対象外。

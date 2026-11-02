@@ -1,0 +1,98 @@
+{
+  "network": "devnet",
+  "sdkVersion": "1.0.1",
+  "serverVersion": "1.0.1",
+  "paths": {
+    "receive": "m/44'/111111'/1'/0/21",
+    "change": "m/44'/111111'/1'/1/20",
+    "destination": "m/44'/111111'/0'/0/0"
+  },
+  "addresses": {
+    "receive": "kaspadev:qzq2jwezrs403564d4d3f2d28atctr5cprwya5408qjfhtlhl609xwtvk788y",
+    "change": "kaspadev:qrkgax7pl63fj68hcrgnedlc3akx6q35nw2htt0q9vjrd5wymteejuvacjs8z",
+    "destination": "kaspadev:qp39fenek5lre0hfdju0mt7kxwjuqnus9435tptmcfah4pr0qqc6jgtetusn0"
+  },
+  "mnemonicWords": 24,
+  "passphraseProfile": "ascii",
+  "coinbaseMaturityDaa": "100",
+  "fundingDaaScore": "352",
+  "originalWorkerExitedBeforeFunding": true,
+  "recoveredSigningProcesses": 2,
+  "wrongPassphraseRejectedBeforeSigning": true,
+  "recoveredChangeSpentAgain": true,
+  "transactions": [
+    {
+      "branch": "receive",
+      "transactionId": "8f240ba2cd80b2dd619b0c31f239582dc22d23fee7ee4e4bb47a15492d441b1b",
+      "inputOutpoint": {
+        "transactionId": "b11229db2a97430bfcaf6537a4cd3ae29265ccb9c421620d11fe579837e90cab",
+        "index": 2
+      },
+      "inputTotalSompi": "50000000000",
+      "amountSompi": "100000000",
+      "feeSompi": "10000",
+      "sdkFeeSompi": "10000",
+      "expectedChangeSompi": "49899990000",
+      "actualChangeSompi": "49899990000",
+      "destinationOutpoint": {
+        "transactionId": "8f240ba2cd80b2dd619b0c31f239582dc22d23fee7ee4e4bb47a15492d441b1b",
+        "index": 0
+      },
+      "changeOutpoint": {
+        "transactionId": "8f240ba2cd80b2dd619b0c31f239582dc22d23fee7ee4e4bb47a15492d441b1b",
+        "index": 1
+      },
+      "acceptingBlockHash": "f73cd431444385e6ad9eef849713b0badefc2a1fc4aa74d1780e4c5330248243",
+      "inputSpent": true,
+      "mempoolObserved": true,
+      "acceptedByVirtualChain": true,
+      "localSignatureVerifiedAfterRecovery": true,
+      "unsignedFieldsPreserved": true
+    },
+    {
+      "branch": "change",
+      "transactionId": "a40f740f87993287ec34c5097d82e351d5e9351cc9fee67d3340dfb2c85d465e",
+      "inputOutpoint": {
+        "transactionId": "8f240ba2cd80b2dd619b0c31f239582dc22d23fee7ee4e4bb47a15492d441b1b",
+        "index": 1
+      },
+      "inputTotalSompi": "49899990000",
+      "amountSompi": "100000000",
+      "feeSompi": "10000",
+      "sdkFeeSompi": "10000",
+      "expectedChangeSompi": "49799980000",
+      "actualChangeSompi": "49799980000",
+      "destinationOutpoint": {
+        "transactionId": "a40f740f87993287ec34c5097d82e351d5e9351cc9fee67d3340dfb2c85d465e",
+        "index": 0
+      },
+      "changeOutpoint": {
+        "transactionId": "a40f740f87993287ec34c5097d82e351d5e9351cc9fee67d3340dfb2c85d465e",
+        "index": 1
+      },
+      "acceptingBlockHash": "fbfddcddecc3411b84b25d7fdf3cf400d03c6cdd6048afefac5aee78ecbdf81c",
+      "inputSpent": true,
+      "mempoolObserved": true,
+      "acceptedByVirtualChain": true,
+      "localSignatureVerifiedAfterRecovery": true,
+      "unsignedFieldsPreserved": true
+    }
+  ],
+  "sdkFilesSha256": {
+    "kaspa.js": "9a4043072f9afebb06b2c15acd7b4650707424ab95c754da9991cc9111296cf1",
+    "kaspa_bg.wasm": "013ecead3156adfda76f75c6b2600d77f9c45c634b2a24db39066c1bb59fd711",
+    "kaspa.d.ts": "45d1c8c7b93da4575bb0b9a49d21fab3d64be24f05b26853887f05b30bba4cc2"
+  },
+  "harnessSha256": "0fbcdc01b31ca2feda2840f14d022c8fde7fe75889f28b019a7ae4e1d759f621",
+  "environment": {
+    "node": "v20.0.0",
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "nodeStopped": true,
+  "minerStopped": true,
+  "baselineCommit": "fcd9c28f9b211b9872a0c90a8c94f79466ffb063",
+  "nodeImage": "kaspanet/rusty-kaspad@sha256:5bc3195c2cd2d171885781ed55ead9485d93c7bd7b784d46e9e393c96757fe22",
+  "minerImage": "kaspanet/cpuminer@sha256:60f78ab2828ab24b249c99210eee5a2825303a5226154260dd021ff26d46748b",
+  "signerSourceSha256": "9beaa3760ae05db7cba16ebbe73a790d658447f68dd2769a4bd49f92ad604725"
+}
