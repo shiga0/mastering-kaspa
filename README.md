@@ -1,5 +1,9 @@
 # Mastering Kaspa — BlockDAGの原理と実装
 
+<a href="https://shiga0.github.io/mastering-kaspa/">
+  <img src="src/images/cover.png" width="280" alt="Mastering Kaspa — BlockDAGの原理と実装の表紙">
+</a>
+
 Kaspaの基礎から、BlockDAG、GHOSTDAG、コンセンサス、Rustによる実装、アプリケーション開発までを体系的に学ぶための技術書です。
 
 **[オンラインで読む](https://shiga0.github.io/mastering-kaspa/)**
@@ -15,6 +19,12 @@ Kaspaの基礎から、BlockDAG、GHOSTDAG、コンセンサス、Rustによる�
 - Rustによる最小実装と再現可能な実験を通じて理解を深める。
 - 学習・調査・検証の過程を記録し、コミュニティに共有する。
 
+## 想定読者と最初の実習
+
+Kaspaの仕組みを理解し、SDK・RPCを使ったアプリ開発や、公式実装の調査へ進みたいエンジニアを想定しています。実装編では、Rustの基本文法・所有権と借用・`Result`・trait・単体テストに加え、ターミナル操作とネットワークの基礎を使います。
+
+まず動かしたい場合は、[「はじめに」の最初の実習ルート](src/introduction.md#まず動かしたい方へ)へ進んでください。付録Aで前提を確認し、第28章の環境準備から公式SDKの監視サンプルへ進むと、ローカルDevnetのUTXO通知と再接続後の再照会を試せます。DockerとNode.jsを使い、既存のDocker構成はlinux/arm64専用です。
+
 ## 書籍構成
 
 | Part | テーマ | 章 |
@@ -23,11 +33,11 @@ Kaspaの基礎から、BlockDAG、GHOSTDAG、コンセンサス、Rustによる�
 | II | Consensus | 9〜14 |
 | III | Transactions, Mining & Security | 15〜20 |
 | IV | Kaspa Development & Implementation | 21〜28 |
-| V | Advanced Kaspa Topics（SilverScript・Argentを含む） | 29〜34 ＋ 独立ページ「Argent」 |
+| V | Advanced Kaspa Topics（Silverscript・Argentを含む） | 29〜34 ＋ 独立ページ「Argent」 |
 | VI | Building & Contributing | 35〜36 |
 | Appendices | 環境構築・用語集・参考文献など | A〜H |
 
-Part Vでは、Covenants、SilverScript、**Argent（Actorベースのアプリケーション言語）**、Layer 2、vProgsなどを扱います。Argentは独立ページとして掲載し、既存のChapter 01〜36の番号は変更しません。
+Part Vでは、Covenants、Silverscript、**Argent（Actorベースのアプリケーション言語）**、Layer 2、vProgsなどを扱います。Argentは独立した補足ページにまとめています。
 
 表紙から「読み始める」で本文へ進めます。各Partの扉ページに学ぶ内容・前提知識・各章への案内を、付録の扉ページに目的別の参照先をまとめています。詳細な目次は `src/SUMMARY.md` を参照してください。
 
@@ -65,7 +75,7 @@ mdbook build
 
 [第35章の入金候補への変換サンプル](examples/payment-candidates/README.md)では、公式SDKの現在UTXOをJSON経由でRustの集計モデルへ取り込みます。保存済みの実データでも実行でき、UTXOの観測と請求の支払い済み判定を分けています。
 
-[第32章のSilverScript/VM実習](experiments/silverscript-vm/README.md)では、本文の2-of-2コントラクトを公式コンパイラーでコンパイルし、ローカルのScript VMで正常署名・署名後の改変などを検査できます。Rust 1.94.0と別の固定Kaspa依存を使う手動実習です。
+[第32章のSilverscript/VM実習](experiments/silverscript-vm/README.md)では、本文の2-of-2コントラクトを公式コンパイラーでコンパイルし、ローカルのScript VMで正常署名・署名後の改変などを検査できます。Rust 1.94.0と別の固定Kaspa依存を使う手動実習です。
 
 完成したウォレット・報酬アプリは本書の収録対象外です。HD復旧・送金などの限定した検証コードと記録は `experiments/` に保存しています。
 
@@ -73,13 +83,13 @@ mdbook build
 
 Devnetの起動・読み取りwRPC・再起動の検証手順は[Devnet実習](experiments/devnet/README.md)を参照してください。公式WASM SDKによる単一署名送金とvirtual受理まで確認済みです。所定の送金異常系、2ノードの伝播・停止復帰・分断合流も確認済みです。Pruning後IBD、競合送金の再編成と会計処理は未検証です。
 
-既存49ページのレビューと所定の個別検証は一巡しました。CI・Pagesを含む公開確認は完了済みです。ライセンス・貢献方針と編集の区切りも決定・反映済みで、今回合意した仕上げ作業は完了です。[初版の仕上げ](ROADMAP.md)に完了条件をまとめ、追加の技術検証は既知の制限・将来課題として分けています。
+初版の編集範囲と今後の検証課題は[ROADMAP](ROADMAP.md)にまとめています。
 
 ## 原稿の状態
 
 各章の状態を次のように区別します。
 
-- **Draft**：公開前の原稿。レビュー済みの範囲と未検証部分は進捗表に記録。
+- **Draft**：公開中・改訂中の原稿。レビュー済みの範囲と未検証部分は進捗表に記録。
 
 技術的な記述の検証状態は、付録Hの基準に合わせて記録します。
 
@@ -113,7 +123,7 @@ Devnetの起動・読み取りwRPC・再起動の検証手順は[Devnet実習](e
 
 ---
 
-**Status:** Draft / 既存49ページのレビュー一巡済み・検証範囲に制限あり
+**Status:** Draft / 公開中・改訂中・検証範囲に制限あり
 
 **Language:** 日本語（将来的に英語版も検討）
 
