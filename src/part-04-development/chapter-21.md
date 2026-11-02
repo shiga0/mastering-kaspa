@@ -607,18 +607,23 @@ grep -n -E 'DownloadHeadersProof|staging|sync_pruning_point_utxoset' protocol/fl
 
 ## 21.16 Dockerによる観察実験
 
-すでに動作するKaspaノードがある場合、次のような観察ができる。イメージタグやオプションは、使用環境に合わせて確認する。
+[第28章28.6](chapter-28.md#286-ローカル環境の準備)で環境を準備し、[28.7](chapter-28.md#287-dockerで単一ノードを起動する)の収録済みCompose構成で`node`サービスを起動する。起動・終了は同節の手順に従い、以下の観察コマンドは本書リポジトリのルートで、ノードが起動している間に実行する。
 
 ```bash
-# 例：コンテナ名が kaspad の場合
-docker logs --tail 200 kaspad
+# 収録Compose構成のnodeサービスのログ
+docker compose -f experiments/devnet/compose.yaml logs --tail=200 node
 
-docker stats kaspad
+# CPU・メモリ等の現在値を一回表示
+docker compose -f experiments/devnet/compose.yaml stats --no-stream node
 
-docker inspect kaspad --format '{{.Image}}'
+# 稼働中のnodeコンテナを取得してイメージIDを表示
+KASPA_NODE_ID=$(docker compose -f experiments/devnet/compose.yaml ps -q node)
+docker inspect "$KASPA_NODE_ID" --format '{{.Image}}'
 ```
 
 ログから、同期フェーズの変化・ピア切断・Pruning関連メッセージを探す。
+
+再起動時の状態保持は[既存Devnet実習の比較手順](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet/README.md#短時間採掘と再起動後の状態比較)、2ノードの停止・復帰後の追従は[28.8](chapter-28.md#288-2ノード構成とピア接続)の実習へ進む。これらは実際のPruning後IBDを再現する試験ではない。Pruning pointがGenesisのままの短い実習と、Pruning Proof・UTXO転送を使った同期は区別して記録する。
 
 **本番ノードのデータディレクトリを削除したり、異なるネットワークのデータを使い回したりしないこと。** 初期同期実験は、独立したデータディレクトリまたはDevnetで行う。
 

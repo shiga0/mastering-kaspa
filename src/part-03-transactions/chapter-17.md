@@ -618,6 +618,22 @@ UTXO / Consensusとの線は検証のための参照関係であり、Mempoolの
 
 ## 17.14 `rusty-kaspa` のソースコードを読む
 
+### 実ノードでMempoolと入力競合を観察する
+
+モデルの検査から実際のノードへ進む場合は、[第28章28.6](../part-04-development/chapter-28.md#286-ローカル環境の準備)でSDK・Devnet環境を準備し、[28.10の送金実習](../part-04-development/chapter-28.md#2810-トランザクションのe2eテスト)で`send.cjs --checks`を実行する。起動・終了とコンテナ名の条件は、その手順に従う。
+
+このモードでは、正常な送金を送る前に採掘を止め、送信後のMempool掲載を確認する。続いて同じ入力を使う競合取引の拒否を調べ、採掘を再開して正常な取引のvirtual受理と入力消費を確認する。
+
+| 観察する出力 | 本章の説明との対応 |
+|---|---|
+| `checks.mempoolObserved: true` | ノードのMempoolへ候補として入ったこと。決済確定ではない |
+| `checks.competingSpend: rejected-as-expected` | 同じ入力を使う競合取引が拒否されたこと |
+| `acceptedByVirtualChain: true` | 採掘再開後、正常な取引がvirtual chainで受理されたこと |
+
+これは固定したノードの単一署名・所定の競合ケースの観察である。全RBF条件や複数ノードのMempool一致を検査する実験ではない。実際の処理経路は、次のソース読解で対応付ける。
+
+### 固定ソースの入口
+
 公式リポジトリ: [kaspanet/rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
 
 調査は、**固定したコミットを起点**に行う。以下のコマンドは手元で実行する例であり、特定バージョンでのディレクトリ名を保証するものではない。
