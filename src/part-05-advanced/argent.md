@@ -4,7 +4,7 @@
 >
 > **確認状況（2026-11-01）**：開発中。主要機能とE2Eサンプルは存在するが、固定READMEはnot yet release-readyと説明し、監査・堅牢化が必要としている。以下の機能説明はプロジェクトが想定するCovenant機能を前提とし、現在のKaspaメインネットでそのまま利用可能であることを意味しない。
 
-目次順37番目の補足ページ。Argentは `2796809f167144902f04a4b3333a4c144f91fdaf`、Playgroundは `86d5453ee525e7aa743d0b3bb21d1bb8d96c3558` を取得して確認した。本書の基準ノードv1.0.1および第32章のSilverScript v1.0.0とは別の参照軸である。確認記録は `experiments/argent-review-2026-11-01.md`。
+Part Vに置く独立した解説ページ。Argentは `2796809f167144902f04a4b3333a4c144f91fdaf`、Playgroundは `86d5453ee525e7aa743d0b3bb21d1bb8d96c3558` を取得して確認した。本書の基準ノードv1.0.1および第32章のSilverScript v1.0.0とは別の参照軸である。確認記録は `experiments/argent-review-2026-11-01.md`。
 
 ## 1. Argentとは
 

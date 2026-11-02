@@ -1,6 +1,8 @@
 # 技術レビューの進捗
 
-更新日：2026年11月2日。本書の[対象バージョン](baseline.md)を基準に、ページの確認と個別の検証結果を記録します。
+更新日：2026年11月3日。本書の[対象バージョン](baseline.md)を基準に、ページの確認と個別の検証結果を記録します。
+
+11月3日の横断レビュー・再実行結果は[今回の記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/repository-review-2026-11-03.md)を参照してください。以下の個別レビュー記録は各実施時点の履歴として維持し、今回の確認を全主張・全環境の検証完了へ広げません。
 
 ## SUMMARY順のレビュー
 
@@ -173,8 +175,9 @@ Part I〜VIと付録の扉ページ7件を、各部の概要・前提知識・�
 `.github/workflows/deploy.yml` には、次の検査を設定しています。
 
 - mdBookのHTMLビルド。
-- 第12・27章の収録済みRust教材2件の書式・Clippy・テスト。
-- `scripts/check-book-examples.py` による、その2教材の本文と実装の一致検査。
+- ビルドしたHTML内の内部リンク・アンカーと画像等のローカル参照（`scripts/check-book-links.py`）。外部URLへのHTTP接続は行いません。
+- 第12・27・35章の収録済みRust教材3件（`dag-relations`・`minimal-node`・`payment-candidates`）の書式・Clippy・テスト。
+- `scripts/check-book-examples.py` による、3教材の本文と実装の一致検査。第35章は集計モデルとtrait定義が対象で、JSON変換処理全体を本文と比較するものではありません。
 - `experiments/devnet/test_utxo_store.py` のSQLite観測ストア7テスト。
 
 公式GHOSTDAG/DAAの比較、Dockerを使うDevnet試験、他章の抜き出しRustコードの検査は、このworkflowでは実行しません。設定内容とローカルの成功記録を、GitHub上の実ジョブの成功へ読み替えないでください。GitHub上のCI・Pagesを含む公開確認は、著者から完了済みと確認されました。[公開サイト](https://shiga0.github.io/mastering-kaspa/)で読めます。今回の文書更新で実ジョブや公開操作を再実行したものではありません。

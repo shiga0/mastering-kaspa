@@ -1,6 +1,6 @@
 # 初版の仕上げと完了条件
 
-更新日：2026-11-02。
+更新日：2026-11-03。
 
 初版は、基準版v1.0.1とDevnetについて確認できた内容・教材・実験記録をまとめて公開する。目次順の49ページのレビューと、下記の個別検証は完了として閉じる。未検証部分は本文に制限として残し、追加検証を初版の必須作業にしない。
 
@@ -22,7 +22,7 @@
 | 完了した範囲 | 記録・入口 |
 |---|---|
 | 導入4ページ・全36章・Argent補足・付録A〜H、49ページの目次順レビューと修正 | [レビュー進捗](src/review-status.md)、`experiments/*-review-*.md`。一巡の区切りはコミット `c86e88e` |
-| mdBookビルド、内部リンクの検査記録、第12/27章の教材・本文同期・CI設定 | [README](README.md)、[CI設定](.github/workflows/deploy.yml)。設定・ローカル成功とGitHub上の実ジョブ成功は区別 |
+| mdBookビルド、内部リンクの検査記録、第12/27/35章の教材・本文同期・CI設定 | [README](README.md)、[CI設定](.github/workflows/deploy.yml)。設定・ローカル成功とGitHub上の実ジョブ成功は区別 |
 | GHOSTDAGの小規模合成DAG比較、DAA算術・Full/Sampled窓・Dual切り替えの限定比較 | [GHOSTDAG](experiments/ghostdag/README.md)、[DAA算術](experiments/daa/README.md)、[Full窓](experiments/daa-window/README.md)、[Sampled/Dual](experiments/daa-transition/README.md) |
 | Devnet起動・単一署名送金・所定の拒否/応答喪失・2ノード伝播/分断・通知補完・報酬UTXOの取り消し | [Devnet実習と各実測の範囲](experiments/devnet/README.md)。会計台帳や実Pruningとは区別 |
 | 同一macOS/ARM64ホスト上で新規Python/SDK・新規DBから起動/採掘/送金/再起動/停止を再現 | [新規環境の記録](experiments/devnet-fresh-review-2026-11-02.md)、コミット `e0d4e5b` |

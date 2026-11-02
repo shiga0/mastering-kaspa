@@ -2,6 +2,8 @@
 
 基準の決定日・確認日：2026年10月31日。本書の実装照合と実習では、以下のソース・配布物・環境を基準にします。これは実験を再現するための条件であり、最新版や現在のMainnetの仕様を示すものではありません。
 
+追加確認：2026年11月3日。現行教材の再検査と記載の整合性確認は[今回のレビュー記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/repository-review-2026-11-03.md)を参照してください。基準ソースの変更ではありません。
+
 ## 基準ソースとネットワーク
 
 | 項目 | 固定した基準 | 確認範囲 |
@@ -23,7 +25,9 @@
 | Node.js/WASM SDK | 公式v1.0.1リリースのNode.js用配布物。パッケージ名 `kaspa-wasm`、宣言版1.0.1 | Devnetで単一署名送金・virtual受理・UTXO通知等を実測。ソースから再ビルドした配布物との一致は未確認 |
 | PythonのwRPC検査 | Python 3.11、`websockets==14.1` | 手書きのJSONクライアントとして実行確認。公式Rust SDKを使う経路ではありません |
 
-Node.js用SDKは[公式v1.0.1リリース](https://github.com/kaspanet/rusty-kaspa/releases/tag/v1.0.1)の `kaspa-wasm32-sdk-v1.0.1.zip` を使います。実行環境はNode.js 20.0.0、WebSocket依存は `websocket@1.0.34` で確認しました。npmの推移依存まで固定する作業は未完了です。HDウォレットのバックアップ復旧も、単一署名送金とは別の未検証事項です。
+Node.js用SDKは[公式v1.0.1リリース](https://github.com/kaspanet/rusty-kaspa/releases/tag/v1.0.1)の `kaspa-wasm32-sdk-v1.0.1.zip` を使います。実行環境はNode.js 20.0.0、WebSocket依存は `websocket@1.0.34` で確認しました。npmの推移依存まで固定する作業は未完了です。
+
+HD復旧は範囲を分けて確認しています。2026年11月2日にgen1の160鍵・アドレスの再構成とメッセージ署名、既知の受取鍵・変更鍵を復旧して行うDevnet送金2件を確認しました。公式アカウント探索APIの固定RPC14ケースも別に検査しています。条件・対象版・再実行手順は[HD復旧実習](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/hd-recovery/README.md)と、[オフライン復旧](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/hd-recovery-review-2026-11-02.md)・[復旧鍵の送金](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/hd-send-review-2026-11-02.md)・[探索境界](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/hd-discovery-review-2026-11-02.md)の記録を参照してください。暗号化DB・バックアップの復元、実ノード/Indexerからの未知index・支出済み履歴の探索を含むウォレット全体の復旧は未検証です。11月3日の再検査はオフライン復旧と固定RPC探索に限り、送金は再実行していません。
 
 SDK導入の手順は[第28章](part-04-development/chapter-28.md)、実測条件はリポジトリの `experiments/devnet-send-review-2026-10-31.md` と各後続記録を参照してください。
 
@@ -50,7 +54,7 @@ RustのGit依存を追加する場合は、同じ完全なrevisionを指定し�
 
 | 項目 | 記録した版・条件 | 確認範囲 |
 |---|---|---|
-| Rust教材 | Rust 1.90.0、edition 2021 | 本文・付録の全59 Rustブロックをコンパイルし、271テストと`main`の実行を確認。`examples/dag-relations/` と `examples/minimal-node/` ではClippy・書式も確認 |
+| Rust教材 | Rust 1.90.0、edition 2021 | 2026-11-03、現行本文・付録の54 Rustブロックをコンパイルし、233テストと`main`の実行が成功。収録3教材（`dag-relations`・`minimal-node`・`payment-candidates`）の書式・Clippy・計43テストも成功。教材と本文の同期3件を確認 |
 | 公式SDK監視サンプル | Node.js 20.0.0、公式Node.js/WASM SDK v1.0.1、`websocket@1.0.34` | `examples/sdk-monitor/`で接続・情報取得・UTXO通知・意図的な切断と再接続・再購読・再照会をDevnet実測 |
 | SDKからRustへの入金候補変換 | 上記SDK環境とRust 1.90.0、serde 1.0.228、serde_json 1.0.150 | `examples/payment-candidates/`で実UTXOのCandidate取り込みを確認。ドメイン12件・変換7件のテスト、書式・Clippy成功 |
 | 第32章のコンパイラー/VM実習 | Rust 1.94.0、Silverscript v1.0.0、依存Kaspa `a41a333b…` | 2-of-2ソースのローカルVM評価5件・ABI拒否1件。本書のノードv1.0.1 Devnetとは別環境 |
@@ -88,9 +92,9 @@ CIのRust検査ジョブにはRust 1.90.0、書籍ビルドにはmdBook 0.5.4を
 本書の基準：fcd9c28f9b211b9872a0c90a8c94f79466ffb063（v1.0.1）
 ```
 
-2026年10月31日に基準版へ再照合し、親選択・候補順・blue判定・score/workの主要規則を確認しました。通常のmanagerで使うkが、固定値からselected parentのDAA scoreに依存する `ForkedParam` へ変わった点も本文へ反映しています。記録は `experiments/ghostdag-baseline-review-2026-10-31.md`、基準版の分類関数と集合モデルの実行比較は `experiments/ghostdag-comparison-2026-10-31.md` を参照してください。両版を実行した動作比較と章全体のレビューは未完了です。
+2026年10月31日に基準版へ再照合し、親選択・候補順・blue判定・score/workの主要規則を確認しました。通常のmanagerで使うkが、固定値からselected parentのDAA scoreに依存する `ForkedParam` へ変わった点も本文へ反映しています。記録は `experiments/ghostdag-baseline-review-2026-10-31.md`、基準版の分類関数と集合モデルの実行比較は `experiments/ghostdag-comparison-2026-10-31.md` を参照してください。これらは両版を実行した動作比較や、章全体の全規則の検証完了を意味しません。
 
-付録Eなどに残る `master` 参照の数値や、発展的な技術の説明を、基準版の機能と自動的に同一視しないでください。基準版以外の話題は、対象コミット・ネットワーク・研究や実装の段階を各ページで示します。確認済みの範囲と残作業は、次の[技術レビューの進捗](review-status.md)で確認できます。
+付録Eの主要パラメータは基準版へ整理済みです。一方、発展的な技術の説明を、基準版の機能と自動的に同一視しないでください。基準版以外の話題は、対象コミット・ネットワーク・研究や実装の段階を各ページで示します。確認済みの範囲と残作業は、次の[技術レビューの進捗](review-status.md)で確認できます。
 
 ## 基準を変更するとき
 

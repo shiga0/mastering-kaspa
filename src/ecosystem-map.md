@@ -35,7 +35,7 @@ L1の説明は本書の[基準版 v1.0.1](baseline.md)を起点に読みます�
 | **Kaspa Script** | UTXOの支出条件を検証するL1の仕組み。基準版の説明・実測範囲は本文と[レビュー進捗](review-status.md)を参照します | [第16章](part-03-transactions/chapter-16.md) |
 | **Covenants** | 支出トランザクションの出力などに制約を設ける仕組み。[公式資料](https://docs.kaspa.org/programmability)ではL1の資産ルール・状態を持つ出力の選択肢として説明されています | [第31章](part-05-advanced/chapter-31.md) |
 | **SilverScript** | Kaspa Scriptを生成する言語・コンパイラ。[v1.0.0の公開リリース](https://github.com/kaspanet/silverscript/releases/tag/v1.0.0)を確認しました | [第32章](part-05-advanced/chapter-32.md) |
-| **Argent** | SilverScriptを基盤とするActorベースの言語・コンパイラ。[確認したREADME](https://github.com/argent-lang/argent/blob/2796809f167144902f04a4b3333a4c144f91fdaf/README.md)では開発中で、リリース準備は未完了とされています | [第32章の補足](part-05-advanced/argent.md) |
+| **Argent** | SilverScriptを基盤とするActorベースの言語・コンパイラ。[確認したREADME](https://github.com/argent-lang/argent/blob/2796809f167144902f04a4b3333a4c144f91fdaf/README.md)では開発中で、リリース準備は未完了とされています | [Argentの独立解説ページ](part-05-advanced/argent.md) |
 | **Igra / Kasplex** | Kaspaに関連する外部実行環境。[Igraの資料](https://igra-labs.gitbook.io/igralabs-docs)はEVM互換を、[KasplexのL2資料](https://docs-kasplex.gitbook.io/l2-network)はL2としての位置づけを説明しています。構成・ブリッジ・信頼条件は個別に確認します | [第33章](part-05-advanced/chapter-33.md) |
 | **Based Apps / Inline ZK** | [公式資料](https://docs.kaspa.org/programmability)が区別する実行モデルです。Based Appsは共有アカウント状態を扱い、Inline ZKは各アクションの証明を個別に検証・決済する方式として説明されています | [第34章](part-05-advanced/chapter-34.md) |
 | **vProgs** | [公開リポジトリ](https://github.com/kaspanet/vprogs/blob/f9b84a863a7c7c20586a9cf947550475e894f72e/README.md)は初期開発・プロトタイプ段階と明記しています。一方、[公式資料](https://docs.kaspa.org/programmability)の **Full vProgs** は独立アプリ間の合成を目指す将来方向です。公開コードの存在と構想全体の完成は分けて読みます | [第34章](part-05-advanced/chapter-34.md) |
