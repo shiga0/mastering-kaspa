@@ -119,7 +119,7 @@
 | [Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）](part-04-development/chapter-21.md) | 主要経路Source-checked（v1.0.1）、本文通読確認（2026-11-01） | 進行条件・証明/UTXO・staging境界を照合。改訂教材8テスト成功。実測pointはGenesisのままで、実削減・Pruning後IBD・耐久性は未検証 |
 | [Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）](part-04-development/chapter-22.md) | Source-checked（主要API） | 目次順で本文・通知/再照会境界を確認。Readiness教材8テスト成功。過去の固定版送金・成功応答喪失・実通知補完とは別。全API・自動再接続・会計台帳は未検証 |
 | [Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）](part-04-development/chapter-23.md) | Source-checked（主要バインディング） | 目次順で本文を確認。独自教材15テスト・web向けWASMビルド・Node境界51項目成功。過去の公式SDK実測とは別。ブラウザーDOM・実Rust RPCアダプター・全SDKは未検証 |
-| [Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）](part-04-development/chapter-24.md) | Source-checked（主要経路） | 目次順で本文・復旧/鍵消去の境界を確認。予約ID付き教材11テスト成功。過去の単一署名実測とは別。gen1の160鍵/アドレスを独立プロセスで再構成し、メッセージ署名と明示パス/xpubを照合（2026-11-02）。Unicode入力のNFKDとの差を記録。復旧受取/変更鍵によるDevnet送金2件も受理まで確認。履歴探索・全終了経路の消去・機器/全Scriptは未検証 |
+| [Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）](part-04-development/chapter-24.md) | Source-checked（主要経路） | 目次順で本文・復旧/鍵消去の境界を確認。予約ID付き教材11テスト成功。過去の単一署名実測とは別。gen1の160鍵/アドレスを独立プロセスで再構成し、メッセージ署名と明示パス/xpubを照合（2026-11-02）。Unicode入力のNFKDとの差を記録。復旧受取/変更鍵によるDevnet送金2件も受理まで確認。公式探索APIの固定RPC14ケースとgap教材12,288比較も成功。実ノード/Indexerの履歴探索・全終了経路の消去・機器/全Scriptは未検証 |
 | [Chapter 25 — Exploring the rusty-kaspa Codebase（rusty-kaspaのコードベースを読む）](part-04-development/chapter-25.md) | Source-checked（主要入口） | 目次順で本文・59パッケージのmetadataと主要経路を確認。DAG教材8テスト・型断片のコンパイル成功。全経路・公式テスト全体・クラッシュ耐性は未検証 |
 | [Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）](part-04-development/chapter-26.md) | Source-checked（GHOSTDAG/保存境界） | 目次順で本文・ヘッダー保存/Virtual更新を確認。既存DAG教材8テスト・型断片コンパイル成功。過去の公式24ケース比較は再実行せず。全ストア・障害復旧は未検証 |
 | [Chapter 27 — Building a Minimal Kaspa-like Node in Rust（Rustによる最小Kaspa型ノードの構築）](part-04-development/chapter-27.md) | 教材の実行確認 | 目次順で本文を確認し、ID検査・全状態保持を改訂。16テスト・実行表示・書式・Clippy成功。関数呼び出しの親再送/逆順受信を検査。Kaspa互換性・実P2P・永続化は対象外 |
@@ -169,6 +169,7 @@
 | 第27章本文レビューと改訂最小ノード | `chapter-27-review-2026-11-01.md` |
 | 第26章本文レビューとGHOSTDAG/保存境界 | `chapter-26-review-2026-11-01.md` |
 | 第25章本文レビューとコード探索/DAG教材 | `chapter-25-review-2026-11-01.md` |
+| 公式アカウント探索APIとgap limitの境界 | `hd-discovery-review-2026-11-02.md`、`hd-recovery/discovery.cjs` |
 | HD復旧受取/変更鍵によるDevnet送金 | `hd-send-review-2026-11-02.md`、`hd-recovery/send.cjs` |
 | gen1のHD鍵・アドレス復旧とUnicode境界 | `hd-recovery-review-2026-11-02.md`、`hd-recovery/` |
 | 第24章本文レビューと入力予約教材 | `chapter-24-review-2026-11-01.md` |
@@ -235,3 +236,5 @@
 2026年11月2日：公式v1.0.1 SDKで160個のgen1鍵/アドレスを独立プロセス間で再構成し、明示パス・アカウントxpub・メッセージ署名を照合。Node cryptoのPBKDF2と比較し、追加パスフレーズのNFKD正規化が自動では行われない差を再現しました。実ノードでの探索や復旧鍵の送金とは分けて記録しています。
 
 2026年11月2日：gen1 HD復旧受取鍵で1 KASを送り、さらに新しいプロセスで復旧した変更鍵で第一TXのお釣りから1 KASを送金。2件とも署名/未署名項目照合、Mempool・virtual受理・入力消費・宛先/変更UTXOと手数料を確認しました。未知index/履歴探索・暗号化バックアップ復旧は残ります。
+
+2026年11月2日：公式Wallet.accountsDiscoveryの固定RPC14ケースで、両枝の範囲・account継続条件・戻り値0の曖昧さ・現在UTXOだけでは支出済み履歴を拾えない条件を確認。別のgap教材は12,288比較で一致しました。実ノード/Indexerの履歴復元や暗号化バックアップは未検証です。

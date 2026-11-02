@@ -1,0 +1,299 @@
+{
+  "sdkVersion": "1.0.1",
+  "officialCaseCount": 14,
+  "allComparisonsMatched": true,
+  "scope": "official Wallet.accountsDiscovery with synthetic UTXO RPC; educational gap model separately",
+  "residentWallet": true,
+  "rpcServerClosed": true,
+  "largeRequestIdsPreserved": 34,
+  "sdkFilesSha256": {
+    "kaspa.js": "9a4043072f9afebb06b2c15acd7b4650707424ab95c754da9991cc9111296cf1",
+    "kaspa_bg.wasm": "013ecead3156adfda76f75c6b2600d77f9c45c634b2a24db39066c1bb59fd711",
+    "kaspa.d.ts": "45d1c8c7b93da4575bb0b9a49d21fab3d64be24f05b26853887f05b30bba4cc2"
+  },
+  "filesSha256": {
+    "discovery.cjs": "381ab1f6541cb1007f20fbaec421c4b30aac022d293e2614016a907ed875e5de",
+    "discovery-model.cjs": "6d9b5f0199c475e31657c3e33370685cfd6325238a5e1640c00d1b621f456a17",
+    "discovery-vectors.json": "b10817f8a44632d490f31e63f4a4fcea4ce5f422a0afee1dd447a705468ad189"
+  },
+  "environment": {
+    "node": "v20.0.0",
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "officialResults": [
+    {
+      "name": "empty",
+      "lastAccountIndexFound": 0,
+      "addressExtent": 20,
+      "accountExtent": 2,
+      "accountsQueried": [
+        0,
+        1
+      ],
+      "addressesQueried": 80,
+      "matchedUtxos": 0,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    },
+    {
+      "name": "account-zero-funded",
+      "lastAccountIndexFound": 0,
+      "addressExtent": 20,
+      "accountExtent": 2,
+      "accountsQueried": [
+        0,
+        1
+      ],
+      "addressesQueried": 80,
+      "matchedUtxos": 1,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    },
+    {
+      "name": "receive-19-in-range",
+      "lastAccountIndexFound": 1,
+      "addressExtent": 20,
+      "accountExtent": 2,
+      "accountsQueried": [
+        0,
+        1,
+        2
+      ],
+      "addressesQueried": 120,
+      "matchedUtxos": 1,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    },
+    {
+      "name": "receive-20-excluded",
+      "lastAccountIndexFound": 0,
+      "addressExtent": 20,
+      "accountExtent": 2,
+      "accountsQueried": [
+        0,
+        1
+      ],
+      "addressesQueried": 80,
+      "matchedUtxos": 0,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    },
+    {
+      "name": "receive-20-expanded",
+      "lastAccountIndexFound": 1,
+      "addressExtent": 21,
+      "accountExtent": 2,
+      "accountsQueried": [
+        0,
+        1,
+        2
+      ],
+      "addressesQueried": 126,
+      "matchedUtxos": 1,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    },
+    {
+      "name": "change-19-in-range",
+      "lastAccountIndexFound": 1,
+      "addressExtent": 20,
+      "accountExtent": 2,
+      "accountsQueried": [
+        0,
+        1,
+        2
+      ],
+      "addressesQueried": 120,
+      "matchedUtxos": 1,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    },
+    {
+      "name": "change-20-excluded",
+      "lastAccountIndexFound": 0,
+      "addressExtent": 20,
+      "accountExtent": 2,
+      "accountsQueried": [
+        0,
+        1
+      ],
+      "addressesQueried": 80,
+      "matchedUtxos": 0,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    },
+    {
+      "name": "change-20-expanded",
+      "lastAccountIndexFound": 1,
+      "addressExtent": 21,
+      "accountExtent": 2,
+      "accountsQueried": [
+        0,
+        1,
+        2
+      ],
+      "addressesQueried": 126,
+      "matchedUtxos": 1,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    },
+    {
+      "name": "receive-21-expanded",
+      "lastAccountIndexFound": 1,
+      "addressExtent": 22,
+      "accountExtent": 2,
+      "accountsQueried": [
+        0,
+        1,
+        2
+      ],
+      "addressesQueried": 132,
+      "matchedUtxos": 1,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    },
+    {
+      "name": "account-two-excluded",
+      "lastAccountIndexFound": 0,
+      "addressExtent": 20,
+      "accountExtent": 2,
+      "accountsQueried": [
+        0,
+        1
+      ],
+      "addressesQueried": 80,
+      "matchedUtxos": 0,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    },
+    {
+      "name": "account-two-expanded",
+      "lastAccountIndexFound": 2,
+      "addressExtent": 20,
+      "accountExtent": 3,
+      "accountsQueried": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "addressesQueried": 200,
+      "matchedUtxos": 1,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    },
+    {
+      "name": "spent-only-history",
+      "lastAccountIndexFound": 0,
+      "addressExtent": 20,
+      "accountExtent": 2,
+      "accountsQueried": [
+        0,
+        1
+      ],
+      "addressesQueried": 80,
+      "matchedUtxos": 0,
+      "historicalUseNotAvailableThroughThisRpc": true,
+      "comparisonMatched": true
+    },
+    {
+      "name": "zero-address-extent",
+      "lastAccountIndexFound": 0,
+      "addressExtent": 0,
+      "accountExtent": 2,
+      "accountsQueried": [
+        null,
+        null
+      ],
+      "addressesQueried": 0,
+      "matchedUtxos": 0,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    },
+    {
+      "name": "zero-account-extent",
+      "lastAccountIndexFound": 0,
+      "addressExtent": 20,
+      "accountExtent": 0,
+      "accountsQueried": [],
+      "addressesQueried": 0,
+      "matchedUtxos": 0,
+      "historicalUseNotAvailableThroughThisRpc": false,
+      "comparisonMatched": true
+    }
+  ],
+  "educationalGapModel": {
+    "fixtures": [
+      {
+        "name": "empty",
+        "found": [],
+        "scanned": 20,
+        "reason": "gap"
+      },
+      {
+        "name": "index-19-found",
+        "found": [
+          19
+        ],
+        "scanned": 40,
+        "reason": "gap"
+      },
+      {
+        "name": "index-20-missed",
+        "found": [],
+        "scanned": 20,
+        "reason": "gap"
+      },
+      {
+        "name": "index-21-missed",
+        "found": [],
+        "scanned": 20,
+        "reason": "gap"
+      },
+      {
+        "name": "utxo-only-spent-zero",
+        "found": [],
+        "scanned": 20,
+        "reason": "gap"
+      },
+      {
+        "name": "history-resets-at-spent-zero",
+        "found": [
+          0,
+          20
+        ],
+        "scanned": 41,
+        "reason": "gap"
+      },
+      {
+        "name": "gap-after-used-zero",
+        "found": [
+          0
+        ],
+        "scanned": 21,
+        "reason": "gap"
+      },
+      {
+        "name": "explicit-bound",
+        "found": [
+          21
+        ],
+        "scanned": 22,
+        "reason": "bound"
+      }
+    ],
+    "exhaustiveComparisons": 12288,
+    "invalidBoundsRejected": 4
+  },
+  "baselineCommit": "fcd9c28f9b211b9872a0c90a8c94f79466ffb063",
+  "sourceFilesSha256": {
+    "wallet/core/src/wallet/mod.rs": "1d1e27cdce9f3efa0036ad860a040a74c5d61d78bf4fa62f5aa10d4ebb0c2336",
+    "wallet/core/src/account/variants/bip32.rs": "44d8aacfc96fd95793b3c1185e13571b3fb8aade0deedb193f4ac4ba3ff0ecf8",
+    "wallet/core/src/api/message.rs": "43396b2e4084a6f6cc7dc7c10d877eb608c44c11f50648d2ce765c0918dfcda9",
+    "wallet/core/src/wasm/api/message.rs": "4ebb015244578327a900c3e996f5afd18d6af7794929293807fb28791b211c28"
+  },
+  "bip44Reference": "https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki",
+  "bip44AccessedDate": "2026-11-02"
+}

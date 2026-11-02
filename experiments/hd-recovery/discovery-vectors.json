@@ -1,0 +1,16 @@
+[
+  {"name":"empty","addressExtent":20,"accountExtent":2,"utxos":[],"expectedLast":0,"expectedAccounts":[0,1]},
+  {"name":"account-zero-funded","addressExtent":20,"accountExtent":2,"utxos":[[0,0,0]],"expectedLast":0,"expectedAccounts":[0,1]},
+  {"name":"receive-19-in-range","addressExtent":20,"accountExtent":2,"utxos":[[1,0,19]],"expectedLast":1,"expectedAccounts":[0,1,2]},
+  {"name":"receive-20-excluded","addressExtent":20,"accountExtent":2,"utxos":[[1,0,20]],"expectedLast":0,"expectedAccounts":[0,1]},
+  {"name":"receive-20-expanded","addressExtent":21,"accountExtent":2,"utxos":[[1,0,20]],"expectedLast":1,"expectedAccounts":[0,1,2]},
+  {"name":"change-19-in-range","addressExtent":20,"accountExtent":2,"utxos":[[1,1,19]],"expectedLast":1,"expectedAccounts":[0,1,2]},
+  {"name":"change-20-excluded","addressExtent":20,"accountExtent":2,"utxos":[[1,1,20]],"expectedLast":0,"expectedAccounts":[0,1]},
+  {"name":"change-20-expanded","addressExtent":21,"accountExtent":2,"utxos":[[1,1,20]],"expectedLast":1,"expectedAccounts":[0,1,2]},
+  {"name":"receive-21-expanded","addressExtent":22,"accountExtent":2,"utxos":[[1,0,21]],"expectedLast":1,"expectedAccounts":[0,1,2]},
+  {"name":"account-two-excluded","addressExtent":20,"accountExtent":2,"utxos":[[2,0,0]],"expectedLast":0,"expectedAccounts":[0,1]},
+  {"name":"account-two-expanded","addressExtent":20,"accountExtent":3,"utxos":[[2,0,0]],"expectedLast":2,"expectedAccounts":[0,1,2,3,4]},
+  {"name":"spent-only-history","addressExtent":20,"accountExtent":2,"utxos":[],"historicalUse":[[1,0,0]],"expectedLast":0,"expectedAccounts":[0,1]},
+  {"name":"zero-address-extent","addressExtent":0,"accountExtent":2,"utxos":[[1,0,0]],"expectedLast":0,"expectedAccounts":[null,null]},
+  {"name":"zero-account-extent","addressExtent":20,"accountExtent":0,"utxos":[[1,0,0]],"expectedLast":0,"expectedAccounts":[]}
+]

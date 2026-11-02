@@ -129,6 +129,8 @@
 
 2026-11-02：C24のHD復旧鍵によるDevnet送金を実施。作成用worker終了後に成熟資金を準備し、復旧受取鍵で1 KAS、さらに別workerの復旧変更鍵で第一TXのお釣りから1 KASを送金。2件ともローカル署名検証・未署名項目一致・Mempool・virtual受理・入力消費・宛先/変更UTXO・手数料を確認し、ノード/マイナーを停止。誤パスフレーズの署名前拒否も確認。記録は `experiments/hd-send-review-2026-11-02.md`。未知index/履歴探索・暗号化バックアップ・全失敗経路・複数ノード/再編成は継続。
 
+2026-11-02：C24の公式Wallet.accountsDiscoveryを固定RPCで14ケース実行し、receive/changeの排他的上限・account継続条件・0の未発見/検出両義性・spent-only履歴を拾えない条件を確認。履歴を外から与える別のgap教材は12,288比較と手動8例で一致。記録は `experiments/hd-discovery-review-2026-11-02.md`。公式API実行と合成RPCを区別し、実ノード/Indexerの未知index/支出済み履歴復元・暗号化バックアップは継続。
+
 ## 優先順位と進め方
 
 - **P1**：本書の正確性と実習の前提。最初に進める。

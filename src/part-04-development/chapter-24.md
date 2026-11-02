@@ -274,6 +274,16 @@ Broadcast
 
 探索範囲・停止条件も復旧仕様である。[BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)のアカウント探索は残高だけでなく取引履歴に基づく。残高ゼロを未使用と決めると、過去に使われたアドレスやアカウントを見落とし得る。gap limitを超えて離れたindexを使っていた場合などは探索範囲の調整が必要になるが、BIP-44の探索規則をすべてのKaspaウォレットへ当てはめない。
 
+### 固定版のアカウント探索とgap limit
+
+基準版の [`scan_bip44_accounts`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/wallet/core/src/wallet/mod.rs) は、各accountについて受取・変更の両枝の `0..address_scan_extent` を導出し、現在のUTXOを照会する。例えばextent 20はindex 0〜19で、20を含まない。継続条件は `account_index < last_account_index + account_scan_extent`。BIP-44の履歴ベースの探索や連続未使用20件の停止と同じ処理ではない。
+
+公式v1.0.1 SDKの `Wallet.accountsDiscovery` を固定したローカルRPC応答で実行した14ケースでは、receive/change index 20のUTXOをextent 20では見落とし、21へ広げると検出した。account 2だけにUTXOがある場合も、account extent 2では0/1で止まり、3へ広げると検出した。**戻り値 `lastAccountIndexFound=0` は、未発見の場合とaccount 0を検出した場合の両方で返る。** この値だけで資金がないとは判断できない。
+
+支出済み履歴だけを持つ比較条件でも、現在UTXOが空ならAPIの結果は空の条件と同じだった。別の教育用gapモデルでは、index 0が支出済み・index 20にUTXOがあるとき、現在UTXOだけでは0〜19を未使用と数えて見落とす一方、履歴で0の使用を認識すれば20を拾えた。ただし0が使用済みでも1〜20が未使用なら、gap 20ではindex 21へ進まない。探索上限を広げても、その範囲外に資金がない証拠にはならない。
+
+公式APIの14ケースと、教育用モデルの12,288比較の記録は `experiments/hd-discovery-review-2026-11-02.md`、実行入口は `experiments/hd-recovery/discovery.cjs`。公式SDKの探索処理は実行したが、応答は合成した現在UTXOであり、実ノードやIndexerから支出済み履歴を復元した試験ではない。DB/暗号化バックアップを含む全ウォレット復旧とは区別する。
+
 ### 復旧テスト
 
 - 本番資産とは切り離したテスト用ウォレットを用意する。
