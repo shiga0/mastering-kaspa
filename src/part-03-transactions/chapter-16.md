@@ -6,7 +6,7 @@
 
 ## 照合した実装
 
-2026年10月31日、[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要ソースを照合した。以下の固定ソースへの参照はSource-checkedの範囲を示す。別途、ランダム鍵による単一署名のDevnet送金・virtual受理は実測した（`experiments/devnet-send-review-2026-10-31.md`）。所定の拒否は `experiments/devnet-send-checks-2026-10-31.md`、送信成功応答の喪失からの復旧は `experiments/devnet-send-retry-2026-10-31.md` に記録済み。これらは以前の実行結果で、今回は再実行していない。HD復旧・全Script・全異常系・現在のMainnetとの一致は未検証。記録はリポジトリの `experiments/signing-wallet-review-2026-10-31.md` を参照する。
+2026年10月31日、[本書の基準版](../baseline.md) v1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要ソースを照合した。以下の固定ソースへの参照はSource-checkedの範囲を示す。別途、ランダム鍵による単一署名のDevnet送金・virtual受理は実測した（`experiments/devnet-send-review-2026-10-31.md`）。所定の拒否は `experiments/devnet-send-checks-2026-10-31.md`、送信成功応答の喪失からの復旧は `experiments/devnet-send-retry-2026-10-31.md` に記録済み。これらは以前の実行結果で、今回は再実行していない。HD復旧は本章の単一署名実験の対象外であり、復旧した鍵によるDevnet送金と変更枝のお釣りの支出は、別実習として[第24章24.14.1](../part-04-development/chapter-24.md#24141-教材の入力予約と公式sdkをつなぐ)で扱う。暗号化バックアップや履歴探索を含むHDウォレット全体の復旧、全Script・全異常系・現在のMainnetとの一致は未検証。記録はリポジトリの `experiments/signing-wallet-review-2026-10-31.md` を参照する。
 
 ## この章で学ぶこと
 

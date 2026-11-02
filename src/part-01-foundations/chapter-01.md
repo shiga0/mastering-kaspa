@@ -241,7 +241,7 @@ PoWとUTXOは共通するが、BlockDAGとGHOSTDAGによってブロックの順
 | ----------------------------------------- | ----------------------------------------- |
 | Part I — Foundations                      | 暗号技術、分散システム、Bitcoin、BlockDAG |
 | Part II — Consensus & Architecture        | Kaspaノード、GHOSTDAG、コンセンサス       |
-| Part III — Transactions & Mining          | UTXO、Script、Mempool、マイニング         |
+| Part III — Transactions, Mining & Security          | UTXO、Script、Mempool、マイニング         |
 | Part IV — Node Architecture & Development | RPC、Rust SDK、ノード実装、Devnet         |
 | Part V — Advanced Kaspa                   | DAGKnight、KIP、Covenants、ZK、vProgs     |
 | Part VI — Building & Contributing         | アプリケーション構築、OSSへの貢献         |

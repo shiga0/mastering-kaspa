@@ -30,7 +30,7 @@
 
 ---
 
-- [Part III — Transactions & Mining（トランザクションとマイニング）](part-03-transactions/index.md)
+- [Part III — Transactions, Mining & Security（トランザクション・マイニング・セキュリティ）](part-03-transactions/index.md)
   - [Chapter 15 — UTXO Model & Transaction Processing（UTXOモデルとトランザクション処理）](part-03-transactions/chapter-15.md)
   - [Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）](part-03-transactions/chapter-16.md)
   - [Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）](part-03-transactions/chapter-17.md)

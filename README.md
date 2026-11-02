@@ -21,7 +21,7 @@ Kaspaの基礎から、BlockDAG、GHOSTDAG、コンセンサス、Rustによる�
 | --- | --- | --- |
 | I | Foundations | 1〜8 |
 | II | Consensus | 9〜14 |
-| III | Transactions & Mining | 15〜20 |
+| III | Transactions, Mining & Security | 15〜20 |
 | IV | Development & Implementation | 21〜28 |
 | V | Advanced Kaspa Topics（SilverScript・Argentを含む） | 29〜34 ＋ 独立ページ「Argent」 |
 | VI | Building & Contributing | 35〜36 |

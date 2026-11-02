@@ -186,7 +186,7 @@ P2Pネットワークではブロック伝播に時間がかかる。同じ時�
 
 小さな合成フォークでdepthを3→7へ増やした連続計算では、候補score 10で得たscore 6の点を、activation後の候補score 11〜14でも保持し、候補score 15でscore 7へ進んだ。適用depthの切り替えは選択親DAAで決まる。この例の値は境界検査用で、実ネットワークの設定ではない。
 
-2026年11月2日、公式 `calc_finality_point` と公式メモリReachabilityを使う25ケース・112回の比較が、別のchain列挙モデルと一致した。ORIGIN、depth/pruning距離、DAG祖先とchain祖先の違い、activation前後、点の保持を含む。これは関数単位の実行検査であり、以下のVirtualProcessorやPruning Proofの実行検証とは区別する。再実行方法・入力・結果はリポジトリの `experiments/finality/`、範囲は `experiments/finality-comparison-2026-11-02.md` に保存した。
+2026年11月2日、公式 `calc_finality_point` と公式メモリReachabilityを使う25ケース・112回の比較が、別のchain列挙モデルと一致した。ORIGIN、depth/pruning距離、DAG祖先とchain祖先の違い、activation前後、点の保持を含む。これは関数単位の実行検査であり、以下のVirtualProcessorやPruning Proofの実行検証とは区別する。固定ソースの取得と実行コマンドは[Finality比較実験の再実行手順](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/finality/README.md#再実行)、入力条件・結果・確認範囲は[検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/finality-comparison-2026-11-02.md)を参照する。
 
 VirtualProcessorはsink候補にfinality pointがselected parent chain上の祖先であることを要求し、UTXO状態も評価する。finalityに違反する候補はVirtual chainから除外する経路を持つ。違反候補が存在したことを、すべて同じ `StatusInvalid` へ記録する説明にはしない。IBD開始時にはpruning pointをvirtual finality pointとして使う分岐もある。
 
@@ -510,6 +510,14 @@ cargo test
 
 **注意**：この例の`confirmations`は外部から与えられる抽象的な指標であり、Kaspaで実際にどのRPC値を採用し、どのように計算するかは別途仕様確認が必要。`min_confirmations: 3`はテストの便宜上の値で、安全な運用推奨値ではない。`evidence_fresh` も呼び出し元の判断を表すだけで、証拠の取得・時刻・viewの整合性をこの関数が検証するわけではない。
 
+### 20.14.1 実際の観測と入金状態管理へ進む
+
+`Evidence`へ渡す情報の取得は、[第28章28.6.4の公式SDK監視サンプル](../part-04-development/chapter-28.md#2864-公式sdkを使った最小監視サンプル)と、[28.10の送金・受理照会](../part-04-development/chapter-28.md#2810-トランザクションのe2eテスト)を入口にする。前者ではノード情報と対象アドレスの現在UTXO、後者では送信した取引のvirtual chain上の受理を観察できる。
+
+ただし、それらを取得するだけで `Evidence` が完成するわけではない。`confirmations`の定義・計算、証拠の鮮度とviewの整合性、競合の検知方法は別に設計・検証する。UTXOが見つかったことや、DAA scoreが進んだことだけを、安全な確認条件へ置き換えない。
+
+評価結果を入金状態へ反映する設計は、[第35章35.7の不変条件](../part-06-contributing/chapter-35.md#357-不変条件を先に書く)と[35.11のRust教材](../part-06-contributing/chapter-35.md#3511-rustでドメインロジックを実装する)へ進む。同じ出力の重複加算防止、観測の版管理、状態変更後の再集計を扱う。第35章も確認ポリシーを満たすという入力を信頼する部分実装であり、この章の判断関数と合わせるだけで確定性・永続化・会計処理が完成するわけではない。
+
 ## 20.15 セキュリティテストの設計
 
 正常系だけでなく、故障や攻撃を再現する。
@@ -629,7 +637,7 @@ grep -n -E 'prior_finality_depth|prior_pruning_depth|crescendo_activation' conse
 
 1. **脅威モデル**：10万円相当の入金を受けるECサイトを想定し、攻撃者・資産・信頼境界を文章化する。
 2. **状態機械**：`reverted`と`investigation`からの復旧条件を追加し、状態遷移表を作る。
-3. **冪等性**：同じトランザクション通知が10回届いても入金が一度しか計上されないテストを追加する。
+3. **冪等性**：[第35章35.11の入金管理教材](../part-06-contributing/chapter-35.md#3511-rustでドメインロジックを実装する)の重複観測テストを読み、同じネットワーク・TX ID・出力index・版の観測を10回与えても、同じ請求への加算が一度分になることを確認するテストを追加する。この章の `evaluate` は状態を持たないため、二重計上防止は別の責務である。同一取引の別出力は区別する。
 4. **ソース調査**：`finality_depth`が参照される箇所を列挙し、各参照がどの不変条件を守るかを説明する。
 5. **分断実験**：Simnet/Devnetの複数ノードで通信を制限し、DAGの見解が収束する過程を記録する。
 6. **レビュー**：「確認数だけを見て入金確定する」設計の問題点を列挙する。
