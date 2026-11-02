@@ -201,6 +201,20 @@ KIP-21の本文はkip-0021.mdで、同名ディレクトリは補足資料の入
 
 これらのPRの暗号方式や安全性を今回検証したわけではない。後で状態が変わる場合も、固定文書での不在と現在のPRの存在は別の証拠として扱う。
 
+### 30.14.1 KCCはアプリケーション間の規約
+
+KCC（Kaspa Covenant Conventions）は、Covenantアプリ間のABI・承認・トークン形式などの規約である。コンセンサス変更を扱うKIPと役割が異なる。2026-11-03の[固定一覧](https://github.com/kaspanet/kccs/blob/1ed87aef59faff8354061aee30f734a3b8b2c3d2/README.md)では次の状態だった。
+
+| 文書 | 対象 | 文書の状態・本文の入口 |
+|---|---|---|
+| [KCC-1](https://github.com/kaspanet/kccs/blob/1ed87aef59faff8354061aee30f734a3b8b2c3d2/kcc-0001.md) | Program ABI、状態配置、テンプレート | Final。[第31章](chapter-31.md#31101-idプログラム状態の出所を分ける) |
+| [KCC-2](https://github.com/kaspanet/kccs/blob/1ed87aef59faff8354061aee30f734a3b8b2c3d2/kcc-0002.md) | Authority Schemes（承認方式） | Final。同じく第31章 |
+| [KCC-20](https://github.com/kaspanet/kccs/blob/1ed87aef59faff8354061aee30f734a3b8b2c3d2/kcc-0020.md) | Fungible Token Convention | Final。[第15章](../part-03-transactions/chapter-15.md#1591-トークンの数量とkasを分ける) |
+| [KCC-23](https://github.com/kaspanet/kccs/blob/1ed87aef59faff8354061aee30f734a3b8b2c3d2/kcc-0023.md) | Covenant Genesis Metadata | Draft。メタデータのコミットメントは表示名・発行者の信用を保証しない |
+| [KCC-12案／PR #24](https://github.com/kaspanet/kccs/pull/24) | Browser Wallet Provider API and Discovery | Draft、PRはOpen・未マージ。上のmain一覧とは別。[第24章](../part-04-development/chapter-24.md#2491-アドレス案provider探索部分署名の互換性) |
+
+Finalは規約上の合意状態であり、すべての実装の適合・監査・Mainnet有効化を保証しない。特に、規約に従うと自己申告したABIを読むだけで、実際のScriptの適合性まで確認したことにはならない。PRの状態と固定ソース、ローカル試験、ネットワークでの検証は[今回の記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/programmability-review-2026-11-03.md)で分ける。
+
 ## 30.15 互換性を4つに分解する
 
 **互換性**は一つの属性ではない。

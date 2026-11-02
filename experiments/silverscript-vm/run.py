@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the book's 2-of-2 contract using a pinned compiler and real Script VM."""
+"""Check the book's contracts using a pinned compiler and real Script VM."""
 import argparse
 import hashlib
 import json
@@ -9,6 +9,10 @@ import subprocess
 COMMIT = "3ed973335b59269293564805cc2c58a14595ec03"
 ROOT = Path(__file__).resolve().parent
 BOOK = ROOT.parents[1]
+SOURCES = [
+    "main.rs", "security.rs", "two-of-two.sil", "timeout-refund.sil",
+    "counter.sil", "bound-counter.sil",
+]
 
 
 def prepare(source, work):
@@ -24,7 +28,7 @@ def prepare(source, work):
     manifest = manifest.replace("__ABI_PATH__", json.dumps(str(source / "silverscript-abi")))
     (work / "src").mkdir(parents=True, exist_ok=True)
     (work / "Cargo.toml").write_text(manifest)
-    for name in ["main.rs", "two-of-two.sil"]:
+    for name in SOURCES:
         (work / "src" / name).write_bytes((ROOT / name).read_bytes())
     (work / "Cargo.lock").write_bytes((ROOT / "Cargo.lock").read_bytes())
     return work
@@ -47,6 +51,10 @@ def main():
     observed["compilerCommit"] = COMMIT
     observed["kaspaCommit"] = "a41a333b08848f41bf737b72592e463a6011b8ac"
     observed["sourceSha256"] = hashlib.sha256((ROOT / "two-of-two.sil").read_bytes()).hexdigest()
+    observed["filesSha256"] = {
+        name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+        for name in [*SOURCES, "run.py", "Cargo.toml.in", "Cargo.lock"]
+    }
     print(json.dumps(observed, indent=2))
 
 

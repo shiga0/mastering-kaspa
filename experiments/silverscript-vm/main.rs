@@ -21,6 +21,8 @@ use secp256k1::{Keypair, Message, Secp256k1};
 use silverscript_abi::encode_contract_entry_sig_script;
 use silverscript_lang::compiler::{CompileOptions, compile_to_sil_abi_artifact_with_options};
 
+mod security;
+
 fn accepts(transaction: Transaction, previous: UtxoEntry) -> bool {
     let transaction = MutableTransaction::with_entries(transaction, vec![previous.clone()]);
     let populated = transaction.as_verifiable();
@@ -172,6 +174,6 @@ fn main() {
     run("corrupted-signature", corrupted, signature_b, false, false);
     println!(
         "{}",
-        serde_json::json!({"cases": cases, "compiledScriptBytes": script.len(), "allChecksPassed": true})
+        serde_json::json!({"cases": cases, "securityCases": security::run(), "compiledScriptBytes": script.len(), "allChecksPassed": true})
     );
 }

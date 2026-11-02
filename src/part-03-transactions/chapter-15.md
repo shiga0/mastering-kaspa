@@ -236,6 +236,32 @@ Fee:
 
 一般的なUTXO型のトランザクションでは、手数料は入力と出力の差額として表れる。マイナーへの支払いを「通常の受取人向け出力」として必ず指定するわけではない。
 
+### 15.9.1 トークンの数量とKASを分ける
+
+ここまでの入出力額はネイティブKASである。トークンを扱う場合も、トークン数量と、そのUTXOに載せるKAS、取引手数料を別々に計算する。
+
+| 対象 | 残高・状態を解釈する仕組み | 取り違えてはいけないこと |
+|---|---|---|
+| ネイティブKAS | コンセンサスが検証するUTXOの`value` | トークンの数量ではない |
+| KRC-20 | オンチェーンの操作を専用インデクサーが解釈して残高を再構築する | KASのUTXO応答からKRC-20残高を直接得られるわけではない |
+| KCC-20 | Covenantの状態・承認・後継出力の規約に従うトークン | 規約への適合、正しいプログラムと系列の識別が必要。名前だけでは資産を識別できない |
+
+KRC-20の一次資料は[Kasplexの専用ノード](https://github.com/kasplex/go-krc20d/blob/6d21c8668bd77db6d89f28560cc37aaa205f8517/README.md)と[残高API](https://github.com/kasplex/go-krc20d/blob/6d21c8668bd77db6d89f28560cc37aaa205f8517/api/v1address.go)を参照する。Kaspaノードから受理順を取り込み、専用の状態とAPIを持つ構成である。KRC-20の残高と、[KCC-20の状態・移転規則](https://github.com/kaspanet/kccs/blob/1ed87aef59faff8354061aee30f734a3b8b2c3d2/kcc-0020.md)を同じ検証方式として扱わない。KCC-1／2／20／23の役割と文書の状態は[30.14.1](../part-05-advanced/chapter-30.md#30141-kccはアプリケーション間の規約)、系列と偽造の区別は[31.10.1](../part-05-advanced/chapter-31.md#31101-idプログラム状態の出所を分ける)にまとめる。
+
+**トークンだけ送る場合もKASは必要か。** 新しいトークンUTXOにKASを載せ、取引のMass・手数料も満たす必要がある。誰がそのKASを負担するかはアプリの設計事項である。KCC-20のBorrowed Receiveは、対応する受取人の既存UTXOを使い、所有権・拡張状態を保ち、トークン量を増やし、KAS額を減らさない仕組みを定める。すべての受取人に既存の適合UTXOがあるとは限らず、手数料も不要にはならない。
+
+**Storage Massは預金ではない。** [第19章](chapter-19.md)と[付録E](../appendices/appendix-e.md)で扱う資源評価・手数料の規則であり、支払った手数料が後日自動返金される制度ではない。UTXOの`value`として残るKASを回収できるかは、そのScriptの支出・終了条件に依存する。トークンを焼却すれば必ず全額回収できると仮定しない。
+
+**KAS20は別の提案である。** 2026-11-03に確認した[KCC-20参照実装へのPR #4](https://github.com/argent-lang/kcc20-reference/pull/4)はOpen・未マージで、[固定例](https://github.com/Manyfestation/kcc20-reference/blob/2f7cc78f13744edeb24823f6e931b5ab0774de77/examples/kas20/README.md)は、各トークン出力のKAS額とトークン基底単位を一致させ、所有者によるburnで裏付けKASを取り出す設計を示す。これは合成資金で動かすオフライン例の説明で、本書では実行していない。正規デプロイの指定やMainnetでの利用確認ではなく、別Covenant IDのデプロイは別資産となる。
+
+### 15.9.2 UTXO検索の版とページネーション
+
+本書v1.0.1の`getUtxosByAddresses`実習と、後続版のAPIを混ぜない。2026-11-03に読んだ公式masterのコミット`b85380d16514e65136001530e7c717eef304e654`には、[GetUtxosByAddressesV2](https://github.com/kaspanet/rusty-kaspa/blob/b85380d16514e65136001530e7c717eef304e654/rpc/core/src/model/message.rs)の`cursor`・`limit`と応答の`next_cursor`がある。SDK・ノードの対応版を合わせて使い、次カーソルがなくなるまで取得する。ただし、このソース確認だけで実機接続・リリース・全ネットワークでの提供を検証したことにはならない。
+
+ページ間にはUTXOの消費・追加・再編成があり得る。単一スナップショットだと仮定せず、outpointで重複を排除し、変更通知と再照会を照合する。途中失敗時の再開・最初からの再取得、同一カーソルの繰り返しも扱う。
+
+Covenant ID別の検索用インデックス（Covenant Index）とページ付きRPCは、同日確認した[rusty-kaspa PR #1152](https://github.com/kaspanet/rusty-kaspa/pull/1152)ではOpen・未マージだった。Covenant IDを持つUTXOがあることと、対象ノードに検索APIが提供されていることは別である。本書のSDK実習を、未確認のAPI名へ置換しない。
+
 ## 15.10 UTXO選択と変更出力
 
 ウォレットが2.2 KASを送りたいとき、所有するUTXOが次のようになっているとする。

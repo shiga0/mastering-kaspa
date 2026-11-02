@@ -46,6 +46,8 @@ ArgentのREADMEでは、`.ag` からSilverScriptの `.sil` と実行用の成果
 
 また、[今回確認したSilverScriptのREADME](https://github.com/kaspanet/silverscript/blob/15b7bc27680bdf0d83b294fbbfda55ecb59958ca/README.md)はKaspa依存に `rusty-kaspa 2.1.0` のクレートを使用すると記載しています。これは本書の基準版 v1.0.1 と異なります。リリースの公開や言語の存在だけで、基準版ノードとの互換性や任意のコントラクトの安全性を確認したことにはなりません。
 
+このREADMEのコミットと、[第32章のv1.0.0に固定したVM実習](part-05-advanced/chapter-32.md#32151-同じソースを公式コンパイラーとscript-vmで検査する)も別の参照軸です。実習を再現するときは、章内のコンパイラー・依存Kaspaの完全SHAを使います。
+
 ## 本書を読む順序
 
 初めて読む場合は本書の目次の順に進みます。分野を調べ直すときは、次の表から関連する部へ移れます。

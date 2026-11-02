@@ -5,6 +5,8 @@
 
 Silverscriptの参照版はv1.0.0 / `3ed973335b59269293564805cc2c58a14595ec03`。本書のノード基準版v1.0.1とは別の資料である。確認記録は `experiments/chapter-32-review-2026-11-01.md`。追加のVM検査は `experiments/silverscript-vm-review-2026-11-02.md`。
 
+2026-11-03の追加確認では、32.15.2の返金・状態・系列制約まで検査した。既存2-of-2を含む30ケースの結果・識別値と、ネットワーク未検証の境界は[追加検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/programmability-review-2026-11-03.md)を参照する。
+
 ## 32.1 この章で学ぶこと
 
 前章ではCovenantを「UTXOの次の支出方法まで制約する仕組み」として学んだ。本章では、そのような制約を人間が理解し、レビューし、テストできる形で記述するための言語と設計方法を考える。
@@ -228,6 +230,25 @@ constructor引数のpubkeyは、[portable ABI](https://github.com/kaspanet/silve
 - 鍵の順序・形式・重複をどう扱うか。
 - スクリプトのサイズや実行コストは許容範囲か。
 - 対象ネットワークで必要な検証機能が利用できるか。
+
+### 32.10.1 型・単位・状態とコンパイラーの制約
+
+以下は固定v1.0.0の[チュートリアル](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/docs/TUTORIAL.md)で確認した規則である。無制限に計算できる常駐プログラムとして扱わない。
+
+| 項目 | 固定版での意味・注意点 |
+|---|---|
+| `tx.time` | Unixミリ秒の絶対locktime。比較対象は`temporal`。秒を渡さない |
+| `tx.daa` | 絶対DAA scoreのlocktime。比較対象は`int` |
+| `this.ageDaa` | sequence lockによる相対DAA score差。秒・ミリ秒ではない |
+| `if`とentrypoint | 選んだ経路の条件を検証する。別経路が制約を迂回しないかも確認する |
+| `for` | コンパイル時に定まる上限で展開する。実行時範囲は終端を含まず、長さが上限以下であることが必要。業務上必要な範囲検査を生成コードの暗黙の挙動だけに委ねない |
+| 状態 | 次UTXOのScriptにコミットする。変数の更新だけで外部に永続化されるわけではない |
+| `validateOutputState` | 指定出力のプログラム・次状態を検査する。金額、binding、出力個数は別に検査する |
+| `readInputState`等 | 形式を読めることと出所の認証は別。外部状態は許可テンプレート等を検証して使う（[31.10.1](chapter-31.md#31101-idプログラム状態の出所を分ける)） |
+
+絶対locktimeはDAA領域と時刻領域が分かれ、境界値は`500_000_000_000`である。時刻条件をVMで評価しても、実チェーンの時刻が到達したことまでは確認できない。取引のlocktimeとネットワーク側の受理条件も必要になる。
+
+ソースの`temporal`は、[constructor引数JSON](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/docs/CONSTRUCTOR_ARGS.md)では`kind: "int"`でミリ秒値を渡す。ソースの型名をそのままJSONの`kind`にするものではない。コンパイラーのタグ、ソース内のpragma、成果物内のversion表示も異なる対象である。ABI・constructor引数・コンパイルオプションを固定し、生成Scriptを再生成して実際のP2SH出力と照合する。ソースやABIの配布だけでは、資金がそのプログラムへ拘束されていると確認できない。
 
 ## 32.11 オンチェーンとオフチェーンの境界
 
@@ -545,6 +566,42 @@ python3 experiments/silverscript-vm/run.py \
 結果JSONの`allChecksPassed: true`は、これらの期待結果との一致を表す。ABIでの拒否1件とVMでの評価5件を`stage`で区別している。特に、参照モデルの「同じ承認者IDを二度数えない」という検査と、「Bの公開鍵にAの署名を渡しても通らない」というVMの検査は、同じ処理ではない。
 
 入力取引・UTXOは合成データで、VMの`covenants_enabled`を明示的に有効にしている。**ローカルVMで通ることと、実ノードが現在のネットワーク規則で受理することは別である。** 成熟・Mass・全コンセンサス規則・ネットワークの有効化・Devnetでの送信はこの実習では確認しない。記録は`experiments/silverscript-vm-review-2026-11-02.md`に残す。
+
+### 32.15.2 返金・状態更新・後継UTXOをVMで検査する
+
+同じrunnerには次の3ソースも含めた。2026-11-03、上と同じ固定コンパイラーとVMでコンパイル・評価した。これは合成UTXOによるローカル試験であり、送金実習や本番用の完成契約ではない。
+
+**期限付き返金：** 受取人の署名で支出でき、期限後は送金者の署名による返金経路も使える。
+
+```text
+{{#include ../../experiments/silverscript-vm/timeout-refund.sil}}
+```
+
+`claim`には期限の上限を設けていない。期限後にも両経路が有効になり、同じUTXOを取り合う可能性がある。自動返金・返金優先を保証しない。VM試験では取引のlocktimeを変えており、ノードの現在時刻・成熟・実際の受理を試していない。
+
+**Counter：** 状態を1だけ増やし、同じプログラムへ同額を引き継ぐ。
+
+```text
+{{#include ../../experiments/silverscript-vm/counter.sil}}
+```
+
+任意の利用者が更新でき、所有者の認証はない。出力を1つに限定して入力額を保つ例なので、単一入力の試験取引の手数料は0である。ネットワーク送信には、別の手数料入力などの設計・検証が必要になる。
+
+**系列も拘束するCounter：** 後継に現在のCovenant IDを要求する。
+
+```text
+{{#include ../../experiments/silverscript-vm/bound-counter.sil}}
+```
+
+これは系列内の入力・出力の個数と後継位置も検査する。ただし、外部から信頼されたGenesisを指定する契約ではない。同じプログラムを別IDの系列で使うこと自体は許可される。
+
+| 試験 | 確認した結果 |
+|---|---|
+| 返金8件 | 正常署名の支出、期限ちょうどの返金、期限後の通常支出を許可。不正署名、期限前、秒／ミリ秒の取り違え、署名後の出力改変を拒否 |
+| Counter 7件 | 正常な次状態を許可。不正状態・別プログラム・金額流出・追加出力を拒否。bindingなし・別系列も許可される |
+| BoundCounter 9件 | 正常な次状態を許可。上記4種の改変に加えてbinding欠落をVMで拒否。別IDの正当な系列は許可。不整合ID・範囲外のauthorizing inputはVM前のcovenant context構築で拒否 |
+
+既存2-of-2の6件と合わせて30件が期待と一致した。内訳はVM評価27件、ABI拒否1件、context構築での拒否2件である。結果JSONは`cases`と`securityCases`に分け、拒否した層を`stage`で記録する。ソース・ハーネス・lockfileのSHA-256と結果は[追加検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/programmability-review-2026-11-03.md)を参照する。コンパイラー全体の正しさ、複数入力の全保存則、Genesisの認証、Mainnet有効化はこの試験で検証していない。
 
 ## 32.16 テストベクトルを設計する
 

@@ -1,0 +1,515 @@
+{
+  "reviewDate": "2026-11-03",
+  "startCommit": "6481d0c7eb88f25ac06db331c327b64974a2d796",
+  "startGitStatus": "",
+  "trackedFileCountAtStart": 260,
+  "inventory": {
+    "srcMarkdown": 59,
+    "numberedChapters": 36,
+    "appendices": 8,
+    "exampleFiles": 17,
+    "experimentFiles": 166,
+    "scriptFiles": 4,
+    "workflowFiles": 1
+  },
+  "scope": "Cross-chapter targeted review, primary-source checks and local code regression checks; not full protocol or network verification.",
+  "pullRequests": {
+    "kcc12": {
+      "url": "https://github.com/kaspanet/kccs/pull/24",
+      "state": "open",
+      "merged": false,
+      "head": "8e1053ec112b7e69504f4c26cba910ec0071ea0f",
+      "headRepository": "saefstroem/kccs",
+      "updatedAt": "2026-10-17T19:43:06Z"
+    },
+    "kip22": {
+      "url": "https://github.com/kaspanet/kips/pull/48",
+      "state": "open",
+      "merged": false,
+      "head": "b031344f82f4491b9066ef556163509f93833cd6",
+      "headRepository": "kaspanet/kips",
+      "updatedAt": "2026-10-19T12:28:51Z"
+    },
+    "kas20": {
+      "url": "https://github.com/argent-lang/kcc20-reference/pull/4",
+      "state": "open",
+      "merged": false,
+      "head": "2f7cc78f13744edeb24823f6e931b5ab0774de77",
+      "headRepository": "Manyfestation/kcc20-reference",
+      "updatedAt": "2026-10-21T09:49:01Z"
+    },
+    "covindex": {
+      "url": "https://github.com/kaspanet/rusty-kaspa/pull/1152",
+      "state": "open",
+      "merged": false,
+      "head": "9df9e9c6f20488b58fe8ac7c36295e7e9768a3af",
+      "headRepository": "biryukovmaxim/rusty-kaspa",
+      "updatedAt": "2026-11-02T12:17:50Z"
+    }
+  },
+  "fixedSources": {
+    "kccs": "1ed87aef59faff8354061aee30f734a3b8b2c3d2",
+    "nodeMaster": "b85380d16514e65136001530e7c717eef304e654",
+    "dagknight": "ad45e241e6688a14901fd24dd8dc33c5c9a33f40",
+    "silverscript": "3ed973335b59269293564805cc2c58a14595ec03",
+    "vmKaspaDependency": "a41a333b08848f41bf737b72592e463a6011b8ac",
+    "vprogs": "f9b84a863a7c7c20586a9cf947550475e894f72e",
+    "kasplex": "6d21c8668bd77db6d89f28560cc37aaa205f8517",
+    "x402": "5220ceba2298ec41b0adabc75f1308da655ecbab"
+  },
+  "artifactSha256": {
+    "kccs-20261103.tar.gz": "9c3569a5cee0292d4fca5aac6be883b25f17a65575c3c885b6fff05564130aef",
+    "dagknight-20261103.tar.gz": "37ee589a5ec7cf7138d1f37810db0e4664b999f69ca0025b5422783407b6c25d",
+    "node-current-20261103.tar.gz": "a5df1a25c3797166f49eb7a2ae181a8b81e2ddf88f379ee1f6b1f60957280d08",
+    "krc20-20261103.tar.gz": "d9ee32a13bac9f527480cd428b3d6de61b67c588df7f206f6c6664eb191b462a",
+    "kcc12-fixed-20261103.md": "c5fe116291920921c600e53c9015b7d56817c710aaaf942704ac7b0ffe9f610a",
+    "kip22-fixed-20261103.md": "259d70644b618d813ba4c211a7ba58cf8c2b127cd3ee573f9cbbade41e31dac7",
+    "kas20-fixed-20261103.md": "439af4482239d8f588430c25eaa237d32ee60a300e34775bab9108989747cf0a"
+  },
+  "newExternalLinks": [
+    {
+      "url": "https://github.com/Manyfestation/kcc20-reference/blob/2f7cc78f13744edeb24823f6e931b5ab0774de77/examples/kas20/README.md",
+      "status": 200,
+      "bytes": 3514
+    },
+    {
+      "url": "https://github.com/argent-lang/kcc20-reference/pull/4",
+      "status": 200,
+      "bytes": 286514
+    },
+    {
+      "url": "https://github.com/kaspanet/kccs/blob/1ed87aef59faff8354061aee30f734a3b8b2c3d2/README.md",
+      "status": 200,
+      "bytes": 1640
+    },
+    {
+      "url": "https://github.com/kaspanet/kccs/blob/1ed87aef59faff8354061aee30f734a3b8b2c3d2/kcc-0001.md",
+      "status": 200,
+      "bytes": 49442
+    },
+    {
+      "url": "https://github.com/kaspanet/kccs/blob/1ed87aef59faff8354061aee30f734a3b8b2c3d2/kcc-0002.md",
+      "status": 200,
+      "bytes": 14784
+    },
+    {
+      "url": "https://github.com/kaspanet/kccs/blob/1ed87aef59faff8354061aee30f734a3b8b2c3d2/kcc-0020.md",
+      "status": 200,
+      "bytes": 23767
+    },
+    {
+      "url": "https://github.com/kaspanet/kccs/blob/1ed87aef59faff8354061aee30f734a3b8b2c3d2/kcc-0023.md",
+      "status": 200,
+      "bytes": 9074
+    },
+    {
+      "url": "https://github.com/kaspanet/kccs/pull/24",
+      "status": 200,
+      "bytes": 1112437
+    },
+    {
+      "url": "https://github.com/kaspanet/kips/blob/b031344f82f4491b9066ef556163509f93833cd6/kip-0022.md",
+      "status": 200,
+      "bytes": 2195
+    },
+    {
+      "url": "https://github.com/kaspanet/kips/pull/48",
+      "status": 200,
+      "bytes": 262099
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/blob/ad45e241e6688a14901fd24dd8dc33c5c9a33f40/consensus/core/src/config/params.rs",
+      "status": 200,
+      "bytes": 34066
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/blob/ad45e241e6688a14901fd24dd8dc33c5c9a33f40/kaspad/src/daemon.rs",
+      "status": 200,
+      "bytes": 32078
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/blob/b85380d16514e65136001530e7c717eef304e654/rpc/core/src/model/message.rs",
+      "status": 200,
+      "bytes": 123941
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/pull/1152",
+      "status": 200,
+      "bytes": 1280026
+    },
+    {
+      "url": "https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/docs/CONSTRUCTOR_ARGS.md",
+      "status": 200,
+      "bytes": 2527
+    },
+    {
+      "url": "https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/docs/TUTORIAL.md",
+      "status": 200,
+      "bytes": 42400
+    },
+    {
+      "url": "https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/silverscript-lang/tests/common.rs",
+      "status": 200,
+      "bytes": 7699
+    },
+    {
+      "url": "https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/silverscript-lang/tests/examples_tests.rs",
+      "status": 200,
+      "bytes": 76145
+    },
+    {
+      "url": "https://github.com/kasplex/go-krc20d/blob/6d21c8668bd77db6d89f28560cc37aaa205f8517/README.md",
+      "status": 200,
+      "bytes": 4647
+    },
+    {
+      "url": "https://github.com/kasplex/go-krc20d/blob/6d21c8668bd77db6d89f28560cc37aaa205f8517/api/v1address.go",
+      "status": 200,
+      "bytes": 3723
+    },
+    {
+      "url": "https://github.com/saefstroem/kccs/blob/8e1053ec112b7e69504f4c26cba910ec0071ea0f/kcc-0012.md",
+      "status": 200,
+      "bytes": 88376
+    },
+    {
+      "url": "https://github.com/x402-foundation/x402/blob/5220ceba2298ec41b0adabc75f1308da655ecbab/README.md",
+      "status": 200,
+      "bytes": 9450
+    }
+  ],
+  "chapterInventory": [
+    {
+      "path": "src/part-01-foundations/chapter-01.md",
+      "sha256AtStart": "f34cdb5d53bc64f02570f0f487182660e54904d045cc5590a7de0c3051798fb8",
+      "linesAtReview": 323,
+      "rustBlocks": 0
+    },
+    {
+      "path": "src/part-01-foundations/chapter-02.md",
+      "sha256AtStart": "b4c4e9d8cc4d0d94a619b01fa0fb0b0b547ca5e87f3c0238e8ca74cf740c8667",
+      "linesAtReview": 439,
+      "rustBlocks": 0
+    },
+    {
+      "path": "src/part-01-foundations/chapter-03.md",
+      "sha256AtStart": "80f4ca2802bc639e6f13866a2bc0c419909c4022b98557d9782f62edd01c3ad4",
+      "linesAtReview": 608,
+      "rustBlocks": 2
+    },
+    {
+      "path": "src/part-01-foundations/chapter-04.md",
+      "sha256AtStart": "28fcbcaf8dc5835337b65ee81d4e4338f495ff0c5bb1973ef7997673fbb5b37a",
+      "linesAtReview": 532,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-01-foundations/chapter-05.md",
+      "sha256AtStart": "d45d01295cc7f75b55cdbe5999f73ad8de4d3890ae2256597d8dfde3cfb5f3ee",
+      "linesAtReview": 591,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-01-foundations/chapter-06.md",
+      "sha256AtStart": "e86b928d68c44804c932412c49c6aa6bedd3414b486bea9a972b955827b994be",
+      "linesAtReview": 346,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-01-foundations/chapter-07.md",
+      "sha256AtStart": "c6f49d0a77c904b933d2085831700122fc6c497fe4dcdcf1cc6fc07c51e40a22",
+      "linesAtReview": 421,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-01-foundations/chapter-08.md",
+      "sha256AtStart": "a95f7b03b31b34df9c3020729a2fa0ddf41a28ee758089d4a5135eb70a36a31b",
+      "linesAtReview": 484,
+      "rustBlocks": 0
+    },
+    {
+      "path": "src/part-02-consensus/chapter-09.md",
+      "sha256AtStart": "9c93703d53093ea415b32b9c031f41bc4b17d78e10abae1fb6a5eb398d9b43aa",
+      "linesAtReview": 539,
+      "rustBlocks": 0
+    },
+    {
+      "path": "src/part-02-consensus/chapter-10.md",
+      "sha256AtStart": "eb6bf5e29ddb9c893edbbcd662932eead4d0857ea130d0daa60fbe7344223ba3",
+      "linesAtReview": 563,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-02-consensus/chapter-11.md",
+      "sha256AtStart": "886e6d1acfe8c19b1e2b82a9100657d059395312a22ffbf88d7958b0fff5c817",
+      "linesAtReview": 918,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-02-consensus/chapter-12.md",
+      "sha256AtStart": "cb521764db3823fc108800ba53414001264452eeff529c354bd89a5d3f49a987",
+      "linesAtReview": 888,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-02-consensus/chapter-13.md",
+      "sha256AtStart": "d02bf8ef8c2e63d9a4df155051a8b97dcfad9c329862f8883b3a523802759108",
+      "linesAtReview": 718,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-02-consensus/chapter-14.md",
+      "sha256AtStart": "1706162a0763da354382025a17cc544c1df2362e1f9e155f039c9ffa3efa31a5",
+      "linesAtReview": 1048,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-03-transactions/chapter-15.md",
+      "sha256AtStart": "3d6d145bff2eb59ac141d1069e9b5908fd38723f21a2ae1a6c3fa015258a3920",
+      "linesAtReview": 1160,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-03-transactions/chapter-16.md",
+      "sha256AtStart": "1d69e2c1b63118be8b6cd6bbc7056c87f9ac1228297e08dd935c40907c361e12",
+      "linesAtReview": 1029,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-03-transactions/chapter-17.md",
+      "sha256AtStart": "89cd505bad4ea602128bad115b591c84447f647c3fb8886369c8be254252fb7d",
+      "linesAtReview": 771,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-03-transactions/chapter-18.md",
+      "sha256AtStart": "f8a8afe54729a6566889c8b8476a64e00cfe5be5f114b4bbf7040246466d1f2a",
+      "linesAtReview": 709,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-03-transactions/chapter-19.md",
+      "sha256AtStart": "d39a5197112548ccbe0fee3051355853c053bc5d070dfcdf1b68180e711c2b82",
+      "linesAtReview": 769,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-03-transactions/chapter-20.md",
+      "sha256AtStart": "a9247aeb47c113c2b1c636cf21078a706bafd63264944c6802dc744a163ed059",
+      "linesAtReview": 694,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-04-development/chapter-21.md",
+      "sha256AtStart": "77bda3fa9d839bd4b321d9f57bbe20211fb3c1708ed9df1828b8141111cfe099",
+      "linesAtReview": 746,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-04-development/chapter-22.md",
+      "sha256AtStart": "b2cd65c3f76ec7c50ac2bac0d9ad9ea0384f3b981d2b638fd56bb3f301a2c3d7",
+      "linesAtReview": 725,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-04-development/chapter-23.md",
+      "sha256AtStart": "4bc7ad86c2e33e0f7f4fb9b4506566e04318b21e6dee5c46ab0acbdaddc4ba0a",
+      "linesAtReview": 850,
+      "rustBlocks": 4
+    },
+    {
+      "path": "src/part-04-development/chapter-24.md",
+      "sha256AtStart": "579732c292fc53a71c61cbf2c6365eae404f973757d47276038cfae8879bec04",
+      "linesAtReview": 799,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-04-development/chapter-25.md",
+      "sha256AtStart": "e68f692c5971431d85b63f5c37912a94ac4925ee70076772c1324324c5866f16",
+      "linesAtReview": 590,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-04-development/chapter-26.md",
+      "sha256AtStart": "486121950adc2b0c70057f3c051176421cab4f574f6d1407ca9614f61ca29adb",
+      "linesAtReview": 450,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-04-development/chapter-27.md",
+      "sha256AtStart": "26260d9c5a484eec1a1881afa2603317e685ea6bdd7547cf2930548d6da6f897",
+      "linesAtReview": 1020,
+      "rustBlocks": 10
+    },
+    {
+      "path": "src/part-04-development/chapter-28.md",
+      "sha256AtStart": "88a754ae436cfd00ad9bba7af1d9d1fc81f79b150f350cc628210e4cc1f9729c",
+      "linesAtReview": 882,
+      "rustBlocks": 2
+    },
+    {
+      "path": "src/part-05-advanced/chapter-29.md",
+      "sha256AtStart": "eab085b162f5957f65616a36be9f9278ef0277a92f79b2b4f9d713919590df50",
+      "linesAtReview": 550,
+      "rustBlocks": 0
+    },
+    {
+      "path": "src/part-05-advanced/chapter-30.md",
+      "sha256AtStart": "1285123e524163aff239dbdc6d0787be53507d18887247de194c8cd1cb92afdc",
+      "linesAtReview": 572,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-05-advanced/chapter-31.md",
+      "sha256AtStart": "32acdc663e3a0fb8b544d72c70ed98a371559f00a43c93a105f0a7b2557322d5",
+      "linesAtReview": 670,
+      "rustBlocks": 1
+    },
+    {
+      "path": "src/part-05-advanced/chapter-32.md",
+      "sha256AtStart": "cd8d0692d6e6179985f3806aa8ef63b3e856965c9547aaf1952676493f78241e",
+      "linesAtReview": 815,
+      "rustBlocks": 2
+    },
+    {
+      "path": "src/part-05-advanced/chapter-33.md",
+      "sha256AtStart": "5a31a0c56ac8456a6e40590656bd50de9cee1413dc5063d3031f3e90c9f9ca11",
+      "linesAtReview": 747,
+      "rustBlocks": 2
+    },
+    {
+      "path": "src/part-05-advanced/chapter-34.md",
+      "sha256AtStart": "ff06df623a0ca065f4c0e48f4f8b901959b7d264f2d1e998b52ba2e220b851b7",
+      "linesAtReview": 463,
+      "rustBlocks": 0
+    },
+    {
+      "path": "src/part-06-contributing/chapter-35.md",
+      "sha256AtStart": "5132f22ebf5f2520c7679fcc7b04e713a21681bcffeff333c2e44a6ca9aafe90",
+      "linesAtReview": 1012,
+      "rustBlocks": 2
+    },
+    {
+      "path": "src/part-06-contributing/chapter-36.md",
+      "sha256AtStart": "813a114560a37598302f42fd16e6ca56933937778f0b83ef62d8f629bfa01e04",
+      "linesAtReview": 624,
+      "rustBlocks": 0
+    }
+  ],
+  "silverScriptResults": "silverscript-vm/observed-2026-11-03.json",
+  "findings": [
+    {
+      "severity": "High",
+      "path": "src/part-05-advanced/chapter-31.md",
+      "lineAtReview": 162,
+      "section": "31.10.1"
+    },
+    {
+      "severity": "High",
+      "path": "src/part-05-advanced/chapter-32.md",
+      "lineAtReview": 570,
+      "section": "32.15.2"
+    },
+    {
+      "severity": "Medium",
+      "path": "src/part-03-transactions/chapter-15.md",
+      "lineAtReview": 239,
+      "section": "15.9.1"
+    },
+    {
+      "severity": "Medium",
+      "path": "src/part-04-development/chapter-24.md",
+      "lineAtReview": 227,
+      "section": "24.9.1"
+    },
+    {
+      "severity": "Medium",
+      "path": "src/part-05-advanced/chapter-29.md",
+      "lineAtReview": 256,
+      "section": "29.13.1"
+    },
+    {
+      "severity": "Medium",
+      "path": "src/part-05-advanced/chapter-30.md",
+      "lineAtReview": 204,
+      "section": "30.14.1"
+    },
+    {
+      "severity": "Medium",
+      "path": "src/part-05-advanced/chapter-34.md",
+      "lineAtReview": 320,
+      "section": "34.16.1"
+    },
+    {
+      "severity": "Low",
+      "path": "src/part-06-contributing/chapter-35.md",
+      "lineAtReview": 955,
+      "section": "課題E"
+    }
+  ],
+  "localChecks": {
+    "mdbook": "0.5.4 build passed",
+    "bookLinks": {
+      "htmlPages": 62,
+      "localReferences": 6329,
+      "images": 3,
+      "errors": 0
+    },
+    "sourceLinks": {
+      "repositoryLinks": 76,
+      "errors": 0
+    },
+    "rustBlocks": 54,
+    "rustSnippetTests": 233,
+    "synchronizedBookExamples": 3,
+    "pythonStoreTests": 7,
+    "utxoTests": 2,
+    "rustCrateTests": {
+      "dag-relations": 8,
+      "minimal-node": 16,
+      "payment-candidates": 19
+    },
+    "rustCrateFmt": "passed",
+    "rustCrateClippy": "passed with -D warnings",
+    "vmHarnessFmt": "passed",
+    "vmHarnessClippy": "passed with -D warnings",
+    "vmResults": {
+      "total": 30,
+      "stages": {
+        "vm": 27,
+        "abi": 1,
+        "covenant-context": 2
+      }
+    },
+    "newExternalLinks": 22,
+    "networkAcceptanceTested": false,
+    "githubActionsTriggered": false
+  },
+  "changedFiles": [
+    "README.md",
+    "experiments/programmability-review-2026-11-03.json",
+    "experiments/programmability-review-2026-11-03.md",
+    "experiments/silverscript-vm/README.md",
+    "experiments/silverscript-vm/bound-counter.sil",
+    "experiments/silverscript-vm/counter.sil",
+    "experiments/silverscript-vm/main.rs",
+    "experiments/silverscript-vm/observed-2026-11-03.json",
+    "experiments/silverscript-vm/run.py",
+    "experiments/silverscript-vm/security.rs",
+    "experiments/silverscript-vm/timeout-refund.sil",
+    "src/baseline.md",
+    "src/ecosystem-map.md",
+    "src/part-03-transactions/chapter-15.md",
+    "src/part-04-development/chapter-24.md",
+    "src/part-05-advanced/argent.md",
+    "src/part-05-advanced/chapter-29.md",
+    "src/part-05-advanced/chapter-30.md",
+    "src/part-05-advanced/chapter-31.md",
+    "src/part-05-advanced/chapter-32.md",
+    "src/part-05-advanced/chapter-34.md",
+    "src/part-06-contributing/chapter-35.md",
+    "src/review-status.md"
+  ],
+  "trackedDiffStat": "README.md                              |  2 +-\n experiments/silverscript-vm/README.md  | 29 ++++++++++++-----\n experiments/silverscript-vm/main.rs    |  4 ++-\n experiments/silverscript-vm/run.py     | 12 +++++--\n src/baseline.md                        |  4 ++-\n src/ecosystem-map.md                   |  2 ++\n src/part-03-transactions/chapter-15.md | 26 ++++++++++++++++\n src/part-04-development/chapter-24.md  | 12 +++++++\n src/part-05-advanced/argent.md         |  2 ++\n src/part-05-advanced/chapter-29.md     | 15 +++++++++\n src/part-05-advanced/chapter-30.md     | 14 +++++++++\n src/part-05-advanced/chapter-31.md     | 47 ++++++++++++++++++++++++++++\n src/part-05-advanced/chapter-32.md     | 57 ++++++++++++++++++++++++++++++++++\n src/part-05-advanced/chapter-34.md     | 14 +++++++++\n src/part-06-contributing/chapter-35.md | 14 +++++++++\n src/review-status.md                   |  2 ++\n 16 files changed, 244 insertions(+), 12 deletions(-)",
+  "trackedDiffStatExcludesNewFiles": true
+}

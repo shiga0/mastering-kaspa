@@ -1,0 +1,12 @@
+pragma silverscript ^0.1.0;
+
+contract TimeoutRefund(pubkey sender, pubkey recipient, temporal deadline) {
+    entry claim(sig approval) {
+        require(checkSig(approval, recipient));
+    }
+
+    entry refund(sig approval) {
+        require(checkSig(approval, sender));
+        require(tx.time >= deadline);
+    }
+}

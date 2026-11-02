@@ -164,6 +164,8 @@ consumes/emitsの対象はCovenant/認可グループの範囲と合わせて読
 
 [ICC semantics](https://github.com/argent-lang/argent/blob/2796809f167144902f04a4b3333a4c144f91fdaf/docs/icc-semantics.md)は、同じ取引で相手Covenantが消費されたことと、自分の操作を認可したことを区別する。id.co_spent()による存在確認だけで認可範囲は定まらず、相手側の署名対象や観測/出力条件と意図して結び付ける必要がある。artifact IDの一致も、チェーン上の正当なGenesisや業務上の認可を単独で保証しない。
 
+系列の複製と資産の偽造、状態の形式と出所、権限UTXOの同時消費を取り違える攻撃例と検証の順序は、[31.10.1](chapter-31.md#31101-idプログラム状態の出所を分ける)にまとめる。ここでのArgent固有の機能を、SilverScriptや本書v1.0.1ノードのAPIとして扱わない。
+
 ICCは任意のActorへ自由にメッセージを送る機能ではない。**同一トランザクション内のCovenant入力・出力を検証可能な形で結び付ける**仕組みである。
 
 ## 7. コンパイラと生成物

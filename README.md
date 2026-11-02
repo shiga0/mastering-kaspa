@@ -75,7 +75,7 @@ mdbook build
 
 [第35章の入金候補への変換サンプル](examples/payment-candidates/README.md)では、公式SDKの現在UTXOをJSON経由でRustの集計モデルへ取り込みます。保存済みの実データでも実行でき、UTXOの観測と請求の支払い済み判定を分けています。
 
-[第32章のSilverscript/VM実習](experiments/silverscript-vm/README.md)では、本文の2-of-2コントラクトを公式コンパイラーでコンパイルし、ローカルのScript VMで正常署名・署名後の改変などを検査できます。Rust 1.94.0と別の固定Kaspa依存を使う手動実習です。
+[第32章のSilverscript/VM実習](experiments/silverscript-vm/README.md)では、2-of-2、期限付き返金、状態更新、後継UTXOの系列制約について、正常系と失敗ケースの計30件を検査できます。Rust 1.94.0と別の固定Kaspa依存を使う手動のローカル実習で、ネットワークへの送信は行いません。
 
 完成したウォレット・報酬アプリは本書の収録対象外です。HD復旧・送金などの限定した検証コードと記録は `experiments/` に保存しています。
 

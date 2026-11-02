@@ -1,0 +1,11 @@
+pragma silverscript ^0.1.0;
+
+contract Counter(int initialCount) {
+    int count = initialCount;
+
+    entry step() {
+        require(tx.outputs.length == 1);
+        require(tx.outputs[0].value == tx.inputs[this.activeInputIndex].value);
+        validateOutputState(0, State { count: count + 1 });
+    }
+}

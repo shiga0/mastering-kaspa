@@ -4,6 +4,8 @@
 
 11月3日の横断レビュー・再実行結果は[今回の記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/repository-review-2026-11-03.md)を参照してください。以下の個別レビュー記録は各実施時点の履歴として維持し、今回の確認を全主張・全環境の検証完了へ広げません。
 
+同日の追加依頼による[プログラマビリティ改訂記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/programmability-review-2026-11-03.md)では、Covenantの出所・承認、SilverScriptの型と失敗ケース、KCC・ウォレット提案・DAGKnightの参照軸を補強しました。SilverScriptはローカル30ケースを確認し、全仕様・本番有効化は未検証です。過去の一巡レビューや実ノード実験の記録を、今回新規に実行したものへ書き換えません。
+
 ## SUMMARY順のレビュー
 
 扉ページ追加前の49ページを目次順に確認し、文章・構成・技術的根拠・リンク・実習への導線のレビューが一巡しました。既存のソース照合や実行結果を使い、同じ検証を繰り返すことは避けます。

@@ -224,6 +224,18 @@ Online Host                          Isolated Signer
 
 ハードウェアウォレット対応は製品・ファームウェア・Kaspa機能の実装状況によって異なる。購入前に公式の対応状況を確認する。
 
+### 24.9.1 アドレス案・Provider探索・部分署名の互換性
+
+以下は2026-11-03に確認した提案であり、本章のv1.0.1実習の機能追加ではない。
+
+**公開鍵を隠すアドレス案：** [KIP-22案／PR #48](https://github.com/kaspanet/kips/pull/48)はDraft・Open・未マージで、[固定本文](https://github.com/kaspanet/kips/blob/b031344f82f4491b9066ef556163509f93833cd6/kip-0022.md)は公開鍵を含むredeem scriptのハッシュへ支払うP2SH方式を提案する。支出前の公開鍵露出を抑えるが、支出時には鍵が明らかになる。公開鍵・xpubを別経路で公開した場合や支出時の攻撃リスクも残り、量子耐性署名への置換ではない。提案の導出purposeと基準版gen1の導出パスを混ぜて復旧しない。同番号の別案との区別は[30.14](../part-05-advanced/chapter-30.md#3014-kip-22を例にしたprと正式文書の違い)を参照する。
+
+**Wallet Discovery：** [KCC-12案／PR #24](https://github.com/kaspanet/kccs/pull/24)もDraft・Open・未マージである。ブラウザー内のウォレットProviderを見つける仕組みであり、24.12のHDアカウント・使用済みアドレス探索とは異なる。提案では`kaspa:requestProvider`と`kaspa:announceProvider`を用いる。Providerの自己紹介だけで信頼性は確定しないため、接続先、ネットワーク、ユーザー承認、対応メソッドを確認する。
+
+**部分署名：** 同案の[固定本文](https://github.com/saefstroem/kccs/blob/8e1053ec112b7e69504f4c26cba910ec0071ea0f/kcc-0012.md)は、指定入力だけを署名する取引APIと、PSKBへの部分署名APIを区別する。署名追加と、最終Scriptの構築・送信は別の処理である。別署名者のデータを保持し、入力・出力を勝手に並べ替えず、参照UTXOや対応しない署名方式が不明なら拒否する。PSKBをBitcoinのPSBTと同一形式だと仮定しない。各ウォレット間の実機互換性は未検証である。
+
+`SIGHASH_ALL`は出力を拘束するが、それだけで任意の操作引数や承認意図の認証が完了するわけではない（[31.10.1](../part-05-advanced/chapter-31.md#31101-idプログラム状態の出所を分ける)）。通常のALLで署名した後にスポンサー入力を追加すれば、その署名はそのまま使えない。必要な入力・出力・手数料を先に確定してから署名を集めるか、再構築・再署名する。異なるSIGHASHを使う設計は拘束範囲を別途検証する。[第35章](../part-06-contributing/chapter-35.md#課題eprogrammabilityへの拡張)のスポンサー決済は、この課題を持つ設計例である。
+
 ## 24.10 Watch-onlyウォレットと署名権限の分離
 
 Watch-onlyウォレットは、公開情報を用いて残高やトランザクションを監視し、秘密鍵を保持しない構成である。会計システムや入金監視に向いている。

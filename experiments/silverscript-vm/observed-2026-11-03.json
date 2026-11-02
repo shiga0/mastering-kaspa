@@ -1,0 +1,172 @@
+{
+  "allChecksPassed": true,
+  "cases": [
+    {
+      "accepted": true,
+      "case": "both-valid",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "missing-second",
+      "stage": "abi"
+    },
+    {
+      "accepted": false,
+      "case": "same-signer-twice",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "swapped-signatures",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "changed-output-after-signing",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "corrupted-signature",
+      "stage": "vm"
+    }
+  ],
+  "compiledScriptBytes": 168,
+  "securityCases": [
+    {
+      "accepted": true,
+      "case": "claim-recipient",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "claim-wrong-signer",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "refund-before-deadline",
+      "stage": "vm"
+    },
+    {
+      "accepted": true,
+      "case": "refund-at-deadline",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "refund-seconds-as-milliseconds",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "refund-wrong-signer",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "refund-output-changed-after-signing",
+      "stage": "vm"
+    },
+    {
+      "accepted": true,
+      "case": "claim-still-possible-after-deadline",
+      "stage": "vm"
+    },
+    {
+      "accepted": true,
+      "case": "Counter-valid-successor",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "Counter-wrong-state",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "Counter-wrong-program",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "Counter-drained-value",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "Counter-extra-output",
+      "stage": "vm"
+    },
+    {
+      "accepted": true,
+      "case": "Counter-missing-binding",
+      "stage": "vm"
+    },
+    {
+      "accepted": true,
+      "case": "Counter-new-lineage-clone",
+      "stage": "vm"
+    },
+    {
+      "accepted": true,
+      "case": "BoundCounter-valid-successor",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "BoundCounter-wrong-state",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "BoundCounter-wrong-program",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "BoundCounter-drained-value",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "BoundCounter-extra-output",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "BoundCounter-missing-binding",
+      "stage": "vm"
+    },
+    {
+      "accepted": true,
+      "case": "BoundCounter-new-lineage-clone",
+      "stage": "vm"
+    },
+    {
+      "accepted": false,
+      "case": "BoundCounter-wrong-lineage",
+      "stage": "covenant-context"
+    },
+    {
+      "accepted": false,
+      "case": "BoundCounter-out-of-range-authorizer",
+      "stage": "covenant-context"
+    }
+  ],
+  "compilerCommit": "3ed973335b59269293564805cc2c58a14595ec03",
+  "kaspaCommit": "a41a333b08848f41bf737b72592e463a6011b8ac",
+  "sourceSha256": "053386573632516c0bbd53daaea5da73932b26116002e43b642ed7929db7c2d5",
+  "filesSha256": {
+    "main.rs": "7567ddf33166570b252d80333cb2c43b967816259700ab19290b88f949d41630",
+    "security.rs": "d60d01d22f77f9e7acdbaf67ea839ecdcf2b6819e8cf5a01dc8198506c3aed68",
+    "two-of-two.sil": "053386573632516c0bbd53daaea5da73932b26116002e43b642ed7929db7c2d5",
+    "timeout-refund.sil": "e630b39216d102ef59afc765aee88a69cf55421b8548c7e882ec275cecc1fe39",
+    "counter.sil": "7afe1f97993ceb8d4498739dec655f95808466ded9a31966c62e44005325faa9",
+    "bound-counter.sil": "e668631fa2b81a4acffb05b0d36579607b213fe8fae05234a6d5fb49618596b5",
+    "run.py": "2228d87be675c27d573fcaf67d3a621bbd441373cf8afbb6f4bf65d5bcc6150d",
+    "Cargo.toml.in": "8e25ed5fcbafb7280c90e7705c98bca5ff518b3ddf18c3d0190216450d24809b",
+    "Cargo.lock": "1c9a32e282b0c3ae2707f4c926fb4fb0f6de8b6b4950dba802cdfd99e86609b9"
+  }
+}

@@ -253,6 +253,21 @@ DAGKnightは、PHANTOM系のBlockDAG研究を発展させ、**ネットワーク
 
 論文に書かれた構想が、そのままメインネットで有効とは限らない。KIPの存在も、採用・有効化の証拠にはならない。
 
+### 29.13.1 Testnet-13の設定と有効化を区別する
+
+2026-11-03、公式`dagknight`ブランチのコミット`ad45e241e6688a14901fd24dd8dc33c5c9a33f40`を追加確認した。[params.rs](https://github.com/kaspanet/rusty-kaspa/blob/ad45e241e6688a14901fd24dd8dc33c5c9a33f40/consensus/core/src/config/params.rs)にはTestnet-13用の設定があり、`dagknight_activation`に`ForkActivation::always()`を指定する。一方、同じソースのMainnet設定は`never()`で、[daemon.rs](https://github.com/kaspanet/rusty-kaspa/blob/ad45e241e6688a14901fd24dd8dc33c5c9a33f40/kaspad/src/daemon.rs)にはMainnet実行を停止させる実験用のガードがある。
+
+`ForkActivation`は対象ネットワークで規則を切り替える実装上の条件である。Testnet用の`always()`からMainnet有効化を推論しない。ここで確認したのは設定とコードの存在であり、公開Testnet-13の稼働、接続互換性、リリース、移行の完了、論文との全面的一致を実測したものではない。本書のv1.0.1 Devnetも、このブランチの実行環境ではない。
+
+また、DAGKnightの適応的な確認とブロック生成間隔の短縮は別の評価である。Bitcoin・Ethereum・Solana・Hyperliquid等と比較する場合も、次を別々に記録する。今回、新たな性能ランキングや未測定の数値は追加しない。
+
+| 指標 | 揃える条件 |
+|---|---|
+| ブロック生成間隔 | 目標値か観測分布か、ネットワーク・測定期間 |
+| 確認・finality | 包含、受理、確率的な確認、プロトコルの確定のどれか。脅威モデルも記載 |
+| 参加者の役割 | 自分で検証するノードと、ブロック生成者・投票者の区別 |
+| 運用コスト | 検証、生成、証明、履歴保存のどの役割か。機器・帯域・資本等の範囲 |
+
 ## 29.14 Rust実装で見るべき責務
 
 Chapter 25〜28で扱ったコード調査方法を、セキュリティの観点に拡張する。
