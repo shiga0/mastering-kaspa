@@ -297,200 +297,39 @@ git status
 
 **テストが通ることは必要条件だが、コンセンサス安全性の十分条件ではない。**
 
-## 36.15 Rustで不変条件をテストする小さな例
+## 36.15 既存教材へのテスト追加をPR形式で説明する
 
-以下は、Kaspa本体ではなく、状態遷移の原子性を学ぶための独立したRust例である。
+[第33章33.20の残高移転教材](../part-05-advanced/chapter-33.md#3320-rustで最小の状態遷移を作る)を使い、**未検査の境界を選び、テストを追加し、変更と検証を説明する**練習を行う。新しい残高移転モデルを作るのではなく、既存の契約とテストを読んで変更対象を絞る。
 
-```rust
-use std::collections::HashMap;
+### 1. 検査したい性質を選ぶ
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Ledger {
-    pub balances: HashMap<String, u64>,
-}
+第33章の独立した学習用プロジェクトで、`apply_transfer` と既存テストを読む。すでに検査しているケースを確認し、追加する入力と期待結果を先に書く。
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum TransferError {
-    EmptyAccount,
-    ZeroAmount,
-    MissingAccount,
-    InsufficientFunds,
-    Overflow,
-}
+例えば、既存の通常送金に関する不足・オーバーフローテストに加え、**`u64::MAX`を持つアカウントから同じアカウントへ全額を送っても、残高が増減せず成功する**ことを調べる。同関数は残高不足を検査した後、自己送金を通常の加算から分岐するため、このケースで受取額のオーバーフローを起こしてはいけない。これは第33章の教材の契約であり、KaspaのUTXO取引の規則ではない。
 
-impl Ledger {
-    pub fn transfer(&mut self, from: &str, to: &str, amount: u64) -> Result<(), TransferError> {
-        if from.is_empty() || to.is_empty() {
-            return Err(TransferError::EmptyAccount);
-        }
-        if amount == 0 {
-            return Err(TransferError::ZeroAmount);
-        }
-        let from_balance = *self
-            .balances
-            .get(from)
-            .ok_or(TransferError::MissingAccount)?;
-        let to_balance = *self.balances.get(to).ok_or(TransferError::MissingAccount)?;
+### 2. テストを追加して検証する
 
-        let new_from = from_balance
-            .checked_sub(amount)
-            .ok_or(TransferError::InsufficientFunds)?;
-        if from == to {
-            return Ok(());
-        }
-        let new_to = to_balance
-            .checked_add(amount)
-            .ok_or(TransferError::Overflow)?;
-
-        // 全ての検証が成功してから更新する。
-        self.balances.insert(from.to_string(), new_from);
-        self.balances.insert(to.to_string(), new_to);
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn sample() -> Ledger {
-        Ledger {
-            balances: HashMap::from([("alice".to_string(), 10), ("bob".to_string(), 5)]),
-        }
-    }
-
-    #[test]
-    fn transfer_preserves_total() {
-        let mut ledger = sample();
-        ledger.transfer("alice", "bob", 4).unwrap();
-        assert_eq!(ledger.balances["alice"], 6);
-        assert_eq!(ledger.balances["bob"], 9);
-    }
-
-    #[test]
-    fn rejected_transfer_does_not_mutate_state() {
-        let mut ledger = sample();
-        let before = ledger.clone();
-        assert_eq!(
-            ledger.transfer("alice", "bob", 100),
-            Err(TransferError::InsufficientFunds)
-        );
-        assert_eq!(ledger, before);
-    }
-
-    #[test]
-    fn overflow_does_not_mutate_state() {
-        let mut ledger = sample();
-        ledger.balances.insert("bob".to_string(), u64::MAX);
-        let before = ledger.clone();
-        assert_eq!(
-            ledger.transfer("alice", "bob", 1),
-            Err(TransferError::Overflow)
-        );
-        assert_eq!(ledger, before);
-    }
-
-    #[test]
-    fn self_transfer_is_noop() {
-        let mut ledger = sample();
-        let before = ledger.clone();
-        ledger.transfer("alice", "alice", 3).unwrap();
-        assert_eq!(ledger, before);
-    }
-
-    #[test]
-    fn rejects_zero_and_empty_labels_without_mutation() {
-        let mut ledger = sample();
-        let before = ledger.clone();
-        assert_eq!(
-            ledger.transfer("alice", "bob", 0),
-            Err(TransferError::ZeroAmount)
-        );
-        for (from, to) in [("", "bob"), ("alice", "")] {
-            assert_eq!(
-                ledger.transfer(from, to, 1),
-                Err(TransferError::EmptyAccount)
-            );
-            assert_eq!(ledger, before);
-        }
-        assert_eq!(ledger, before);
-    }
-
-    #[test]
-    fn missing_accounts_do_not_mutate_state() {
-        let mut ledger = sample();
-        let before = ledger.clone();
-        for (from, to) in [
-            ("missing", "bob"),
-            ("alice", "missing"),
-            ("missing", "missing"),
-        ] {
-            assert_eq!(
-                ledger.transfer(from, to, 1),
-                Err(TransferError::MissingAccount)
-            );
-            assert_eq!(ledger, before);
-        }
-    }
-
-    #[test]
-    fn self_transfer_cannot_bypass_available_funds() {
-        let mut ledger = sample();
-        let before = ledger.clone();
-        assert_eq!(
-            ledger.transfer("alice", "alice", 11),
-            Err(TransferError::InsufficientFunds)
-        );
-        assert_eq!(ledger, before);
-    }
-
-    #[test]
-    fn finite_grid_preserves_total_or_complete_input() {
-        for a in [0, 1, 10, u64::MAX] {
-            for b in [0, 1, 10, u64::MAX] {
-                for amount in [0, 1, 10, u64::MAX] {
-                    let mut ledger = Ledger {
-                        balances: HashMap::from([("alice".into(), a), ("bob".into(), b)]),
-                    };
-                    let before = ledger.clone();
-                    match ledger.transfer("alice", "bob", amount) {
-                        Ok(()) => assert_eq!(
-                            ledger
-                                .balances
-                                .values()
-                                .map(|v| u128::from(*v))
-                                .sum::<u128>(),
-                            u128::from(a) + u128::from(b)
-                        ),
-                        Err(_) => assert_eq!(ledger, before),
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn this_ledger_does_not_prevent_replay() {
-        let mut ledger = sample();
-        ledger.transfer("alice", "bob", 4).unwrap();
-        ledger.transfer("alice", "bob", 4).unwrap();
-        assert_eq!(ledger.balances["alice"], 2);
-        assert_eq!(ledger.balances["bob"], 13);
-    }
-}
-```
-
-本書外でcargo new --lib --edition 2021 contribution-invariant-labを作り、src/lib.rsへ配置する。Rust/Cargo 1.90.0、外部依存なしで本文を検査した。
+1. 変更前のテストを実行し、結果を記録する。
+2. 選んだ入力・期待結果に対応するテストを一つ追加する。上の例なら成功結果が元の残高集合全体と一致することも確認する。
+3. 追加したテストと既存テストを実行する。対象を絞った場合も、実行件数が0ではないことを確認する。
+4. 書式・Clippy・差分を検査する。
 
 ```bash
+# 第33章の教材を置いた独立プロジェクト内で実行する
 cargo test --offline
 cargo fmt --all -- --check
 cargo clippy --offline --all-targets -- -D warnings
+git diff --check
+git diff
 ```
 
-この例は架空の非空IDによるアカウント残高モデルで、両アカウントが存在することと金額が正であることを要求する。自己送金でも残高不足を検査する。KaspaのUTXO・署名/認証・nonce/Replay防止・手数料・永続化/並行制御は実装しない。同じ要求の再実行で2回送金できることもテストした。
+既存実装が正しければ、テスト追加だけでよい。失敗した場合も、まず期待値と仕様を見直し、修正が必要な理由を説明してから動作を変更する。通常のErrで入力状態が維持されることと、panic・プロセスクラッシュ・永続化の保証は区別する。
 
-この例で確認できるのは、**検証完了前に状態を変更しない**という通常のResultエラー経路での基本原則である。OOMやpanic・プロセスクラッシュを含むトランザクション保証ではない。実際のKaspaではUTXO、DAG、仮想状態、永続化などが絡むため、同じ原則をより複雑な境界で守る必要がある。
+### 3. PRの説明を作る
+
+36.19のテンプレートを使い、問題・変更・検証結果を短くまとめる。例えば「最大残高の自己送金を明示的に検査していなかったため、既存の自己送金規則を確認する回帰テストを追加した。実装の動作変更はない」と説明する。実行したコマンド、テスト名・件数、環境と未確認範囲も記録する。
+
+これはローカルでPR説明を作る演習であり、上流へそのまま提出する課題ではない。実際に貢献する場合は対象リポジトリの規則と既存テストを確認し、そのプロジェクトで必要な変更を選ぶ。教材は署名・権限・nonce・永続化を実装しておらず、テスト追加をKaspa本体の安全性検証とは扱わない。
 
 ## 36.16 非決定性を持ち込まない
 
@@ -780,6 +619,6 @@ Kaspaへのコントリビュートは、完成した専門家だけの活動で
 7. [GitHub Docs — Contributing to projects](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project)
 8. [GitHub Docs — Creating a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)
 
-**確認範囲：** 基準版の開発用入口・現在の公開手順と独自Rust教材。公式スクリプト/CI全体、実PR提出や脆弱性報告の実行、コンセンサスの全面検証ではない。記録は `experiments/chapter-36-review-2026-11-01.md`。
+**確認範囲：** 基準版の開発用入口・公開手順の既存確認。36.15は第33章の教材を使うテスト追加・PR説明の演習であり、追加テストを本章で実装・実行済みとするものではない。公式スクリプト/CI全体、実PR提出や脆弱性報告の実行、コンセンサスの全面検証ではない。記録は `experiments/chapter-36-review-2026-11-01.md`。
 
 次は[付録A — Rust環境・Docker環境の構築](../appendices/appendix-a.md)。

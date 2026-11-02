@@ -1,7 +1,7 @@
 # Chapter 35 — Designing and Partially Implementing a Kaspa Application（Kaspaアプリケーションの設計と部分実装）
 
 > **目次順の本文レビュー：2026-11-01。基準版の主要RPC入口・独自集計教材・SQLite制約を確認。完成アプリ/E2E・会計台帳の検証ではない。**
-> 本章は『Mastering Kaspa』Part VI「Contributing」の実践編である。実装例は学習用であり、資金を扱う本番アプリケーションとして監査済みではない。SDKやRPCのAPIはバージョンによって変化するため、実装時は利用するリリースの公式サンプルを確認する。
+> 本章は『Mastering Kaspa』Part VI「Building & Contributing」の実践編である。実装例は学習用であり、資金を扱う本番アプリケーションとして監査済みではない。SDKやRPCのAPIはバージョンによって変化するため、実装時は利用するリリースの公式サンプルを確認する。
 
 ノード参照版はv1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。現行ドキュメントとAPIが異なる場合はこの固定版のソースを優先する。確認記録は `experiments/chapter-35-review-2026-11-01.md`。
 
@@ -826,7 +826,11 @@ COMMIT
 - Testnetのアドレス・トランザクションをMainnet請求に混ぜない。
 - 一部入金・過払い・期限切れ後の入金を扱える。
 
-## 35.17 Devnetでの検証手順
+## 35.17 実アプリ実装後のDevnet検証計画
+
+以下は、請求作成・DB更新・継続監視などを実装した後に行うE2E検証の計画である。本書に完成Payment Trackerや、この一覧をそのまま実行する手順を収録しているわけではない。
+
+今すぐ動かせるSDK応答からRustへの入金候補取り込みは[35.11.1](#35111-公式sdkの現在utxoをrustの入金候補へ変換する)、公式SDKによる送金・受理照会は[第28章28.10](../part-04-development/chapter-28.md#2810-トランザクションのe2eテスト)を使う。これらの成功と、以下のアプリ全体の検証は分けて記録する。
 
 1. `rusty-kaspa`の利用バージョンを固定する。
 2. Devnetノードを起動する（フラグは対象リリースで確認）。
@@ -991,4 +995,4 @@ Kaspaアプリケーションを作るうえで重要なのは、チェーンの
 - Kaspa改善提案（KIPs）：https://github.com/kaspanet/kips
 - mdBook：https://rust-lang.github.io/mdBook/
 
-**確認範囲：** 基準版RPC/サンプルの主要箇所、独自Rust教材とSQLite制約。完成Payment Tracker・実RPCアダプター・複数ワーカー・入金履歴復元・期限/業務会計・E2Eは未検証。記録は `experiments/chapter-35-review-2026-11-01.md`。
+**確認範囲：** 基準版RPC/サンプルの主要箇所、独自Rust教材とSQLite制約。追加で、公式SDKから実Devnetの現在UTXOをJSON経由でRustへ渡し、`Candidate`として取り込む限定サンプルを実測した。継続監視用のRust RPCアダプター、完成Payment Tracker、複数ワーカー、入金履歴復元、期限/業務会計、アプリ全体のE2Eは未検証。記録は `experiments/chapter-35-review-2026-11-01.md` と[候補取り込みの実測記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/payment-candidates-review-2026-11-02.md)を参照する。
