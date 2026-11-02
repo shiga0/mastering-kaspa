@@ -363,144 +363,36 @@ cargo test --locked -p kaspa-consensus --lib pipeline::body_processor::body_vali
 
 成功ケースだけでなく、失敗時の不変条件を見ることが重要である。
 
-## 25.12 Rustによる小さな実験：状態更新の原子性
+## 25.12 教材と公式実装で失敗時の状態を比較する
 
-以下は `rusty-kaspa` のコードではなく、状態変更を安全に行うための教育用モデルである。**通常のErrで既存のメモリ内状態を維持する**ことを確認する。実ノードの全段階が同じ性質を持つという例ではない。
+[第7章](../part-01-foundations/chapter-07.md)のDAG教材と[第11章](../part-02-consensus/chapter-11.md)の検証パイプライン教材では、親関係を検査し、拒否時に既存のメモリ内状態を維持した。本章ではそのコードを再実装する代わりに、**公式実装のどの段階で、何が保存されるか**を調べる。
 
-```rust
-use std::collections::{BTreeMap, HashSet};
+教材の「Errなら集合を変えない」という性質を、実ノードの全処理へ一般化しない。公式実装では、ヘッダー保存後に本体検証が失敗する場合もあり、エラーの種類によって無効ステータスの保存方針も異なる。
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum Error {
-    AlreadyKnown,
-    EmptyParents,
-    DuplicateParent,
-    SelfParent,
-    MissingParent,
-}
+### 比較する手順
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DagStore {
-    parents: BTreeMap<u64, Vec<u64>>,
-}
-
-impl DagStore {
-    // 教材のルートを明示する。本物のGenesis検証ではない。
-    pub fn new(root: u64) -> Self {
-        Self {
-            parents: BTreeMap::from([(root, vec![])]),
-        }
-    }
-
-    pub fn insert(&mut self, id: u64, parents: &[u64]) -> Result<(), Error> {
-        if self.parents.contains_key(&id) {
-            return Err(Error::AlreadyKnown);
-        }
-        if parents.is_empty() {
-            return Err(Error::EmptyParents);
-        }
-        let mut seen = HashSet::new();
-        for parent in parents {
-            if *parent == id {
-                return Err(Error::SelfParent);
-            }
-            if !seen.insert(parent) {
-                return Err(Error::DuplicateParent);
-            }
-            if !self.parents.contains_key(parent) {
-                return Err(Error::MissingParent);
-            }
-        }
-        self.parents.insert(id, parents.to_vec());
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn sample() -> DagStore {
-        let mut store = DagStore::new(0);
-        store.insert(1, &[0]).unwrap();
-        store
-    }
-    #[test]
-    fn accepts_block_after_parent() {
-        let mut store = sample();
-        assert_eq!(store.insert(2, &[1]), Ok(()));
-        assert_eq!(store.parents.get(&2), Some(&vec![1]));
-    }
-    #[test]
-    fn invalid_block_preserves_nonempty_state() {
-        let mut store = sample();
-        let before = store.clone();
-        assert_eq!(store.insert(2, &[1, 99]), Err(Error::MissingParent));
-        assert_eq!(store, before);
-    }
-    #[test]
-    fn duplicate_is_rejected_without_replacing_edges() {
-        let mut store = sample();
-        store.insert(2, &[0]).unwrap();
-        let before = store.clone();
-        assert_eq!(store.insert(1, &[2]), Err(Error::AlreadyKnown));
-        assert_eq!(store, before);
-    }
-    #[test]
-    fn only_explicit_root_has_no_parents() {
-        let mut store = sample();
-        let before = store.clone();
-        assert_eq!(store.insert(2, &[]), Err(Error::EmptyParents));
-        assert_eq!(store, before);
-    }
-    #[test]
-    fn duplicate_parent_preserves_state() {
-        let mut store = sample();
-        let before = store.clone();
-        assert_eq!(store.insert(2, &[1, 1]), Err(Error::DuplicateParent));
-        assert_eq!(store, before);
-    }
-    #[test]
-    fn self_parent_preserves_state() {
-        let mut store = sample();
-        let before = store.clone();
-        assert_eq!(store.insert(2, &[1, 2]), Err(Error::SelfParent));
-        assert_eq!(store, before);
-    }
-    #[test]
-    fn missing_parent_can_arrive_before_retry() {
-        let mut store = DagStore::new(0);
-        assert_eq!(store.insert(2, &[1]), Err(Error::MissingParent));
-        assert_eq!(store.insert(1, &[0]), Ok(()));
-        assert_eq!(store.insert(2, &[1]), Ok(()));
-    }
-    #[test]
-    fn multiple_parents_do_not_require_numeric_order() {
-        let mut store = DagStore::new(0);
-        store.insert(2, &[0]).unwrap();
-        store.insert(1, &[0]).unwrap();
-        store.insert(3, &[2, 1]).unwrap();
-        assert_eq!(store.parents.get(&3), Some(&vec![2, 1]));
-    }
-}
-```
-
-本書のリポジトリとは別の作業用ディレクトリで実行する。Cargo.tomlはcargo newが作るものを使い、外部依存は不要である。
-
-実行手順：
+1. 25.10で紹介した `body_processor/processor.rs` を開き、本体検証のエラーを処理する分岐を読む。`StatusInvalid` を保存する条件と、`BadMerkleRoot`・`MissingParents`・`PrunedBlock` を除外する条件を記録する。
+2. 25.11の `merkle_root_missing_parents_known_invalid_test` を読み、初期状態・投入する本体・期待するエラー・再投入時の結果を調べる。再投入が `KnownInvalid` になるか、元の検証エラーを返すかに注目する。
+3. 同じブロックのヘッダー処理へ戻り、ヘッダーが保存される段階と、本体の検証に失敗した段階を分ける。[第11章](../part-02-consensus/chapter-11.md)のHeaderOnly・本体保存・Virtual更新の区別を使う。
+4. 必要なビルド依存を準備した固定版workspaceのルートで、次の公式テストを実行し、実行件数と結果を確認する。
 
 ```bash
-cargo new --lib --edition 2021 dag-store-lab
-cd dag-store-lab
-# 上のコードを src/lib.rs に貼り付ける
-cargo test
+cargo test --locked -p kaspa-consensus --lib pipeline::body_processor::body_validation_in_isolation::tests::merkle_root_missing_parents_known_invalid_test -- --exact
 ```
 
-教材は明示したrootから始め、既知の親への辺を保存する。整数IDの大小は到着順やトポロジーを表さず、親配列の順序も本物のcanonical orderingの再現ではない。
+このテストの過去の実行条件と結果は[検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/core-validation-review-2026-10-31.md#実行した検査)にある。PoWを無効にしたTestConsensusによる限定した検査であり、P2Pからの再取得・全拒否条件・クラッシュ復旧を検証するものではない。
 
-本文から抽出した教材は8テスト成功。既存状態を保った拒否、親が後から到着した場合の再投入、複数親も検査した。25.8の型・trait断片は別のライブラリとしてコンパイル確認した。
+### 比較結果を記録する
 
-このモデルにはPoW、GHOSTDAG、永続化、ネットワーク、UTXO処理は含まれない。また、メモリ上の単一操作の性質を示すだけであり、実際のノードのトランザクション性を保証するものではない。
+次の表を、調べたコード位置とテストのアサーションを根拠に埋める。テストが検査していない保存状態は、推測で補わず未確認とする。
+
+| 対象 | 失敗した段階・理由 | 失敗前に保存済みの情報 | 失敗時に保存・維持する情報 | 再投入時の結果 | 根拠・未確認事項 |
+|---|---|---|---|---|---|
+| 第11章の教材 | 親不足など | 教材の既存ブロック集合 | コードとテストから記入 | 記入 | 教材の関数・テスト名 |
+| 公式実装 | `BadMerkleRoot` | 記入 | 記入 | 記入 | 固定SHA・関数・アサーション |
+| 公式実装 | `MissingParents` | 記入 | 記入 | 記入 | 固定SHA・関数・アサーション |
+
+目的は「失敗時は何も変わらない」と結論づけることではなく、処理段階ごとに状態の境界と再試行の条件を説明できることである。
 
 ## 25.13 DDDの視点：境界づけられたコンテキスト
 

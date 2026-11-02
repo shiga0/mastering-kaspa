@@ -279,11 +279,9 @@ Broadcast
 
 基準版の [`scan_bip44_accounts`](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/wallet/core/src/wallet/mod.rs) は、各accountについて受取・変更の両枝の `0..address_scan_extent` を導出し、現在のUTXOを照会する。例えばextent 20はindex 0〜19で、20を含まない。継続条件は `account_index < last_account_index + account_scan_extent`。BIP-44の履歴ベースの探索や連続未使用20件の停止と同じ処理ではない。
 
-公式v1.0.1 SDKの `Wallet.accountsDiscovery` を固定したローカルRPC応答で実行した14ケースでは、receive/change index 20のUTXOをextent 20では見落とし、21へ広げると検出した。account 2だけにUTXOがある場合も、account extent 2では0/1で止まり、3へ広げると検出した。**戻り値 `lastAccountIndexFound=0` は、未発見の場合とaccount 0を検出した場合の両方で返る。** この値だけで資金がないとは判断できない。
+探索範囲の端は結果に影響する。例えば、receive/change index 20のUTXOはextent 20では範囲外で、21へ広げると検出できる。**戻り値 `lastAccountIndexFound=0` は、未発見の場合とaccount 0を検出した場合の両方で返る。** この値だけで資金がないとは判断できない。
 
-支出済み履歴だけを持つ比較条件でも、現在UTXOが空ならAPIの結果は空の条件と同じだった。別の教育用gapモデルでは、index 0が支出済み・index 20にUTXOがあるとき、現在UTXOだけでは0〜19を未使用と数えて見落とす一方、履歴で0の使用を認識すれば20を拾えた。ただし0が使用済みでも1〜20が未使用なら、gap 20ではindex 21へ進まない。探索上限を広げても、その範囲外に資金がない証拠にはならない。
-
-公式APIの14ケースと、教育用モデルの12,288比較の記録は `experiments/hd-discovery-review-2026-11-02.md`、実行入口は `experiments/hd-recovery/discovery.cjs`。公式SDKの探索処理は実行したが、応答は合成した現在UTXOであり、実ノードやIndexerから支出済み履歴を復元した試験ではない。DB/暗号化バックアップを含む全ウォレット復旧とは区別する。
+現在UTXOが空でも、支出済みの履歴がないとは限らない。教育用gapモデルでも、履歴を使うか現在UTXOだけを見るかで探索結果が変わった。探索上限を広げても、その範囲外に資金がない証拠にはならない。具体的な境界条件と実測は、下表の探索検査の記録を参照する。
 
 ### 復旧テスト
 
@@ -293,13 +291,20 @@ Broadcast
 - 署名と送金が再現できることを確認する。
 - 手順を記録する。ただし**秘密情報そのものをログや手順書に書かない**。
 
-2026-11-02、公式v1.0.1 SDKで英語12語/24語、4種類の追加パスフレーズ、account 0/1、受取/変更、index 0/1/20/21/2147483647を検査した。作成用・復旧用の独立プロセス間で160個の鍵由来の公開鍵・アドレスが一致し、元の鍵のメッセージ署名を復旧後の公開鍵で検証できた。明示的なgen1導出パス、アカウントxpubからの公開鍵生成とも一致した。通常index/accountの上限超過、hardened公開導出、不正パス、ニーモニックchecksumの拒否も確認した。
+### 既存の検査で確認した範囲
 
-再実行コードはリポジトリの `experiments/hd-recovery/`、記録は `experiments/hd-recovery-review-2026-11-02.md`。復旧素材はランダム生成し、メモリと匿名パイプだけで受け渡す。これは既知indexへの鍵・アドレスの再構成とメッセージ署名の検査であり、残高/履歴の探索・gap limitの停止条件・トランザクション送金/受理はこのオフライン試験には含まない。
+2026-11-02に公式v1.0.1 SDKで行った検査を、目的別に整理する。鍵が再構成できること、資金を探索できること、復旧鍵で送金できることは、それぞれ別の確認である。
 
-続くDevnet試験では、一時24語ニーモニックとASCII追加パスフレーズから作成用workerで公開アドレスを取得し、そのworkerを終了してから採掘・成熟待機した。別workerでaccount 1の受取index 21の鍵を復旧し、account 0の受取index 0へ1 KASを送金、お釣りをaccount 1の変更index 20へ戻した。さらに新しいworkerで変更鍵を復旧し、そのお釣りからもう1 KASを送った。2件ともMempool掲載・virtual受理・入力消費・宛先/変更UTXOと手数料の一致を確認した。
+| 検査 | 確認したこと | 対象外・限界 | 実行手順・詳細記録 |
+|---|---|---|---|
+| 鍵・アドレスの再構成 | 独立プロセス間で160個の鍵由来の公開鍵・アドレスが一致。メッセージ署名、gen1導出パス、xpubとの一致と所定の不正入力の拒否 | 既知indexのオフライン検査。残高・履歴探索や取引送金は含まない | [実行手順](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/hd-recovery/README.md#実行)・[条件と結果](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/hd-recovery-review-2026-11-02.md) |
+| Unicode入力 | 合成形・分解形の追加パスフレーズで、固定版SDKのraw入力とNFKD化後の結果の違いを確認（24.4.3） | 現行SDK・全ウォレットへ一般化しない。既存ウォレットの入力処理と照合が必要 | [Unicodeの結果](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/hd-recovery/README.md#unicodeの結果) |
+| アドレス・アカウント探索 | 合成RPC応答による公式APIの14ケースと、教育用gapモデルの12,288比較で探索境界を確認 | 実ノード・Indexerからの支出済み履歴の復元ではない | [実行手順](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/hd-recovery/README.md#アドレスアカウント探索の境界)・[条件と結果](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/hd-discovery-review-2026-11-02.md) |
+| 復旧鍵によるDevnet送金 | 別workerで復旧した受取鍵で送金し、さらに復旧した変更鍵でお釣りを支出。2件のMempool掲載・virtual受理・入力消費・出力と手数料を確認 | 既知パスでの内部送金。未知indexの再発見や全ウォレット復旧ではない | [送金手順](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/hd-recovery/README.md#復旧した鍵でdevnet送金する)・[条件と結果](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/hd-send-review-2026-11-02.md) |
 
-誤った追加パスフレーズでは、既知アドレスとの不一致を署名前に検出した。署名以外のTX項目が未署名TXと一致することも照合した。これは既知パスでの内部送金で、未知indexの再発見や全ウォレットの復旧ではない。実行入口は `experiments/hd-recovery/send.cjs`、記録は `experiments/hd-send-review-2026-11-02.md`。ノード/マイナーは試験後に停止し、復旧素材は公開しない。
+復旧素材はテスト用にランダム生成し、メモリと匿名パイプだけで受け渡した。Devnet送金では、誤った追加パスフレーズによる既知アドレスとの不一致を署名前に検出し、署名以外のTX項目が未署名TXと一致することも照合した。実コードと受取枝・変更枝の使い分けは[24.14.1](#24141-教材の入力予約と公式sdkをつなぐ)で追う。
+
+これらを合わせても、暗号化バックアップ・DB・未知の残高や履歴の探索を含むウォレット全体の復旧を検証したことにはならない。
 
 > **注意：** ニーモニックをWebフォームやAIチャットに入力して「復旧できるか確認」してはいけない。スクリーンショット・クラウド同期・クリップボード履歴にも注意する。
 

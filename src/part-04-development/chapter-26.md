@@ -170,7 +170,7 @@ UTXO state transition
 
 この章では公式実装の入力・出力・依存先を読む。教育用DAG・UTXOコードを一から組み立てる作業は第27章にまとめる。第12章のDAG解析器で集合の意味を確認してから、以下の経路を追うとよい。
 
-参照コミットは `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。以下の表は固定ソースの読み取りによる確認である。追加の `experiments/ghostdag/` では公式の分類関数を直接呼び、24ケースで親選択・順序付きblue/red・score/workの差分を検査した。合成ヘッダーとDFS到達可能性を使う関数単位の試験であり、公式ノード全体の実行結果ではない。
+参照コミットは `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。以下の表は固定ソースの読み取りによる確認である。追加の `experiments/ghostdag/` では公式の分類関数を直接呼び、24ケースで親選択・順序付きblue/red・score/workの差分を検査した。固定ソースの取得・ビルド環境・実行コマンドは[比較実験の再実行手順](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/ghostdag/README.md#実行)、条件と結果は[検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/ghostdag-comparison-2026-10-31.md)を参照する。合成ヘッダーとDFS到達可能性を使う関数単位の試験であり、公式ノード全体の実行結果ではない。
 
 | 読む箇所 | 入力と処理 | 確認する出力 |
 |---|---|---|

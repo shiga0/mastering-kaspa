@@ -160,12 +160,14 @@ WebSocketの推移的依存までの固定は未完了。ローカルのSDK・�
 | 検証したもの | まだ検証していないもの |
 |---|---|
 | 起動・読み取りRPC・採掘・再起動時の保持 | amd64・Linuxホストでの実行 |
-| 単一署名送金、手数料/お釣り、主要な拒否、応答喪失からの復旧 | 全Script・HDウォレット復旧・ハードウェア機器 |
+| 単一署名送金、手数料/お釣り、主要な拒否、応答喪失からの復旧 | 全Script・ハードウェア機器 |
 | 2ノード伝播・停止復帰・P2P分断と再接続 | 任意の大規模ネットワークへの一般化 |
 | 実通知・照会補完・観測UTXOの取り消し | 決済会計台帳・複数ワーカーの取り消し |
 | Pruning前提のソース確認とpointの照会 | 実データ削減・Pruning後の証明付きIBD |
 
 実測条件と結果は `experiments/devnet/README.md` と各検証記録に保存している。章全体の検証完了を示す表ではない。
+
+HD復旧は本章の一時鍵による送金実習とは別に、[第24章24.14.1](chapter-24.md#24141-教材の入力予約と公式sdkをつなぐ)で扱う。既知パスの鍵・アドレスの再構成と、復旧した受取鍵・変更鍵によるDevnet送金は確認済みだが、暗号化バックアップや未知の残高・履歴の探索を含むウォレット全体の復旧は未検証である。
 
 ### 28.6.4 公式SDKを使った最小監視サンプル
 
@@ -380,6 +382,8 @@ Devnetではブロック生成の準備が別途必要な場合がある。ノ�
 
 ## 28.11 非同期イベント購読の検証
 
+実行コマンドと前提条件は、実習READMEの[通知欠落・重複とSQLiteの再読込](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet/README.md#通知欠落重複とsqliteの再読込)と[稼働中の再照会と再購読](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet/README.md#稼働中の再照会と再購読)を参照する。
+
 追加の `experiments/devnet/live-reconciliation.py` は、通知を差分更新として直接適用せず再照会のヒントとして扱う。要求の世代番号で古い結果の上書きを拒否し、再購読時も新しい通知を待たずに完全照会する。実験では稼働中の通知を受けて再照会し、購読停止中の欠落も補完できた。要求の世代はノードのDAA scoreではなく単一プロセス内の要求開始順で、永続化された分散ロックではない。完全な成功応答だけを反映し、部分取得やエラーを空集合として全件無効化しない。照会間に作成され消費された出力の全履歴は、現在UTXOの再照会だけでは復元できない。
 
 単一書き込み主体の現在UTXO観測を対象とし、複数ワーカーやreorgの会計処理は未検証。詳細は `experiments/devnet-live-reconciliation-2026-10-31.md` を参照する。
@@ -405,6 +409,8 @@ Event stream ──▶ Event handler ──▶ Reconciliation
 
 ## 28.12 タイムアウトと再試行
 
+実行は28.10の `--retry-checks` を選ぶ。条件と確認点は、実習READMEの[応答喪失と再試行・二重計上防止](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet/README.md#応答喪失と再試行二重計上防止)にもまとめている。
+
 本書の `experiments/devnet/send.cjs --retry-checks` は、ノードの送信成功応答をローカルプロキシで1件だけ破棄する。クライアント側の期限切れ後、既知のTX IDでMempoolを照会して復旧し、同じ署名済みトランザクションを意図的に再送すると重複として拒否されることを確認した。
 
 この検証では、正常送金の受理後に受取UTXO情報を2回処理し、Outpoint単位の計上で金額を1回分に保つことも確認した。ただし、インメモリの教材試験であり、永続台帳・複数ワーカー・再編成による取り消しの検証ではない。実測記録は `experiments/devnet-send-retry-2026-10-31.md` を参照する。
@@ -426,6 +432,8 @@ Client                 Node
 再試行戦略は「読み取り」「同一データの再送」「新規署名・新規トランザクションの作成」で分ける。
 
 ## 28.13 Reorganizationと状態の巻き戻り
+
+実行・停止手順とポート共有の条件は、実習READMEの[分岐合流後のUTXO取り消し](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet/README.md#分岐合流後のutxo取り消し)を参照する。
 
 `experiments/devnet/reorg-observer.py` では、分断中のBの報酬UTXOをSQLiteへ記録し、再接続・統合ブロック生成後に10件の消失を確認した。全10件を実removed通知でも確認し、再照会に基づく無効化・再適用・別プロセス再読込が一致した。これは観測UTXOの取り消しであり、決済済みの売上や請求書を取り消す実装ではない。失敗試行と条件は `experiments/devnet-reorg-observer-2026-10-31.md` を参照する。
 
@@ -455,6 +463,8 @@ APPLICATION_CONFIRMED
 `APPLICATION_CONFIRMED` はアプリケーションの確認ポリシーであり、Kaspaプロトコルの状態名ではない。確認済み表示後の例外対応や補償処理も設計する。
 
 ## 28.14 障害注入テストの計画
+
+実測済みの分断を再現する場合は、実習READMEの[両ノード稼働中のP2P分断](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet/README.md#両ノード稼働中のp2p分断)に従う。先に2ノード試験を実行する前提と、終了・中断時の停止方法も確認する。
 
 両ノード稼働中の分断は、リポジトリの `experiments/devnet/partition.py` で実測した。P2P中継だけ停止し、ピア数0とRPC応答を確認して双方の枝で順に採掘した。再接続後、両ノードで62ブロック・指定報酬先46件のUTXO内容が一致した。全UTXO集合や、競合送金・台帳の取り消しまで検証した結果ではない。記録は `experiments/devnet-partition-2026-10-31.md` を参照する。
 
@@ -869,4 +879,4 @@ Stop Containers / Cleanup
 - [Tokio — Asynchronous Rust Runtime](https://tokio.rs/)
 - [Docker Compose ドキュメント](https://docs.docker.com/compose/)
 
-> **残る確認**：全トランザクション種別・HD復旧、複数ワーカーと会計台帳、Pruning後のIBD、ノードバイナリのソース一致、別CPU/OSでの実行は未検証。上記実習の成功をこれらへ拡張しない。
+> **残る確認**：全トランザクション種別、暗号化バックアップや未知の残高・履歴の探索を含むHDウォレット全体の復旧、複数ワーカーと会計台帳、Pruning後のIBD、ノードバイナリのソース一致、別CPU/OSでの実行は未検証。上記実習の成功をこれらへ拡張しない。

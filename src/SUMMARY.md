@@ -40,7 +40,7 @@
 
 ---
 
-- [Part IV — Node Architecture & Development（ノードアーキテクチャと開発）](part-04-development/index.md)
+- [Part IV — Kaspa Development & Implementation（Kaspaの開発と実装）](part-04-development/index.md)
   - [Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）](part-04-development/chapter-21.md)
   - [Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）](part-04-development/chapter-22.md)
   - [Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）](part-04-development/chapter-23.md)

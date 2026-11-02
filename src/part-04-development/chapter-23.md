@@ -390,6 +390,8 @@ Kaspaアプリケーションでは、UIから直接RPCを呼ぶ設計より、�
 
 SDKの実際のAPI名に依存しない、アプリケーション側のポートを定義する。
 
+[第22章](chapter-22.md)では接続先のネットワーク・同期・応答の鮮度・必要なインデックスを検査した。ここでは、**接続や応答解析のエラーを `GatewayError` で表し、アプリケーション側の `AppError` へ変換する境界**に注目する。検査項目を絞った教材なので、実装時には第22章の要件も引き継ぐ。
+
 ```rust
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NodeStatus {
@@ -702,7 +704,7 @@ grep -n -E 'wasm32-sdk|wasm32-rpc|crate-type' wasm/Cargo.toml
 
 [第28章](chapter-28.md)の28.6で、v1.0.1公式Node.js/WASM SDKの取得・SHA-256照合・WebSocket依存の導入を行う。Node.js 20.0.0で単一署名送金とUTXO通知を実測した。JSON接続のenumは `Encoding.SerdeJson`。金額はsompiの整数として扱い、SDKから返る `bigint` をJavaScriptの `number` へ無条件に変換しない。
 
-この過去の実測は、本章の独自Rust/WASMモジュールのビルドやブラウザー実行とは別である。公式SDK配布物の利用検証と、独自WASMモジュールの開発・ビルド検証を分ける。HDウォレット復旧と全Scriptへの対応も未検証である。
+この過去の実測は、本章の独自Rust/WASMモジュールのビルドやブラウザー実行とは別である。公式SDK配布物の利用検証と、独自WASMモジュールの開発・ビルド検証を分ける。HD復旧はこの接続・送金実験の対象外であり、復旧した鍵によるDevnet送金と変更枝のお釣りの支出は、別実習として[第24章24.14.1](chapter-24.md#24141-教材の入力予約と公式sdkをつなぐ)で扱う。暗号化バックアップや履歴探索を含むHDウォレット全体の復旧と、全Scriptへの対応は未検証である。
 
 ### テストの階層
 
