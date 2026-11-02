@@ -237,7 +237,15 @@ bits = compact_target_bits(bounded_target)
 
 最小・最大の要素は `(timestamp, blue_work, hash)` の比較で決める。timestampと目標時間の単位はミリ秒。途中の平均化でも整数除算するため、式の演算順序を変更したり、targetの平均をdifficultyの平均へ置き換えたりしない。compact表現へ戻す段階でも精度が落ち得るため、整数targetの計算値とbitsを区別する。Sampled側は通常の分母にsample rateも掛け、Crescendo直後で標本が不足するときにはselected parentのbitsを継承または目標時間比で補正する別経路を持つ。
 
-根拠：[window.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/window.rs)、[difficulty.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/difficulty.rs)、[params.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)。ヘッダー検証では、申告bitsへのPoW検査と、履歴から計算する期待bitsとの照合を分けて行う。[第11章](chapter-11.md)の検証順を参照する。追加の `experiments/daa/` で、明示した窓に対するFull/Sampled算術を27ケース・各2通りの挿入順で実行比較し、整数モデルとbitsが一致した。履歴不足、同一時刻、丸め、target制限、Sampled標本不足時の境界を含む。続く `experiments/daa-window/` ではFull側の窓構築・non-DAA集合・DAA scoreを120ケースで比較し一致した。キャッシュ3条件と親配列2順も同じ出力。GHOSTDAGメタデータは公式から供給する条件付き比較で、合成DAGの到達可能性はDFSを使う。さらに `experiments/daa-transition/` でSampled窓とDual切り替えを288ケース比較し、Pythonモデルと一致した。選択親DAAのactivation直前・一致・直後を含み、窓・non-DAA・DAA score・bitsを確認。キャッシュ3条件と親配列2順でDual/直接計算器の結果も一致した。算術27ケースの記録は `experiments/daa-comparison-2026-10-31.md`、Full窓120ケースは `experiments/daa-window-comparison-2026-10-31.md`、Sampled/Dual288ケースは `experiments/daa-transition-comparison-2026-10-31.md`。これらは以前の実行記録で、今回の通読時に再実行したものではない。
+根拠：[window.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/window.rs)、[difficulty.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/difficulty.rs)、[params.rs](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)。ヘッダー検証では、申告bitsへのPoW検査と、履歴から計算する期待bitsとの照合を分けて行う。[第11章](chapter-11.md)の検証順を参照する。既存の実行比較は、次の3つに分けて記録している。
+
+| 比較対象 | ケース数 | 手順・条件・結果 |
+|---|---|---|
+| Full/Sampledのtarget算術 | 27（各2通りの挿入順） | [算術の検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/daa-comparison-2026-10-31.md) |
+| Full窓・non-DAA集合・DAA score | 120 | [Full窓の検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/daa-window-comparison-2026-10-31.md) |
+| Sampled窓・Dual切り替え・bits | 288 | [切り替えの検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/daa-transition-comparison-2026-10-31.md) |
+
+いずれもモデルとの出力一致を確認した有限の合成入力の検査である。算術は履歴不足・同一時刻・丸め・target制限等を含む。窓の比較では公式GHOSTDAGメタデータとDFS到達可能性を使い、キャッシュ3条件・親配列2順を確認した。切り替えは選択親DAAのactivation直前・一致・直後を含む。これらは以前の実行記録で、今回の通読時に再実行したものではない。
 
 Sampled側の**窓に含まれないこと**と、**non-DAAであること**は異なる。non-DAAはblue scoreの閾値に基づいて判定し、sample rateによる間引きやactivationのフィルタと分ける。各merge setのDAA indexにはnon-DAA以外を数え、その後にactivationとサンプリング条件を適用する。したがって、窓の要素数だけをDAA scoreへ加算する計算にはしない。キャッシュもFull/Sampledのoriginを区別して利用する。
 

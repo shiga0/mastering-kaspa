@@ -358,153 +358,29 @@ grep -n -E 'ConsensusFactory|MiningManager|RpcCoreService|WrpcService' kaspad/sr
 -
 ```
 
-## 9.15 設計を理解するための簡易Rustモデル
+## 9.15 DAG構造と状態更新の責務を分ける
 
-実際のコンセンサス処理と構造管理を区別するため、**DAGの依存関係だけ**を扱う小さなプログラムを作る。以下は学習用であり、PoW、GHOSTDAG、トランザクション検証、pruningなどを実装していない。
+[第7章のRust教材](../part-01-foundations/chapter-07.md)では、既知の親を参照するブロックの登録と、祖先・Anticoneの照会を実装した。本章ではそのコードを使い、**構造を管理するAPIだけでは何が決まらないか**を確認する。
 
-本書のリポジトリ外の作業用ディレクトリで作成する。Rust 1.90.0で確認した、標準ライブラリのみの教材である。
+第7章の例で、`B` を共通の親とする `C` と `D` に、同じUTXOを消費する取引が含まれていると仮定する。教材の `Block` は取引を保持しないので、これは責務を考えるための仮定である。
 
-```bash
-cargo new --lib --edition 2021 kaspa-architecture-lab
-cd kaspa-architecture-lab
-```
+| 操作・判定 | 担当する責務 | この例で分かること |
+|---|---|---|
+| `C` と `D` の親を確認して登録する | DAG構造の管理 | 両方とも親関係を登録できる |
+| `C` と `D` の関係を照会する | 到達可能性の判定 | 両者は互いのAnticoneに入る |
+| どちらのブロックを先に評価するか決める | コンセンサス順序 | 親関係の登録成功だけでは決まらない |
+| 競合する取引のどちらを受理するか決める | UTXO文脈での取引検証 | 決まった順序と基準UTXO状態が必要になる |
+| 更新結果を外部へ知らせる | RPC・通知 | DAG登録成功と取引受理を区別して伝える |
 
-`Cargo.toml`：
+したがって、DAGの `insert` が成功したことを、そのブロック内の全取引が受理されたという戻り値へ読み替えない。構造管理は親関係を扱い、状態更新は順序とUTXO文脈に基づいて取引を評価する。公式実装ではヘッダー検証の途中でもGHOSTDAGを計算するため、この責務の分離を、そのまま逐次的な呼び出し順と見なさない。
 
-```toml
-[package]
-name = "kaspa-architecture-lab"
-version = "0.1.0"
-edition = "2021"
-```
+### 既存の教材から確認する
 
-`src/lib.rs`：
+1. 第7章の教材で、`C` と `D` の追加順を入れ替えても親関係とAnticoneが同じになることを確認する。
+2. `insert` がUTXOや取引の受理結果を返さない理由を説明する。
+3. 親より先に子が届く場合、未解決データの保持・不足親の取得・再投入をどこが担当するか考える。[第11章](chapter-11.md)で検証と再試行の境界を追う。
 
-```rust
-use std::collections::{HashMap, HashSet};
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Block {
-    pub id: String,
-    pub parents: Vec<String>,
-}
-
-#[derive(Debug, Default)]
-pub struct Dag {
-    blocks: HashMap<String, Block>,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum DagError {
-    Duplicate,
-    UnknownParent(String),
-    SelfParent,
-    DuplicateParent,
-}
-
-impl Dag {
-    pub fn insert(&mut self, block: Block) -> Result<(), DagError> {
-        if self.blocks.contains_key(&block.id) {
-            return Err(DagError::Duplicate);
-        }
-        if block.parents.iter().any(|p| p == &block.id) {
-            return Err(DagError::SelfParent);
-        }
-        if block.parents.iter().collect::<HashSet<_>>().len() != block.parents.len() {
-            return Err(DagError::DuplicateParent);
-        }
-        for parent in &block.parents {
-            if !self.blocks.contains_key(parent) {
-                return Err(DagError::UnknownParent(parent.clone()));
-            }
-        }
-        self.blocks.insert(block.id.clone(), block);
-        Ok(())
-    }
-
-    pub fn tips(&self) -> HashSet<String> {
-        let mut tips: HashSet<String> = self.blocks.keys().cloned().collect();
-        for block in self.blocks.values() {
-            for parent in &block.parents {
-                tips.remove(parent);
-            }
-        }
-        tips
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn block(id: &str, parents: &[&str]) -> Block {
-        Block {
-            id: id.to_string(),
-            parents: parents.iter().map(|p| p.to_string()).collect(),
-        }
-    }
-
-    #[test]
-    fn parallel_blocks_can_be_merged() {
-        let mut dag = Dag::default();
-        dag.insert(block("genesis", &[])).unwrap();
-        dag.insert(block("a", &["genesis"])).unwrap();
-        dag.insert(block("b", &["genesis"])).unwrap();
-        assert_eq!(dag.tips(), HashSet::from(["a".into(), "b".into()]));
-        dag.insert(block("c", &["a", "b"])).unwrap();
-        assert_eq!(dag.tips(), HashSet::from(["c".into()]));
-    }
-
-    #[test]
-    fn invalid_insertions_preserve_all_blocks() {
-        let mut dag = Dag::default();
-        dag.insert(block("genesis", &[])).unwrap();
-        let before = dag.blocks.clone();
-        for (candidate, error) in [
-            (block("genesis", &[]), DagError::Duplicate),
-            (block("a", &["a"]), DagError::SelfParent),
-            (
-                block("a", &["genesis", "genesis"]),
-                DagError::DuplicateParent,
-            ),
-            (
-                block("a", &["missing"]),
-                DagError::UnknownParent("missing".into()),
-            ),
-        ] {
-            assert_eq!(dag.insert(candidate), Err(error));
-            assert_eq!(dag.blocks, before);
-        }
-    }
-
-    #[test]
-    fn unknown_parent_is_rejected() {
-        let mut dag = Dag::default();
-        assert_eq!(
-            dag.insert(block("a", &["missing"])),
-            Err(DagError::UnknownParent("missing".into()))
-        );
-    }
-}
-```
-
-実行方法：
-
-```bash
-cargo test
-```
-
-この実装では**親が先に登録される**ことを要求する。実際のP2Pでは親より先に子が到着しうるため、未解決ブロックを一時保持して不足データを要求する仕組みが必要になる。また、この学習用モデルはGenesisの一意性、ハッシュの検証、最大親数、ネットワーク敵対性を扱っていない。tipsは構造上の先端であり、Virtualの親選択を実装したものではない。教材3テストの結果と限界はリポジトリの `experiments/chapter-09-review-2026-10-31.md` に記録している。
-
-### 追加実験
-
-1. 親が届く前のブロックを`pending`に入れる。
-2. 親が到着したときに`pending`を再評価する。
-3. 複数の親なしブロックを許すモデルと、Genesisを一つに限定するモデルを比較する。
-4. `tips()`を毎回全走査せず更新する方式を比較する。
-5. DAGへの追加とUTXO更新を別モジュールに分ける。
-
-最後の実験が本章の核心である。**DAG構造の管理と、トランザクションの状態遷移は別の責務**である。
+順序の導出は[第12章](chapter-12.md)、その順序に基づくUTXO評価とVirtual Stateの更新は[第14章](chapter-14.md)で扱う。
 
 ## 9.16 アーキテクチャをDDD・C4で整理する
 
@@ -616,7 +492,7 @@ A. 内部DB形式は実装依存であり、ウォレット向け履歴検索に
 5. ウォレットで残高が更新されないとき、どの境界を順番に確認するか。
 6. `rusty-kaspa` のソースコードからRPC呼び出しがコンセンサス状態を参照する経路を調べる手順を書け。
 7. なぜ`git commit`を固定しない実装解説は再現性が低いのか。
-8. Rustの簡易DAGモデルに親ブロックの遅延到着を追加する場合、どの状態を導入するか。
+8. 第7章のRust教材に親ブロックの遅延到着を追加する場合、どの状態を導入し、取得・再投入をどの責務に分けるか。
 
 ### 確認の観点
 

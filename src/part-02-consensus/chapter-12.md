@@ -8,7 +8,7 @@
 
 ## 照合した実装
 
-2026年10月31日に `rusty-kaspa` のコミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` を参照した。本章の親選択・merge set・blue判定・score/workの式は、下記の固定ソースを読み取って照合した（Source-checked）。さらに `experiments/ghostdag/` で公式の `GhostdagManager::ghostdag` と全blue集合のanticoneを直接数えるモデルを比較し、24ケース・各親配列順で712ブロックの親選択、順序付きblue/red、score/workが一致した。到達可能性は共通のDFSアダプターで提供し、公式Reachability・PoW・ヘッダー検証は対象外。詳細は `experiments/ghostdag-comparison-2026-10-31.md`。メインネットの稼働リリースとの一致や章全体の検証を意味しない。
+2026年10月31日に `rusty-kaspa` のコミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` を参照した。本章の親選択・merge set・blue判定・score/workの式は、下記の固定ソースを読み取って照合した（Source-checked）。さらに `experiments/ghostdag/` で公式の `GhostdagManager::ghostdag` と全blue集合のanticoneを直接数えるモデルを比較し、24ケース・各親配列順で712ブロックの親選択、順序付きblue/red、score/workが一致した。到達可能性は共通のDFSアダプターで提供し、公式Reachability・PoW・ヘッダー検証は対象外。再実行は[比較実験の手順](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/ghostdag/README.md#実行)、条件と結果は[検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/ghostdag-comparison-2026-10-31.md)を参照する。手順には固定ソースの取得、ビルド環境、実行コマンドを収録している。メインネットの稼働リリースとの一致や章全体の検証を意味しない。
 
 - [親選択・分類・スコア計算](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/protocol.rs)
 - [blue workとハッシュの比較](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/ghostdag/ordering.rs)

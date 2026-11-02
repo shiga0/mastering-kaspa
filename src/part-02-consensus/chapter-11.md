@@ -685,6 +685,8 @@ Kaspaの実装を理解するには、特定の関数名を暗記するより、
 6. Virtual State更新とトランザクション受理の処理を追う。
 7. 同じ経路を通るユニットテスト・統合テストを探す。
 
+公式テストを動かす入口は、[既存の検証記録「実行した検査」](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/core-validation-review-2026-10-31.md#実行した検査)にある。基準版workspaceのルートで実行した、本体単独検査と `BadMerkleRoot` / `MissingParents` の再投入に関する2件のコマンドを収録している。記録の `--offline` は依存取得済み環境向けなので、初回は[第25章](../part-04-development/chapter-25.md)のビルド環境を準備し、依存を取得する。後者はPoWを無効にしたTestConsensusの試験であり、PoW込みの通信からVirtual更新までのE2E試験とは区別する。
+
 ### 11.13.2 検索コマンドの例
 
 ```bash
