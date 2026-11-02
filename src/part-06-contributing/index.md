@@ -8,7 +8,7 @@ Part IVのRPC・SDK・ウォレット・Devnet実習を前提にします。ア�
 
 ## この部の各章
 
-- [Chapter 35 — Building a Kaspa Application（Kaspaアプリケーションの構築）](chapter-35.md)
+- [Chapter 35 — Designing and Partially Implementing a Kaspa Application（Kaspaアプリケーションの設計と部分実装）](chapter-35.md)
 - [Chapter 36 — Contributing to Kaspa（Kaspaへのコントリビュート）](chapter-36.md)
 
 ## 読み終えたときの目標

@@ -64,7 +64,7 @@
 ---
 
 - [Part VI — Building & Contributing（アプリケーション開発と貢献）](part-06-contributing/index.md)
-  - [Chapter 35 — Building a Kaspa Application（Kaspaアプリケーションの構築）](part-06-contributing/chapter-35.md)
+  - [Chapter 35 — Designing and Partially Implementing a Kaspa Application（Kaspaアプリケーションの設計と部分実装）](part-06-contributing/chapter-35.md)
   - [Chapter 36 — Contributing to Kaspa（Kaspaへのコントリビュート）](part-06-contributing/chapter-36.md)
 
 ---

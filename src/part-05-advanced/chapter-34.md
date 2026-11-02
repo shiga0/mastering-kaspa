@@ -695,6 +695,6 @@ Rustで学ぶ際は、**決定的な状態遷移 → 不変条件のテスト �
 
 ---
 
-次は[第35章 — Kaspaアプリケーションの構築](../part-06-contributing/chapter-35.md)。
+次は[第35章 — Kaspaアプリケーションの設計と部分実装](../part-06-contributing/chapter-35.md)。
 
 **確認範囲：** 公開案内/研究投稿・固定プロトタイプの主要箇所・独自状態遷移教材。全論文/証明、公式テスト全体、実アプリ間原子性・DA/退出・現行Mainnet動作は未検証。記録は `experiments/chapter-34-review-2026-11-01.md`。
