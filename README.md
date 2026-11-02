@@ -63,7 +63,7 @@ mdbook build
 
 章・付録別の確認範囲と残作業は[技術レビューの進捗](src/review-status.md)を参照してください。
 
-Devnetの起動・読み取りwRPC・再起動の検証手順は[Devnet実習](experiments/devnet/README.md)を参照してください。公式WASM SDKによる単一署名送金とvirtual受理まで確認済みです。異常系と2ノードでの検証は未完了です。
+Devnetの起動・読み取りwRPC・再起動の検証手順は[Devnet実習](experiments/devnet/README.md)を参照してください。公式WASM SDKによる単一署名送金とvirtual受理まで確認済みです。所定の送金異常系、2ノードの伝播・停止復帰・分断合流も確認済みです。Pruning後IBD、競合送金の再編成と会計処理は未検証です。
 
 今後の作業と完了条件は[残作業一覧](ROADMAP.md)にまとめています。
 

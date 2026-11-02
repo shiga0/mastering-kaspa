@@ -1,0 +1,41 @@
+{
+  "network": "devnet",
+  "serverVersion": "1.0.1",
+  "source": "kaspadev:qpvku7lsj75c8rpv089hs2f7dpmafp04m6snrx9avl4a47j00awlw5uhl3pzj",
+  "destination": "kaspadev:qqqld2av3zlmh7f2xrrrhsvjm6gzeeu5fpd94ra9fz3jhkxf6n30swpjqphz9",
+  "checks": {
+    "insufficientFunds": "rejected-as-expected",
+    "invalidSignature": "rejected-as-expected",
+    "failedSignaturePreservedInput": true,
+    "mempoolObserved": true,
+    "competingSpend": "rejected-as-expected"
+  },
+  "inputTotalSompi": "50000000000",
+  "outputTotalSompi": "49999990000",
+  "independentFeeSompi": "10000",
+  "sdkFeeSompi": "10000",
+  "expectedChangeSompi": "49899990000",
+  "actualChangeSompi": "49899990000",
+  "transactionId": "f99f58397f642e4f6c2aecc371ecc2f579239e344115e1b6a4800ce113bc2c7b",
+  "amountSompi": "100000000",
+  "coinbaseMaturityDaa": "100",
+  "fundingDaaScore": "102",
+  "inputSpent": true,
+  "destinationUtxoObserved": true,
+  "acceptedByVirtualChain": true,
+  "acceptingBlockHash": "597abf07b46115ca03dcdc26a1ae1df630ff907f58fd386527688cbefa3700ff",
+  "destinationOutpoint": {
+    "transactionId": "f99f58397f642e4f6c2aecc371ecc2f579239e344115e1b6a4800ce113bc2c7b",
+    "index": 0
+  },
+  "date": "2026-11-02",
+  "initialBlockCount": 0,
+  "initialVirtualDaaScore": 0,
+  "restartStateMatches": true,
+  "restartBlockCount": 165,
+  "restartVirtualDaaScore": 165,
+  "restartRewardUtxoCount": 40,
+  "destinationUtxoSurvivesRestart": true,
+  "nodeStopped": true,
+  "miningContainersRunning": 0
+}

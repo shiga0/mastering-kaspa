@@ -63,6 +63,40 @@ docker compose -f experiments/devnet/compose.yaml stop
 データは名前付きボリュームに保存する。停止で削除しない。
 単一ノードでの送金とvirtual受理は末尾の実習で確認済み。2ノードのブロック伝播・停止復帰は末尾の実習で確認済み。分断時の両側採掘・通知補完・枝の報酬の取り消しも後述の別実習で確認した。Pruning後の同期は未検証。採掘と状態保持の検証は以下を参照。
 
+## 新規ボリュームから再現する
+
+既存データを残して初回手順を確認する場合は、`fresh.yaml` を追加する。既存の単一ノードと同じコンテナ名・ポートを使うため、同時には実行しない。Python環境・SDKの導入は上記と送金節の手順を使う。
+
+```bash
+# 実行ごとに未使用の名前を選ぶ。inspectが成功したら別名に変更する。
+export KASPA_FRESH_VOLUME=mastering-kaspa-fresh-20261102
+docker volume inspect "$KASPA_FRESH_VOLUME"
+# 「no such volume」であることを確認してから進む。接続・権限エラーは別途解消する。
+docker compose -f experiments/devnet/compose.yaml -f experiments/devnet/mining.yaml -f experiments/devnet/fresh.yaml up -d --force-recreate node
+docker inspect mastering-kaspa-devnet-node-1 --format '{{json .Mounts}}'
+# /dataのNameがKASPA_FRESH_VOLUMEと一致することを確認する。
+# ログでRPC待受を確認してからprobeを実行する。
+experiments/devnet/.venv/bin/python experiments/devnet/probe.py
+# blockCount=0、virtualDaaScore=0、Devnet/1.0.1/index有効を確認する。
+KASPA_SDK_ROOT="$PWD/experiments/devnet/.sdk" node experiments/devnet/send.cjs --checks
+```
+
+**`--force-recreate` が必要。** ボリューム名の上書きだけでは、Composeが既存コンテナを再利用し、以前のDBへ接続したことを実測した。新規という判定にはマウント先とブロック数の確認も必要。
+
+この後の採掘・再起動・停止コマンドにも `-f experiments/devnet/fresh.yaml` を追加し、同じ環境変数を維持する。送金スクリプトが使う既定コンテナ名を保つため、プロジェクト名は変更しない。
+
+終了時（途中失敗時も実行）：
+
+```bash
+docker compose -f experiments/devnet/compose.yaml -f experiments/devnet/mining.yaml -f experiments/devnet/fresh.yaml --profile mining stop -t 2
+docker compose -f experiments/devnet/compose.yaml -f experiments/devnet/mining.yaml -f experiments/devnet/fresh.yaml --profile mining ps -a
+docker ps --filter name=mastering-kaspa-send-
+```
+
+送金専用マイナーが残った場合は、表示された該当コンテナを `docker stop --time=2 <コンテナ名>` で停止する。ボリュームは削除しない。元のDBへ戻すときは、`fresh.yaml` を外して `up -d --force-recreate node` を実行する。
+
+2026年11月2日の再現結果は [新規環境の検証記録](../devnet-fresh-review-2026-11-02.md) を参照。同一macOS/ARM64ホスト上でPython環境・SDK・ノードDBを新規作成した試験であり、OSやDockerの新規インストールまで確認したものではない。
+
 ## 短時間採掘と再起動後の状態比較
 
 追加の `mining.yaml` はノード内部だけでgRPCを有効化し、Devnetで未同期採掘を許可する。gRPCポートはホストへ公開しない。
