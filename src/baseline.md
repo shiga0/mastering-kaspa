@@ -56,7 +56,7 @@ RustのGit依存を追加する場合は、同じ完全なrevisionを指定し�
 | Python実習・比較スクリプト | Python 3.11 | Devnet検査と公式関数比較の実行に使用。Devnet用の `websockets==14.1` は `experiments/devnet/requirements.txt` で固定 |
 | 公式ライブラリ比較のネイティブビルド環境 | Apple clang 17.0.0 | C/C++依存を含む比較実習の確認環境。各比較ディレクトリのREADMEに前提を記載 |
 
-CIのRust検査ジョブにはRust 1.90.0、書籍ビルドにはmdBook 0.5.4を指定しています。一方、書籍ビルドジョブでmdBookをインストールするRustと、Pythonの実行版はrunnerの環境を使い、同じ版へ固定していません。CI設定があることと、GitHub上の実ジョブの成功を確認したことは別です。GitHub上の実行・Pages公開は未確認です。
+CIのRust検査ジョブにはRust 1.90.0、書籍ビルドにはmdBook 0.5.4を指定しています。一方、書籍ビルドジョブでmdBookをインストールするRustと、Pythonの実行版はrunnerの環境を使い、同じ版へ固定していません。CI・Pagesを含む公開確認は、2026年11月2日に著者から完了済みと確認されています。[公開サイトはこちら](https://shiga0.github.io/mastering-kaspa/)。
 
 このページの版は実測時の記録です。読者の環境での再現性は、対象OS・CPU・依存関係を合わせて確認してください。
 

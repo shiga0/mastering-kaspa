@@ -6,3 +6,6 @@ language = "ja"
 [output.html]
 no-section-label = true
 additional-css = ["theme/custom.css"]
+
+[output.html.playground]
+runnable = false
