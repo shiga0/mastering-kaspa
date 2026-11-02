@@ -22,3 +22,69 @@
 .content pre code {
   font-size: 14px;
 }
+
+/* The Kaspa palette is opt-in; built-in mdBook themes remain unchanged. */
+.kaspa {
+  --kaspa-accent: #70c7ba;
+  --bg: #ffffff;
+  --fg: #243431;
+  --sidebar-bg: #edf7f4;
+  --sidebar-fg: #304a44;
+  --sidebar-non-existant: #647c74;
+  --sidebar-active: #17665e;
+  --sidebar-spacer: #c6e4dd;
+  --sidebar-header-border-color: #70c7ba;
+  --scrollbar: #526d66;
+  --links: #17665e;
+  --icons: #526d66;
+  --icons-hover: #17665e;
+  --inline-code-color: #24594e;
+  --quote-bg: #f0f8f5;
+  --quote-border: #70c7ba;
+  --table-border-color: #c6ded7;
+  --table-header-bg: #e2f2ec;
+  --table-alternate-bg: #f5faf8;
+  --theme-popup-bg: #ffffff;
+  --theme-popup-border: #c6ded7;
+  --theme-hover: #e2f2ec;
+  --searchbar-bg: #ffffff;
+  --searchbar-fg: #243431;
+  --searchbar-border-color: #526d66;
+  --searchbar-shadow-color: #c6ded7;
+  --searchresults-header-fg: #526d66;
+  --searchresults-border-color: #c6ded7;
+  --searchresults-li-bg: #f0f8f5;
+  --search-mark-bg: #bce8df;
+  --color-scheme: light;
+  --copy-button-filter: invert(37%);
+  --copy-button-filter-hover: invert(28%);
+  --footnote-highlight: #bce8df;
+  --overlay-bg: rgba(36, 52, 49, 0.4);
+  --warning-border: #b65a00;
+  --blockquote-note-color: #17665e;
+  --blockquote-tip-color: #28752c;
+  --blockquote-important-color: #7851a8;
+  --blockquote-warning-color: #9a6700;
+  --blockquote-caution-color: #b52731;
+}
+
+.kaspa .content h1 {
+  border-bottom: 3px solid var(--kaspa-accent);
+  padding-bottom: 0.4em;
+}
+
+.kaspa .chapter li a.active {
+  font-weight: 700;
+}
+
+.kaspa a:focus-visible,
+.kaspa button:focus-visible,
+.kaspa input:focus-visible {
+  outline: 2px solid var(--links);
+  outline-offset: 3px;
+}
+
+.kaspa ::selection {
+  color: #10201e;
+  background: #70c7ba;
+}

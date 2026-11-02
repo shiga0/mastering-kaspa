@@ -34,3 +34,6 @@ Creative Commons Attribution 4.0 International（CC BY 4.0）で提供します�
 SDKや配布イメージ等には、各権利者の条件が適用されます。
 本書のライセンスを外部由来の部分へ上書きしません。
 個別の著作権・ライセンス・出典表示がある場合は、その表示と条件を優先してください。
+
+`theme/index.hbs` はmdBook v0.5.4のテンプレートを改変したもので、MPL-2.0を適用します。
+条文は LICENSES/MPL-2.0.txt、出典と変更内容は theme/index.hbs の冒頭に記載しています。
