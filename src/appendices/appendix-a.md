@@ -55,6 +55,8 @@ Apple Siliconの場合、通常は`Darwin`と`arm64`が表示される。Linux�
 | Git | ソース取得・差分管理 | ほぼすべて |
 | Rust (`rustup`, `cargo`) | サンプル実装・テスト | Rust演習 |
 | Docker | Devnetノードを隔離して起動 | Devnet演習 |
+| Python 3.11 | RPC検査・実験スクリプト | 第28章のPython実習 |
+| Node.js 20.0.0 | 公式Node.js/WASM SDKの実行 | SDK監視・送金・HD復旧・入金候補の取得 |
 | mdBook | 本書のローカル閲覧 | 執筆・読書 |
 | エディタ | コード・Markdown編集 | 推奨 |
 
@@ -405,7 +407,7 @@ jobs:
       - run: cargo test --locked --all-targets
 ```
 
-この例は生成したCargo.lockを版管理する前提。本書の既存CIが検査するRust教材は第12・27章の2件で、本付録の手動確認を自動実行済みとは扱わない。ワークスペースやサブディレクトリ配置の場合は`working-directory`等を調整する。第三者アクションは運用時にコミットSHAへ固定することも検討する。
+この例は生成したCargo.lockを版管理する前提。本書の既存CIでRust検査の対象にしているのは、第12章の `dag-relations`、第27章の `minimal-node`、第35章の `payment-candidates` の3件である。SDK監視や実ノードへの接続・送金、本付録の環境導入・手動確認を自動実行する設定ではない。ワークスペースやサブディレクトリ配置の場合は`working-directory`等を調整する。第三者アクションは運用時にコミットSHAへ固定することも検討する。
 
 ## A.17 mdBookのインストールと表示
 
@@ -432,7 +434,9 @@ mastering-kaspa/
 │   └── appendices/appendix-a.md
 ├── examples/
 │   ├── dag-relations/
-│   └── minimal-node/
+│   ├── minimal-node/
+│   ├── sdk-monitor/          # 公式SDKによる読み取り・通知の実習
+│   └── payment-candidates/   # SDK応答からRustの入金候補へ変換
 ├── experiments/
 │   └── devnet/
 │       ├── README.md

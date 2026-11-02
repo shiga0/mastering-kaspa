@@ -336,7 +336,7 @@ git blame consensus/core/src/config/params.rs
 - 最終確認日:
 ```
 
-このカードを`experiments/`に保存すると、本文に根拠を戻しやすくなる。
+読者自身の調査では、本書や公式ソースとは別の調査用ディレクトリへ、このカードを保存する。本書への改善提案として記録を追加する場合は、既存の `experiments/` の形式を参考に、個人情報・秘密情報・生ログを除いた記録を用意し、本文の修正と対応付ける。貢献の手順は[第36章](../part-06-contributing/chapter-36.md)を参照する。
 
 ## F.16 対応表をCSVとして管理する
 
@@ -538,6 +538,8 @@ rg -n 'ForkActivation|crescendo_activation' consensus
 4. 関連するテスト。
 5. 値の変更が与える影響について、コードから確実に言えること。
 
+実行へ進む場合は、[第12章](../part-02-consensus/chapter-12.md)で説明した[公式GHOSTDAGとの比較実験](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/ghostdag/README.md#実行)を使う。これは本書のハーネスから公式の `GhostdagManager::ghostdag` を呼び、親選択・blue/red・score/workをモデルと比較する実習である。[既存の検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/ghostdag-comparison-2026-10-31.md)と入力条件を読み、READMEの環境・依存をそろえて再実行し、自分の結果をF.15のカードへ記録する。フォーク境界の入力も含むが、実ネットワークの有効化を確認する試験ではない。
+
 **禁止する推論:** 「この値があるから、ある研究提案がMainnetで稼働している」。
 
 ## F.23 再現実験: KIPとコードの差分
@@ -551,6 +553,8 @@ rg -n 'ForkActivation|crescendo_activation' consensus
 5. ネットワーク別の導入状況を別途検証する。
 
 **成果物:** 「KIPの節 → ソースの関数 → テスト名」の3列対応表。
+
+境界の検証例として、[第13章](../part-02-consensus/chapter-13.md)の[Sampled DAA窓とDual切り替えの比較手順](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/daa-transition/README.md#再実行)と[検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/daa-transition-comparison-2026-10-31.md)を参照する。本書のハーネスで公式の `DualWindowManager` を呼び、選択親のDAA scoreがactivationの直前・一致・直後となる入力を比較している。合成設定での関数検証なので、手順4の具体例として使い、手順5のネットワーク導入状況とは分けて記録する。対応表にも、公式リポジトリ内のテストと本書独自の比較ハーネスを区別して記載する。
 
 ## F.24 再現実験: 未採用提案を調べる
 

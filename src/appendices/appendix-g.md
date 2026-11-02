@@ -44,7 +44,9 @@
 mastering-kaspa/
 ├── examples/
 │   ├── dag-relations/
-│   └── minimal-node/
+│   ├── minimal-node/
+│   ├── sdk-monitor/
+│   └── payment-candidates/
 └── experiments/
     ├── ghostdag/
     ├── daa/
@@ -53,6 +55,8 @@ mastering-kaspa/
     ├── devnet/
     └── *-2026-10-31.md 等の検証記録
 ```
+
+第35章の入金候補サンプルは `examples/payment-candidates/` に収録している。SDKの現在UTXOをRustへ取り込む手順は[サンプルREADME](https://github.com/shiga0/mastering-kaspa/blob/main/examples/payment-candidates/README.md)を参照する。完成した支払い監視アプリ全体を収録したものではない。
 
 本付録のJSON/manifest/結果テンプレートは保存形式の提案で、experiments/vectors、experiments/rust、experiments/resultsやexperiments.ymlを本書に追加したものではない。G.6の独自教材も本書外の一時プロジェクトで確認した。ログやDB・鍵を含む新しいフォルダーを公開用に作らない。
 
@@ -400,7 +404,7 @@ GHOSTDAGは単純な「DAGのトポロジカルソート」ではない。比較
 
 **手順：** 小規模DAGを生成 → 参照実装に与える → 出力をJSON化 → 教育用実装と差分比較 → 不一致時に最小反例を保存する。
 
-**実行結果（2026-10-31）：** 基準版v1.0.1の `GhostdagManager::ghostdag` と全blue集合のanticoneを直接数えるモデルを、24ケース・各親配列順で712ブロック比較し、selected parent・順序付きblue/red・score/workが一致した。親配列の通常順と反転順の出力も一致。収録コードは `experiments/ghostdag/`、公開集計は `experiments/ghostdag/observed-2026-10-31.json`、条件と経緯は `experiments/ghostdag-comparison-2026-10-31.md` を参照する。
+**実行結果（2026-10-31）：** 基準版v1.0.1の `GhostdagManager::ghostdag` と全blue集合のanticoneを直接数えるモデルを、24ケース・各親配列順で712ブロック比較し、selected parent・順序付きblue/red・score/workが一致した。親配列の通常順と反転順の出力も一致。収録コードは `experiments/ghostdag/`、公開集計は `experiments/ghostdag/observed-2026-10-31.json`、条件と経緯は [ghostdag-comparisonの検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/ghostdag-comparison-2026-10-31.md) を参照する。
 
 固定k、ハッシュ同点処理、異なるbits、フォーク境界、上位レベルのwork下限を含む。到達可能性は共通DFSアダプター、ヘッダーは合成値であり、公式Reachability・PoW・DAA計算・ノード全体の検証ではない。任意のDAGや登録順を網羅した結果として扱わない。
 
@@ -416,7 +420,7 @@ GHOSTDAGは単純な「DAGのトポロジカルソート」ではない。比較
 | 変化点 | ハードフォーク・パラメータ変更の境界 |
 | 異常系 | 同一時刻、極端な時刻差、境界値 |
 
-**実行結果（2026-10-31）：** 基準版v1.0.1のFull/Sampled DAA計算器に明示した窓を与え、27ケース・各2通りの挿入順でPython整数モデルとbitsが一致した。入力と期待値は `experiments/daa/vectors.json`、結果は `experiments/daa/observed-2026-10-31.json`、条件は `experiments/daa-comparison-2026-10-31.md` を参照する。履歴不足・同一時刻・整数丸め・target制限・Sampledの標本不足時の分岐を含む。別検査 `experiments/daa-window/` ではFull窓・non-DAA集合・DAA scoreを120ケースで比較し一致した。キャッシュ3条件・親配列2順で計11700回の公式ブロック比較を行った。GHOSTDAGメタデータは公式から供給し、到達可能性は共通DFSで提供する。さらに `experiments/daa-transition/` でSampled窓・Dual切り替えを288ケースで比較し、窓・non-DAA・DAA score・bitsが一致した。選択親DAAのactivation直前・一致・直後を含み、キャッシュ3条件・親配列2順でDualと直接計算器の出力も一致。PoW・全ネットワーク・全sample rate・中央値時刻窓・実際のPruning後IBDは未検証。
+**実行結果（2026-10-31）：** 基準版v1.0.1のFull/Sampled DAA計算器に明示した窓を与え、27ケース・各2通りの挿入順でPython整数モデルとbitsが一致した。入力と期待値は `experiments/daa/vectors.json`、結果は `experiments/daa/observed-2026-10-31.json`、条件は [daa-comparisonの検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/daa-comparison-2026-10-31.md) を参照する。履歴不足・同一時刻・整数丸め・target制限・Sampledの標本不足時の分岐を含む。別検査 `experiments/daa-window/` ではFull窓・non-DAA集合・DAA scoreを120ケースで比較し一致した。キャッシュ3条件・親配列2順で計11700回の公式ブロック比較を行った。GHOSTDAGメタデータは公式から供給し、到達可能性は共通DFSで提供する。さらに `experiments/daa-transition/` でSampled窓・Dual切り替えを288ケースで比較し、窓・non-DAA・DAA score・bitsが一致した。選択親DAAのactivation直前・一致・直後を含み、キャッシュ3条件・親配列2順でDualと直接計算器の出力も一致。PoW・全ネットワーク・全sample rate・中央値時刻窓・実際のPruning後IBDは未検証。
 
 ## G.12 G-007：Devnetノード同期
 
@@ -442,7 +446,7 @@ git -C rusty-kaspa rev-parse HEAD
 
 **測定するもの：** ピア数、同期状態、DAG情報、再起動後の復帰、エラー数。同期時間の測定には起点と終点の定義が必要。
 
-**既存の結果：** `experiments/devnet-two-node-2026-10-31.md` に、別データ領域の2ノードで伝播・停止復帰後の27ブロック/DAA score・指定1アドレスの26 UTXOが一致した記録がある。イメージdigest/ARM64・構成は固定済み。「未固定によるBLOCKED」は現状と合わないため撤回する。全UTXOやPruning後IBD・同期時間ベンチマークは未検証。今回は記録の照合のみ。
+**既存の結果：** [devnet-two-nodeの検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet-two-node-2026-10-31.md) に、別データ領域の2ノードで伝播・停止復帰後の27ブロック/DAA score・指定1アドレスの26 UTXOが一致した記録がある。イメージdigest/ARM64・構成は固定済み。「未固定によるBLOCKED」は現状と合わないため撤回する。全UTXOやPruning後IBD・同期時間ベンチマークは未検証。今回は記録の照合のみ。
 
 ## G.13 G-008：RPC・wRPC再接続
 
@@ -456,7 +460,7 @@ git -C rusty-kaspa rev-parse HEAD
 
 **注意：** wRPC通知だけで完全な履歴再生が保証されると仮定しない。必要な照合方法は実装とAPI仕様に依存する。
 
-**既存の結果：** `experiments/devnet-live-reconciliation-2026-10-31.md` で、購読の終了/再購読・現在UTXOの再照会・古い応答の拒否を確認した記録がある。単一アドレス/単一書込主体の限定試験で、切断中の全イベント履歴や自動再接続サービスの継続運用を検証したものではない。今回は再実行していない。
+**既存の結果：** [devnet-live-reconciliationの検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet-live-reconciliation-2026-10-31.md) で、購読の終了/再購読・現在UTXOの再照会・古い応答の拒否を確認した記録がある。単一アドレス/単一書込主体の限定試験で、切断中の全イベント履歴や自動再接続サービスの継続運用を検証したものではない。今回は再実行していない。
 
 ## G.14 G-009：重複通知と冪等性
 
@@ -470,7 +474,7 @@ git -C rusty-kaspa rev-parse HEAD
 
 検証対象は「イベントID」だけではない。トランザクションID、出力インデックス、チェーン状態、再編成の扱いも設計する。データベースの一意制約とトランザクション境界を併用する。added→removed→addedを永久的なoutpoint/kind重複排除で潰さない。現在状態への冪等置換とイベント履歴の同一性を区別する。
 
-**既存の結果：** `experiments/devnet-notifications-2026-10-31.md` で、実際に受けた通知をアプリ側で2回適用し、SQLiteの件数/金額が増えないことを確認した記録がある。ネットワークが同じ通知を2回送った試験ではない。再編成のremoved観測は別の `experiments/devnet-reorg-observer-2026-10-31.md` を参照。会計取消や複数ワーカーの試験まで完了したとしない。
+**既存の結果：** [devnet-notificationsの検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet-notifications-2026-10-31.md) で、実際に受けた通知をアプリ側で2回適用し、SQLiteの件数/金額が増えないことを確認した記録がある。ネットワークが同じ通知を2回送った試験ではない。再編成のremoved観測は別の [devnet-reorg-observerの検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet-reorg-observer-2026-10-31.md) を参照。会計取消や複数ワーカーの試験まで完了したとしない。
 
 ## G.15 G-010：Pruning・再起動
 
@@ -478,7 +482,22 @@ git -C rusty-kaspa rev-parse HEAD
 
 **観測項目：** 起動時間、ディスク使用量、同期状態、RPC応答、保持データの範囲、復旧に必要な手順。Pruningの挙動はコンセンサス・ストレージ設定・ノードバージョンに依存する。
 
-**既存の結果：** 通常のプロセス再起動の保持は `experiments/devnet-environment-2026-10-31.md` に記録。一方、`experiments/devnet-pruning-review-2026-10-31.md` の前提検査はPruning pointがGenesisのままで終了コード2。実削減・削減後再起動/新規ノードIBDは未実施で、Pruning成功として扱わない。今回はこれらの記録を照合しただけである。
+**既存の結果：** 通常のプロセス再起動の保持は [devnet-environmentの検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet-environment-2026-10-31.md) に記録。一方、[devnet-pruning-reviewの検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet-pruning-review-2026-10-31.md) の前提検査はPruning pointがGenesisのままで終了コード2。実削減・削減後再起動/新規ノードIBDは未実施で、Pruning成功として扱わない。今回はこれらの記録を照合しただけである。
+
+### G.15.1 G-005〜010を再現する入口
+
+本書リポジトリを取得し、各READMEの対象版・依存・起動条件・終了処理を確認してから実行する。結果の記録だけを読む場合と、自分で再実行した場合を分ける。
+
+| 実験 | 実行手順 |
+|---|---|
+| G-005：公式GHOSTDAGとの比較 | [GHOSTDAG比較README](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/ghostdag/README.md) |
+| G-006：DAA算術・窓・切り替え | [算術](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/daa/README.md)・[Full窓](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/daa-window/README.md)・[Sampled/Dual切り替え](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/daa-transition/README.md) |
+| G-007：2ノードの伝播・復帰 | [2ノードの伝播と停止復帰](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet/README.md#2ノードの伝播と停止復帰) |
+| G-008：再購読と現在UTXOの補完 | [稼働中の再照会と再購読](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet/README.md#稼働中の再照会と再購読) |
+| G-009：通知の二重適用 | [通知欠落・重複とSQLiteの再読込](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet/README.md#通知欠落重複とsqliteの再読込) |
+| G-010：通常再起動とPruningの前提検査 | [短時間採掘と再起動後の状態比較](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet/README.md#短時間採掘と再起動後の状態比較)・[Pruningの前提検査](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/devnet/README.md#pruningの前提検査未達を成功扱いにしない) |
+
+G-010のリンク先は通常再起動と前提検査の手順であり、Pruning後IBDの完成した実習ではない。各実験の確認範囲はG.10〜15と検証記録に従う。
 
 ## G.16 実験メタデータのテンプレート
 
@@ -723,7 +742,6 @@ Kaspaの研究論文、KIP、Rust実装、Devnetを結びつけるのは、**再
 - [Cargoのテスト機能](https://doc.rust-lang.org/cargo/commands/cargo-test.html)
 - [GitHub Actions公式ドキュメント](https://docs.github.com/en/actions)
 
-> **編集メモ：** 出版前に、各実験の結果を実測ログで埋め、参照実装のコミットSHA・ネットワークバージョン・適用KIPを確定すること。
 
 
 次は[付録H — 参考文献・変更履歴](appendix-h.md)。

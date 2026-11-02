@@ -512,7 +512,16 @@ fn main() {
 }
 ```
 
-このコードを別の一時Cargoプロジェクトのsrc/main.rsへ置き、実行するとassertでPast(D)を確認できる。Rust 1.90.0 / edition 2021で実行・書式・Clippyを確認した。HashSetの表示順は未規定。未知の親は葉として扱い、閉路や自己参照を検出・拒否するコードではない。これらは呼び出し前に満たす前提であり、祖先集合の取得だけで有効なDAGを証明できない。
+本書のリポジトリとは別の作業用ディレクトリで、C.25とは独立したプロジェクトを作る。
+
+```bash
+cargo +1.90.0 new --bin --edition 2021 dag-ancestors-lab
+cd dag-ancestors-lab
+# src/main.rs を上記コードに置き換える
+cargo +1.90.0 run --offline
+```
+
+この例には `#[test]` のテスト関数がない。`cargo run`で `main` 内のassertを実行し、`Past(D) = {A, B, C}` を確認する。`cargo test`で0件成功しただけでは、このassertを実行したことにはならない。Rust 1.90.0 / edition 2021で実行・書式・Clippyを確認した。HashSetの表示順は未規定。未知の親は葉として扱い、閉路や自己参照を検出・拒否するコードではない。これらは呼び出し前に満たす前提であり、祖先集合の取得だけで有効なDAGを証明できない。
 
 ### C.26.1 実装で追加すべき検証
 

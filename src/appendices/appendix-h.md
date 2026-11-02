@@ -87,27 +87,11 @@ NISTのページmetadata/注意書きの照合であり、規格本文やerrata�
 
 **区別：** 一般的な暗号学の定義と、Kaspaで採用される具体的なアルゴリズムや署名方式は同じとは限らない。
 
-## H.5 主要KIP対応表
+## H.5 KIP文献の参照先
 
-第30章・付録Fと同じ固定KIP `e4ae2332117b5cb68bd6188e065ef885b6d17939` の一覧に合わせる。表題は要旨であり本文のTitleと異なる場合がある。主要表の番号/Statusを照合し、最新の状態やネットワークでの稼働を示す表にはしない。
+KIPの番号・表題・索引上の状態・本書の対応章は、[付録F「KIPの対応表」](appendix-f.md#f6-kipの対応表公開索引の例)にまとめている。第30章・付録Fと同じ固定コミット `e4ae2332117b5cb68bd6188e065ef885b6d17939` の[KIP索引](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/README.md)を参照軸とし、この付録では状態一覧を重複して管理しない。
 
-| KIP | 公開一覧上の主題 | 一覧の状態（確認時点） | 本書の関連章 |
-|---|---|---|---|
-| [KIP-0001](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0001.md) | Rustフルノードへの書き換え | Implemented | 9, 25, 36 |
-| [KIP-0002](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0002.md) | DAGKnightへの移行 | Proposed | 29, 30 |
-| [KIP-0004](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0004.md) | Sparse Difficulty Windows | Active | 13, 30 |
-| [KIP-0009](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0009.md) | Extended Mass Formula | Active | 15, 30 |
-| [KIP-0010](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0010.md) | Scriptオペコード拡張 | Active | 16, 31 |
-| [KIP-0014](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0014.md) | Crescendo Hardfork | Active | 6, 9, 30 |
-| [KIP-0015](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0015.md) | Canonical Transaction Ordering | Active | 14, 34 |
-| [KIP-0016](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0016.md) | ZK Precompile Opcode | Active | 33, 34 |
-| [KIP-0017](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0017.md) | Covenants | Active | 31, 32 |
-| [KIP-0020](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0020.md) | Covenant IDs | Active | 31, 32 |
-| [KIP-0021](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0021.md) | Partitioned Sequencing Commitment | Active | 33, 34 |
-
-一次資料：https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/README.md
-
-KIPの番号・タイトル・状態は公開一覧に基づく。実装箇所や仕様の適用範囲は**各KIP本文と対象リリース**を確認すること。
+引用する際は、索引の要旨だけでなく各KIP本文の表題・該当節・参照コミットを記録する。実装箇所や仕様の適用範囲は対象リリースで確認し、索引上の状態とネットワークでの有効化を分ける。
 
 ## H.6 実装とリリース履歴の扱い
 
@@ -156,7 +140,7 @@ GitHubの行番号だけではリファクタリングでずれるため、**コ
 | 15–20 | Transaction/Script/Mempool/Mining実装 | 署名・UTXO・PoW・安全性 |
 | 21–28 | Node/SDK/RPC/Devnet実装 | バージョン・再現手順 |
 | 29–30 | DAGKnight論文、KIP一覧 | 研究・提案・導入の区別 |
-| 31–32 | KIP-0010/0017/0020、言語実装 | Covenant機能とツール対応 |
+| 第31〜32章・[Argent補足](../part-05-advanced/argent.md) | KIP-0010/0017/0020、Silverscript・Argentの固定版ソース | Covenant機能、言語・コンパイラー・実行環境の対応範囲 |
 | 33–34 | KIP-0015/0016/0021、ZK研究 | 証明とDA、L1/L2の責務 |
 | 35–36 | RPC/SDK/CONTRIBUTING/CI | 実装・運用・貢献手順 |
 | 付録A–G | ツールチェーン・設定・実験ログ | 実行可能性・追跡可能性 |
