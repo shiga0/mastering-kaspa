@@ -61,7 +61,7 @@ mdbook build
 
 [第12章のDAG解析器](examples/dag-relations/README.md)も収録し、Past・Anticone・k-cluster条件と追加順の違いを検証しています。
 
-`examples/wallet/`、`examples/reward-app/` は今後の実装用で、現時点では実行できるコードを収録していません。`experiments/` には検証記録を保存しています。
+完成したウォレット・報酬アプリは本書の収録対象外です。`examples/wallet/`、`examples/reward-app/` に実行可能なアプリは収録していません。HD復旧・送金などの限定した検証コードと記録は `experiments/` に保存しています。
 
 章・付録別の確認範囲と既知の制限は[技術レビューの進捗](src/review-status.md)を参照してください。
 
@@ -105,7 +105,7 @@ Devnetの起動・読み取りwRPC・再起動の検証手順は[Devnet実習](e
 
 ---
 
-**Status:** Draft / Technical review pending
+**Status:** Draft / 全49ページのレビュー一巡済み・検証範囲に制限あり
 
 **Language:** 日本語（将来的に英語版も検討）
 
