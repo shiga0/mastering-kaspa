@@ -185,3 +185,25 @@ Kaspaの実装・KIP・SDKは更新される。公開後も、少なくとも**�
 
 自動化できる部分：リンクチェック、Markdown lint、Rustテスト、mdBookビルド、参照タグの存在確認。自動化しにくい部分：論文の仮定、コンセンサスの意味、脅威モデル、実際のネットワーク有効化条件。
 
+### 参考リポジトリの更新を追う
+
+以下は2026-11-02に確認した主要な追跡先と既定ブランチ。更新を調べる入口として使い、本文の参照コミットを自動的に置き換えない。
+
+| リポジトリ | 追跡するブランチ | 関連する内容 |
+|---|---|---|
+| [kaspanet/rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) | `master` | ノード・コンセンサス・SDK |
+| [kaspanet/kips](https://github.com/kaspanet/kips) | `master` | 仕様変更の提案 |
+| [kaspanet/silverscript](https://github.com/kaspanet/silverscript) | `master` | SilverScript |
+| [argent-lang/argent](https://github.com/argent-lang/argent) | `master` | Argent |
+| [kaspanet/vprogs](https://github.com/kaspanet/vprogs) | `master` | vProgsの実装 |
+| [kaspanet/research](https://github.com/kaspanet/research) | `main` | 論文・研究仕様 |
+
+GitHubのWatchはリポジトリ単位で、特定ブランチの全コミットを通知する設定ではない。[GitHubの通知設定](https://docs.github.com/en/subscriptions-and-notifications/get-started/configuring-notifications)を参照。
+
+- まず`rusty-kaspa`で「Watch → Custom → Releases」を選び、新リリースの通知を受ける。
+- KIPや開発中の技術は、本に関係するIssue・PRを個別にSubscribeする。リリース通知だけでは文書・開発途中の変更を拾えない。
+- 新リリース時や本の改訂時に、本文で固定したコミットと更新候補の差分を比較し、影響する章・実習を確認する。毎コミットの追従は必須にしない。
+- 対象版を更新する場合は、関連コード・実習を再確認し、[対象バージョン](../src/baseline.md)と参照コミット・確認記録を一緒に更新する。確認前は従来の基準版を維持する。
+
+CIでは教材のビルド・テストや新版の検知を自動化できるが、新しい仕様と本文の意味が一致するかは別途確認する。新版通知の自動化は現時点では導入していない。
+

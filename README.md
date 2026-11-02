@@ -103,6 +103,8 @@ Devnetの起動・読み取りwRPC・再起動の検証手順は[Devnet実習](e
 
 誤字・説明の改善・技術的な訂正をIssue／PRで受け付けます。大きな変更は事前にIssueで相談してください。投稿手順とライセンスは [CONTRIBUTING.md](CONTRIBUTING.md) にまとめています。
 
+メンテナー向けの[参考リポジトリ・追跡ブランチと更新方針](docs/editorial-guide.md#参考リポジトリの更新を追う)も記載しています。
+
 ---
 
 **Status:** Draft / 既存49ページのレビュー一巡済み・検証範囲に制限あり
