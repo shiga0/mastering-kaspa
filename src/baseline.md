@@ -19,6 +19,19 @@
 
 コンセンサス関数の比較には、小さな合成DAGや明示した窓・パラメータも使います。これらは関数単位の試験条件であり、Devnetの既定設定をそのまま実行した結果とは分けて扱います。
 
+## リリース済み実装とネットワークの区別
+
+2026-11-03に、公式リリースと固定ソースを追加確認しました。次の表は文書・実装に基づく区別であり、今回新たにMainnetやTestnetへ取引を送って受理を実測した結果ではありません。
+
+| 対象 | 定義・実装の状態 | ネットワークについて確認したこと |
+|---|---|---|
+| 本書のv1.0.1 | 再現実験の基準。取引・署名の説明は主にv0 | 指定DockerイメージのDevnet実測。現在のMainnet互換性を示さない |
+| Toccata／Covenantの基盤機能 | KIP-17/20等と対応する、リリース済みのL1機能 | [公式Dev Guide](https://docs.kaspa.org/toccata)はMainnetで2026-06-30、DAA score `474_165_565`に有効化と説明。言語・アプリの完成度とは別 |
+| [v2.0.1の設定](https://github.com/kaspanet/rusty-kaspa/blob/cfafeb4c093fa37a303f1b9f19c58f986b870ce3/consensus/core/src/config/params.rs) | Released。Toccataの有効化条件を持つ | Mainnetは上のscore、Testnet-10は`467_579_632`。同じ版のDevnet既定は`never()`であり、ネットワーク名だけで機能を判断しない |
+| [v2.1.0](https://github.com/kaspanet/rusty-kaspa/releases/tag/v2.1.0)／`01b532e8b553523216471682649693af92f0fd16` | Released。取引v0/v1を扱うpost-Toccata実装 | 本書では[第15章のID・署名範囲比較](part-03-transactions/chapter-15.md#1551-transaction-v0とv1を区別する)に使用。実ネットワーク接続・送金・全ノードの採用状況は未検証 |
+
+v2.1.0のworkspaceはRust最低版1.91.0・edition 2024を宣言します。今回の関数検査はRust 1.94.0で実行し、宣言された最低版自体でのビルドや`kaspad`全体の検証はしていません。これを理由に既存の1.90.0教材やv1.0.1実習の依存を変更する必要はありません。詳細は[最終品質レビュー記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/final-quality-review-2026-11-03.md)を参照してください。
+
 ## SDKとRPCクライアント
 
 | 対象 | 採用する版・経路 | 確認範囲 |

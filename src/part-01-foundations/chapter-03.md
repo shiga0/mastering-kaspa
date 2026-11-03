@@ -397,14 +397,14 @@ Kaspaのブロックやトランザクション処理でも、暗号学的コミ
 
 ## 12. 実践：RustでSHA-256を計算する
 
-この節では、Kaspa固有のハッシュ実装ではなく、暗号学的ハッシュ関数の基本的な性質をRustで観察する。本書のリポジトリとは別の作業用ディレクトリで実行する。Rust/Cargoが必要で、初回の依存取得にはネットワーク接続が必要となる。
+この節では、Kaspa固有のハッシュ実装ではなく、暗号学的ハッシュ関数の基本的な性質をRustで観察する。[付録AのA.5〜A.5.2](../appendices/appendix-a.md#a5-rustのインストール)でRust 1.90.0の準備とテスト実行を確認してから、本書のリポジトリとは別の作業用ディレクトリで実行する。初回の依存取得にはネットワーク接続が必要となる。
 
 ### 12.1 プロジェクトの作成
 
 ```bash
-cargo new --edition 2021 hash-lab
+cargo +1.90.0 new --edition 2021 hash-lab
 cd hash-lab
-cargo add 'sha2@=0.10.9'
+cargo +1.90.0 add 'sha2@=0.10.9'
 ```
 
 `sha2` は本章で確認した0.10.9へ固定する（[同版のAPI資料](https://docs.rs/sha2/0.10.9/sha2/)）。生成された `Cargo.lock` は間接依存の版も記録するため、再現するときに保持する。
@@ -434,7 +434,7 @@ fn main() {
 実行する。
 
 ```bash
-cargo run
+cargo +1.90.0 run --locked
 ```
 
 この例の入力はUTF-8/ASCIIの5バイトであり、改行は含まない。期待する標準出力は次の通りである。
@@ -485,7 +485,7 @@ mod tests {
 ```
 
 ```bash
-cargo test
+cargo +1.90.0 test --locked
 ```
 
 `abc` の期待値は[NISTのSHA-256計算例](https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/SHA256.pdf)に対応する。空入力と大小文字の例も含め、期待値をPython標準ライブラリの `hashlib.sha256` と独立に照合した。これらは具体的な入力に対する確認であり、衝突が存在しないことの証明ではない。

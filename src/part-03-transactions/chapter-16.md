@@ -219,6 +219,8 @@ UTXO系プロトコルでは、署名が承認する入力・出力の範囲を�
 
 [outputs_hash](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/hashing/sighash.rs)ではNONEは出力の集約をゼロ、SINGLEは入力と同じindexの出力だけを対象とし、対応する出力がなければゼロを返す。ANYONECANPAYでは入力群のOutpoint・sig_op_count等の集約が変わる。これらは検証済みの特定版の規則であり、署名モードを変更する際は承認範囲も見直す。
 
+Transaction v1では、compute budget・storage massがALL署名の対象外で、出力のCovenant bindingは対象になるなど、基準版との違いがある。[15.5.1の比較表と14ケース](chapter-15.md#1551-transaction-v0とv1を区別する)を参照し、ここでのv0のフィールド列を後続版へそのまま適用しない。ALLは「取引の全バイトを署名する」という意味ではない。
+
 ### 16.7.3 標準アドレスからScriptへの変換
 
 [pay_to_address_script](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/crypto/txscript/src/standard.rs)はアドレスのversionで分岐する。PubKeyは32バイトの公開鍵データと `OpCheckSig`、PubKeyECDSAは33バイトと `OpCheckSigECDSA` を使う。ScriptHashはBLAKE2bによる32バイトのスクリプトハッシュを比較する。任意のアドレスpayloadを同じ署名方式で処理しない。

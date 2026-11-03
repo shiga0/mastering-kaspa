@@ -1,0 +1,521 @@
+{
+  "reviewDate": "2026-11-03",
+  "startBranch": "main",
+  "startCommit": "f43538b5d45d93f7cd347da67b88b7eccec0dd24",
+  "startGitStatus": "",
+  "trackedFilesAtStart": 267,
+  "scope": "Book-wide structure, version, link and teaching-code checks; focused source review of transaction v1 and technology selection. Not a full protocol audit or a line-by-line reread of all files.",
+  "inventory": {
+    "srcMarkdown": 59,
+    "numberedChapters": 36,
+    "summaryPages": 58,
+    "examples": 17,
+    "experiments": 173,
+    "workflows": 1,
+    "scripts": 4
+  },
+  "bookFiles": [
+    {
+      "path": "src/SUMMARY.md",
+      "sha256AtStart": "5f8ed79380213222eaa6924e875037c5217c6785b0f34df490ffd5250d70fd00",
+      "sha256AtReview": "5f8ed79380213222eaa6924e875037c5217c6785b0f34df490ffd5250d70fd00"
+    },
+    {
+      "path": "src/afterword.md",
+      "sha256AtStart": "d8bcf9f33bf526f2a2cb249fa570544f0a8c6c1fb1ebacbbea80abc7ae275490",
+      "sha256AtReview": "d8bcf9f33bf526f2a2cb249fa570544f0a8c6c1fb1ebacbbea80abc7ae275490"
+    },
+    {
+      "path": "src/appendices/appendix-a.md",
+      "sha256AtStart": "77667bf3abf357c857dff081ae9f7226391cd113b9f45f0cf117869c2becae24",
+      "sha256AtReview": "77667bf3abf357c857dff081ae9f7226391cd113b9f45f0cf117869c2becae24"
+    },
+    {
+      "path": "src/appendices/appendix-b.md",
+      "sha256AtStart": "053427bdafe9386c7cad7912e6560a6ddc435e5f0841dbe73689d8d7ebbc736c",
+      "sha256AtReview": "053427bdafe9386c7cad7912e6560a6ddc435e5f0841dbe73689d8d7ebbc736c"
+    },
+    {
+      "path": "src/appendices/appendix-c.md",
+      "sha256AtStart": "e9371c10fe16c3700ef5ac3208b9f131ad940f190a39ffe379e1392242e11c3a",
+      "sha256AtReview": "e9371c10fe16c3700ef5ac3208b9f131ad940f190a39ffe379e1392242e11c3a"
+    },
+    {
+      "path": "src/appendices/appendix-d.md",
+      "sha256AtStart": "d4b862894c222e259486f77256cbd9bf1c291f5f64be1f9ffaee7312474281bf",
+      "sha256AtReview": "d4b862894c222e259486f77256cbd9bf1c291f5f64be1f9ffaee7312474281bf"
+    },
+    {
+      "path": "src/appendices/appendix-e.md",
+      "sha256AtStart": "fc808756554eed2419712dac881b0e0becab0b3a48880f107cfd495a07de7aa8",
+      "sha256AtReview": "fc808756554eed2419712dac881b0e0becab0b3a48880f107cfd495a07de7aa8"
+    },
+    {
+      "path": "src/appendices/appendix-f.md",
+      "sha256AtStart": "cec5f8a2780249bf8f095632938b4e6954dc08416cdd9c05f083240b238b67b6",
+      "sha256AtReview": "cec5f8a2780249bf8f095632938b4e6954dc08416cdd9c05f083240b238b67b6"
+    },
+    {
+      "path": "src/appendices/appendix-g.md",
+      "sha256AtStart": "aec37ce06d1030cdb1eeb58dd6c998d0143652672c6407b640f7d0101784d088",
+      "sha256AtReview": "aec37ce06d1030cdb1eeb58dd6c998d0143652672c6407b640f7d0101784d088"
+    },
+    {
+      "path": "src/appendices/appendix-h.md",
+      "sha256AtStart": "d9293daa0c7b8a4c7253c7a668033e667233861c15fbe9827e27f1ec3ed809ba",
+      "sha256AtReview": "d9293daa0c7b8a4c7253c7a668033e667233861c15fbe9827e27f1ec3ed809ba"
+    },
+    {
+      "path": "src/appendices/index.md",
+      "sha256AtStart": "ad66df4e7cbfc8c777329bcf66b44ff4a3ca25b1f83da6f12855e54ddbaf9c4c",
+      "sha256AtReview": "ad66df4e7cbfc8c777329bcf66b44ff4a3ca25b1f83da6f12855e54ddbaf9c4c"
+    },
+    {
+      "path": "src/baseline.md",
+      "sha256AtStart": "0f999665204fb517c98bb1be30b5e4c732a6bebef97c78b4e630c81a2d36c501",
+      "sha256AtReview": "b232d3d24e9cd8be72eaa5013c92d35f4fb31ca80080270a52667ec94130c6b7"
+    },
+    {
+      "path": "src/cover.md",
+      "sha256AtStart": "bfaffdeff9fec8f41d0d90caa31818d8fedfa7ae29c6547d488b0f03048edd52",
+      "sha256AtReview": "bfaffdeff9fec8f41d0d90caa31818d8fedfa7ae29c6547d488b0f03048edd52"
+    },
+    {
+      "path": "src/ecosystem-map.md",
+      "sha256AtStart": "a737fc63daf3d5e85b145c08f857a82c99d6c9079d9cf488873607cbafe4c406",
+      "sha256AtReview": "d18a9220b78de1249109afd64dbf1fd74cf88d49acebd4cd14b7752335bb0f29"
+    },
+    {
+      "path": "src/introduction.md",
+      "sha256AtStart": "ef4daa4c8ccc2d352a19dfe0fabb46d6bca122461b71c8b9e37382bc360edad8",
+      "sha256AtReview": "d33ef1f241eb215793e915e24be99054c3acf2d76f67630deba031a7575bdb82"
+    },
+    {
+      "path": "src/part-01-foundations/chapter-01.md",
+      "sha256AtStart": "f34cdb5d53bc64f02570f0f487182660e54904d045cc5590a7de0c3051798fb8",
+      "sha256AtReview": "f34cdb5d53bc64f02570f0f487182660e54904d045cc5590a7de0c3051798fb8"
+    },
+    {
+      "path": "src/part-01-foundations/chapter-02.md",
+      "sha256AtStart": "b4c4e9d8cc4d0d94a619b01fa0fb0b0b547ca5e87f3c0238e8ca74cf740c8667",
+      "sha256AtReview": "b4c4e9d8cc4d0d94a619b01fa0fb0b0b547ca5e87f3c0238e8ca74cf740c8667"
+    },
+    {
+      "path": "src/part-01-foundations/chapter-03.md",
+      "sha256AtStart": "80f4ca2802bc639e6f13866a2bc0c419909c4022b98557d9782f62edd01c3ad4",
+      "sha256AtReview": "ca0845a4ce71843c81bdb2d5988adbe753a4b4383259595b3f250c55518b31a9"
+    },
+    {
+      "path": "src/part-01-foundations/chapter-04.md",
+      "sha256AtStart": "28fcbcaf8dc5835337b65ee81d4e4338f495ff0c5bb1973ef7997673fbb5b37a",
+      "sha256AtReview": "28fcbcaf8dc5835337b65ee81d4e4338f495ff0c5bb1973ef7997673fbb5b37a"
+    },
+    {
+      "path": "src/part-01-foundations/chapter-05.md",
+      "sha256AtStart": "d45d01295cc7f75b55cdbe5999f73ad8de4d3890ae2256597d8dfde3cfb5f3ee",
+      "sha256AtReview": "d45d01295cc7f75b55cdbe5999f73ad8de4d3890ae2256597d8dfde3cfb5f3ee"
+    },
+    {
+      "path": "src/part-01-foundations/chapter-06.md",
+      "sha256AtStart": "e86b928d68c44804c932412c49c6aa6bedd3414b486bea9a972b955827b994be",
+      "sha256AtReview": "e86b928d68c44804c932412c49c6aa6bedd3414b486bea9a972b955827b994be"
+    },
+    {
+      "path": "src/part-01-foundations/chapter-07.md",
+      "sha256AtStart": "c6f49d0a77c904b933d2085831700122fc6c497fe4dcdcf1cc6fc07c51e40a22",
+      "sha256AtReview": "c6f49d0a77c904b933d2085831700122fc6c497fe4dcdcf1cc6fc07c51e40a22"
+    },
+    {
+      "path": "src/part-01-foundations/chapter-08.md",
+      "sha256AtStart": "a95f7b03b31b34df9c3020729a2fa0ddf41a28ee758089d4a5135eb70a36a31b",
+      "sha256AtReview": "a95f7b03b31b34df9c3020729a2fa0ddf41a28ee758089d4a5135eb70a36a31b"
+    },
+    {
+      "path": "src/part-01-foundations/index.md",
+      "sha256AtStart": "70c2307dd3a44d89f9fb6d3e8ca2c4ab5bbecabef5757643a3ebbebc8192c2f0",
+      "sha256AtReview": "70c2307dd3a44d89f9fb6d3e8ca2c4ab5bbecabef5757643a3ebbebc8192c2f0"
+    },
+    {
+      "path": "src/part-02-consensus/chapter-09.md",
+      "sha256AtStart": "9c93703d53093ea415b32b9c031f41bc4b17d78e10abae1fb6a5eb398d9b43aa",
+      "sha256AtReview": "9c93703d53093ea415b32b9c031f41bc4b17d78e10abae1fb6a5eb398d9b43aa"
+    },
+    {
+      "path": "src/part-02-consensus/chapter-10.md",
+      "sha256AtStart": "eb6bf5e29ddb9c893edbbcd662932eead4d0857ea130d0daa60fbe7344223ba3",
+      "sha256AtReview": "eb6bf5e29ddb9c893edbbcd662932eead4d0857ea130d0daa60fbe7344223ba3"
+    },
+    {
+      "path": "src/part-02-consensus/chapter-11.md",
+      "sha256AtStart": "886e6d1acfe8c19b1e2b82a9100657d059395312a22ffbf88d7958b0fff5c817",
+      "sha256AtReview": "886e6d1acfe8c19b1e2b82a9100657d059395312a22ffbf88d7958b0fff5c817"
+    },
+    {
+      "path": "src/part-02-consensus/chapter-12.md",
+      "sha256AtStart": "cb521764db3823fc108800ba53414001264452eeff529c354bd89a5d3f49a987",
+      "sha256AtReview": "cb521764db3823fc108800ba53414001264452eeff529c354bd89a5d3f49a987"
+    },
+    {
+      "path": "src/part-02-consensus/chapter-13.md",
+      "sha256AtStart": "d02bf8ef8c2e63d9a4df155051a8b97dcfad9c329862f8883b3a523802759108",
+      "sha256AtReview": "d02bf8ef8c2e63d9a4df155051a8b97dcfad9c329862f8883b3a523802759108"
+    },
+    {
+      "path": "src/part-02-consensus/chapter-14.md",
+      "sha256AtStart": "1706162a0763da354382025a17cc544c1df2362e1f9e155f039c9ffa3efa31a5",
+      "sha256AtReview": "1706162a0763da354382025a17cc544c1df2362e1f9e155f039c9ffa3efa31a5"
+    },
+    {
+      "path": "src/part-02-consensus/index.md",
+      "sha256AtStart": "6a6cad069f1f86b29a33569360601b1d2c029b185a8153c921b1cd3acfbbfed2",
+      "sha256AtReview": "6a6cad069f1f86b29a33569360601b1d2c029b185a8153c921b1cd3acfbbfed2"
+    },
+    {
+      "path": "src/part-03-transactions/chapter-15.md",
+      "sha256AtStart": "3bc6561ef63bea89981b43faa510bbda4dc41618269ffbbe771c084c3d3c1749",
+      "sha256AtReview": "4527626d84b1f426c9ac91ed7490624c7cb926eb7621fa8c929a7548df2bac0e"
+    },
+    {
+      "path": "src/part-03-transactions/chapter-16.md",
+      "sha256AtStart": "1d69e2c1b63118be8b6cd6bbc7056c87f9ac1228297e08dd935c40907c361e12",
+      "sha256AtReview": "3df33147b72108a5efb1dee9daf8dfc78ac909d7d200f50f40be68690b52b909"
+    },
+    {
+      "path": "src/part-03-transactions/chapter-17.md",
+      "sha256AtStart": "89cd505bad4ea602128bad115b591c84447f647c3fb8886369c8be254252fb7d",
+      "sha256AtReview": "89cd505bad4ea602128bad115b591c84447f647c3fb8886369c8be254252fb7d"
+    },
+    {
+      "path": "src/part-03-transactions/chapter-18.md",
+      "sha256AtStart": "f8a8afe54729a6566889c8b8476a64e00cfe5be5f114b4bbf7040246466d1f2a",
+      "sha256AtReview": "f8a8afe54729a6566889c8b8476a64e00cfe5be5f114b4bbf7040246466d1f2a"
+    },
+    {
+      "path": "src/part-03-transactions/chapter-19.md",
+      "sha256AtStart": "d39a5197112548ccbe0fee3051355853c053bc5d070dfcdf1b68180e711c2b82",
+      "sha256AtReview": "d39a5197112548ccbe0fee3051355853c053bc5d070dfcdf1b68180e711c2b82"
+    },
+    {
+      "path": "src/part-03-transactions/chapter-20.md",
+      "sha256AtStart": "a9247aeb47c113c2b1c636cf21078a706bafd63264944c6802dc744a163ed059",
+      "sha256AtReview": "a9247aeb47c113c2b1c636cf21078a706bafd63264944c6802dc744a163ed059"
+    },
+    {
+      "path": "src/part-03-transactions/index.md",
+      "sha256AtStart": "447198bd64b5f17dd8babb8586205673eb6c92c1af2d89c04e77e9849d7795b2",
+      "sha256AtReview": "447198bd64b5f17dd8babb8586205673eb6c92c1af2d89c04e77e9849d7795b2"
+    },
+    {
+      "path": "src/part-04-development/chapter-21.md",
+      "sha256AtStart": "77bda3fa9d839bd4b321d9f57bbe20211fb3c1708ed9df1828b8141111cfe099",
+      "sha256AtReview": "77bda3fa9d839bd4b321d9f57bbe20211fb3c1708ed9df1828b8141111cfe099"
+    },
+    {
+      "path": "src/part-04-development/chapter-22.md",
+      "sha256AtStart": "b2cd65c3f76ec7c50ac2bac0d9ad9ea0384f3b981d2b638fd56bb3f301a2c3d7",
+      "sha256AtReview": "b2cd65c3f76ec7c50ac2bac0d9ad9ea0384f3b981d2b638fd56bb3f301a2c3d7"
+    },
+    {
+      "path": "src/part-04-development/chapter-23.md",
+      "sha256AtStart": "4bc7ad86c2e33e0f7f4fb9b4506566e04318b21e6dee5c46ab0acbdaddc4ba0a",
+      "sha256AtReview": "4bc7ad86c2e33e0f7f4fb9b4506566e04318b21e6dee5c46ab0acbdaddc4ba0a"
+    },
+    {
+      "path": "src/part-04-development/chapter-24.md",
+      "sha256AtStart": "954e28b1a860cd928e1caa8f01d0a85d496a7301f3ae1ae2153e33b8e84f6c23",
+      "sha256AtReview": "954e28b1a860cd928e1caa8f01d0a85d496a7301f3ae1ae2153e33b8e84f6c23"
+    },
+    {
+      "path": "src/part-04-development/chapter-25.md",
+      "sha256AtStart": "e68f692c5971431d85b63f5c37912a94ac4925ee70076772c1324324c5866f16",
+      "sha256AtReview": "e68f692c5971431d85b63f5c37912a94ac4925ee70076772c1324324c5866f16"
+    },
+    {
+      "path": "src/part-04-development/chapter-26.md",
+      "sha256AtStart": "486121950adc2b0c70057f3c051176421cab4f574f6d1407ca9614f61ca29adb",
+      "sha256AtReview": "486121950adc2b0c70057f3c051176421cab4f574f6d1407ca9614f61ca29adb"
+    },
+    {
+      "path": "src/part-04-development/chapter-27.md",
+      "sha256AtStart": "26260d9c5a484eec1a1881afa2603317e685ea6bdd7547cf2930548d6da6f897",
+      "sha256AtReview": "26260d9c5a484eec1a1881afa2603317e685ea6bdd7547cf2930548d6da6f897"
+    },
+    {
+      "path": "src/part-04-development/chapter-28.md",
+      "sha256AtStart": "88a754ae436cfd00ad9bba7af1d9d1fc81f79b150f350cc628210e4cc1f9729c",
+      "sha256AtReview": "88a754ae436cfd00ad9bba7af1d9d1fc81f79b150f350cc628210e4cc1f9729c"
+    },
+    {
+      "path": "src/part-04-development/index.md",
+      "sha256AtStart": "68d0922f3b5fdac99984a9f55d80c4fbc756c2fa03b6fdf7949902425bf9355d",
+      "sha256AtReview": "68d0922f3b5fdac99984a9f55d80c4fbc756c2fa03b6fdf7949902425bf9355d"
+    },
+    {
+      "path": "src/part-05-advanced/argent.md",
+      "sha256AtStart": "ab2b6a265abdc93a22ac00e6bfb64c4bfbe4fa7285df7425b3c234a40c737b1a",
+      "sha256AtReview": "ab2b6a265abdc93a22ac00e6bfb64c4bfbe4fa7285df7425b3c234a40c737b1a"
+    },
+    {
+      "path": "src/part-05-advanced/chapter-29.md",
+      "sha256AtStart": "1305247ca6fb1139a0d5616e110b5a002fd87b5d9074e50db6f99f909d7eef24",
+      "sha256AtReview": "1305247ca6fb1139a0d5616e110b5a002fd87b5d9074e50db6f99f909d7eef24"
+    },
+    {
+      "path": "src/part-05-advanced/chapter-30.md",
+      "sha256AtStart": "8eb34c7b7535ff04e136f5970eda0cbc0894923418024eab07db9c7e5d333842",
+      "sha256AtReview": "8eb34c7b7535ff04e136f5970eda0cbc0894923418024eab07db9c7e5d333842"
+    },
+    {
+      "path": "src/part-05-advanced/chapter-31.md",
+      "sha256AtStart": "d75272dd93c1344272adf66b193aecd30c79aa54b6ab580fe11b9730c7dd0325",
+      "sha256AtReview": "d75272dd93c1344272adf66b193aecd30c79aa54b6ab580fe11b9730c7dd0325"
+    },
+    {
+      "path": "src/part-05-advanced/chapter-32.md",
+      "sha256AtStart": "a409e6d787c12a0ed7d9ee93762bfbe5ddc7c0208ccb1aa5e05e13dbe2cb5aa8",
+      "sha256AtReview": "a409e6d787c12a0ed7d9ee93762bfbe5ddc7c0208ccb1aa5e05e13dbe2cb5aa8"
+    },
+    {
+      "path": "src/part-05-advanced/chapter-33.md",
+      "sha256AtStart": "5a31a0c56ac8456a6e40590656bd50de9cee1413dc5063d3031f3e90c9f9ca11",
+      "sha256AtReview": "5a31a0c56ac8456a6e40590656bd50de9cee1413dc5063d3031f3e90c9f9ca11"
+    },
+    {
+      "path": "src/part-05-advanced/chapter-34.md",
+      "sha256AtStart": "6e0d017a8ce4fca5c1e02e2a3dcc0467372160e75dec56c3900d5dcbd8297288",
+      "sha256AtReview": "6e0d017a8ce4fca5c1e02e2a3dcc0467372160e75dec56c3900d5dcbd8297288"
+    },
+    {
+      "path": "src/part-05-advanced/index.md",
+      "sha256AtStart": "70233acc3c82b7ac37c4d198fd699f1a540751207987ad885f33a98f9830c3c1",
+      "sha256AtReview": "70233acc3c82b7ac37c4d198fd699f1a540751207987ad885f33a98f9830c3c1"
+    },
+    {
+      "path": "src/part-06-contributing/chapter-35.md",
+      "sha256AtStart": "6187f99d1554e27b18632b6521e48dedab952d3bb630ed5d4a46adb58c61f825",
+      "sha256AtReview": "6187f99d1554e27b18632b6521e48dedab952d3bb630ed5d4a46adb58c61f825"
+    },
+    {
+      "path": "src/part-06-contributing/chapter-36.md",
+      "sha256AtStart": "813a114560a37598302f42fd16e6ca56933937778f0b83ef62d8f629bfa01e04",
+      "sha256AtReview": "813a114560a37598302f42fd16e6ca56933937778f0b83ef62d8f629bfa01e04"
+    },
+    {
+      "path": "src/part-06-contributing/index.md",
+      "sha256AtStart": "d29970aa141b927d14dd457efd8ffd019f601bd2cbc95509c6260c3419ee1674",
+      "sha256AtReview": "d29970aa141b927d14dd457efd8ffd019f601bd2cbc95509c6260c3419ee1674"
+    },
+    {
+      "path": "src/review-status.md",
+      "sha256AtStart": "88adcbb065f2e15ad3c6dad943ca004d3ca52a18d1539ebc768faf3992106ecf",
+      "sha256AtReview": "27ef1140d03bffd3b82d9127e03a5b98b0aa8554653ed95898e244bd549f04f9"
+    }
+  ],
+  "sources": {
+    "releasedNode": "01b532e8b553523216471682649693af92f0fd16",
+    "activationParams": "cfafeb4c093fa37a303f1b9f19c58f986b870ce3",
+    "kips": "d832dbd89347dcb16d3d83bf6755b081714cbcb2",
+    "argentReadme": "2796809f167144902f04a4b3333a4c144f91fdaf"
+  },
+  "downloadSha256": {
+    "node-v2.1.0.tar.gz": "f2c30553a1993245419ba225f53fd898806b0102e5d81a5889d7648d51db03ff",
+    "kips.tar.gz": "bcd4c66b1a1e11fc6348dada8cfb6df8f7b918661b150c5b254e088e02d2f1eb",
+    "v2.0.1-params.rs": "fb792fa3c768961c4a06c25cf914d01ed97b9309d615bf96b600cb361ded56aa",
+    "release-v2.1.0.json": "8e036cfda375ce32f97f23dcb3069ee7f43a31e00d6cc839caf5cae1653d9b07",
+    "release-v2.0.0.json": "c3b7e3e7a34082953b021710ec637abded331edfc370a444e20c73bf7bb426c0",
+    "toccata.html": "b767c117bf6028c2fc9bc5723023ed6288207882d3322174aa7881c0ab9a49e8",
+    "covenants.html": "b39b683d4e2bf7eb9c22e5b9799e4feef08764c7fc818497d027224c7be1bf4e",
+    "argent-readme.md": "bf8b4218368bfbecf8b80757adc689de7d99b27fdf933f53d7dcfec8f0aa396e"
+  },
+  "externalLinks": [
+    {
+      "url": "https://docs.kaspa.org/programmability",
+      "status": 200,
+      "bytes": 62236
+    },
+    {
+      "url": "https://docs.kaspa.org/programmability/covenants",
+      "status": 200,
+      "bytes": 60846
+    },
+    {
+      "url": "https://docs.kaspa.org/toccata",
+      "status": 200,
+      "bytes": 113728
+    },
+    {
+      "url": "https://github.com/kaspanet/kips/blob/d832dbd89347dcb16d3d83bf6755b081714cbcb2/kip-0020.md",
+      "status": 200,
+      "bytes": 18500
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/blob/01b532e8b553523216471682649693af92f0fd16/consensus/core/src/hashing/sighash.rs",
+      "status": 200,
+      "bytes": 33609
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/blob/01b532e8b553523216471682649693af92f0fd16/consensus/core/src/hashing/tx.rs",
+      "status": 200,
+      "bytes": 17319
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/blob/01b532e8b553523216471682649693af92f0fd16/consensus/core/src/mass/mod.rs",
+      "status": 200,
+      "bytes": 38856
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/blob/01b532e8b553523216471682649693af92f0fd16/consensus/core/src/tx.rs",
+      "status": 200,
+      "bytes": 49654
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/blob/01b532e8b553523216471682649693af92f0fd16/crypto/hashes/src/hashers.rs",
+      "status": 200,
+      "bytes": 15077
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/blob/01b532e8b553523216471682649693af92f0fd16/mining/src/mempool/check_transaction_standard.rs",
+      "status": 200,
+      "bytes": 20329
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/blob/cfafeb4c093fa37a303f1b9f19c58f986b870ce3/consensus/core/src/config/params.rs",
+      "status": 200,
+      "bytes": 37618
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/releases/tag/v2.0.0",
+      "status": 200,
+      "bytes": 164308
+    },
+    {
+      "url": "https://github.com/kaspanet/rusty-kaspa/releases/tag/v2.1.0",
+      "status": 200,
+      "bytes": 174249
+    }
+  ],
+  "findings": [
+    {
+      "severity": "High",
+      "path": "src/part-03-transactions/chapter-15.md",
+      "lineAfterRevision": 141,
+      "reason": "Missing version-1 comparison and signed-field boundaries"
+    },
+    {
+      "severity": "High",
+      "path": "src/part-03-transactions/chapter-16.md",
+      "lineAfterRevision": 222,
+      "reason": "Cross-reference version-1 signature differences"
+    },
+    {
+      "severity": "Medium",
+      "path": "src/part-03-transactions/chapter-15.md",
+      "lineAfterRevision": 294,
+      "reason": "Separate resource accounting from fee policy"
+    },
+    {
+      "severity": "Medium",
+      "path": "src/baseline.md",
+      "lineAfterRevision": 22,
+      "reason": "Distinguish released source, activation settings and live verification"
+    },
+    {
+      "severity": "Medium",
+      "path": "src/ecosystem-map.md",
+      "lineAfterRevision": 51,
+      "reason": "Decision guide for execution, state and trust"
+    },
+    {
+      "severity": "Low",
+      "path": "src/introduction.md",
+      "lineAfterRevision": 49,
+      "reason": "First Rust-only route"
+    },
+    {
+      "severity": "Low",
+      "path": "src/part-01-foundations/chapter-03.md",
+      "lineAfterRevision": 400,
+      "reason": "Toolchain and lockfile consistency"
+    }
+  ],
+  "checks": {
+    "mdbookBuild": "passed",
+    "bookHtmlPages": 62,
+    "bookLocalReferences": 6357,
+    "bookImageReferences": 3,
+    "summaryPages": 58,
+    "rustBlocks": 54,
+    "rustSnippetTests": 233,
+    "synchronizedExamples": 3,
+    "rustCrates": {
+      "dag-relations": {
+        "fmt": "passed",
+        "clippy": "passed",
+        "tests": 8
+      },
+      "minimal-node": {
+        "fmt": "passed",
+        "clippy": "passed",
+        "tests": 16
+      },
+      "payment-candidates": {
+        "fmt": "passed",
+        "clippy": "passed",
+        "tests": 19
+      }
+    },
+    "pythonStoreTests": 7,
+    "utxoTests": 2,
+    "pythonSyntaxFiles": 26,
+    "cjsSyntaxFiles": 9,
+    "startTrackedJsonFiles": 36,
+    "officialV210HashingUnitTests": 5,
+    "v1MutationCases": 14,
+    "v1IntegrationTests": 1,
+    "v1Evidence": "transaction-v1/observed-2026-11-03.json",
+    "v1Fmt": "passed",
+    "v1Clippy": "passed with --no-deps -D warnings",
+    "silverScriptCases": 30,
+    "silverScriptStages": {
+      "vm": 27,
+      "abi": 1,
+      "covenant-context": 2
+    },
+    "silverScriptCurrentResultMatchesCommittedResult": true,
+    "silverScriptFmt": "passed",
+    "silverScriptClippy": "passed",
+    "firstRustRoute": {
+      "appendixTests": 2,
+      "chapter03Tests": 2,
+      "expectedSha256OutputMatched": true,
+      "rust": "1.90.0",
+      "edition": 2021,
+      "newToolchainInstallationTested": false
+    },
+    "githubActionsTriggered": false,
+    "liveMainnetOrTestnetChecked": false,
+    "diffCheck": "passed",
+    "sourceRepositoryReferences": 79,
+    "sourceLinkErrors": 0,
+    "newSourceUrlsChecked": 13
+  },
+  "changedFiles": [
+    "experiments/final-quality-review-2026-11-03.json",
+    "experiments/final-quality-review-2026-11-03.md",
+    "experiments/transaction-v1/README.md",
+    "experiments/transaction-v1/checks.rs",
+    "experiments/transaction-v1/observed-2026-11-03.json",
+    "experiments/transaction-v1/run.py",
+    "src/baseline.md",
+    "src/ecosystem-map.md",
+    "src/introduction.md",
+    "src/part-01-foundations/chapter-03.md",
+    "src/part-03-transactions/chapter-15.md",
+    "src/part-03-transactions/chapter-16.md",
+    "src/review-status.md"
+  ],
+  "trackedDiffStat": " src/baseline.md                        | 13 +++++++++++++\n src/ecosystem-map.md                   | 24 +++++++++++++++++++++++\n src/introduction.md                    |  2 ++\n src/part-01-foundations/chapter-03.md  | 10 +++++-----\n src/part-03-transactions/chapter-15.md | 35 ++++++++++++++++++++++++++++++++++\n src/part-03-transactions/chapter-16.md |  2 ++\n src/review-status.md                   |  2 ++\n 7 files changed, 83 insertions(+), 5 deletions(-)\n",
+  "trackedDiffStatExcludesUntracked": true,
+  "gitHeadAtEnd": "f43538b5d45d93f7cd347da67b88b7eccec0dd24",
+  "gitStatusAtEnd": " M src/baseline.md\n M src/ecosystem-map.md\n M src/introduction.md\n M src/part-01-foundations/chapter-03.md\n M src/part-03-transactions/chapter-15.md\n M src/part-03-transactions/chapter-16.md\n M src/review-status.md\n?? experiments/final-quality-review-2026-11-03.json\n?? experiments/final-quality-review-2026-11-03.md\n?? experiments/transaction-v1/\n"
+}

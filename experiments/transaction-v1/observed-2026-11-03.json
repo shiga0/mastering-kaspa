@@ -1,0 +1,95 @@
+{
+  "allChecksPassed": true,
+  "cases": [
+    {
+      "case": "signature-script",
+      "idChanged": false,
+      "sighashAllChanged": false,
+      "transactionHashChanged": true
+    },
+    {
+      "case": "compute-budget",
+      "idChanged": false,
+      "sighashAllChanged": false,
+      "transactionHashChanged": true
+    },
+    {
+      "case": "storage-mass",
+      "idChanged": false,
+      "sighashAllChanged": false,
+      "transactionHashChanged": true
+    },
+    {
+      "case": "output-value",
+      "idChanged": true,
+      "sighashAllChanged": true,
+      "transactionHashChanged": true
+    },
+    {
+      "case": "output-script",
+      "idChanged": true,
+      "sighashAllChanged": true,
+      "transactionHashChanged": true
+    },
+    {
+      "case": "covenant-id",
+      "idChanged": true,
+      "sighashAllChanged": true,
+      "transactionHashChanged": true
+    },
+    {
+      "case": "authorizing-input",
+      "idChanged": true,
+      "sighashAllChanged": true,
+      "transactionHashChanged": true
+    },
+    {
+      "case": "remove-binding",
+      "idChanged": true,
+      "sighashAllChanged": true,
+      "transactionHashChanged": true
+    },
+    {
+      "case": "previous-outpoint",
+      "idChanged": true,
+      "sighashAllChanged": true,
+      "transactionHashChanged": true
+    },
+    {
+      "case": "sequence",
+      "idChanged": true,
+      "sighashAllChanged": true,
+      "transactionHashChanged": true
+    },
+    {
+      "case": "payload",
+      "idChanged": true,
+      "sighashAllChanged": true,
+      "transactionHashChanged": true
+    },
+    {
+      "case": "lock-time",
+      "idChanged": true,
+      "sighashAllChanged": true,
+      "transactionHashChanged": true
+    },
+    {
+      "case": "utxo-amount",
+      "idChanged": false,
+      "sighashAllChanged": true,
+      "transactionHashChanged": false
+    },
+    {
+      "case": "utxo-script",
+      "idChanged": false,
+      "sighashAllChanged": true,
+      "transactionHashChanged": false
+    }
+  ],
+  "sourceCommit": "01b532e8b553523216471682649693af92f0fd16",
+  "archiveSha256": "f2c30553a1993245419ba225f53fd898806b0102e5d81a5889d7648d51db03ff",
+  "upstreamLockSha256": "85a67ee990f56b42e1259200a247783b86981d5d5cb9a6e1b2e1e4a86d89e3cb",
+  "checksSha256": "69aecd572465d43276e1860a8c2048f83c786e90b0aae6f819dcefcaa4e3bd45",
+  "runnerSha256": "c982e86ce8ea06998f68241e44f68b04b3f74d354e0846226e37bc8c83d51140",
+  "rustc": "rustc 1.94.0 (4a4ef493e 2026-03-02)"
+}

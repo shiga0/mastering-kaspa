@@ -138,6 +138,35 @@ Transaction
 
 Transaction IDはトランザクションを識別するハッシュ値である。**表示用のJSONや任意の文字列をハッシュすれば互換のIDになるわけではない**。コンセンサス仕様が定めるシリアライズとハッシュ規則が必要になる。
 
+### 15.5.1 Transaction v0とv1を区別する
+
+上の図とSDK送金実習は、本書の固定版v1.0.1を対象とする。**ノードのリリース番号と、取引の`version`は別の番号**である。2026-11-03には、後続のリリース済み[v2.1.0](https://github.com/kaspanet/rusty-kaspa/releases/tag/v2.1.0)、コミット`01b532e8b553523216471682649693af92f0fd16`の実装も比較した。基準版を置き換えるものではない。以下は通常の非Coinbase取引の比較であり、報酬取引の例外を含む全規則の一覧ではない。
+
+| 項目 | 基準版で扱うTransaction v0 | v2.1.0実装のTransaction v1 |
+|---|---|---|
+| 入力の計算資源宣言 | `sig_op_count: u8` | `compute_budget: u16`。Rustでは`ComputeCommit`で区別し、Script実行予算とcompute massに関わる |
+| 出力 | KAS額とScript | これらに加えて任意の`covenant` binding（`authorizing_input`と`covenant_id`） |
+| 生成されるUTXO | 金額・Script・DAA score・Coinbase属性 | さらに任意の`covenant_id`を保持する |
+| Transaction ID | `TransactionID`のBLAKE2bによる計算 | payloadと残りの取引構造を別々にダイジェスト化し、BLAKE3の`TransactionV1Id`で結合する |
+| IDに含めないもの | signature script、sig-op count、mass commitment | signature script、compute budget、storage mass commitment |
+| ALLで署名する出力 | 出力額・Script | 出力額・Scriptと、bindingの有無・両フィールド |
+
+根拠：[取引型](https://github.com/kaspanet/rusty-kaspa/blob/01b532e8b553523216471682649693af92f0fd16/consensus/core/src/tx.rs)、[ID・取引ハッシュ](https://github.com/kaspanet/rusty-kaspa/blob/01b532e8b553523216471682649693af92f0fd16/consensus/core/src/hashing/tx.rs)、[ハッシュ方式](https://github.com/kaspanet/rusty-kaspa/blob/01b532e8b553523216471682649693af92f0fd16/crypto/hashes/src/hashers.rs)、[署名ハッシュ](https://github.com/kaspanet/rusty-kaspa/blob/01b532e8b553523216471682649693af92f0fd16/consensus/core/src/hashing/sighash.rs)。Covenant bindingの規範的な定義は[KIP-20](https://github.com/kaspanet/kips/blob/d832dbd89347dcb16d3d83bf6755b081714cbcb2/kip-0020.md)を参照する。実装の細部を、古いKIPのフィールド名だけから補完しない。
+
+`compute_budget`はKAS額や手数料そのものではなく、取引の`gas`とも別である。bindingは出力の系列と、その継承／Genesis判定の基準となる入力を結ぶ情報で、`authorizing_input`は同じ取引の入力番号を指す。同じIDを持つ後継を作ることは、正しい状態遷移を示す条件の一部にすぎない（[31.10.1](../part-05-advanced/chapter-31.md#31101-idプログラム状態の出所を分ける)）。
+
+**v1の`SIGHASH_ALL`は取引全体の全バイトを固定しない。** 上の実装ではsignature script、compute budget、storage massはALLの署名ハッシュに含まれない。一方、完全な取引ハッシュ`hash(tx)`はこれらも含めるため、Transaction ID・取引ハッシュ・署名ハッシュを別々に扱う。
+
+| v1に対する変更 | Transaction ID | 完全な取引ハッシュ | ALL署名ハッシュ |
+|---|---|---|---|
+| signature script／compute budget／storage massだけを変更 | 不変 | 変化 | 不変 |
+| 出力額・Script・binding、参照outpoint、sequence、payload、locktimeを変更 | 変化 | 変化 | 変化 |
+| 署名対象入力の参照UTXOの額・Scriptを変更 | 不変 | 不変 | 変化 |
+
+この表は単一入力の合成データ14ケースを、公式のハッシュ関数で比較して確認した（[再実行手順と結果](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/transaction-v1/README.md)）。署名ハッシュの一致は、その変更後の取引が有効という意味ではない。予算不足、storage massの不整合、UTXOの不存在、bindingの不正などは別の検証で拒否され得る。利用者が承認した操作と、実際に提出する取引の構造・資源・手数料を照合する。
+
+仕様・Released実装・利用ネットワークの対応は[基準版ページの比較表](../baseline.md#リリース済み実装とネットワークの区別)へ集約する。本書v1.0.1のDevnet成功を、v1のMainnet送信成功として扱わない。
+
 ## 15.6 UTXO集合はどこにあるのか
 
 ノードが保持するUTXO集合は、概念的には次の写像で表せる。
@@ -261,6 +290,12 @@ KRC-20の一次資料は[Kasplexの専用ノード](https://github.com/kasplex/g
 ページ間にはUTXOの消費・追加・再編成があり得る。単一スナップショットだと仮定せず、outpointで重複を排除し、変更通知と再照会を照合する。途中失敗時の再開・最初からの再取得、同一カーソルの繰り返しも扱う。
 
 Covenant ID別の検索用インデックス（Covenant Index）とページ付きRPCは、同日確認した[rusty-kaspa PR #1152](https://github.com/kaspanet/rusty-kaspa/pull/1152)ではOpen・未マージだった。Covenant IDを持つUTXOがあることと、対象ノードに検索APIが提供されていることは別である。本書のSDK実習を、未確認のAPI名へ置換しない。
+
+### 15.9.3 後続版のMassと手数料
+
+v2.1.0の[Mass計算](https://github.com/kaspanet/rusty-kaspa/blob/01b532e8b553523216471682649693af92f0fd16/consensus/core/src/mass/mod.rs)は、compute、transient（取引データの一時的な占有）、storage（UTXO集合の継続的な占有）を区別する。入力のcompute budgetはScript実行予算とcompute側の評価へ反映され、storage massは参照UTXOと出力の金額・保存量にも依存する。Covenant IDを持つUTXOは、その32バイトも保存量の評価に含む。`storageMass`という単一フィールドを、すべての資源量や必要手数料の代用にしない。
+
+通常送金のKAS手数料は、v1でも入力KAS合計と出力KAS合計の差額である。一方、v2.1.0の[最低中継手数料の検査](https://github.com/kaspanet/rusty-kaspa/blob/01b532e8b553523216471682649693af92f0fd16/mining/src/mempool/check_transaction_standard.rs)は、compute massと正規化したtransient massの大きい方に基づく。これはMempoolポリシーであり、全Massの制限やコンセンサスの金額保存検査とは別である。古い実習の固定額を現在の必要手数料として再利用せず、対象版の見積り・ポリシーを確認する。
 
 ## 15.10 UTXO選択と変更出力
 
