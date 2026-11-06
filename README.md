@@ -1,7 +1,7 @@
 # Mastering Kaspa — BlockDAGの原理と実装
 
 <a href="https://shiga0.github.io/mastering-kaspa/">
-  <img src="src/images/cover.png" width="280" alt="Mastering Kaspa — BlockDAGの原理と実装の表紙">
+  <img src="src/images/cover.png" width="280" alt="Mastering Kaspa — BlockDAG Principles and Implementation。著者 shiga0。英語表記の表紙。">
 </a>
 
 Kaspaの基礎から、BlockDAG、GHOSTDAG、コンセンサス、Rustによる実装、アプリケーション開発までを体系的に学ぶための技術書です。
