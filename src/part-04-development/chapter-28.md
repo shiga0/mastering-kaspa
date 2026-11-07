@@ -1,24 +1,26 @@
 # Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）
 
-> **Mastering Kaspa / Part IV — Kaspa Development & Implementation**  
-> 目次順の本文レビュー：2026-11-01。設定・手順・既存実測と独自教材を確認。全実ノード試験の再実行ではない。\
-> 本章の対象：Kaspa Devnetでの再現可能な統合テスト、RPC、障害注入、検証証跡
+<p class="chapter-part">Part IV — Kaspa Development &amp; Implementation（Kaspaの開発と実装）</p>
 
-今回の記録は `experiments/chapter-28-review-2026-11-01.md`。過去の実ノード実測、今回の設定検査・単体テスト、未実施の障害注入を分ける。
+> **対象読者：** Kaspa Devnetでの再現可能な統合テスト、RPC、障害注入、検証証跡
 
-## 28.1 本章の目的
+設定の検査・モックの単体テスト・実ノードの統合試験を分けて扱う。
+
+<a id="281-本章の目的"></a>
+
+## 28.1 この章で学ぶこと
 
 第27章では教育用の最小Kaspa型ノードを組み立てた。本章では、そのモデルから一歩進み、**実際の `rusty-kaspa` ノードを隔離されたDevnetで動かし、アプリケーションとノードの境界を検証する**。
 
 読み終えると、次の作業を説明・実践できるようになる。
 
-1. DevnetとMainnet・Testnetの用途とリスクを区別する。
-2. ノード・クライアント・テストハーネスの責務を分離する。
-3. RPC接続、同期状態、トランザクション送信、状態確認を段階的に検証する。
-4. タイムアウト、再起動、重複通知、ネットワーク分断をテストする。
-5. 実験条件・ログ・結果を保存し、第三者が再現できるようにする。
+- DevnetとMainnet・Testnetの用途とリスクを区別する。
+- ノード・クライアント・テストハーネスの責務を分離する。
+- RPC接続、同期状態、トランザクション送信、状態確認を段階的に検証する。
+- タイムアウト、再起動、重複通知、ネットワーク分断をテストする。
+- 実験条件・ログ・結果を保存し、第三者が再現できるようにする。
 
-**注意：** KaspaのCLIフラグ、RPCメソッド、Dockerイメージの挙動はリリースによって変わる。28.6〜28.14は固定版の実習・過去の実測を含み、それ以外の概念図や計画と区別する。使用版の `--help` と公式ソースを確認し、未実行の計画を実測として記述しない。
+> **注意：** KaspaのCLIフラグ、RPCメソッド、Dockerイメージの挙動はリリースによって変わる。28.6〜28.14は固定版の実習・過去の実測を含み、それ以外の概念図や計画と区別する。使用版の `--help` と公式ソースを確認し、未実行の計画を実測として記述しない。
 
 ## 28.2 なぜ統合テストが必要なのか
 
@@ -209,9 +211,14 @@ docker compose -p mastering-kaspa-sdk-demo -f experiments/devnet/compose.yaml -f
 
 サンプルの各セッションは、次の処理を行う。以下は実装からの抜粋であり、`rpc`・通知待ち・タイムアウト関数の定義を含む全体は[monitor.cjs](https://github.com/shiga0/mastering-kaspa/blob/main/examples/sdk-monitor/monitor.cjs)を参照する。
 
+<details class="code-details" open>
+<summary>SDKの接続とUTXO監視コードを見る</summary>
+
 ```javascript
 {{#include ../../examples/sdk-monitor/monitor.cjs:connect-and-observe}}
 ```
+
+</details>
 
 | 設計上の責務 | 実際に使うAPIと処理 |
 |---|---|
@@ -485,6 +492,9 @@ APPLICATION_CONFIRMED
 
 実際のKaspa RPC SDKはバージョンに依存するため、まずは外部依存を抽象化する。
 
+<details class="code-details" open>
+<summary>テストハーネスの境界設計を見る</summary>
+
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Network {
@@ -544,11 +554,16 @@ pub fn ensure_devnet_ready(
 }
 ```
 
+</details>
+
 これは実ノードへの接続を行わない**教育用のポート設計**である。RequireSyncedを通常の条件とし、AllowUnsyncedDevnetLabは本章の隔離Devnet採掘だけの明示的な例外とする。実際の採掘フラグを変更するコードではなく、Okでも同期済みの証明にはならない。版・応答鮮度・TLS・index追従等の検査も省略している（[第22章](chapter-22.md)）。実際のRPCクライアントは、この `NodeGateway` を実装するアダプターとして追加する。
 
 ## 28.16 Rust単体テスト
 
 前節のコードに以下を続ける。
+
+<details class="code-details">
+<summary>Devnet準備条件の単体テストを見る</summary>
 
 ```rust
 #[cfg(test)]
@@ -674,6 +689,8 @@ mod tests {
     }
 }
 ```
+
+</details>
 
 本書の外で `cargo new --lib --edition 2021 devnet-readiness-lab` を作り、28.15と28.16のコードをsrc/lib.rsへ順に置く。外部依存なし。Rust/Cargo 1.90.0で7テスト、書式、Clippyが成功した。モック教材であり、実ノードとの接続結果ではない。
 
@@ -813,6 +830,9 @@ Stop Containers / Cleanup
 
 ## 28.24 実践課題
 
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
+
 ### 課題A：単一ノードの健全性確認
 
 1. Devnetノードを起動する。
@@ -842,7 +862,12 @@ Stop Containers / Cleanup
 4. Mempool観測とコンセンサス受理を分けて記録する。
 5. 失敗時の再試行方針を設計する。
 
+</details>
+
 ## 28.25 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. 単体テストと統合テストは何を異なる対象としているか。
 2. DevnetをMainnetから隔離すべき理由は何か。
@@ -855,7 +880,25 @@ Stop Containers / Cleanup
 9. 「送信」「Mempool観測」「コンセンサス受理」はどう違うか。
 10. 障害注入テストの安全な実行条件を説明せよ。
 
+**解答例**
+
+1. 単体テストは関数やドメインロジック等の独立した単位、統合テストは複数要素の結合・実接続を主に対象とする。実ノードを使うかも明記する。
+2. 試験用の採掘・送金・障害注入で実資産や本番ノードへ影響を与えないため。NetworkIdだけでなく接続先・鍵・保存先・ポート等も分離する。
+3. ノードで処理された後に応答だけが失われる場合があるため。TX ID等で照会し、成否不明と明示して扱う。
+4. 切断中の欠落、再送・重複、順序の違いにより、保存した会計状態が実際とずれる。通知は再照会・再照合の契機として扱う。
+5. 起動・同期・受理の所要時間は変動するため。必要な条件を確認しつつ期限で失敗させれば、早過ぎる実行や無期限の待機を避けられる。
+6. 一例はノード間の伝播、片側停止後の復帰、ネットワーク分断後の合流である。観察したことと、任意の再編成やPruning後IBDまで検証したことは区別する。
+7. 同期・応答失敗等の条件をモックで作り、業務ロジックを実ノードなしで試せる。実アダプターとの結合は別に検証する。
+8. ノードの版・コミット、SDK・依存の版、Rust/Node.js等の環境、イメージdigest・CPU、完全なNetworkId、起動設定、試験入力を固定・記録する。
+9. 送信は要求を出すこと、Mempool観測は特定ノードの候補に見えること、コンセンサス受理は合意文脈で状態へ採用されること。いずれも業務上の確定とは分ける。
+10. 隔離したローカルまたは許可済みDevnetを使い、試験専用資源・鍵・接続先を確認する。期限・停止方法・回復手順を用意し、Mainnetや他者の環境へ波及させない。
+
+</details>
+
 ## 28.26 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 本章の中心は、**ノードを起動することではなく、何を観測し、何を保証できるかを明確にすること**である。
 
@@ -867,9 +910,14 @@ Stop Containers / Cleanup
 
 第27章で構築した教育用ノードと、本章で使用する実際のKaspaノードを比較することで、**プロトコルの概念モデルと実装上の複雑さの差**が見えてくる。
 
+</details>
+
 [次章](../part-05-advanced/chapter-29.md)からは、より高度なコンセンサス研究とDAGKnightの設計を扱う。
 
 ## 28.27 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 - [Kaspa公式サイト](https://kaspa.org/)
 - [Kaspa Wiki](https://wiki.kaspa.org/en/home)
@@ -880,3 +928,18 @@ Stop Containers / Cleanup
 - [Docker Compose ドキュメント](https://docs.docker.com/compose/)
 
 > **残る確認**：全トランザクション種別、暗号化バックアップや未知の残高・履歴の探索を含むHDウォレット全体の復旧、複数ワーカーと会計台帳、Pruning後のIBD、ノードバイナリのソース一致、別CPU/OSでの実行は未検証。上記実習の成功をこれらへ拡張しない。
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 29 — GHOSTDAG Security & DAGKnight（GHOSTDAGのセキュリティとDAGKnight）](../part-05-advanced/chapter-29.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-28)
+
+</details>

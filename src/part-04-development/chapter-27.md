@@ -1,12 +1,14 @@
 # Chapter 27 — Building a Minimal Kaspa-like Node in Rust（Rustによる最小Kaspa型ノードの構築）
 
-> **目次順の本文レビュー:** 2026-11-01。教材のID検査・状態保持・ノード間の関数呼び出しを確認。Kaspa互換性の検証ではない。\
-> **対象:** 『Mastering Kaspa』Part IV — Kaspa Development & Implementation  
-> **前提:** 第7章（BlockDAG）、第10章（P2P）、第14章（Virtual State）、第15章（UTXO）、第25〜26章（Rust実装）
+<p class="chapter-part">Part IV — Kaspa Development &amp; Implementation（Kaspaの開発と実装）</p>
 
-今回の記録は `experiments/chapter-27-review-2026-11-01.md`。2026-10-31の6テストの記録と、今回の改訂後16テストを区別する。
+> **前提知識：** 第7章（BlockDAG）、第10章（P2P）、第14章（Virtual State）、第15章（UTXO）、第25〜26章（Rust実装）
 
-## 27.1 この章で作るもの
+本章の最小ノードは教育用モデルであり、Kaspa互換ノードではない。
+
+<a id="271-この章で作るもの"></a>
+
+## 27.1 この章で学ぶこと
 
 第26章では公式実装の処理を追い、本章では教育用モデルを自作してコンポーネントを接続する。公式実装の読み取りと教材の動作検証は、別の到達目標として扱う。
 
@@ -76,7 +78,7 @@
 7. Mempool内で同じ入力を複数のトランザクションが予約できない。
 8. ノード間で受信したデータは、送信元を信用せず再検証する。
 
-**注意:** これらは教材独自の条件を含む。Kaspaの実際のコンセンサス規則を列挙したものではない。
+> **注意：** これらは教材独自の条件を含む。Kaspaの実際のコンセンサス規則を列挙したものではない。
 
 ## 27.5 プロジェクト構成
 
@@ -114,6 +116,9 @@ minimal-kaspa-like-node/
 
 トランザクションはUTXOの参照（`OutPoint`）を入力に持ち、金額を持つ新しい出力を作る。ここでは公開鍵やScriptを省略する。
 
+<details class="code-details" open>
+<summary>ノードのデータモデルを見る</summary>
+
 ```rust
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
@@ -144,11 +149,16 @@ struct Block {
 }
 ```
 
+</details>
+
 `String`のIDは教材用のラベルであり、暗号学的ハッシュではない。実運用では、ハッシュ計算、シリアライズ、サイズ制限、入力検証が必要になる。
 
 ## 27.7 UTXO状態遷移を実装する
 
 状態遷移は**検証してからコミット**する。途中で失敗した場合に、半分だけ更新された状態を残さないためだ。
+
+<details class="code-details" open>
+<summary>UTXO状態遷移の実装を見る</summary>
 
 ```rust
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -212,6 +222,8 @@ impl UtxoSet {
 }
 ```
 
+</details>
+
 applied_txidsは、この状態で適用したラベルの履歴である。出力が消費済みでもIDを再利用せず、入力が自分のIDを参照する取引や既存出力への衝突を拒否する。初期残高のseedも使用済みラベルとして登録する。
 
 これは暗号学的なTX IDの計算ではなく、履歴を削らないメモリ内の一意性検査である。署名・Script・成熟・mass等は検証しない。出力indexはu32への変換を検査するが、受信サイズ・メモリ使用量の上限を設けた意味ではない。
@@ -238,6 +250,9 @@ fn apply_block_transactions(
 ## 27.8 Mempoolの最小実装
 
 Mempoolは、コンセンサスで確定した状態ではない。未処理のトランザクション候補を管理する領域だ。
+
+<details class="code-details" open>
+<summary>Mempoolの入力予約の実装を見る</summary>
 
 ```rust
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -283,11 +298,16 @@ impl Mempool {
 }
 ```
 
+</details>
+
 これは**競合入力の予約モデル**であり、UTXOの存在や署名を検証していない。親子トランザクション、手数料、期限切れ、Reorganization後の再投入も扱わない。これらを追加する前に、Mempoolの責務を明確にしておく。
 
 ## 27.9 BlockDAGの最小実装
 
 複数親を登録できる構造を作る。ただし**親を複数持つことだけではGHOSTDAGにならない**。
+
+<details class="code-details" open>
+<summary>BlockDAGの最小実装を見る</summary>
 
 ```rust
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -321,6 +341,8 @@ impl Dag {
 }
 ```
 
+</details>
+
 ここでは**最初に登録した親なしブロックをGenesisとして扱う**。正式なネットワークではGenesisは任意に決められず、ネットワークパラメータで固定される。
 
 ### DAGのイメージ
@@ -338,6 +360,9 @@ impl Dag {
 ## 27.10 Nodeでコンポーネントを接続する
 
 この教材では、通常のErrでDAG・UTXO・適用済みID・Mempool予約を維持するため、ブロック受理の候補状態を先に作る。これはメモリ内の直列処理の境界であり、[第26章](chapter-26.md)の実ノードのヘッダー・本体・Virtualの別段階を再現したものではない。
+
+<details class="code-details" open>
+<summary>Nodeによるコンポーネントの接続を見る</summary>
 
 ```rust
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -365,6 +390,8 @@ impl Node {
 }
 ```
 
+</details>
+
 このコードでは、**ブロック受理順にトランザクションを適用する**。そのため、ネットワークの受信順が異なると状態が異なる可能性がある。これは分散コンセンサスとして**成立しない**。実際のKaspaでは、GHOSTDAGとコンセンサス順序、Virtual Stateの仕組みがこの問題を解決する。ここは教材の最大の未実装部分である。
 
 適用失敗でブロック全体を拒否するのも教材独自の規則である。実際のKaspaのブロック妥当性と、各取引のVirtualでの受理を同一視しない。
@@ -374,6 +401,9 @@ impl Node {
 ## 27.11 `main`で動かす
 
 次の`main`関数を、これまでの型と実装の下に追加する。
+
+<details class="code-details" open>
+<summary>main関数の実行例を見る</summary>
 
 ```rust
 fn main() -> Result<(), String> {
@@ -416,13 +446,15 @@ fn main() -> Result<(), String> {
 }
 ```
 
+</details>
+
 実行する。
 
 ```bash
 cargo run
 ```
 
-期待される表示は次のとおり。
+**期待結果：**
 
 ```text
 blocks: 2
@@ -435,6 +467,9 @@ mempool: 0
 ## 27.12 テストで不変条件を確認する
 
 以下を同じファイルに追加する。
+
+<details class="code-details">
+<summary>テストコードを見る（16件の単体テスト）</summary>
 
 ```rust
 #[cfg(test)]
@@ -741,6 +776,8 @@ mod tests {
 }
 ```
 
+</details>
+
 ```bash
 cargo test
 cargo clippy --all-targets -- -D warnings
@@ -834,7 +871,7 @@ trait ConsensusOrdering {
 }
 ```
 
-**注意:** DAGの一般的なトポロジカルソートは、KaspaのGHOSTDAG順序を再現しない。辞書順ソートなどで仮の順序を作っても、それはKaspaのコンセンサスにはならない。正しいアルゴリズムは第12・14・26章と、対象バージョンの公式実装を参照する。
+> **注意：** DAGの一般的なトポロジカルソートは、KaspaのGHOSTDAG順序を再現しない。辞書順ソートなどで仮の順序を作っても、それはKaspaのコンセンサスにはならない。正しいアルゴリズムは第12・14・26章と、対象バージョンの公式実装を参照する。
 
 ## 27.16 永続化をどう設計するか
 
@@ -964,26 +1001,34 @@ cargo metadata --locked --offline --no-deps --format-version 1 > "$KASPA_MINIMAL
 
 ## 27.23 発展課題：最小ノードから次の段階へ
 
-**課題A：未解決ブロックの保管**  
+<details class="exercise-details">
+<summary>発展課題を見る</summary>
+
+### 課題A：未解決ブロックの保管
 未知の親を参照するブロックを`OrphanPool`に一時保存し、親が到着したら再試行する。件数・保持時間の上限も設定する。
 
-**課題B：UTXOのUndo Log**  
+### 課題B：UTXOのUndo Log
 ブロック適用前後の差分を記録し、再編成に備えたロールバックを実装する。複数ブロックの巻き戻し順序もテストする。
 
-**課題C：決定的な教材用順序**  
+### 課題C：決定的な教材用順序
 27.15の設計に沿ってDAGの保存と状態評価を分離する。まず、競合取引の適用失敗を理由にブロック全体をDAGから除外する現行の教材規則を変更し、親関係等の教材上の構造検査を通ったブロックを保存する。
 
 そのうえで、親子関係を守り、並行ブロック間の優先規則も明示した決定的な順序を**教材独自のものとして**実装する。各ノードが同じブロック集合を取得した後、共通の初期UTXOからその順序で状態を再評価する。競合などで適用できない取引は状態へ反映せず、受理・不受理の結果を記録する。既に受信順で更新したUTXOへ並べ替えた取引を追加適用するだけでは、受信順の影響を除去できない。
 
 27.14の競合ブロックを逆順に届け、最終的な保存済みDAG・評価順序・取引の受理結果・UTXO集合が一致することを確認する。これは教材の保存・受理規則を変更する演習であり、Kaspaのブロック検証・GHOSTDAG・Virtual Stateを再現するものではない。
 
-**課題D：TCPアダプター**  
+### 課題D：TCPアダプター
 Tokioで2ノードを接続し、メッセージのシリアライズ、タイムアウト、サイズ制限、再送を実装する。
 
-**課題E：公式実装の追跡**  
+### 課題E：公式実装の追跡
 `rusty-kaspa`の特定コミットを固定し、「受信 → 検証 → DAG登録 → Virtual State更新」の実装経路を関数名・テスト名付きで記録する。
 
+</details>
+
 ## 27.24 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. なぜ複数親のDAGを作るだけではKaspa互換ノードにならないのか。
 2. トランザクション検証後に状態を更新する設計にはどんな利点があるか。
@@ -996,7 +1041,25 @@ Tokioで2ノードを接続し、メッセージのシリアライズ、タイ�
 9. 本章のテストで保証できること、保証できないことは何か。
 10. 公式実装を調査するときにコミットIDを記録する理由は何か。
 
+**解答例**
+
+1. Kaspa固有の形式・ハッシュ・PoW・DAA・GHOSTDAG・Virtual State・Script・同期等の規則を実装していないから。複数親はデータ構造の一条件にすぎない。
+2. 途中の失敗で入力消費や出力追加だけが残ることを防ぎ、失敗時の状態不変と再試行を検査しやすくする。
+3. Mempoolはローカルな候補、Virtual Stateでの受理は合意文脈の順序と検証を経た結果である。候補への登録だけで現在UTXOへ反映されたとはいえない。
+4. 受信順で競合取引を適用すると、ノード間で異なるUTXO状態や勝者を選び得る。教材の処理を分散コンセンサスへ一般化しない。
+5. トポロジカルソートは祖先関係を守る並べ方を求めるだけで、PoWに基づく親選択・blue/red分類・決定的な競合処理等を提供しないから。
+6. 不足親と待機ブロックを管理し、P2P・同期で必要データを取得して、依存関係が揃った時点で再検証する。待機資源の上限も設ける。
+7. 入力だけ消費された状態、履歴とUTXOの不一致、再起動後の二重適用等が残る可能性がある。更新単位と回復手順を定める。
+8. 通信の再送・切断・入力制限と、決定的な検証・状態遷移を別々に設計・テストできる。通信成功を合意受理と混同しにくくなる。
+9. 教材の固定入力に対する成功・拒否・失敗時状態保持等を確認できる。一方、実PoW・署名・GHOSTDAG・ネットワーク同期や任意入力でのコンセンサス安全性は保証しない。
+10. 後から同じコード・テスト・規則を参照し、教材との対応や差分を確認できるようにするため。
+
+</details>
+
 ## 27.25 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 本章では、Rustの標準ライブラリを使って、**DAG・UTXO・Mempool・Nodeを組み合わせた教育用の最小ノード**を作った。
 
@@ -1004,9 +1067,14 @@ Tokioで2ノードを接続し、メッセージのシリアライズ、タイ�
 
 また、ノードを設計するときは、アルゴリズムだけでなく、検証の境界、状態更新の原子性、同期、永続化、障害回復、DoS耐性を一緒に考える必要がある。
 
+</details>
+
 [次章](chapter-28.md)では、ここで整理した責務を踏まえて、**Devnet上の実ノードを使った統合テスト**に進む。
 
 ## 27.26 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 - [Kaspa公式サイト](https://kaspa.org/)
 - [Kaspa公式Wiki](https://wiki.kaspa.org/)
@@ -1017,4 +1085,20 @@ Tokioで2ノードを接続し、メッセージのシリアライズ、タイ�
 - [Cargo Book](https://doc.rust-lang.org/cargo/)
 - [Tokio公式ドキュメント](https://tokio.rs/)
 
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）](chapter-28.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-27)
+
 > **確認範囲:** 改訂後の教材16テスト・実行表示・書式・Clippyと本文同期を確認した。GHOSTDAG・署名・PoW・本物のP2P・永続化・reorg・Kaspa互換性は未実装であり、付録Gの実ノード実験と混同しない。記録は `experiments/chapter-27-review-2026-11-01.md`。
+
+
+</details>

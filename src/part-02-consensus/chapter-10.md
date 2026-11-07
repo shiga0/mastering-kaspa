@@ -1,7 +1,8 @@
 # Chapter 10 — Kaspa Node & P2P Network（KaspaノードとP2Pネットワーク）
 
-> **Part II — Kaspa Consensus & Architecture**  
-> 概説・基準版の主要経路を確認：2026-11-01。参照版は[本書の基準版](../baseline.md)のv1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。
+<p class="chapter-part">Part II — Kaspa Consensus &amp; Architecture（コンセンサスとアーキテクチャ）</p>
+
+
 
 ## この章で学ぶこと
 
@@ -9,11 +10,11 @@ Kaspaのノードがどのように他のノードを発見し、ブロックと
 
 学習目標は次のとおり。
 
-1. フルノード、マイナー、ウォレット、RPCクライアントの責務を区別できる。
-2. ピア発見からハンドシェイク、メッセージ伝播、切断までのライフサイクルを説明できる。
-3. BlockDAG特有の同期課題を、線形チェーンと比較して説明できる。
-4. 通信相手を信頼せずに検証する設計原則を説明できる。
-5. Rustで小さな伝播モデルを実装し、重複排除とネットワーク分断をテストできる。
+- フルノード、マイナー、ウォレット、RPCクライアントの責務を区別できる。
+- ピア発見からハンドシェイク、メッセージ伝播、切断までのライフサイクルを説明できる。
+- BlockDAG特有の同期課題を、線形チェーンと比較して説明できる。
+- 通信相手を信頼せずに検証する設計原則を説明できる。
+- Rustで小さな伝播モデルを実装し、重複排除とネットワーク分断をテストできる。
 
 > **実装上の注意:** 本章はアーキテクチャを理解するための概念モデルである。メッセージ名、ハンドシェイク順序、ポート、同期プロトコル、CLIオプションは `rusty-kaspa` のリリースやネットワークによって変わり得る。実運用時は対象バージョンのコードと公式ドキュメントで確認する。
 
@@ -260,6 +261,9 @@ Discovered -> Connecting -> Handshaking -> Active
 
 ### 10.10.1 `src/main.rs`
 
+<details class="code-details">
+<summary>P2P伝播モデルの実装とテストを見る</summary>
+
 ```rust
 use std::collections::{HashMap, HashSet, VecDeque};
 
@@ -383,7 +387,11 @@ mod tests {
 }
 ```
 
-### 10.10.2 実行方法
+</details>
+
+<a id="10102-実行方法"></a>
+
+### 10.10.2 実行手順
 
 ```bash
 cargo new --edition 2021 kaspa-p2p-lab
@@ -409,12 +417,17 @@ after disconnect: 3
 
 ### 10.10.3 発展課題
 
+<details class="exercise-details">
+<summary>発展課題を見る</summary>
+
 1. 新規ピアに不足しているメッセージを照会・再送する仕組みを追加する。
 2. メッセージごとにTTLを設け、転送回数を制限する。
 3. ノード間リンクに遅延を追加し、到着順が変わる様子を観察する。
 4. 一部のリンクを切断し、分断前後の到達可能性を比較する。
 5. `Block { id, parents }` を導入し、親ブロックが未到着のときの保留キューを作る。
 6. キュー長の上限と、満杯になった場合の方針を決める。
+
+</details>
 
 ### 10.10.4 実ノードで伝播・再接続を確かめる
 
@@ -474,7 +487,7 @@ grep -n -E 'RequestRelayBlocks|MissingParents|process_orphan' protocol/flows/src
 | ストレージ | I/O待ちや空き容量不足 | ディスク性能、容量、Pruning設定 |
 | RPC | アプリから接続できない | RPCの待受設定、認証・公開範囲、FW |
 
-**注意:** RPCのポートをインターネットへ公開することと、P2Pポートを公開することは異なる。外部公開するインターフェースは、目的とアクセス制御を明確にする。
+> **注意：** RPCのポートをインターネットへ公開することと、P2Pポートを公開することは異なる。外部公開するインターフェースは、目的とアクセス制御を明確にする。
 
 ### 10.12.1 障害調査の順番
 
@@ -508,22 +521,35 @@ grep -n -E 'RequestRelayBlocks|MissingParents|process_orphan' protocol/flows/src
 
 ## 10.14 よくある誤解
 
-**Q. 接続したピアが多ければ、コンセンサス上の投票権も増える？**  
-A. いいえ。P2P接続数とPoWコンセンサス上の重みは別の概念である。
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
 
-**Q. ブロックが先に届いたノードの判断が正解になる？**  
-A. いいえ。到着順だけで正当性や最終的なコンセンサス順序が決まるわけではない。
+**1. 接続したピアが多ければ、コンセンサス上の投票権も増える？**
 
-**Q. 複数tipが見えるのはネットワーク異常？**  
-A. 必ずしもそうではない。BlockDAGでは並行ブロックが自然に存在する。
+いいえ。P2P接続数とPoWコンセンサス上の重みは別の概念である。
 
-**Q. RPCでブロック情報を取得できれば、P2P同期も正常？**  
-A. そうとは限らない。RPCの応答性とP2P同期・検証の進行は別々に観測する必要がある。
+**2. ブロックが先に届いたノードの判断が正解になる？**
 
-**Q. Pruningノードは不正なブロックを検証できない？**  
-A. そのように一般化できない。Pruningは保存する過去データの範囲に関する設計であり、検証能力や同期手順はプロトコルの具体的な仕組みに依存する。
+いいえ。到着順だけで正当性や最終的なコンセンサス順序が決まるわけではない。
+
+**3. 複数tipが見えるのはネットワーク異常？**
+
+必ずしもそうではない。BlockDAGでは並行ブロックが自然に存在する。
+
+**4. RPCでブロック情報を取得できれば、P2P同期も正常？**
+
+そうとは限らない。RPCの応答性とP2P同期・検証の進行は別々に観測する必要がある。
+
+**5. Pruningノードは不正なブロックを検証できない？**
+
+そのように一般化できない。Pruningは保存する過去データの範囲に関する設計であり、検証能力や同期手順はプロトコルの具体的な仕組みに依存する。
+
+</details>
 
 ## 10.15 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. P2Pネットワークとコンセンサスの責務をそれぞれ一文で説明しよう。
 2. なぜ同じブロックが複数回届くことがあるのか。
@@ -536,7 +562,25 @@ A. そのように一般化できない。Pruningは保存する過去データ�
 9. 第10.10節のコードで、ネットワークを二つの連結成分に分けた場合、伝播はどうなるか。
 10. BitcoinとKaspaのP2Pに共通する問題と、DAG固有の問題をそれぞれ挙げよう。
 
+**解答例**
+
+1. P2Pはピア間の情報交換・伝播、コンセンサスは共有規則によるブロック検証・順序付け・状態計算を担う。
+2. 複数の伝播経路、ピアからの再送、再接続などで同じデータを受信し得るため。識別子による重複排除や冪等な処理が必要になる。
+3. 子が親より先に届いただけかもしれず、依存データ不足と規則違反は異なるから。不足親の取得後に検証する。
+4. ネットワーク遅延の間に複数のマイナーが生成し、互いをまだ参照しない並行ブロックが生じるため。
+5. Sybilは多数の偽装参加者を作る攻撃、Eclipseは特定ノードの接続・観測を攻撃者側へ偏らせて孤立させる攻撃である。
+6. IBDは過去の必要な履歴・証明・状態をまとめて取得・検証する。通常伝播では新着データへの追従が中心となる。必要なIBD経路は共有履歴の有無でも変わる。
+7. 入力速度が処理速度を超えた場合のメモリ枯渇、過大な遅延、DoSを抑え、バックプレッシャーや破棄方針を設けるため。
+8. NetworkId、ピア接続・切断理由、同期の進捗、必要データの取得失敗、検証エラー、キューやディスク等の資源状態を調べる。RPC待受の成功だけでは同期完了を示さない。
+9. 教材では送信元から辺をたどって到達できる成分にだけ伝播し、接続のない別成分には届かない。実ネットワークの分断合流を検証した結果とは区別する。
+10. 共通の問題は遅延・重複・帯域・不正ピア等。DAGでは複数親の取得、並行ブロックの依存関係、不足親の解消なども扱う。
+
+</details>
+
 ## 10.16 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 - KaspaのP2P層はブロックとトランザクションなどの情報をノード間で伝播させる。
 - **受信した情報が正しいかどうかは、接続相手ではなくローカルの検証ルールで判断する。**
@@ -545,19 +589,39 @@ A. そのように一般化できない。Pruningは保存する過去データ�
 - P2Pの接続品質とコンセンサスの安全性は区別して考える。
 - 実装を読むときは、**通信 → 検証 → DAG管理 → 順序付け → 状態更新**という責務の境界を追う。
 
+</details>
+
 次章では、ネットワークから受け取ったブロックをノードがどのように処理・検証するかを掘り下げる。
 
-**Next: [Chapter 11 — Block Processing & Validation（ブロック処理と検証）](chapter-11.md)**
 
 ---
 
 ## 参考資料
 
-1. [Kaspa公式ドキュメント](https://docs.kaspa.org/) — ノード、ネットワーク、開発者向け情報。
-2. [Kaspa公式GitHub: rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) — 実装・テスト・リリース履歴。
-3. [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — プロトコル変更の提案と背景。
-4. [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104) — PHANTOM/BlockDAGの背景となる研究。
-5. [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf) — BitcoinのP2PとPoWの基本構想。
-6. [Rust標準ライブラリ `std::collections`](https://doc.rust-lang.org/std/collections/index.html) — サンプル実装で使用したデータ構造。
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Kaspa公式ドキュメント](https://docs.kaspa.org/) — ノード、ネットワーク、開発者向け情報。
+- [Kaspa公式GitHub: rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) — 実装・テスト・リリース履歴。
+- [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — プロトコル変更の提案と背景。
+- [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104) — PHANTOM/BlockDAGの背景となる研究。
+- [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf) — BitcoinのP2PとPoWの基本構想。
+- [Rust標準ライブラリ `std::collections`](https://doc.rust-lang.org/std/collections/index.html) — サンプル実装で使用したデータ構造。
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 11 — Block Processing & Validation（ブロック処理と検証）](chapter-11.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-10)
 
 > **確認範囲（2026-11-01）:** 基準版の接続・ハンドシェイク・ブロックrelayの主要経路を照合し、伝播モデルの実行と5テストを確認した。実ノードの新たな通信実験や全IBD経路・攻撃耐性の検証ではない。記録はリポジトリの `experiments/chapter-10-review-2026-11-01.md` を参照。
+
+
+</details>

@@ -1,8 +1,8 @@
 # Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）
 
-> **Part IV — Kaspa Development & Implementation**  
-> 目次順の本文レビュー：2026-11-01。主要経路は基準版と照合。本文の確認と実Pruning・Pruning後同期の検証は区別する。\
-> 対象：Kaspaの仕組みを理解し、`rusty-kaspa` のコード・運用・テストに進む開発者
+<p class="chapter-part">Part IV — Kaspa Development &amp; Implementation（Kaspaの開発と実装）</p>
+
+> **対象読者：** Kaspaの仕組みを理解し、`rusty-kaspa` のコード・運用・テストに進む開発者
 
 ## 照合した実装と実測範囲
 
@@ -16,13 +16,13 @@
 
 学習後には、次の点を説明できるようになる。
 
-1. Pruningと単なるデータ削除の違い
-2. BlockDAGの履歴と現在のUTXO集合の役割
-3. Pruning Point、Pruning Proof、UTXO commitmentの関係
-4. IBD（Initial Block Download）の大まかな処理と信頼境界
-5. ストレージ層・同期層・コンセンサス層の責務分担
-6. Rustで検証可能な最小スナップショット・インポート処理
-7. 実ノードの障害調査と実験の進め方
+- Pruningと単なるデータ削除の違い
+- BlockDAGの履歴と現在のUTXO集合の役割
+- Pruning Point、Pruning Proof、UTXO commitmentの関係
+- IBD（Initial Block Download）の大まかな処理と信頼境界
+- ストレージ層・同期層・コンセンサス層の責務分担
+- Rustで検証可能な最小スナップショット・インポート処理
+- 実ノードの障害調査と実験の進め方
 
 ---
 
@@ -56,7 +56,7 @@ Pruningは、コンセンサスで安全に不要と判断できる古い情報�
 | 過去の詳細な照会 | 制限がある | 保持範囲に応じて可能 |
 | 主な用途 | 通常のネットワーク参加・検証 | インデックス作成・研究・履歴分析 |
 
-**注意：**「フルノード」は検証能力を表す文脈でも使われる。全履歴を永久に保存することだけがフルノードの条件ではない。実際の保存範囲や起動オプションはバージョン・設定に依存する。
+> **注意：** 「フルノード」は検証能力を表す文脈でも使われる。全履歴を永久に保存することだけがフルノードの条件ではない。実際の保存範囲や起動オプションはバージョン・設定に依存する。
 
 ## 21.3 何を保存するのか：ストレージの論理モデル
 
@@ -300,6 +300,9 @@ sha2 = "=0.10.9"
 
 ### src/lib.rs
 
+<details class="code-details">
+<summary>ストレージモデルの実装とテストを見る</summary>
+
 ```rust
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -487,7 +490,9 @@ mod tests {
 }
 ```
 
-実行例：
+</details>
+
+**実行手順：**
 
 ```bash
 cargo test
@@ -578,6 +583,9 @@ grep -n -E 'DownloadHeadersProof|staging|sync_pruning_point_utxoset' protocol/fl
 
 ### 調査ノートのテンプレート
 
+<details class="code-details">
+<summary>調査ノートのテンプレートを見る</summary>
+
 ```markdown
 ## 調査対象
 - Repository:
@@ -602,6 +610,8 @@ grep -n -E 'DownloadHeadersProof|staging|sync_pruning_point_utxoset' protocol/fl
 ## 未確認事項
 - 推測せず保留する項目
 ```
+
+</details>
 
 **ソースコードの関数名だけで仕様を断定しないこと。** 呼び出し元、テスト、パラメータ、アップグレード条件まで追う。
 
@@ -674,39 +684,57 @@ docker inspect "$KASPA_NODE_ID" --format '{{.Image}}'
 
 ## 21.19 よくある誤解
 
-**Q1. Pruningするとノードは検証しなくなる？**  
-A. いいえ。Pruningは保存履歴の削減であり、検証能力を放棄することではない。
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
 
-**Q2. UTXO集合だけダウンロードすれば安全？**  
-A. いいえ。コミットメントが一致することと、そのコミットメントを含むヘッダーが正しいコンセンサス履歴に属することは別の検証である。
+**1. Pruningするとノードは検証しなくなる？**
 
-**Q3. Pruning Point以前のデータは一切残らない？**  
-A. いいえ。証明や検証に必要な情報は保持される。削除対象はデータの種類と規則によって異なる。
+いいえ。Pruningは保存履歴の削減であり、検証能力を放棄することではない。
 
-**Q4. Archiveノードであればすべてのアドレス履歴を即座に検索できる？**  
-A. 必ずしもそうではない。データの保持と検索用インデックスの構築は別の要件である。
+**2. UTXO集合だけダウンロードすれば安全？**
 
-**Q5. FinalityとPruningは同じ？**  
-A. いいえ。前者はコンセンサス上の履歴変更制約、後者はストレージ削減の仕組みである。
+いいえ。コミットメントが一致することと、そのコミットメントを含むヘッダーが正しいコンセンサス履歴に属することは別の検証である。
+
+**3. Pruning Point以前のデータは一切残らない？**
+
+いいえ。証明や検証に必要な情報は保持される。削除対象はデータの種類と規則によって異なる。
+
+**4. Archiveノードであればすべてのアドレス履歴を即座に検索できる？**
+
+必ずしもそうではない。データの保持と検索用インデックスの構築は別の要件である。
+
+**5. FinalityとPruningは同じ？**
+
+いいえ。前者はコンセンサス上の履歴変更制約、後者はストレージ削減の仕組みである。
+
+</details>
 
 ## 21.20 実践課題
 
-**課題1：責務図**  
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
+
+### 課題1：責務図
 IBDで受信したUTXO集合がローカルの有効な状態になるまでを、P2P・コンセンサス・ストレージの3つの境界で描く。
 
-**課題2：障害注入**  
+### 課題2：障害注入
 21.11の既存テストを読み、重複Outpoint・コミットメント不一致・件数超過が、それぞれどの検査で拒否されるか確認する。そのうえで、複数エントリからなる正しい候補集合のコミットメントを計算し、受け渡すエントリのうち1件の金額だけを変更するテストを追加する。期待値には改ざん前のコミットメントを渡し、`CommitmentMismatch` が返ることと、空ではない既存UTXO集合が全体として維持されることを確認する。
 
-**課題3：永続化**  
+### 課題3：永続化
 候補スナップショットを一時ファイルへ保存し、検証成功時だけ正式ファイルへ置き換える処理を設計する。ファイルの原子的置換とディレクトリ同期の必要性も調査する。
 
-**課題4：ソースコード追跡**  
+### 課題4：ソースコード追跡
 `rusty-kaspa` の特定コミットで `import_pruning_point_utxo_set` の呼び出し元、失敗時の挙動、永続化境界を追跡し、根拠となる行番号を記録する。
 
-**課題5：同期の性能評価**  
+### 課題5：同期の性能評価
 Devnet上で初期同期・再起動・一時的なネットワーク切断を比較し、時間・メモリ・ディスク・ログを測定する。
 
+</details>
+
 ## 21.21 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. Pruningと全履歴保存の違いは何か。
 2. UTXO集合だけでは過去の全トランザクション履歴を検索できないのはなぜか。
@@ -717,7 +745,23 @@ Devnet上で初期同期・再起動・一時的なネットワーク切断を�
 7. ノードが同期済みでもアプリケーションのインデックスが未完成の場合、何が起きるか。
 8. Rustの教育用SHA-256コミットメントをKaspaのMuHashと同一視できないのはなぜか。
 
+**解答例**
+
+1. Pruningは規則に従って古い本体等を削減し、必要な証拠・状態を維持する。全履歴保存は履歴を残す方針で、保存量と提供できる照会範囲が異なる。
+2. 現在の未使用出力には、既に消費された出力や過去の全取引が残らないため。履歴照会には別途保存・索引が必要になる。
+3. Pruning Pointは履歴削減・同期の基準となる地点、Finalityは履歴変更の扱いに関する合意上の概念・規則である。関連はあるが同一ではない。
+4. Pruning Proofは省略する履歴を含む合意文脈を評価する証拠、UTXO commitmentは対象文脈のUTXO集合との整合を検証するコミットメントである。集合のハッシュ一致だけで履歴全体を正当化しない。
+5. 誤った・欠けた・別ネットワークのデータを返す可能性があるため。証明・ヘッダー・UTXO集合等を対象規則で検証する。
+6. 途中までの集合を有効な状態として公開すると、commitmentや関連メタデータと不一致になるから。完了・検証・切替の契約を設ける。
+7. アドレス照会や履歴・残高表示が欠落・遅延し、入金を見落とす等の問題が起き得る。ノード同期と索引の完成・鮮度を別に確認する。
+8. 教材は独自の表現とSHA-256で集合を扱い、MuHashの方式・正式なエンコード・更新規則と異なるから。教材の成功は公式commitmentとの互換性を示さない。
+
+</details>
+
 ## 21.22 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 この章の中心は、**「データを削減すること」と「検証可能性を保つこと」の両立**である。
 
@@ -725,22 +769,44 @@ KaspaのPruningは、BlockDAGの保存コストを抑えながら、新しいノ
 
 開発者として特に重要なのは、**P2Pで受け取ったデータを信用せず、コンセンサスで検証し、ストレージへ安全にコミットする**という境界を明確にすることである。
 
+</details>
+
 次章では、このノード内部の状態を外部アプリケーションから利用するための **[Chapter 22 — Kaspa RPC, wRPC & Application Integration](chapter-22.md)** に進む。
 
 ---
 
 ## 21.23 参考資料・一次情報
 
-1. [kaspanet/rusty-kaspa — 公式Rust実装](https://github.com/kaspanet/rusty-kaspa)
-2. [rusty-kaspa Releases — IBD・Pruningの更新履歴](https://github.com/kaspanet/rusty-kaspa/releases)
-3. [Consensus constants — Finality / Pruningの定数](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)
-4. [Consensus parameters — ネットワーク別設定](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)
-5. [Kaspa KIPs — 改善提案一覧](https://github.com/kaspanet/kips)
-6. [KIP-0006 — Proof of Chain Membership](https://github.com/kaspanet/kips/blob/master/kip-0006.md)（履歴・取引の所属証明に関する文書。Pruning Proofそのものと同一視しない）
-7. [KIP-0015 — Canonical Transaction Ordering and SelectedParent Accepted Transactions Commitment](https://github.com/kaspanet/kips/blob/master/kip-0015.md)
-8. [Issue #1100 — Pruning Point UTXO snapshotの敵対的テスト](https://github.com/kaspanet/rusty-kaspa/issues/1100)（追加試験・防御の提案。固定版で試験が完了した証拠ではない）
-9. [Bitcoin Developer Reference](https://developer.bitcoin.org/reference/)
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [kaspanet/rusty-kaspa — 公式Rust実装](https://github.com/kaspanet/rusty-kaspa)
+- [rusty-kaspa Releases — IBD・Pruningの更新履歴](https://github.com/kaspanet/rusty-kaspa/releases)
+- [Consensus constants — Finality / Pruningの定数](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)
+- [Consensus parameters — ネットワーク別設定](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)
+- [Kaspa KIPs — 改善提案一覧](https://github.com/kaspanet/kips)
+- [KIP-0006 — Proof of Chain Membership](https://github.com/kaspanet/kips/blob/master/kip-0006.md)（履歴・取引の所属証明に関する文書。Pruning Proofそのものと同一視しない）
+- [KIP-0015 — Canonical Transaction Ordering and SelectedParent Accepted Transactions Commitment](https://github.com/kaspanet/kips/blob/master/kip-0015.md)
+- [Issue #1100 — Pruning Point UTXO snapshotの敵対的テスト](https://github.com/kaspanet/rusty-kaspa/issues/1100)（追加試験・防御の提案。固定版で試験が完了した証拠ではない）
+- [Bitcoin Developer Reference](https://developer.bitcoin.org/reference/)
 
 > **技術レビュー時の確認事項**：本章の概念図・教育用実装と、`rusty-kaspa` の現行コードは厳密に区別すること。同期フェーズ・メッセージ名・Pruning保持規則・時間定数は、出版時に固定したGitコミットとネットワーク設定に基づいて再確認する。
 
+
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）](chapter-22.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-21)
+
 目次順の本文レビューと教材8テストは `experiments/chapter-21-review-2026-11-01.md`。KIPの文書ステータス・Issueの議論と、基準版の有効規則・実行済みの検証結果を区別する。実Pruning・Pruning後IBD・敵対的インポート・クラッシュ耐久性は今回実行していない。
+
+</details>

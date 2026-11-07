@@ -4,7 +4,7 @@
 >
 > **確認状況（2026-11-01）**：開発中。主要機能とE2Eサンプルは存在するが、固定READMEはnot yet release-readyと説明し、監査・堅牢化が必要としている。以下の機能説明はプロジェクトが想定するCovenant機能を前提とし、現在のKaspaメインネットでそのまま利用可能であることを意味しない。
 
-Part Vに置く独立した解説ページ。Argentは `2796809f167144902f04a4b3333a4c144f91fdaf`、Playgroundは `86d5453ee525e7aa743d0b3bb21d1bb8d96c3558` を取得して確認した。本書の基準ノードv1.0.1および第32章のSilverScript v1.0.0とは別の参照軸である。確認記録は `experiments/argent-review-2026-11-01.md`。
+Part Vに置く独立した解説ページ。Argentは `2796809f167144902f04a4b3333a4c144f91fdaf`、Playgroundは `86d5453ee525e7aa743d0b3bb21d1bb8d96c3558` を取得して確認した。本書の基準ノードv1.0.1および第32章のSilverScript v1.0.0とは別の参照軸である。
 
 ## 1. Argentとは
 
@@ -88,6 +88,9 @@ Actorは自身の状態レイアウトと、許可された状態遷移を定義
 
 以下は固定Argent CLIでbuild/inspectを確認した本書独自の簡略例。公式examples/tickets.agはIssuerの発行とredeemを扱う別のアプリである。この例は購入/譲渡の説明に絞り、価格を正にし、Ticketの価値を維持する条件を置く。この例の署名・支払いを伴うランタイム実行や、実ノードへの送信・受理は確認していない。後述のCounter等のローカル実行結果とは区別する。
 
+<details class="code-details" open>
+<summary>Argentのチケット購入・譲渡のコードを見る</summary>
+
 ```text
 state EventState {
     int remaining_tickets;
@@ -138,6 +141,8 @@ app Tickets {
     actor Ticket;
 }
 ```
+
+</details>
 
 この例のbuyer/next_ownerは公開鍵そのものではなく、Ticketの検査と対応する`blake2b(byte[](pubkey))`の32-byte値を渡す想定である。アドレス文字列や別形式の32-byte値へ置き換えない。初期化・入力の変換を誤ると、後継Ticketを使えなくなり得る。
 
@@ -241,24 +246,39 @@ Argentを学ぶ際には、コードがコンパイルできるだけでなく�
 
 ### 演習A：Counter
 
+<details class="exercise-details">
+<summary>演習を見る</summary>
+
 1. `argent-playground`の`basic_counter`を動かす。
 2. Actorの状態を1増やすトランザクションを追う。
 3. 生成された`.sil`と`artifact.json`を確認する。
 4. 不正な次状態を指定して失敗を観察する。
 
+</details>
+
 ### 演習B：Ticket
+
+<details class="exercise-details">
+<summary>演習を見る</summary>
 
 1. 公式の`examples/tickets.ag`を読む。
 2. Issuerの発行前後の状態とTicket出力を図にする。
 3. 署名検証と出力値の制約を確認する。
 4. 二重発行や不正所有者を想定したテストを考える。
 
+</details>
+
 ### 演習C：複数ActorとICC
+
+<details class="exercise-details">
+<summary>演習を見る</summary>
 
 1. two_actor_exchangeでPing→Pong→Pingを2取引で進める経路を確認する。名前から2取引全体の原子的交換を実証したと解釈しない。
 2. `multiapp_badge`で別アプリ間の連携を追う。
 3. `open_icc_agent`で実行時Actorハンドルを確認する。
 4. `dex_asset`で資産・ペア・レジストリの関係を整理する。
+
+</details>
 
 ### 固定版とローカル確認手順
 
@@ -321,6 +341,9 @@ Argentは**EVMそのものでも、L2そのものでもない**。KaspaのCovena
 
 ## 参考資料（固定一次資料）
 
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
 - [Argent公式README](https://github.com/argent-lang/argent/blob/2796809f167144902f04a4b3333a4c144f91fdaf/README.md)
 - [Argent固定ソース](https://github.com/argent-lang/argent/tree/2796809f167144902f04a4b3333a4c144f91fdaf)
 - [Ticketsサンプル](https://github.com/argent-lang/argent/blob/2796809f167144902f04a4b3333a4c144f91fdaf/examples/tickets.ag)
@@ -329,6 +352,16 @@ Argentは**EVMそのものでも、L2そのものでもない**。KaspaのCovena
 - [Range設計と実装状況](https://github.com/argent-lang/argent/blob/2796809f167144902f04a4b3333a4c144f91fdaf/docs/entry-clause-ranges.md)
 - [Argent Playground固定ソース](https://github.com/argent-lang/argent-playground/tree/86d5453ee525e7aa743d0b3bb21d1bb8d96c3558)
 
+</details>
+
 次は[第33章 — Layer 2, Bridges & Zero-Knowledge Proofs](chapter-33.md)へ進み、L1上のActor・Covenantとは異なる実行・資産連携・証明の信頼条件を学ぶ。
 
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-argent)
+
 **確認範囲：** 固定文書・主要コードと本節の学習例。全security invariant・暗号方式・実ネットワークの有効化、実資金を扱うアプリの監査ではない。記録は `experiments/argent-review-2026-11-01.md`。
+
+
+</details>

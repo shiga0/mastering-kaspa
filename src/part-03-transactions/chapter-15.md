@@ -1,7 +1,7 @@
 # Chapter 15 — UTXO Model & Transaction Processing（UTXOモデルとトランザクション処理）
 
-> **Mastering Kaspa / Part III — Transactions, Mining & Security**  
-> 目次順の本文レビュー：2026-11-01。主要経路は基準版と照合。ページの確認と全規則・全経路の検証は区別する。\
+<p class="chapter-part">Part III — Transactions, Mining &amp; Security（トランザクション・マイニング・セキュリティ）</p>
+
 > 本章はKaspaのUTXOモデルとトランザクション処理を理解するための原稿である。Rustの実装例は**教育用の簡略モデル**であり、Kaspaの署名、スクリプト、トランザクション形式、コンセンサス規則を完全再現しない。プロトコル依存の詳細は対象バージョンの`rusty-kaspa`で照合すること。
 
 ## 照合した実装
@@ -259,7 +259,7 @@ Fee:
   0.1 KAS
 ```
 
-**注意**：この式は通常のUTXO資産移転を説明するための単純化である。Coinbaseやサブネットワークに関連する特殊な規則を同一視しないこと。
+> **注意：** この式は通常のUTXO資産移転を説明するための単純化である。Coinbaseやサブネットワークに関連する特殊な規則を同一視しないこと。
 
 ### 手数料は明示的な出力ではない
 
@@ -433,6 +433,9 @@ cd utxo-lab
 ```
 
 `src/lib.rs`を次の内容にする。
+
+<details class="code-details">
+<summary>UTXO・取引処理モデルの実装とテストを見る</summary>
 
 ```rust
 use std::collections::{HashMap, HashSet};
@@ -889,6 +892,8 @@ mod tests {
 }
 ```
 
+</details>
+
 テストを実行する。
 
 ```bash
@@ -1090,25 +1095,39 @@ grep -n -E 'coinbase_maturity|input_amounts|check_scripts|feerate' consensus/src
 
 ## 15.22 よくある誤解
 
-**誤解1：「アドレスには残高が1つ保存されている」**  
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+**1. 「アドレスには残高が1つ保存されている」**
+
 UTXOモデルでは、残高は通常、関連する未使用出力の合計として導かれる。
 
-**誤解2：「入力UTXOの一部分だけを消費できる」**  
+**2. 「入力UTXOの一部分だけを消費できる」**
+
 入力として参照したUTXOは全体を消費する。手元に残す差額は変更出力で表現し、入力と全出力の差額は手数料となる。
 
-**誤解3：「トランザクションがMempoolにあれば確定している」**\
+**3. 「トランザクションがMempoolにあれば確定している」**
+
 Mempoolは未確定トランザクションを扱う。コンセンサス状態への受理とは異なる。
 
-**誤解4：「ブロックに含まれれば、トランザクションは必ず受理される」**\
+**4. 「ブロックに含まれれば、トランザクションは必ず受理される」**
+
 KaspaではブロックのDAG上の存在と、トランザクションの受理を分けて考える必要がある。
 
-**誤解5：「blueブロック内のトランザクションはすべて受理される」**\
+**5. 「blueブロック内のトランザクションはすべて受理される」**
+
 blue/redはGHOSTDAGのブロック分類であり、個々のトランザクションのUTXO有効性を直接保証するものではない。
 
-**誤解6：「Rustの`u64`なら金額計算は必ず安全」**  
+**6. 「Rustの`u64`なら金額計算は必ず安全」**
+
 加算時のオーバーフローや、減算時のアンダーフローを検出する必要がある。
 
+</details>
+
 ## 15.23 実践課題
+
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
 
 ### 課題A：UTXO選択
 
@@ -1136,7 +1155,12 @@ blue/redはGHOSTDAGのブロック分類であり、個々のトランザクシ�
 
 調査結果は、ソースファイル・関数名・コミットハッシュ付きで記録する。
 
+</details>
+
 ## 15.24 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. UTXOとウォレット残高は何が違うか。
 2. Outpointは何によって一意に識別されるか。
@@ -1149,7 +1173,25 @@ blue/redはGHOSTDAGのブロック分類であり、個々のトランザクシ�
 9. 失敗したトランザクションでUTXO集合を変更してはいけないのはなぜか。
 10. `rusty-kaspa`を調べるとき、どの情報を記録すれば説明の再現性が高まるか。
 
+**解答例**
+
+1. UTXOは未消費出力の個々の状態、ウォレット残高は所有アドレスに属する出力を所定の条件で集計した表示である。成熟・予約・業務上の確認条件でも額が異なる。
+2. トランザクションIDと出力インデックスの組み合わせで識別する。
+3. 入力は出力単位で消費するため、支払い先への1 KASとは別に、自分へ戻す「4 KAS−1 KAS−手数料」の出力を作る必要がある。
+4. 通常取引では参照UTXOの入力総額から出力総額を引いた差額で求める。Coinbase等の特別な規則とは分ける。
+5. 同一の未消費出力を二重に使う競合が起きる。両方を同じ合意状態へ有効な支出として適用できない。
+6. Mempoolはノードの候補集合、Virtual UTXO Stateへの反映は合意文脈で取引を検証・適用した状態である。Mempool観測だけで確定とは判断しない。
+7. DAGへ複数のブロックを記録できることと、取引が状態検証を通ることは別だから。合意順序とUTXO検証で競合支出を排除する。
+8. 金額や合計のオーバーフロー・アンダーフローを検出し、不正な値のまま検証・更新を進めないため。
+9. 入力の一部だけが消えたり出力だけが追加されたりすると、取引失敗後に資金状態が壊れ、再試行でも結果が変わるから。教材では検証完了後にまとめて更新する。
+10. タグ・コミット、完全なNetworkId、実装パス・関数、有効化文脈、依存・ツールチェーン、参照テストと実行の有無・結果を記録する。
+
+</details>
+
 ## 15.25 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 本章の中心は、**トランザクションを「残高の増減」ではなく「UTXO集合の決定的な状態遷移」として捉えること**である。
 
@@ -1174,9 +1216,14 @@ UTXO集合
 
 Kaspaでは、これにBlockDAG、GHOSTDAG、Virtual Stateという要素が重なる。**ブロックの順序、トランザクションの受理、UTXO状態の更新を分離して理解する**ことが、ノード実装を読むための土台になる。
 
+</details>
+
 次章では、UTXOを使うための条件を記述する**[Kaspa Scriptとトランザクション署名](chapter-16.md)**を扱う。
 
 ## 15.26 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 一次資料を優先し、バージョン差分に注意して読む。
 
@@ -1188,8 +1235,23 @@ Kaspaでは、これにBlockDAG、GHOSTDAG、Virtual Stateという要素が重�
 - [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf) — UTXOの背景を理解するための比較資料
 - [Mastering Bitcoin（オープンソース版）](https://github.com/bitcoinbook/bitcoinbook) — UTXO、トランザクション、Scriptの一般的な概念を学ぶための参考。Kaspa固有の仕様とは区別すること。
 
+</details>
+
 ---
 
 > **残る確認:** ハッシュ・シリアライズ・署名の完全照合、subnetwork固有の規則、報酬生成の詳細、公式実装との実行時の差分テストは未完了。主要な型と状態計算をソースで確認した範囲を章全体へ拡張しない。
 
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）](chapter-16.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-15)
+
 目次順の本文レビューと改訂教材7テストは `experiments/chapter-15-review-2026-11-01.md`。主要経路と旧教材4テストの記録は `experiments/consensus-state-review-2026-10-31.md` を参照する。今回、公式テストやノードを新規に実行したものではない。
+
+</details>

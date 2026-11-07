@@ -1,7 +1,6 @@
 # Appendix B — Kaspa用語集
 
 > **Mastering Kaspa / 付録B**  
-> 目次順の本文レビュー：2026-11-01。主要用語を既存章と基準版ソースに照合。全用語・全機能の検証ではない。\
 > 対象：Kaspaを初めて学ぶ読者から、ノード実装・コンセンサスを調査する開発者まで
 
 本付録は、本書で登場する用語の**短い定義・関連概念・調査時の注意点**をまとめた索引である。英語の原語を併記し、コードや論文を読むときに検索しやすくした。
@@ -450,6 +449,9 @@ Kaspa
 
 ## B.12 参考資料（一次資料を優先）
 
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
 - [Kaspa公式サイト](https://kaspa.org/)
 - [Kaspa Wiki](https://wiki.kaspa.org/)
 - [rusty-kaspa（公式Rust実装）](https://github.com/kaspanet/rusty-kaspa)
@@ -459,8 +461,17 @@ Kaspa
 - [基準版TXID/transaction hashの符号化](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/hashing/tx.rs)
 - 論文の書誌・前提は[第29章](../part-05-advanced/chapter-29.md)を参照。
 
-> **編集メモ**：本付録の定義は学習用に簡潔化している。特に数理的に厳密な定義が必要な場合は、該当章と論文・実装を優先する。出版前に用語の表記揺れ、KIPの状態、実装の変更点を再確認すること。
+</details>
+
+> **注意**：本付録の定義は学習用に簡潔化している。特に数理的に厳密な定義が必要な場合は、該当章と論文・実装を優先する。
 
 ---
 
 **次の付録：** [Appendix C — 数学・確率・暗号技術の補足](appendix-c.md)
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-appendix-b)
+
+</details>

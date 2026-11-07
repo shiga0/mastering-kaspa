@@ -1,9 +1,8 @@
 # Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）
 
-> **Mastering Kaspa — Part IV: Kaspa Development & Implementation**  
-> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。主要バインディングの照合と教材の確認であり、SDK全体の検証ではない。
+<p class="chapter-part">Part IV — Kaspa Development &amp; Implementation（Kaspaの開発と実装）</p>
 
-確認記録は `experiments/chapter-23-review-2026-11-01.md`。公式配布SDKを使った過去のDevnet実測と、本章の独自教材の実行を区別する。
+公式配布SDKのDevnet実測と、本章の独自教材の実行は区別する。
 
 ## この章で学ぶこと
 
@@ -11,11 +10,11 @@
 
 学習目標は次の5点である。
 
-1. `rusty-kaspa`、RPCクライアント、WASMバインディングの関係を説明できる。
-2. ブラウザとサーバーで秘密鍵・接続情報をどこに置くべきか判断できる。
-3. RPC接続の失敗・再接続・ネットワーク不一致を設計できる。
-4. Rustの純粋なドメインロジックをWASM対応の境界から切り離せる。
-5. 実ノードとの統合テストを、単体テストと分離して計画できる。
+- `rusty-kaspa`、RPCクライアント、WASMバインディングの関係を説明できる。
+- ブラウザとサーバーで秘密鍵・接続情報をどこに置くべきか判断できる。
+- RPC接続の失敗・再接続・ネットワーク不一致を設計できる。
+- Rustの純粋なドメインロジックをWASM対応の境界から切り離せる。
+- 実ノードとの統合テストを、単体テストと分離して計画できる。
 
 > **バージョン上の注意:** Kaspa SDKの公開API、パッケージ名、ビルド手順は更新される。本章のコードは明示した教育用サンプルを除き、特定のSDKバージョンに依存する呼び出しを断定しない。実際の接続コードは使用するリリースの公式サンプルと照合すること。
 
@@ -69,7 +68,7 @@ Kaspaの主要なRust実装は [`kaspanet/rusty-kaspa`](https://github.com/kaspa
 | Wallet | 鍵・UTXO選択・送金構築 | 秘密鍵と金額を慎重に扱う |
 | WASM bindings | Rust機能をJSなどに公開 | 型変換・メモリ・非同期境界 |
 
-> **重要:** 「Rust SDK」は単一の固定されたライブラリ名ではなく、Rust製の関連クレートやクライアント機能を指す文脈がある。本書では、個別の公開API名を示す際に必ずバージョンを併記する方針とする。
+> **重要：** 「Rust SDK」は単一の固定されたライブラリ名ではなく、Rust製の関連クレートやクライアント機能を指す文脈がある。本書では、個別の公開API名を示す際に必ずバージョンを併記する方針とする。
 
 ### 23.2.1 基準版の具体的な入口
 
@@ -100,6 +99,9 @@ pub struct NetworkId(pub &'static str);
 `Sompi` とネットワーク識別子を異なる型にすれば、単なる整数・文字列の取り違えを減らせる。ただし、**型だけでネットワークや送金先の正当性が保証されるわけではない**。
 
 ### `Result`を使った失敗の明示
+
+<details class="code-details" open>
+<summary>Resultによる金額検査のコードとテストを見る</summary>
 
 ```rust
 #[derive(Debug, PartialEq, Eq)]
@@ -163,6 +165,8 @@ mod amount_tests {
     }
 }
 ```
+
+</details>
 
 この関数はSompi単位の算術チェックだけを行い、UTXO選択・mass・手数料率・成熟・署名・送信を扱わない。上の型は独自モデルで、NetworkIdの文字列の構文検査も実装していない。23.3と23.8のRust断片を同じlib.rsに連結すると、後述のモックを含めてテストできる。
 
@@ -255,6 +259,9 @@ wasm-bindgen = "=0.2.100"
 
 ### `src/lib.rs`
 
+<details class="code-details" open>
+<summary>WASM境界のコードとテストを見る</summary>
+
 ```rust
 use wasm_bindgen::prelude::*;
 
@@ -303,6 +310,8 @@ mod tests {
     }
 }
 ```
+
+</details>
 
 `u32`はブラウザ境界の例を簡単にするために選んだ。**実際のKaspa金額型を`u32`に制限してよいという意味ではない**。
 
@@ -391,6 +400,9 @@ Kaspaアプリケーションでは、UIから直接RPCを呼ぶ設計より、�
 SDKの実際のAPI名に依存しない、アプリケーション側のポートを定義する。
 
 [第22章](chapter-22.md)では接続先のネットワーク・同期・応答の鮮度・必要なインデックスを検査した。ここでは、**接続や応答解析のエラーを `GatewayError` で表し、アプリケーション側の `AppError` へ変換する境界**に注目する。検査項目を絞った教材なので、実装時には第22章の要件も引き継ぐ。
+
+<details class="code-details">
+<summary>NodeGatewayの設計とテストを見る</summary>
 
 ```rust
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -498,6 +510,8 @@ mod gateway_tests {
     }
 }
 ```
+
+</details>
 
 23.3のNetworkIdを使い、Testnetの番号まで照合する。実アプリではSDKの識別子型や検証済みの値へ変換する。これはエラー変換に絞ったモック教材であり、[第22章](chapter-22.md)の応答の鮮度・必要なUTXO index等の検査は省略している。実装時にはその要件も引き継ぐ。
 
@@ -769,44 +783,72 @@ End-to-end tests
 
 ## 23.19 よくある誤解
 
-**Q. WASMならRustのすべてのcrateをブラウザで動かせる？**  
-A. いいえ。OS固有の機能や未対応の依存関係がある。
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
 
-**Q. SDKの送信APIが成功すれば入金確定？**  
-A. いいえ。RPC成功、ネットワーク観測、コンセンサス受理、アプリの確定判断は異なる。
+**1. WASMならRustのすべてのcrateをブラウザで動かせる？**
 
-**Q. SDKを使えば秘密鍵管理を考えなくてよい？**  
-A. いいえ。鍵の生成・保存・復旧・署名承認は別途設計する。
+いいえ。OS固有の機能や未対応の依存関係がある。
 
-**Q. Rustの型があれば金額のバグはなくなる？**  
-A. いいえ。単位、丸め、オーバーフロー、業務上の妥当性を検証する必要がある。
+**2. SDKの送信APIが成功すれば入金確定？**
 
-**Q. ブラウザから直接ノードRPCへ接続すべき？**  
-A. 用途次第。公開RPCの負荷・権限・可用性・プライバシーを考慮する。
+いいえ。RPC成功、ネットワーク観測、コンセンサス受理、アプリの確定判断は異なる。
+
+**3. SDKを使えば秘密鍵管理を考えなくてよい？**
+
+いいえ。鍵の生成・保存・復旧・署名承認は別途設計する。
+
+**4. Rustの型があれば金額のバグはなくなる？**
+
+いいえ。単位、丸め、オーバーフロー、業務上の妥当性を検証する必要がある。
+
+**5. ブラウザから直接ノードRPCへ接続すべき？**
+
+用途次第。公開RPCの負荷・権限・可用性・プライバシーを考慮する。
+
+</details>
 
 ## 23.20 実践課題
 
-### 課題A — 型安全な金額
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
+
+<a id="課題a--型安全な金額"></a>
+
+### 課題A：型安全な金額
 
 `Sompi(u64)`を作り、加算・減算を`checked_*`で実装する。ゼロ金額・オーバーフロー・不足をテストする。
 
-### 課題B — RPCアダプター
+<a id="課題b--rpcアダプター"></a>
+
+### 課題B：RPCアダプター
 
 `NodeGateway`を`async`に拡張し、接続タイムアウト、未同期、ネットワーク不一致のテストを追加する。
 
-### 課題C — 再接続
+<a id="課題c--再接続"></a>
+
+### 課題C：再接続
 
 接続ステートマシンを実装し、切断→再接続→購読復元の遷移をテストする。
 
-### 課題D — WASM
+<a id="課題d--wasm"></a>
+
+### 課題D：WASM
 
 本章の`can_cover_payment`をブラウザから呼び出し、Rust単体テストとブラウザ側テストの結果を比較する。
 
-### 課題E — 実ノード
+<a id="課題e--実ノード"></a>
+
+### 課題E：実ノード
 
 対象の`rusty-kaspa`コミットを固定し、ノード情報を取得する最小クライアントを作成する。APIのシグネチャ、依存関係、エラー型を調査メモに残す。
 
+</details>
+
 ## 23.21 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. SDKとノード本体の責務はどう異なるか。
 2. WASMが動作する環境で、ネイティブRustと異なる制約は何か。
@@ -819,7 +861,25 @@ A. 用途次第。公開RPCの負荷・権限・可用性・プライバシー�
 9. SDK更新時に固定・記録すべきバージョン情報は何か。
 10. コンセンサスの受理とアプリケーションの入金確定を分ける理由は何か。
 
+**解答例**
+
+1. SDKは型変換・署名補助・接続等のクライアント機能を提供し、ノードは合意規則の検証・状態維持を担う。SDK利用だけでノード検証を代替できない。
+2. ブラウザのI/O・ネットワーク・ファイル・スレッド等の制約、非同期処理、JavaScriptとの型・メモリ境界が異なる。対象WASM実行環境とSDKの前提を確認する。
+3. 整数を正確に表せる範囲を超えると丸めで金額等が変わり得る。`bigint`や十進文字列等を使い、相互変換の範囲を検査する。
+4. 同一署名済み取引の再送は同じTX IDを追跡できるが、別取引の再構築は最初の取引と別の支出・業務要求を生む可能性がある。タイムアウトは未受理の証明ではない。
+5. ドメインロジックをSDK・通信方式から分離し、テスト用実装と実APIを差し替え、エラー契約や前提を明確にできる。
+6. 不正なUI・依存スクリプト、鍵の入力・保存・ログ、署名対象の取り違え等は別に対策が必要だから。WASM化だけで秘密保護や正しい承認は保証されない。
+7. 切断中の通知が再配送されるとは限らず、再購読だけでは欠落した状態変化を回復できないから。現在状態の再照会・再照合も行う。
+8. 単体テストは独立したロジックやモック条件、統合テストは実際の結合・接続を確認する。それぞれ試験条件外やMainnetの全挙動、安全性全体を保証しない。
+9. SDK版・配布物のハッシュ、ノードのタグ・コミット、API形式、NetworkId、有効化文脈、Rust/Node.js・WASMツール等の関連版を記録する。
+10. 合意上の受理はプロトコルの結果、入金確定は事業者のリスク・金額・確認条件を含む判断だから。両者を同一にすると早過ぎる計上等を招く。
+
+</details>
+
 ## 23.22 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Rust SDKとWASMは、Kaspaのコンセンサス機能をアプリケーションから利用するための重要な接点である。ただし、SDKはネットワーク・鍵管理・業務上の正しさをすべて引き受けるわけではない。
 
@@ -831,20 +891,40 @@ Rust SDKとWASMは、Kaspaのコンセンサス機能をアプリケーション
 - **秘密鍵の管理は、SDK選定とは別のセキュリティ設計である。**
 - **実装を調べるときは、必ずバージョンとソースコードを固定する。**
 
+</details>
+
 [次章「Wallet Architecture & Key Management」](chapter-24.md)では、鍵生成、HDウォレット、アドレス、署名、バックアップと復旧をさらに掘り下げる。
 
 ## 23.23 参考資料
 
-1. [Kaspa — Official Website](https://kaspa.org/)
-2. [Kaspa Wiki](https://wiki.kaspa.org/en/home)
-3. [kaspanet/rusty-kaspa — GitHub](https://github.com/kaspanet/rusty-kaspa)
-4. [Kaspa Improvement Proposals (KIPs)](https://github.com/kaspanet/kips)
-5. [The Rust Programming Language](https://doc.rust-lang.org/book/)
-6. [The Rust and WebAssembly Book](https://rustwasm.github.io/docs/book/)
-7. [wasm-bindgen Guide](https://rustwasm.github.io/docs/wasm-bindgen/)
-8. [wasm-pack Documentation](https://rustwasm.github.io/docs/wasm-pack/)
-9. [MDN — WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly)
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Kaspa — Official Website](https://kaspa.org/)
+- [Kaspa Wiki](https://wiki.kaspa.org/en/home)
+- [kaspanet/rusty-kaspa — GitHub](https://github.com/kaspanet/rusty-kaspa)
+- [Kaspa Improvement Proposals (KIPs)](https://github.com/kaspanet/kips)
+- [The Rust Programming Language](https://doc.rust-lang.org/book/)
+- [The Rust and WebAssembly Book](https://rustwasm.github.io/docs/book/)
+- [wasm-bindgen Guide](https://rustwasm.github.io/docs/wasm-bindgen/)
+- [wasm-pack Documentation](https://rustwasm.github.io/docs/wasm-pack/)
+- [MDN — WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly)
+
+</details>
 
 ---
 
 本文・固定ソース・独自教材の確認範囲は `experiments/chapter-23-review-2026-11-01.md`。全SDK、実際のRust RPCアダプター、ブラウザーDOM、HD復旧、全Scriptを検証したものではない。
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）](chapter-24.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-23)
+
+</details>

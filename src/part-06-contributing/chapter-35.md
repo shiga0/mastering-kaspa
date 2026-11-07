@@ -1,11 +1,14 @@
 # Chapter 35 — Designing and Partially Implementing a Kaspa Application（Kaspaアプリケーションの設計と部分実装）
 
-> **目次順の本文レビュー：2026-11-01。基準版の主要RPC入口・独自集計教材・SQLite制約を確認。完成アプリ/E2E・会計台帳の検証ではない。**
+<p class="chapter-part">Part VI — Building &amp; Contributing（アプリケーション開発と貢献）</p>
+
 > 本章は『Mastering Kaspa』Part VI「Building & Contributing」の実践編である。実装例は学習用であり、資金を扱う本番アプリケーションとして監査済みではない。SDKやRPCのAPIはバージョンによって変化するため、実装時は利用するリリースの公式サンプルを確認する。
 
-ノード参照版はv1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。現行ドキュメントとAPIが異なる場合はこの固定版のソースを優先する。確認記録は `experiments/chapter-35-review-2026-11-01.md`。
+ノード参照版はv1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。現行ドキュメントとAPIが異なる場合はこの固定版のソースを優先する。
 
-## 35.1 この章で設計・実装する範囲
+<a id="351-この章で設計実装する範囲"></a>
+
+## 35.1 この章で学ぶこと
 
 ここまで学んだBlockDAG、UTXO、ウォレット、RPC、ノード、テストの知識を組み合わせて、Kaspaを利用するアプリケーションを設計する。
 
@@ -228,6 +231,9 @@ Kaspaアプリケーションは、ノードの情報を取得するためにRPC
 
 学習用のリレーショナルモデルを考える。
 
+<details class="code-details" open>
+<summary>スナップショット保存用のSQL定義を見る</summary>
+
 ```sql
 PRAGMA foreign_keys = ON;
 
@@ -259,6 +265,8 @@ CREATE TABLE observed_outputs (
     FOREIGN KEY (invoice_id, network) REFERENCES invoices(id, network)
 );
 ```
+
+</details>
 
 このDDLはSQLiteで制約を検査した学習用のスナップショット表で、監査履歴・チェックポイント・実アプリの更新処理は未実装。foreign_keysは各接続で有効化する。networkには正規化した完全なNetworkId、時刻TEXTには検査済みのUTC形式を渡す。DDL自体はアドレス・txid・時刻・ネットワーク文字列の仕様を検証しない。
 
@@ -302,6 +310,9 @@ UTXOのremovedや現在スナップショットからの消失は、後の支出
 本書外で `cargo new payment-domain --lib --edition 2021` で作成した `src/lib.rs` を次のように置き換える。
 
 <!-- example:payment-domain:start -->
+
+<details class="code-details">
+<summary>支払い集計モデルの実装とテストを見る</summary>
 
 ```rust
 use std::collections::HashMap;
@@ -637,7 +648,9 @@ mod tests {
 }
 ```
 
-実行：
+</details>
+
+**実行手順：**
 
 ```bash
 cargo test --offline
@@ -936,6 +949,9 @@ COMMIT
 
 ## 35.24 発展課題
 
+<details class="exercise-details">
+<summary>発展課題を見る</summary>
+
 ### 課題A：監視ダッシュボード
 
 請求数、未処理数、RPC遅延、ノード同期状態を可視化する。
@@ -970,7 +986,12 @@ Covenantなどを使う必要があるユースケースを定義し、通常の
 
 [x402の固定README](https://github.com/x402-foundation/x402/blob/5220ceba2298ec41b0adabc75f1308da655ecbab/README.md)はHTTPの`402 Payment Required`を用い、client、resource server、支払いの検証・実行を仲介するfacilitatorの役割を説明する。方式やネットワークの拡張性と、Kaspaで使える具体的な支払いscheme・署名・facilitatorの対応は別である。本書ではKaspa向けの互換実装を確認・実行していないため、ヘッダーを追加するだけで動くコードは掲載しない。受理・確認ポリシーと冪等な請求処理は通常の支払い監視と同様に必要になる。
 
+</details>
+
 ## 35.25 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. 請求データをKaspa L1に保存しないのはなぜか。
 2. `transaction_id + output_index` を記録する理由は何か。
@@ -983,7 +1004,25 @@ Covenantなどを使う必要があるユースケースを定義し、通常の
 9. 単体テストとDevnet E2Eテストは何をそれぞれ保証するか。
 10. 他人がアプリを再現するために、READMEへ何を書くべきか。
 
+**解答例**
+
+1. 本章の設計では請求や顧客対応等は業務データで、公開L1へ保存する必要がなく、プライバシー・更新・検索・コストの要件も別だから。これは全アプリへの一律の禁止ではない。
+2. 個々の出力を識別し、重複観測・消費・再評価を扱うため。同じTX IDでも出力は複数あり、NetworkId等の文脈も合わせて管理する。
+3. 重複は二重計上、欠落は見落としを起こすため。一意キーと冪等更新だけでは欠落を回復できず、再照会・再照合も必要になる。
+4. 観測はノードや通知で見えた事実、受理は合意文脈で採用された結果、業務上の確定は所定の確認ポリシーを満たした判断である。
+5. SDK・通信方式を変更しても請求・金額・確認ポリシー等を独立に保守でき、モックや固定データでテストしやすくなる。
+6. 過去の出力が既に消費されていると、現在の未使用出力には残らないため。チェックポイント・履歴・索引等の保存方針が必要になる。
+7. 変化した受理結果・UTXO等を再照合し、確認世代と履歴を残して請求状態や計上を見直す。過去の通知を消すだけで済ませず、業務上の取消・補償方針も定める。
+8. 古い・不完全な観測を根拠にする入金確定・支払い済み反映等を保留する。観測の保存と業務上の確定を分け、同期復帰後に再照合する。
+9. 単体テストはモデル・固定入力の規則を、Devnet E2Eは実ノード・SDK・保存等を通る所定経路を確認する。どちらも条件外やMainnetの全動作を保証しない。
+10. 前提環境、版・コミット・依存、NetworkId・起動設定、準備/実行/停止手順、入力・期待結果、確認済み範囲と既知の制限を書く。秘密情報や私有パスは含めない。
+
+</details>
+
 ## 35.26 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Kaspaアプリケーションを作るうえで重要なのは、チェーンの仕組みを知ることだけではない。**チェーンが保証することと、アプリケーションが責任を負うことを分ける設計**が必要になる。
 
@@ -996,17 +1035,38 @@ Kaspaアプリケーションを作るうえで重要なのは、チェーンの
 - Rustの型とテストでドメインの正しさを確認する。
 - 実アプリへ進む際のDevnet検証・障害注入・CI・ドキュメントの計画を立てる。
 
+</details>
+
 [次章](chapter-36.md)では、こうした実装・検証・ドキュメントの経験を、Kaspaへのオープンソース貢献につなげる。
 
 ## 35.27 参考資料・一次資料
 
-- Kaspa公式開発者向けページ：https://kaspa.org/build
-- Kaspa開発ドキュメント：https://docs.kaspa.org/
-- Kaspa Getting Started：https://docs.kaspa.org/integrate/getting-started
-- rusty-kaspa公式リポジトリ：https://github.com/kaspanet/rusty-kaspa
-- Rust wRPCクライアント例：https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/wrpc/examples/simple_client/src/main.rs
-- Rusty Kaspa WASM SDK概要：https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/wasm/README.md
-- Kaspa改善提案（KIPs）：https://github.com/kaspanet/kips
-- mdBook：https://rust-lang.github.io/mdBook/
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Kaspa公式開発者向けページ](https://kaspa.org/build)
+- [Kaspa開発ドキュメント](https://docs.kaspa.org/)
+- [Kaspa Getting Started](https://docs.kaspa.org/integrate/getting-started)
+- [rusty-kaspa公式リポジトリ](https://github.com/kaspanet/rusty-kaspa)
+- [Rust wRPCクライアント例](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/wrpc/examples/simple_client/src/main.rs)
+- [Rusty Kaspa WASM SDK概要](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/wasm/README.md)
+- [Kaspa改善提案（KIPs）](https://github.com/kaspanet/kips)
+- [mdBook](https://rust-lang.github.io/mdBook/)
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 36 — Contributing to Kaspa（Kaspaへのコントリビュート）](chapter-36.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-35)
 
 **確認範囲：** 基準版RPC/サンプルの主要箇所、独自Rust教材とSQLite制約。追加で、公式SDKから実Devnetの現在UTXOをJSON経由でRustへ渡し、`Candidate`として取り込む限定サンプルを実測した。継続監視用のRust RPCアダプター、完成Payment Tracker、複数ワーカー、入金履歴復元、期限/業務会計、アプリ全体のE2Eは未検証。記録は `experiments/chapter-35-review-2026-11-01.md` と[候補取り込みの実測記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/payment-candidates-review-2026-11-02.md)を参照する。
+
+
+</details>

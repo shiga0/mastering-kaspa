@@ -1,10 +1,10 @@
 # Chapter 18 — Mining & Block Template Construction（マイニングとブロックテンプレート構築）
 
-> **Mastering Kaspa / Part III — Transactions, Mining & Security**  
-> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要なテンプレート生成経路と照合。全規則・全経路の検証ではない。\
+<p class="chapter-part">Part III — Transactions, Mining &amp; Security（トランザクション・マイニング・セキュリティ）</p>
+
 > この章のRustコードは教育用モデルであり、Kaspaメインネットのブロック生成・PoWを再現するものではない。
 
-固定ソースの照合と教材の記録は `experiments/chapter-18-review-2026-11-01.md`。既存のDevnet実験とは分け、今回はノード起動・採掘・送金を実行していない。
+この章の教材は実ノードの採掘結果を再現するものではない。
 
 ## この章で学ぶこと
 
@@ -298,6 +298,9 @@ cargo new --lib --edition 2021 template-lab
 cd template-lab
 ```
 
+<details class="code-details">
+<summary>ブロックテンプレートモデルの実装とテストを見る</summary>
+
 ```rust
 use std::collections::{HashMap, HashSet};
 
@@ -523,7 +526,9 @@ mod tests {
 }
 ```
 
-実行例：
+</details>
+
+**実行手順：**
 
 ```bash
 cargo test
@@ -652,6 +657,9 @@ PoW検証の責務:
 
 ## 18.19 実践課題
 
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
+
 ### 課題A：テンプレート更新をモデル化する
 
 第18.13節の`Template`に`generation: u64`を追加し、DAG更新時に世代番号を増やす。古い世代の仕事に対する解を識別するテストを書く。
@@ -668,7 +676,12 @@ PoW検証の責務:
 
 対象コミットを固定し、テンプレート生成の入口からブロック提出までを呼び出しグラフにする。確認できた事実と推測を別欄に記録する。
 
+</details>
+
 ## 18.20 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. フルノードとマイナーの責務はどう違うか。
 2. ブロックテンプレートを更新する必要があるのはなぜか。
@@ -681,15 +694,38 @@ PoW検証の責務:
 9. massとバイトサイズを同一視してはいけないのはなぜか。
 10. マイニングの集中化を評価するとき、ハッシュレート以外に何を観察するべきか。
 
+**解答例**
+
+1. フルノードは共有規則でデータを検証し状態を維持する。マイナーはテンプレート等から候補を作りPoWを探索する。マイナーの提出もノードの検証を受ける。
+2. 親・Virtual状態・Mempool候補・時刻や規則の文脈等が変わるため。状態に応じて再利用・修正・再生成する。
+3. Bitcoinの単一の前ブロック参照に対し、BlockDAGでは複数親を参照して並行履歴を取り込める。親選択にもコンセンサス規則がある。
+4. 競合・依存関係、VirtualのUTXO view、mass制限、候補選択方針等で選外や再検証失敗が起きるため。基準版では同一ブロック内の親子取引もそのまま詰め込まない。
+5. シェアはプールが貢献を測るための条件、ブロック受理はネットワークのPoWを含む合意規則への適合である。シェア成功がブロック発見とは限らない。
+6. 期待難易度の不一致、親・時刻・形式・コミットメント等の違反や、不正な取引を含む場合など。PoWだけで全規則は満たせない。
+7. Coinbaseはプロトコル上の報酬処理を担い、通常送金は既存UTXOを支出する。Coinbaseの特別な構造・報酬規則を通常送金に一般化しない。
+8. 一例はVirtualの合意状態、親候補となるDAG情報、Mempoolの取引候補である。ネットワークパラメータ等も参照する。
+9. massは検証・計算やストレージ等の資源負担を評価する尺度で、単なるシリアライズ後のバイト数ではないから。式は対象版と有効化文脈で確認する。
+10. テンプレート作成・取引選択の主体、プール運用者、機材所有者、接続・地域や運用基盤の偏り等を分けて観察する。
+
+</details>
+
 ## 18.21 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 本章の核心は、**マイニングをPoW探索だけに還元しないこと**である。
 
 Kaspaでは、BlockDAGの状態に基づく親選択、Mempoolからのトランザクション選択、Coinbase、難易度、PoW探索、提出後の独立検証が一つの処理系としてつながる。しかし、それぞれの責務と信頼境界は異なる。テンプレートは一時点の候補にすぎず、ネットワーク上の最終的な受理はコンセンサスが決める。
 
+</details>
+
 [次章「Chapter 19 — Mining Economics & Network Security」](chapter-19.md)では、報酬・費用・ハッシュレート・マイニングの集中化がネットワークの安全性にどう影響するかを扱う。
 
 ## 18.22 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 - [Kaspa公式サイト](https://kaspa.org/)
 - [Kaspa Wiki](https://wiki.kaspa.org/en/home)
@@ -697,6 +733,19 @@ Kaspaでは、BlockDAGの状態に基づく親選択、Mempoolからのトラン
 - [Kaspa Improvement Proposals（KIPs）](https://github.com/kaspanet/kips)
 - [Bitcoin Developer Reference — Block Chain](https://developer.bitcoin.org/reference/block_chain.html)
 - [Bitcoin Whitepaper](https://bitcoin.org/bitcoin.pdf)
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 19 — Mining Economics & Network Security（マイニング経済とネットワークセキュリティ）](chapter-19.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-18)
 
 ### 技術レビュー時の確認項目
 
@@ -707,3 +756,5 @@ Kaspaでは、BlockDAGの状態に基づく親選択、Mempoolからのトラン
 - [x] 教育用Rustコードの独自方針と未実装の条件を明記したか
 
 主要経路のソース照合と教材8テストは `experiments/chapter-18-review-2026-11-01.md`。全選択器の分布・キャッシュ/更新競合・報酬計算・PoWの既知値・公式関数との差分実行・実際の採掘は今回検証していない。
+
+</details>

@@ -1,7 +1,7 @@
 # Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）
 
-> **Mastering Kaspa / Part III — Transactions, Mining & Security**  
-> 目次順の本文レビュー：2026-11-01。主要経路は基準版と照合。ページの確認と全規則・全経路の検証は区別する。\
+<p class="chapter-part">Part III — Transactions, Mining &amp; Security（トランザクション・マイニング・セキュリティ）</p>
+
 > 本章では、KaspaのUTXOを支出するための**権限の証明**を、鍵・署名・スクリプト・トランザクション検証という責務に分解する。プロトコル固有のバイト列、署名ハッシュ、opcode、ネットワーク別ルールは変更され得るため、対象バージョンの`rusty-kaspa`で必ず確認する。Rustの簡略モデルは教育用であり、実際のKaspaトランザクションの署名・検証には使用しない。16.12.3では、これと区別して公式SDKを使う既存のDevnet実習を読む。
 
 ## 照合した実装
@@ -334,6 +334,9 @@ cd script-boundary-lab
 
 `src/lib.rs`に以下を記述する。外部依存はなく、Rust 1.90.0で確認した。検証器には取引・入力位置・参照UTXOも渡すが、モックは文脈を無視する。その限界もテストで示す。
 
+<details class="code-details">
+<summary>署名・支出条件モデルの実装とテストを見る</summary>
+
 ```rust
 use std::collections::HashMap;
 
@@ -661,6 +664,8 @@ mod tests {
 }
 ```
 
+</details>
+
 実行コマンド：
 
 ```bash
@@ -706,9 +711,14 @@ cargo test
 
 `--checks`は正常な取引を署名した後、そのコピーの`signatureScript`を1ビット変更して送信する。元の`pending`は変更せず、不正コピーの拒否を確認してから正常な送金へ進む。
 
+<details class="code-details">
+<summary>署名検証失敗を確認するコードを見る</summary>
+
 ```javascript
 {{#include ../../experiments/devnet/send.cjs:reject-invalid-signature}}
 ```
+
+</details>
 
 `rejected`はスクリプト内の検査関数である。処理が成功した場合や、タイムアウト・切断などの通信失敗では検査を失敗にする。期待するScript・署名・検証系の拒否を得た後、入力Outpointが現在UTXOに残っていることも確認する。
 
@@ -804,6 +814,9 @@ HEADが本章冒頭の完全SHAと一致することを確認する。固定版�
 
 ### 16.16.2 ソース調査記録テンプレート
 
+<details class="code-details">
+<summary>調査記録のテンプレートを見る</summary>
+
 ```markdown
 ## 調査対象
 - Repository: kaspanet/rusty-kaspa
@@ -827,6 +840,8 @@ HEADが本章冒頭の完全SHAと一致することを確認する。固定版�
 - Actual:
 - Evidence (test/log):
 ```
+
+</details>
 
 ## 16.17 C4モデルと責務の分割
 
@@ -914,25 +929,39 @@ Accepted in Virtual State
 
 ## 16.19 よくある誤解
 
-**Q1. アドレスが分かればUTXOを使える？**  
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+**1. アドレスが分かればUTXOを使える？**
+
 いいえ。支出条件を満たす署名などが必要になる。
 
-**Q2. 署名が有効なら送金は確定？**  
+**2. 署名が有効なら送金は確定？**
+
 いいえ。UTXOの存在、未使用状態、手数料、コンセンサス上の順序などの検証が必要になる。
 
-**Q3. Transaction IDと署名ハッシュは同じ？**  
+**3. Transaction IDと署名ハッシュは同じ？**
+
 別の値である。目的と計算規則が異なる。
 
-**Q4. BitcoinのScriptをKaspaでそのまま動かせる？**  
+**4. BitcoinのScriptをKaspaでそのまま動かせる？**
+
 互換性を前提にしてはいけない。opcode、署名規則、トランザクション形式、コンセンサスルールを確認する。
 
-**Q5. Scriptは一般的なEVMスマートコントラクトと同じ？**  
+**5. Scriptは一般的なEVMスマートコントラクトと同じ？**
+
 いいえ。UTXOの支出条件を評価するScriptと、共有状態を操作するEVMの実行モデルは設計目的が異なる。
 
-**Q6. `FakeVerifier`を本物の署名検証に置き換えれば完成？**  
+**6. `FakeVerifier`を本物の署名検証に置き換えれば完成？**
+
 いいえ。Sighash、シリアライズ、Script VM、各種コンセンサス規則、テストベクトルなどが欠けている。
 
+</details>
+
 ## 16.20 実践課題
+
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
 
 ### 課題A：境界を図示する
 
@@ -967,7 +996,12 @@ Accepted in Virtual State
 3. SIGHASH_ALLを使い、署名後に送金先を変更した場合の検証失敗を観察する。FakeVerifierの反例と混同しない。
 4. トランザクションID・署名対象・入力UTXOの違いを記録する。
 
+</details>
+
 ## 16.21 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. `scriptPubKey`と`signatureScript`は、それぞれどこに格納されるか。
 2. 公開鍵とアドレスは同じものか。
@@ -978,7 +1012,9 @@ Accepted in Virtual State
 7. BitcoinとKaspaのScriptで共通する概念と、互換性を仮定してはいけない部分を挙げよ。
 8. 鍵が漏えいしていなくても、不正送金につながり得るUI上の問題は何か。
 
-### 解答の要点
+<a id="解答の要点"></a>
+
+**解答例**
 
 1. 出力側の支出条件と、入力側の支出証拠。
 2. いいえ。アドレスは公開鍵や出力種別等を扱うための表現。
@@ -989,7 +1025,12 @@ Accepted in Virtual State
 7. UTXOの支出条件という概念は共通だが、具体的な署名ハッシュ・opcode・形式は個別仕様。
 8. 実際と異なる送金先や金額を表示して署名させる問題。
 
+</details>
+
 ## 16.22 本章のまとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 本章では、Kaspaのトランザクション署名とScriptを、単なる暗号関数ではなく、**UTXOの支出条件を満たすための検証システム**として整理した。
 
@@ -1000,9 +1041,14 @@ Accepted in Virtual State
 - 正しい署名だけではトランザクションの受理は保証されない。
 - 教育用コードと、実際のKaspaコンセンサス互換実装は明確に区別する。
 
+</details>
+
 次章の**[Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）](chapter-17.md)**では、署名済みトランザクションがP2Pネットワークへ流れ、各ノードのMempoolでどのように扱われるかを学ぶ。
 
 ## 16.23 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 ### Kaspa公式・一次資料
 
@@ -1019,6 +1065,19 @@ Accepted in Virtual State
 - [BIP-341 — Taproot](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki)（比較学習用）
 - [SEC 1: Elliptic Curve Cryptography](https://www.secg.org/sec1-v2.pdf)
 
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）](chapter-17.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-16)
+
 ### 原稿を技術レビューする際の確認項目
 
 - [x] 対象ネットワークと`rusty-kaspa`コミットを明記したか。
@@ -1029,3 +1088,5 @@ Accepted in Virtual State
 - [x] Devnetの所定の実測結果と未確認事項を記録したか（生ログ・秘密情報は公開しない）。
 
 目次順の本文レビューと教材9テストは `experiments/chapter-16-review-2026-11-01.md`。上の未チェック項目は全方式・全opcodeやバイト単位の照合を含み、主要経路のソース確認・単一署名送金だけで完了とはしない。今回は鍵生成・署名・送金・ノードの起動を新規に実行していない。
+
+</details>

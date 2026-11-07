@@ -1,11 +1,10 @@
 # Appendix F — 論文・KIP・実装対応表
 
 > **Mastering Kaspa / 付録F**  
-> 目次順の本文レビュー：2026-11-01。固定KIPの主要metadata/参照先・記録教材を確認。\
 > 対象: Kaspaの理論・仕様・実装・検証をつなぐための調査ガイド  
 > **参照軸:** KIPは第30章と同じ `e4ae2332117b5cb68bd6188e065ef885b6d17939`、ノードは本書基準版v1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。異なる時点の資料であり、KIP索引の状態と基準版の実装・Mainnetでの有効化を分ける。
 
-確認結果は `experiments/appendix-f-review-2026-11-01.md`。今回全KIP本文・論文の証明・実装・ネットワークを全面照合したものではない。
+固定KIPの索引・参照先を扱い、全KIP本文・論文の証明・実装・ネットワークを全面照合する資料ではない。
 
 ## F.1 この付録の目的
 
@@ -355,6 +354,9 @@ F-003,Script,,KIP-0017,consensus/,未記録,未記録,調査中
 
 外部クレートなしの書籍管理用教材。記録欄の不足を見つけるだけで、テスト再現性やMainnetでの有効化を判定するプログラムではない。
 
+<details class="code-details">
+<summary>記録欄の不足チェックの実装とテストを見る</summary>
+
 ```rust
 #[derive(Debug)]
 pub struct Evidence<'a> {
@@ -443,6 +445,8 @@ mod tests {
     }
 }
 ```
+
+</details>
 
 本書外の一時Cargo libプロジェクトのsrc/lib.rsへ保存し、Rust 1.90.0 / edition 2021でcargo test --offline、cargo fmt --all -- --check、cargo clippy --offline --all-targets -- -D warningsを実行した。4テストが成功。
 
@@ -622,6 +626,9 @@ AIは調査の補助にはなるが、証拠にはならない。
 
 ## F.29 理解度チェック
 
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
+
 1. 論文・KIP・実装・テストは、それぞれ何を証明するか。
 2. KIPが`Active`であることだけで、Mainnet稼働を断定できるか。
 3. `params.rs`に値が定義されていることと、実際に使われていることの違いは何か。
@@ -631,7 +638,23 @@ AIは調査の補助にはなるが、証拠にはならない。
 7. AIが提示した関数名を検証する最短手順は何か。
 8. コンセンサス変更のレビューで不変条件が重要なのはなぜか。
 
+**解答例**
+
+1. 論文はモデルと仮定の下の主張、KIPは提案された仕様、実装はその版の具体的な処理、テストは選んだ条件での挙動を示す。どれか一つだけで実ネットワーク全体の正しさを保証するものではない。
+2. できない。文書の状態と、対象ノードの実装・リリース・Mainnetでの有効化条件は別に照合する。
+3. 定義があっても、選択されるネットワーク、呼び出し元、有効化文脈によって使用する値や経路が変わる。定義から利用箇所・境界条件・テストへ追う。
+4. 対象論文・KIP・固定実装のアルゴリズムと前提、リリース・有効化状況を区別して確認する。研究提案の存在を現在の稼働の証拠にしない。
+5. ブランチやタグの参照先だけに依存せず、同じコードを再調査し、本文・テスト・実測記録との対応を再現できるようにするため。
+6. その版・ネットワーク・入力・環境で通った試験の範囲までであり、Mainnet・任意の入力・安全性証明まで一般化しない。
+7. 対象コミットを固定し、文字列検索で関数の実在・定義を確認する。呼び出し元、型、テストまで読み、同名であるだけで役割を断定しない。
+8. 同じUTXOの二重消費防止、決定性、失敗時の整合性等、変更前後で守るべき性質を明示し、テストとレビューの基準にできるため。
+
+</details>
+
 ## F.30 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Kaspaを深く理解するには、論文を読むだけでも、Rustコードを読むだけでも十分ではない。**理論が仕様になり、仕様が実装になり、実装がテストで検証されるまでのつながり**を追うことが重要である。
 
@@ -649,18 +672,31 @@ Kaspaを深く理解するには、論文を読むだけでも、Rustコード�
 
 この調査手順は、Kaspaへのコントリビュートだけでなく、他の分散システムやOSSの設計を学ぶ際にも応用できる。
 
+</details>
+
 ## F.31 参考資料
 
-1. [Kaspa Improvement Proposals — GitHub](https://github.com/kaspanet/kips)
-2. [KIP索引（README）](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/README.md)
-3. [rusty-kaspa — GitHub](https://github.com/kaspanet/rusty-kaspa)
-4. [Consensus Parameters (`params.rs`)](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)
-5. [Consensus Constants (`constants.rs`)](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)
-6. [Kaspa Documents](https://github.com/kaspanet/docs)
-7. [Kaspa Wiki](https://wiki.kaspa.org/)
-8. [旧Go実装 `kaspad`](https://github.com/kaspanet/kaspad)
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Kaspa Improvement Proposals — GitHub](https://github.com/kaspanet/kips)
+- [KIP索引（README）](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/README.md)
+- [rusty-kaspa — GitHub](https://github.com/kaspanet/rusty-kaspa)
+- [Consensus Parameters (`params.rs`)](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)
+- [Consensus Constants (`constants.rs`)](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)
+- [Kaspa Documents](https://github.com/kaspanet/docs)
+- [Kaspa Wiki](https://wiki.kaspa.org/)
+- [旧Go実装 `kaspad`](https://github.com/kaspanet/kaspad)
+
+</details>
+
+次は[付録G — 実験結果・テストベクトル](appendix-g.md)。
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-appendix-f)
 
 **書籍編集メモ:** 参考URLは追跡の入口。出版用の厳密な引用には、対象コミットのパーマリンク、参照日、論文の版情報を追加すること。
 
-
-次は[付録G — 実験結果・テストベクトル](appendix-g.md)。
+</details>

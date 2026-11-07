@@ -1,12 +1,11 @@
 # Appendix C — 数学・確率・暗号技術の補足
 
 > **Mastering Kaspa** / 付録C  
-> 目次順の本文レビュー：2026-11-01。数式の前提・独自Rust教材を確認。暗号方式の安全性証明や公式合意の再検証ではない。\
 > 対象：数学が得意でなくても、Kaspaの論文・仕様・Rust実装を読み進めたい開発者
 
 本付録は、Kaspaを理解するうえで必要になる数学を、**直感 → 定義 → 具体例 → コード → 検証**の順で整理する。数式は原理を理解するための簡略化を含む。Kaspaの実際のコンセンサス規則や難易度計算を再現する際は、対象バージョンの仕様と `rusty-kaspa` の実装を優先する。
 
-対象版は[本書の対象バージョン](../baseline.md)、今回の確認結果は `experiments/appendix-c-review-2026-11-01.md` を参照。
+対象版は[本書の対象バージョン](../baseline.md)を参照してください。
 
 ## C.1 この付録の読み方
 
@@ -390,6 +389,9 @@ settled(invoice) ⇒ accepted_amount(invoice) ≥ invoice.amount
 
 `src/main.rs`:
 
+<details class="code-details">
+<summary>確率モデルの実装とテストを見る</summary>
+
 ```rust
 fn at_least_one_event(rate_per_sec: f64, seconds: f64) -> f64 {
     assert!(rate_per_sec.is_finite() && rate_per_sec >= 0.0);
@@ -466,6 +468,8 @@ mod tests {
 }
 ```
 
+</details>
+
 実行：
 
 ```bash
@@ -481,6 +485,9 @@ cargo +1.90.0 run --offline
 ## C.26 RustでDAGの祖先を求める
 
 次のコードは、ブロックIDから親IDへの隣接リストをたどる**教育用モデル**。循環がないことを前提とし、KaspaのBlockDAG処理とは別物。
+
+<details class="code-details">
+<summary>DAGの祖先を求めるコードを見る</summary>
 
 ```rust
 use std::collections::{HashMap, HashSet};
@@ -511,6 +518,8 @@ fn main() {
     println!("Dの祖先: {:?}", past);
 }
 ```
+
+</details>
 
 本書のリポジトリとは別の作業用ディレクトリで、C.25とは独立したプロジェクトを作る。
 
@@ -559,17 +568,43 @@ PoWシステムで「安全性が高まる」と述べるとき、何を攻撃�
 
 ## C.29 よくある誤解
 
-| 誤解 | 正しい捉え方 |
-|---|---|
-| DAGなら順序付けは不要 | 並行ブロックを表せても、トランザクションの評価順序には合意規則が必要 |
-| Anticoneのブロックは不正 | 祖先・子孫関係にないという構造上の関係であり、不正の意味ではない |
-| PoWは平均時間どおりに必ず成功 | 発見時間には確率的なばらつきがある |
-| ハッシュには衝突が存在しない | 衝突は存在するが、発見が計算上困難 |
-| 署名が正しければトランザクションは有効 | UTXO、Script、コンセンサスなどの追加検証が必要 |
-| ZKならブリッジも自動的に安全 | 証明対象外の資産管理やDAなどに別のリスクがある |
-| blue scoreは作業量そのもの | blue workとの違いを確認する必要がある |
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+**1. DAGなら順序付けは不要**
+
+並行ブロックを表せても、トランザクションの評価順序には合意規則が必要
+
+**2. Anticoneのブロックは不正**
+
+祖先・子孫関係にないという構造上の関係であり、不正の意味ではない
+
+**3. PoWは平均時間どおりに必ず成功**
+
+発見時間には確率的なばらつきがある
+
+**4. ハッシュには衝突が存在しない**
+
+衝突は存在するが、発見が計算上困難
+
+**5. 署名が正しければトランザクションは有効**
+
+UTXO、Script、コンセンサスなどの追加検証が必要
+
+**6. ZKならブリッジも自動的に安全**
+
+証明対象外の資産管理やDAなどに別のリスクがある
+
+**7. blue scoreは作業量そのもの**
+
+blue workとの違いを確認する必要がある
+
+</details>
 
 ## C.30 実践演習
+
+<details class="exercise-details">
+<summary>演習を見る</summary>
 
 ### 演習1：DAGの関係を手で求める
 
@@ -613,6 +648,8 @@ E[N] = 16
 
 調査の入口は[第12章](../part-02-consensus/chapter-12.md)、[第13章](../part-02-consensus/chapter-13.md)、[第16章](../part-03-transactions/chapter-16.md)、[第26章](../part-04-development/chapter-26.md)。各章の固定版と照合範囲を確認し、別の版へパスや結果をそのまま適用しない。
 
+</details>
+
 ## C.31 学習チェックリスト
 
 - [ ] DAGと一般の有向グラフの違いを説明できる。
@@ -629,16 +666,24 @@ E[N] = 16
 
 ## C.32 参考資料・一次資料
 
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
 書籍公開前には、**リンク先の版・公開日・コミットハッシュを記録**し、内容と実装の整合性を確認する。
 
-1. [Kaspa公式サイト](https://kaspa.org/) — プロジェクト全体の説明。
-2. [Kaspa Wiki](https://wiki.kaspa.org/) — 技術文書・用語・関連資料への入口。
-3. [rusty-kaspa（公式実装）](https://github.com/kaspanet/rusty-kaspa) — コンセンサス、PoW、署名、DAG処理の実装確認。
-4. [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — 提案の状態と仕様変更の追跡。
-5. [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104.pdf) — GHOSTDAGを学ぶための基礎論文。論文のモデルと現行実装の違いに注意。
-6. [Rust公式ドキュメント](https://doc.rust-lang.org/book/) — Rustの型・所有権・テスト。
+- [Kaspa公式サイト](https://kaspa.org/) — プロジェクト全体の説明。
+- [Kaspa Wiki](https://wiki.kaspa.org/) — 技術文書・用語・関連資料への入口。
+- [rusty-kaspa（公式実装）](https://github.com/kaspanet/rusty-kaspa) — コンセンサス、PoW、署名、DAG処理の実装確認。
+- [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — 提案の状態と仕様変更の追跡。
+- [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104.pdf) — GHOSTDAGを学ぶための基礎論文。論文のモデルと現行実装の違いに注意。
+- [Rust公式ドキュメント](https://doc.rust-lang.org/book/) — Rustの型・所有権・テスト。
+
+</details>
 
 ## C.33 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Kaspaを理解するための数学は、すべてを高度な証明から始める必要はない。まずは次の対応を押さえる。
 
@@ -653,5 +698,13 @@ L2 / ZK / vProgs   → 有限体・証明・状態遷移
 
 **数式は実装の代わりではなく、実装が守るべき性質を言葉より正確に表す道具である。** 論文を読み、簡単なモデルをRustで動かし、公式実装と照合することで、理解を検証可能な知識に変えていこう。
 
+</details>
 
 次は[付録D — RPC・CLIリファレンス](appendix-d.md)。
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-appendix-c)
+
+</details>

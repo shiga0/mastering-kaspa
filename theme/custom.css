@@ -23,6 +23,29 @@
   font-size: 14px;
 }
 
+.chapter-part {
+  margin: 0.5em 0 1.5em;
+  color: var(--sidebar-fg);
+  font-size: 0.9em;
+}
+
+.chapter-next {
+  margin: 1.5em 0;
+  border-top: 1px solid var(--table-border-color);
+  padding-top: 1em;
+}
+
+.chapter-next a {
+  display: block;
+  padding: 0.5em 0;
+  overflow-wrap: anywhere;
+}
+
+.chapter-next a:focus-visible {
+  outline: 2px solid var(--links);
+  outline-offset: 3px;
+}
+
 /* The Kaspa palette is opt-in; built-in mdBook themes remain unchanged. */
 .kaspa {
   --kaspa-accent: #70c7ba;
@@ -118,7 +141,70 @@
   background: var(--quote-bg);
 }
 
+.code-details,
+.quiz-answers,
+.misconception-details,
+.summary-details,
+.reference-details,
+.exercise-details,
+.verification-details {
+  margin: 1.2em 0;
+  border: 1px solid var(--table-border-color);
+  border-radius: 6px;
+  padding: 0 1em;
+}
+
+.code-details > summary,
+.quiz-answers > summary,
+.misconception-details > summary,
+.summary-details > summary,
+.reference-details > summary,
+.exercise-details > summary,
+.verification-details > summary {
+  padding: 0.8em 0;
+  cursor: pointer;
+  color: var(--links);
+  font-weight: 600;
+}
+
+.code-details > summary:focus-visible,
+.quiz-answers > summary:focus-visible,
+.misconception-details > summary:focus-visible,
+.summary-details > summary:focus-visible,
+.reference-details > summary:focus-visible,
+.exercise-details > summary:focus-visible,
+.verification-details > summary:focus-visible {
+  outline: 2px solid var(--links);
+  outline-offset: 3px;
+}
+
 @media print {
+  .chapter-next {
+    display: none;
+  }
+
+  .code-details,
+  .quiz-answers,
+  .misconception-details,
+  .summary-details,
+  .reference-details,
+  .exercise-details,
+  .verification-details {
+    border: 0;
+    padding: 0;
+  }
+
+  .code-details > summary,
+  .quiz-answers > summary,
+  .misconception-details > summary,
+  .summary-details > summary,
+  .reference-details > summary,
+  .exercise-details > summary,
+  .verification-details > summary {
+    color: inherit;
+    cursor: auto;
+  }
+
   .book-cover {
     break-after: page;
   }

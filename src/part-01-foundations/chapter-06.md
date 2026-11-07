@@ -1,7 +1,8 @@
 # Chapter 06 — Blockchain Limitations（ブロックチェーンの限界）
 
-> **Mastering Kaspa** · Part I — Foundations（基礎編）  
-> 基礎概説・確率計算教材を確認：2026-10-31。Kaspa側は[本書の基準版](../baseline.md)を参照。
+<p class="chapter-part">Part I — Foundations（基礎編）</p>
+
+
 
 ## 1. はじめに
 
@@ -13,17 +14,19 @@ KaspaのBlockDAGとGHOSTDAGを理解するには、まずBitcoin型のPoWチェ�
 
 **本章の中心的な問い：ブロックをもっと頻繁に作れば、単純に処理性能が上がるのだろうか。**
 
-## 2. 学習目標
+<a id="2-学習目標"></a>
+
+## 2. この章で学ぶこと
 
 本章を終えると、次を説明できる。
 
-1. ブロック生成間隔とネットワーク伝播遅延の関係
-2. 同時に発見されたブロックが競合する理由
-3. 孤立ブロック・ステールブロックと再編成の違い
-4. ブロックサイズ、帯域、検証コストのトレードオフ
-5. スループット、レイテンシ、確定性を区別する方法
-6. マイニングの公平性とネットワーク遅延の関係
-7. BlockDAGが解決しようとする問題と、解決しない問題
+- ブロック生成間隔とネットワーク伝播遅延の関係
+- 同時に発見されたブロックが競合する理由
+- 孤立ブロック・ステールブロックと再編成の違い
+- ブロックサイズ、帯域、検証コストのトレードオフ
+- スループット、レイテンシ、確定性を区別する方法
+- マイニングの公平性とネットワーク遅延の関係
+- BlockDAGが解決しようとする問題と、解決しない問題
 
 ## 3. ブロック生成間隔と伝播遅延
 
@@ -207,6 +210,9 @@ KaspaのGHOSTDAGは、DAGの構造をもとにブロックの分類と順序付�
 
 本書とは別の作業用ディレクトリで、`probability.rs` として保存する。Rust 1.90.0で確認しており、標準ライブラリ以外の依存はない。
 
+<details class="code-details">
+<summary>ブロック間隔と競合確率の計算コードを見る</summary>
+
 ```rust
 fn probability_of_additional_block(mean_interval_seconds: f64, propagation_seconds: f64) -> f64 {
     assert!(mean_interval_seconds.is_finite() && mean_interval_seconds > 0.0);
@@ -261,7 +267,9 @@ mod tests {
 }
 ```
 
-実行例：
+</details>
+
+**実行手順：**
 
 ```bash
 rustc --edition 2021 probability.rs -o probability
@@ -270,7 +278,7 @@ rustc --edition 2021 --test probability.rs -o probability-tests
 ./probability-tests
 ```
 
-期待する標準出力：
+**期待結果：**
 
 ```text
 interval=   600s, probability=0.17%
@@ -292,55 +300,94 @@ interval=     1s, probability=63.21%
 
 ## 13. よくある誤解
 
-### 誤解1：ブロック生成を10倍速くすればTPSも必ず10倍になる
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+<a id="誤解1ブロック生成を10倍速くすればtpsも必ず10倍になる"></a>
+
+**1. ブロック生成を10倍速くすればTPSも必ず10倍になる**
 
 実効スループットは、ネットワーク、検証、ブロック競合、プロトコル制限などに左右される。
 
-### 誤解2：ステールブロックは不正なブロックである
+<a id="誤解2ステールブロックは不正なブロックである"></a>
+
+**2. ステールブロックは不正なブロックである**
 
 ステールブロックは有効な場合がある。コンセンサスルール違反の無効ブロックとは異なる。
 
-### 誤解3：BlockDAGなら通信遅延がなくなる
+<a id="誤解3blockdagなら通信遅延がなくなる"></a>
+
+**3. BlockDAGなら通信遅延がなくなる**
 
 通信遅延は残る。BlockDAGは、並行して生成されたブロックの扱い方を変える。
 
-### 誤解4：ブロックに入ればトランザクションは絶対に覆らない
+<a id="誤解4ブロックに入ればトランザクションは絶対に覆らない"></a>
+
+**4. ブロックに入ればトランザクションは絶対に覆らない**
 
 PoW型ネットワークでは、履歴が再編成される可能性を考慮し、用途に応じた確定性の判断が必要である。
 
+</details>
+
 ## 14. 理解度チェック
 
-**Q1.** ブロック生成間隔を短くすると競合が増えやすいのはなぜか。  
-**A.** ブロックが全ノードに伝わる前に、別のマイナーが新しいブロックを発見する可能性が高まるため。
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
-**Q2.** ステールブロックと無効ブロックは同じか。  
-**A.** 違う。ステールブロックは有効でも主チェーンに選ばれなかったブロックを指し得る。
+1. ブロック生成間隔を短くすると競合が増えやすいのはなぜか。
+2. ステールブロックと無効ブロックは同じか。
+3. スループットと確定性は同じか。
+4. ブロックサイズを大きくする際のコストは何か。
+5. KaspaがBlockDAGを採用する主な理由は何か。
 
-**Q3.** スループットと確定性は同じか。  
-**A.** 違う。前者は処理量、後者は履歴が覆るリスクに関する性質である。
+**解答例**
 
-**Q4.** ブロックサイズを大きくする際のコストは何か。  
-**A.** 帯域、伝播時間、検証負荷、ストレージ、ノード参加障壁など。
+1. ブロックが全ノードに伝わる前に、別のマイナーが新しいブロックを発見する可能性が高まるため。
+2. 違う。ステールブロックは有効でも主チェーンに選ばれなかったブロックを指し得る。
+3. 違う。前者は処理量、後者は履歴が覆るリスクに関する性質である。
+4. 帯域、伝播時間、検証負荷、ストレージ、ノード参加障壁など。
+5. 並行して生成されたブロックをDAG内で扱い、高頻度のブロック生成を支えるため。
 
-**Q5.** KaspaがBlockDAGを採用する主な理由は何か。  
-**A.** 並行して生成されたブロックをDAG内で扱い、高頻度のブロック生成を支えるため。
+</details>
 
 ## 15. まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 従来のブロックチェーンには、ブロック伝播遅延と競合、処理性能と検証負荷、分散性と運用コストなどのトレードオフがある。
 
 ブロック生成間隔の短縮やサイズの拡大は、単純な性能改善ではなく、ネットワークとコンセンサスに新たな負荷をもたらす。
 
+</details>
+
 Kaspaは、**並行ブロックを主チェーンから排除するのではなく、BlockDAGとして扱う**という設計を採用した。[次章](chapter-07.md)では、その基礎となるDAGのデータ構造を詳しく学ぶ。
 
 ## 参考資料
 
-- Satoshi Nakamoto, *Bitcoin: A Peer-to-Peer Electronic Cash System* — <https://bitcoin.org/bitcoin.pdf>
-- Yonatan Sompolinsky and Aviv Zohar, *Accelerating Bitcoin's Transaction Processing. Fast Money Grows on Trees, Not Chains* — <https://eprint.iacr.org/2013/881>
-- Yonatan Sompolinsky, Shai Wyborski, and Aviv Zohar, *PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus* — <https://eprint.iacr.org/2018/104>
-- Kaspa公式ドキュメント — <https://docs.kaspa.org/>
-- rusty-kaspa — <https://github.com/kaspanet/rusty-kaspa>
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
----
+- [Satoshi Nakamoto, *Bitcoin: A Peer-to-Peer Electronic Cash System*](https://bitcoin.org/bitcoin.pdf)
+- [Yonatan Sompolinsky and Aviv Zohar, *Accelerating Bitcoin's Transaction Processing. Fast Money Grows on Trees, Not Chains*](https://eprint.iacr.org/2013/881)
+- [Yonatan Sompolinsky, Shai Wyborski, and Aviv Zohar, *PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus*](https://eprint.iacr.org/2018/104)
+- [Kaspa公式ドキュメント](https://docs.kaspa.org/)
+- [rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 07 — Introduction to BlockDAG（BlockDAG入門）](chapter-07.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-06)
 
 > **確認範囲（2026-10-31）：** 基礎概説・用語・書誌情報を一次資料と照合し、確率計算教材の実行と5テストを確認した。実ネットワークの性能・ステール率や安全性の証明を検証したものではない。記録はリポジトリの `experiments/chapter-06-review-2026-10-31.md` を参照。
+
+
+</details>

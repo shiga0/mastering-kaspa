@@ -1,8 +1,8 @@
 # Chapter 20 — Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）
 
-> **Part III — Transactions, Mining & Security**  
-> 目次順の本文レビュー：2026-11-01。Finalityの主要経路は基準版と照合。ページの確認と全規則・全経路の検証は区別する。\
-> 対象読者：Rust・バックエンド開発の経験があり、Kaspaの安全性を設計・実装の観点から理解したい読者
+<p class="chapter-part">Part III — Transactions, Mining &amp; Security（トランザクション・マイニング・セキュリティ）</p>
+
+> **対象読者：** Rust・バックエンド開発の経験があり、Kaspaの安全性を設計・実装の観点から理解したい読者
 
 ## この章で学ぶこと
 
@@ -12,7 +12,7 @@
 - **アプリケーションの入金確認**と**ノードのfinalityルール**を混同しない。
 - Rustで簡単なリスク評価・状態遷移モデルを作り、テストできるようにする。
 
-> **重要**：本章はセキュリティモデルを説明する教育用原稿であり、取引所や決済事業者向けの「安全な承認秒数」を保証するものではない。コンセンサスの定数やRPC仕様はネットワーク・バージョン・アップグレードによって変化する。実運用では、利用するノードのリリースとソースコードを確認すること。
+> **重要：** 本章はセキュリティモデルを説明する教育用原稿であり、取引所や決済事業者向けの「安全な承認秒数」を保証するものではない。コンセンサスの定数やRPC仕様はネットワーク・バージョン・アップグレードによって変化する。実運用では、利用するノードのリリースとソースコードを確認すること。
 
 ---
 
@@ -284,6 +284,9 @@ settled後の受理喪失・異常 → investigation / 訂正処理
 
 この関数は、すでに観測した支払いについて現在の証拠を評価する。戻り値は判断であり、入金台帳の更新や過去からの状態遷移ではない。
 
+<details class="code-details">
+<summary>確認ポリシーモデルの実装とテストを見る</summary>
+
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PolicyDecision {
@@ -495,7 +498,9 @@ mod tests {
 }
 ```
 
-実行例：
+</details>
+
+**実行手順：**
 
 ```bash
 cargo new --lib --edition 2021 payment-policy
@@ -508,7 +513,7 @@ cargo test
 
 `PolicySatisfied` は現在の条件一致だけを示し、永続化や会計上のsettledを自動更新しない。前回の受理・不受理を保持しないため、revertedの検出、冪等な残高更新、古い通知の除外は別の処理である。
 
-**注意**：この例の`confirmations`は外部から与えられる抽象的な指標であり、Kaspaで実際にどのRPC値を採用し、どのように計算するかは別途仕様確認が必要。`min_confirmations: 3`はテストの便宜上の値で、安全な運用推奨値ではない。`evidence_fresh` も呼び出し元の判断を表すだけで、証拠の取得・時刻・viewの整合性をこの関数が検証するわけではない。
+> **注意：** この例の`confirmations`は外部から与えられる抽象的な指標であり、Kaspaで実際にどのRPC値を採用し、どのように計算するかは別途仕様確認が必要。`min_confirmations: 3`はテストの便宜上の値で、安全な運用推奨値ではない。`evidence_fresh` も呼び出し元の判断を表すだけで、証拠の取得・時刻・viewの整合性をこの関数が検証するわけではない。
 
 ### 20.14.1 実際の観測と入金状態管理へ進む
 
@@ -618,22 +623,35 @@ grep -n -E 'prior_finality_depth|prior_pruning_depth|crescendo_activation' conse
 
 ## 20.20 よくある誤解
 
-**Q1. Kaspaはブロックが速いから、送金は絶対に取り消せない？**  
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+**1. Kaspaはブロックが速いから、送金は絶対に取り消せない？**
+
 いいえ。ブロック生成の速さと、攻撃下で履歴が覆るリスクは別に評価する。
 
-**Q2. Mempoolに見えたトランザクションは確定済み？**\
+**2. Mempoolに見えたトランザクションは確定済み？**
+
 いいえ。Mempoolはノードの未確定トランザクションの管理領域であり、コンセンサス上の受理とは異なる。
 
-**Q3. blue blockのトランザクションは必ず有効？**\
+**3. blue blockのトランザクションは必ず有効？**
+
 いいえ。ブロックのblue/red分類と、その中のトランザクションがUTXO状態で受理されるかは別である。
 
-**Q4. 51%未満ならどんな攻撃も成功しない？**  
+**4. 51%未満ならどんな攻撃も成功しない？**
+
 いいえ。EclipseやDoS、ネットワーク分断、ウォレット侵害などは別の攻撃面を持つ。
 
-**Q5. finalityの定数が12時間なら、アプリは12時間待つべき？**  
+**5. finalityの定数が12時間なら、アプリは12時間待つべき？**
+
 そのような直接の結論にはならない。プロトコルのfinalityルールと業務上の入金確認ポリシーは区別する。
 
+</details>
+
 ## 20.21 実践課題
+
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
 
 1. **脅威モデル**：10万円相当の入金を受けるECサイトを想定し、攻撃者・資産・信頼境界を文章化する。
 2. **状態機械**：`reverted`と`investigation`からの復旧条件を追加し、状態遷移表を作る。
@@ -642,7 +660,12 @@ grep -n -E 'prior_finality_depth|prior_pruning_depth|crescendo_activation' conse
 5. **分断実験**：Simnet/Devnetの複数ノードで通信を制限し、DAGの見解が収束する過程を記録する。
 6. **レビュー**：「確認数だけを見て入金確定する」設計の問題点を列挙する。
 
+</details>
+
 ## 20.22 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. SafetyとLivenessの違いを説明できるか。
 2. トランザクションのValidityとAcceptanceはなぜ同じではないのか。
@@ -653,7 +676,9 @@ grep -n -E 'prior_finality_depth|prior_pruning_depth|crescendo_activation' conse
 7. PruningとFinalityが関係する理由は何か。
 8. 入金処理で冪等性が必要なのはなぜか。
 
-### 解答の方向性
+<a id="解答の方向性"></a>
+
+**解答例**
 
 1. Safetyは矛盾した結果を防ぐ性質、Livenessは処理が進む性質。
 2. トランザクション単体のルール適合性だけでは、競合UTXOの最終的な消費順序が決まらないため。
@@ -664,15 +689,22 @@ grep -n -E 'prior_finality_depth|prior_pruning_depth|crescendo_activation' conse
 7. 削除可能な履歴の境界と、新規ノードが正しく同期・検証できる条件を整合させる必要があるため。
 8. ネットワークイベントは再送・重複・順序逆転が起こり得るため。
 
+</details>
+
 ## 20.23 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Kaspaのネットワークセキュリティは、PoWだけでも、GHOSTDAGだけでも、P2Pだけでも説明できない。**ブロックの検証、DAGの順序付け、UTXOの受理、ネットワークの収束、finalityルール、アプリケーションの業務判断**が連携して成り立つ。
 
 本章の結論は三つである。
 
-1. **「見えた」「受理された」「十分安全と判断した」は別の状態**である。
-2. **攻撃モデルとネットワーク条件を明示せずに、確定性を秒数だけで語れない**。
-3. **ノードのコンセンサスとアプリケーションの決済ポリシーは責務を分離する**。
+- **「見えた」「受理された」「十分安全と判断した」は別の状態**である。
+- **攻撃モデルとネットワーク条件を明示せずに、確定性を秒数だけで語れない**。
+- **ノードのコンセンサスとアプリケーションの決済ポリシーは責務を分離する**。
+
+</details>
 
 [次章](../part-04-development/chapter-21.md)では、この安全性を支えるデータ管理として、Pruning・ストレージ・ノード同期を掘り下げる。
 
@@ -680,15 +712,35 @@ Kaspaのネットワークセキュリティは、PoWだけでも、GHOSTDAGだ�
 
 ## 参考資料
 
-1. [Kaspa — 公式サイト](https://kaspa.org/)
-2. [rusty-kaspa — Rust製フルノード実装](https://github.com/kaspanet/rusty-kaspa)
-3. [rusty-kaspa: Consensus Constants](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)
-4. [rusty-kaspa: Consensus Parameters](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)
-5. [rusty-kaspa: Releases](https://github.com/kaspanet/rusty-kaspa/releases)
-6. [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104) — 設計・証明の一次資料。固定実装との完全照合は別の作業。
-7. [Bitcoin: A Peer-to-Peer Electronic Cash System — Satoshi Nakamoto](https://bitcoin.org/bitcoin.pdf)
-8. [Eclipse Attacks on Bitcoin’s Peer-to-Peer Network — USENIX Security 2015](https://www.usenix.org/conference/usenixsecurity15/technical-sessions/presentation/heilman) — Bitcoinを対象とする攻撃の背景研究。現在のKaspaの脆弱性の実証ではない。
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Kaspa — 公式サイト](https://kaspa.org/)
+- [rusty-kaspa — Rust製フルノード実装](https://github.com/kaspanet/rusty-kaspa)
+- [rusty-kaspa: Consensus Constants](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)
+- [rusty-kaspa: Consensus Parameters](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)
+- [rusty-kaspa: Releases](https://github.com/kaspanet/rusty-kaspa/releases)
+- [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104) — 設計・証明の一次資料。固定実装との完全照合は別の作業。
+- [Bitcoin: A Peer-to-Peer Electronic Cash System — Satoshi Nakamoto](https://bitcoin.org/bitcoin.pdf)
+- [Eclipse Attacks on Bitcoin’s Peer-to-Peer Network — USENIX Security 2015](https://www.usenix.org/conference/usenixsecurity15/technical-sessions/presentation/heilman) — Bitcoinを対象とする攻撃の背景研究。現在のKaspaの脆弱性の実証ではない。
 
 > **残る確認**：Finalityの全分岐・攻撃モデルの証明・Pruning後の同期・入金確認指標の実装は、追加のコード照合と実行検証が必要。主要経路の読み取り・本文の通読・教材の実行から、全プロトコルの検証へ範囲を広げない。
 
+
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）](../part-04-development/chapter-21.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-20)
+
 目次順の本文レビューと改訂教材8テストは `experiments/chapter-20-review-2026-11-01.md`。基準版のFinality主要経路と旧教材4テストの記録は `experiments/core-validation-review-2026-10-31.md`。公式finality point関数の限定した実行比較は `experiments/finality-comparison-2026-11-02.md`（25ケース・112回）。攻撃成功確率の証明・全フォーク境界・VirtualProcessorによる候補拒否・Pruning後IBDの実行検証は引き続き未完了。
+
+</details>

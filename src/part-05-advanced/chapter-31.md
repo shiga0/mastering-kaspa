@@ -1,9 +1,10 @@
 # Chapter 31 — Covenants & Advanced Scripting（Covenantsと高度なスクリプティング）
 
-> **目次順の本文レビュー：2026-11-01。主要な固定KIP/基準版ソースと独自教材を確認。全仕様・本番有効化の検証ではない。**
+<p class="chapter-part">Part V — Advanced Kaspa（Kaspaの高度な技術）</p>
+
 > 本章は仕組みと設計の学習を目的とする。Kaspaで実際に利用できるOpcode、スクリプトバージョン、ネットワークでの有効化状況は、対象のノード実装・KIP・ネットワーク設定で必ず確認する。例示するCovenantは概念モデルであり、現在のKaspaメインネットでそのまま動くことを意味しない。
 
-基準版はv1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`、KIP文書は第30章と同じ `e4ae2332117b5cb68bd6188e065ef885b6d17939`。両者は同時点の仕様集合ではない。確認記録は `experiments/chapter-31-review-2026-11-01.md`。
+基準版はv1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`、KIP文書は第30章と同じ `e4ae2332117b5cb68bd6188e065ef885b6d17939`。両者は同時点の仕様集合ではない。
 
 ## 31.1 この章で学ぶこと
 
@@ -11,11 +12,11 @@
 
 学習目標：
 
-1. 署名条件とCovenantの違いを説明できる。
-2. UTXOとトランザクションを用いて、状態遷移の不変条件を定義できる。
-3. Script、Covenant、オフチェーン検証、L2の責務を区別できる。
-4. Kaspaの実装状況を一次資料で確認できる。
-5. Rustで簡略化した制約エンジンを実装・テストできる。
+- 署名条件とCovenantの違いを説明できる。
+- UTXOとトランザクションを用いて、状態遷移の不変条件を定義できる。
+- Script、Covenant、オフチェーン検証、L2の責務を区別できる。
+- Kaspaの実装状況を一次資料で確認できる。
+- Rustで簡略化した制約エンジンを実装・テストできる。
 
 ## 31.2 前提：UTXOとScript
 
@@ -54,7 +55,7 @@ Input + Witness/Signature
 | 典型用途 | 通常の送金 | Vault、支出制限、段階的な資金移動 |
 | 注意点 | 鍵の保護 | 表現力と検証可能性、柔軟性のトレードオフ |
 
-**重要：** Covenantは特定のOpcode名ではない。トランザクションに課す制約の設計概念であり、実現方法はチェーンごとのスクリプト仕様に依存する。
+> **重要：** Covenantは特定のOpcode名ではない。トランザクションに課す制約の設計概念であり、実現方法はチェーンごとのスクリプト仕様に依存する。
 
 ## 31.4 なぜCovenantが必要なのか
 
@@ -245,6 +246,9 @@ Ports / Interfaces ◀──── Infrastructure
 
 以下は「許可された受取先以外への送金を拒否する」という**オフチェーンの教育用モデル**である。Kaspa ScriptのOpcodeを実装したものではない。
 
+<details class="code-details">
+<summary>簡略Covenantモデルの実装とテストを見る</summary>
+
 ```rust
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Output {
@@ -429,11 +433,15 @@ mod tests {
 }
 ```
 
+</details>
+
 expected_feeは呼出し側の予定手数料で、ノードへ送る独立したfeeフィールドではない。基準版の[UTXO文脈の検査](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/transaction_validator/tx_validation_in_utxo_context.rs)では、通常取引の入力総額−出力総額が手数料になる。残額を「未使用額」として許さず、出力合計+予定手数料=入力額を要求する。釣り銭を戻す場合も、許可先への出力として明示する。
 
 input_amountは正しいUTXOから解決・合計済みという仮定で、destinationは架空の識別ラベルである。実アドレスの検査、ScriptPublicKeyのversion/bytes比較、複数入力の存在・単一消費、署名・時間・再帰的な継続制約をこの関数は検証しない。u64全域の教材上の判定を、ネットワークの供給上限や最小手数料の検証とも扱わない。
 
-### 実行方法
+<a id="実行方法"></a>
+
+### 実行手順
 
 ```bash
 # 本書の外の調査用ディレクトリで実行
@@ -597,6 +605,9 @@ L2 / Off-chain
 
 ## 31.22 実践課題A：ウォレットの支出ポリシー
 
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
+
 Rustのサンプルを拡張し、以下を実装する。
 
 1. 複数の許可先を設定から登録・更新し、検証へ渡す。
@@ -605,7 +616,12 @@ Rustのサンプルを拡張し、以下を実装する。
 4. `cargo test` で正常系・異常系を検証する。
 5. この制約が**オフチェーンでしか強制されない**ことをREADMEに明記する。
 
+</details>
+
 ## 31.23 実践課題B：Covenantの仕様書を書く
+
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
 
 次の見出しで設計文書を作成する。
 
@@ -626,7 +642,12 @@ Rustのサンプルを拡張し、以下を実装する。
 
 **Required Script Capabilities** には、現時点でKaspaに存在する機能と、仮定している未実装機能を分けて記述する。
 
+</details>
+
 ## 31.24 実践課題C：一次資料との対応表
+
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
 
 | 要件 | KIP・仕様 | Rust実装 | 有効化状態 | テスト |
 |---|---|---|---|---|
@@ -636,7 +657,12 @@ Rustのサンプルを拡張し、以下を実装する。
 
 空欄を推測で埋めず、確認できない項目は「未確認」と明記する。これは『Mastering Kaspa』全体の技術的信頼性を高めるための作業でもある。
 
+</details>
+
 ## 31.25 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. 署名条件とCovenantは何が違うか。
 2. Covenantの「制約」がどこで強制されるかは、なぜ重要か。
@@ -647,7 +673,23 @@ Rustのサンプルを拡張し、以下を実装する。
 7. CovenantとZK証明はどう異なるか。
 8. 自分の設計したVaultの不変条件を3つ挙げられるか。
 
+**解答例**
+
+1. 署名条件は所定の鍵等による承認を検証し、Covenantは出力先・金額・後継状態等、支出する取引の形や遷移を制約する。用途に応じて両者を組み合わせる。
+2. UIやサーバーだけの条件は、その経路を迂回して取引を作れば外せるため。必要なルールが実際のScript・コンセンサス規則で強制されるか確認する。
+3. 次の支出でも制約を継承する設計に矛盾や到達不能な条件があると、許可された出口を作れなくなるため。返金・回復・期限等の経路も検証する。
+4. 一例は支出先や後継出力の金額・状態を指定条件と照合するVaultである。自分の承認だけでなく、取引の入力・出力等を検査する必要がある。
+5. 攻撃者がそのバリデーターを呼ばずに、オンチェーンで許される別取引を作る迂回である。オフチェーンの検査だけではネットワーク全体へ条件を強制できない。
+6. 対象KIPの固定版・状態に加え、実装コミット・リリース・opcodeや形式、対象ネットワーク・有効化条件を照合する。文書確認と実測も区別する。
+7. Covenantは許可する支出・状態遷移の制約、ZK証明は所定の計算・関係が成立したことを検証する証拠である。証明があるだけで支出条件や状態との結合が完成するわけではない。
+8. 一例は「未承認の宛先へ出力しない」「定めた金額・手数料条件を守る」「状態更新時に所定の後継出力へ制約を継承する」。具体的なVaultの目的・回復経路に合わせて定義する。
+
+</details>
+
 ## 31.26 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 - ScriptはUTXOを消費するための条件を表現する。
 - Covenantは、消費によって生成される出力や次の状態に制約を課す考え方である。
@@ -656,9 +698,14 @@ Rustのサンプルを拡張し、以下を実装する。
 - Kaspaで利用可能な機能は、KIP・実装・有効化状況を突き合わせて確認する。
 - 安全な設計では、状態遷移、不変条件、攻撃モデル、回復経路を先に定義する。
 
+</details>
+
 [次章](chapter-32.md)では、こうしたスクリプトの設計をより読みやすく記述するためのアプローチとして、**Silverscriptとスマートコントラクト設計**を扱う。
 
 ## 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 - [KIP-10 — 固定版](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0010.md)
 - [KIP-17 — 固定版](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0017.md)
@@ -666,5 +713,20 @@ Rustのサンプルを拡張し、以下を実装する。
 - [rusty-kaspa — 基準版のソース](https://github.com/kaspanet/rusty-kaspa/tree/fcd9c28f9b211b9872a0c90a8c94f79466ffb063)
 - [Bitcoin Developer Reference — Transactions](https://developer.bitcoin.org/reference/transactions.html)（比較資料。Kaspaの仕様ではない）
 
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 32 — Silverscript & Smart Contract Design（Silverscriptとスマートコントラクト設計）](chapter-32.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-31)
 
 **確認範囲：** 本文・主要KIP/基準版の該当箇所と独自教材。実Vault、公式Script試験・暗号方式の監査、現行Mainnet/全SDKの有効化確認は行っていない。記録は `experiments/chapter-31-review-2026-11-01.md`。
+
+
+</details>

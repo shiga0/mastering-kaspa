@@ -1,20 +1,23 @@
 # Chapter 25 — Exploring the rusty-kaspa Codebase（rusty-kaspaのコードベースを読む）
 
-> **目次順の本文レビュー:** 2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。主要入口・metadata・教材の確認。\
-> **対象読者:** Rustの基礎を理解し、Kaspaの実装を追跡したい開発者  
+<p class="chapter-part">Part IV — Kaspa Development &amp; Implementation（Kaspaの開発と実装）</p>
+
+> **対象読者：** Rustの基礎を理解し、Kaspaの実装を追跡したい開発者\
 > **この章の目的:** `rusty-kaspa` を「ファイルの集合」ではなく、責務・依存関係・データフローから読み解く。
 
-確認記録は `experiments/chapter-25-review-2026-11-01.md`。全ソース・全テストの検証ではなく、既存の公式関数の実行記録とも分けて読む。
+本章は目的に沿ったソース調査の入口を扱い、全ソース・全テストの検証を保証するものではない。
 
-## 25.1 本章の到達目標
+<a id="251-本章の到達目標"></a>
+
+## 25.1 この章で学ぶこと
 
 本章を読み終えたら、次のことができるようになる。
 
-1. リポジトリの構造とCargoワークスペースを調査できる。
-2. P2P、コンセンサス、ストレージ、RPC、ウォレットの境界を説明できる。
-3. 「トランザクション送信」「ブロック受信」などのユースケースを入口から追跡できる。
-4. 型、トレイト、非同期処理、エラー、テストから実装上の不変条件を見つけられる。
-5. 調査結果を再現可能な形で記録し、小さな変更とテストに結び付けられる。
+- リポジトリの構造とCargoワークスペースを調査できる。
+- P2P、コンセンサス、ストレージ、RPC、ウォレットの境界を説明できる。
+- 「トランザクション送信」「ブロック受信」などのユースケースを入口から追跡できる。
+- 型、トレイト、非同期処理、エラー、テストから実装上の不変条件を見つけられる。
+- 調査結果を再現可能な形で記録し、小さな変更とテストに結び付けられる。
 
 > **バージョンについて:** 本章ではディレクトリ名や関数名を固定的な仕様として扱わない。`rusty-kaspa` は更新されるため、手元のコミットで確認した事実と、概念的なアーキテクチャを区別する。
 
@@ -258,6 +261,9 @@ Miner / Mining Client
 
 関数の中身より先に、入出力の型を読むと理解が速い。
 
+<details class="code-details" open>
+<summary>ブロック検証の型とインターフェースを見る</summary>
+
 ```rust
 // 以下は教育用の例であり、rusty-kaspaの実際の型ではない。
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -281,6 +287,8 @@ pub trait BlockValidator {
     fn validate(&self, header: &BlockHeader) -> Result<(), ValidationError>;
 }
 ```
+
+</details>
 
 この例から読み取れるのは、`BlockValidator` が入力とエラーの契約を公開しているという点である。ただし、`parents` が空でよいか、時刻がどの範囲なら有効か、PoWがどう計算されるかは、型定義だけでは分からない。呼び出し側とテストを確認する必要がある。
 
@@ -453,6 +461,9 @@ cargo test --locked -p kaspa-consensus --lib pipeline::body_processor::body_vali
 
 ## 25.16 実践課題A：ブロック処理の経路を調べる
 
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
+
 **課題:** 手元のコミットで、ブロック受信からコンセンサス処理への経路を追跡する。
 
 成果物の例：
@@ -470,7 +481,12 @@ cargo test --locked -p kaspa-consensus --lib pipeline::body_processor::body_vali
 
 完了条件は、**最低3つの具体的なコード位置**と、**少なくとも1つのテスト**を根拠として示せること。
 
+</details>
+
 ## 25.17 実践課題B：RPCからMempoolまでを追う
+
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
 
 **課題:** トランザクション送信APIの入口を探し、Mempoolでの受理・拒否までを追う。
 
@@ -482,7 +498,12 @@ cargo test --locked -p kaspa-consensus --lib pipeline::body_processor::body_vali
 - RPCエラーへどう変換されるか。
 - ローカル受理後、P2P伝播はどこで開始されるか。
 
+</details>
+
 ## 25.18 実践課題C：小さなテストを追加する
+
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
 
 大規模な改修を行う前に、既存テストの近くへ**一つだけ**境界ケースを追加する。
 
@@ -494,6 +515,8 @@ cargo test --locked -p kaspa-consensus --lib pipeline::body_processor::body_vali
 - 未同期ノードに対するRPC要求
 
 まず失敗するテストを作る必要があるとは限らない。既存の仕様を確認する**回帰テスト**でもよい。重要なのは、テストの意図と期待結果を説明できること。
+
+</details>
 
 ## 25.19 ログ・メトリクス・障害調査
 
@@ -527,22 +550,35 @@ cargo test --locked -p kaspa-consensus --lib
 
 ## 25.21 よくある誤解
 
-**Q. ディレクトリ名がそのままアーキテクチャなのか？**  
-A. いいえ。クレート・モジュールの構造は重要な手掛かりだが、実際の責務は型・呼び出し・テストから確認する。
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
 
-**Q. 論文にある概念と同名の関数があるはずか？**  
-A. 必ずしもない。実装では処理が分割・統合・最適化される。
+**1. ディレクトリ名がそのままアーキテクチャなのか？**
 
-**Q. テストが通れば安全性は証明されたのか？**  
-A. いいえ。テストは指定した条件下の振る舞いを検証する。形式的な証明や広範な脅威分析とは異なる。
+いいえ。クレート・モジュールの構造は重要な手掛かりだが、実際の責務は型・呼び出し・テストから確認する。
 
-**Q. blueブロックなら全トランザクションが有効か？**\
-A. いいえ。ブロックのコンセンサス上の分類と、トランザクションの状態遷移上の受理は異なる。
+**2. 論文にある概念と同名の関数があるはずか？**
 
-**Q. 最初からすべてのクレートを理解する必要があるか？**  
-A. ない。目的に沿った一つの経路を追い、周辺へ広げる方が効率的である。
+必ずしもない。実装では処理が分割・統合・最適化される。
+
+**3. テストが通れば安全性は証明されたのか？**
+
+いいえ。テストは指定した条件下の振る舞いを検証する。形式的な証明や広範な脅威分析とは異なる。
+
+**4. blueブロックなら全トランザクションが有効か？**
+
+いいえ。ブロックのコンセンサス上の分類と、トランザクションの状態遷移上の受理は異なる。
+
+**5. 最初からすべてのクレートを理解する必要があるか？**
+
+ない。目的に沿った一つの経路を追い、周辺へ広げる方が効率的である。
+
+</details>
 
 ## 25.22 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. Cargoワークスペースの依存関係を確認する方法を2つ挙げよ。
 2. P2Pメッセージ受信からブロック検証までの境界を説明せよ。
@@ -553,7 +589,9 @@ A. ない。目的に沿った一つの経路を追い、周辺へ広げる方�
 7. ソースコード調査でコミットハッシュを残す理由を説明せよ。
 8. KIPの提案と現在の実装をどう区別するか。
 
-### 解答の要点
+<a id="解答の要点"></a>
+
+**解答例**
 
 1. `Cargo.toml`、`cargo metadata`、`cargo tree` など。
 2. 外部の未信頼データが内部の検証処理へ渡る境界。変換・入力検査・エラー処理が重要。
@@ -564,7 +602,12 @@ A. ない。目的に沿った一つの経路を追い、周辺へ広げる方�
 7. コードは変更されるため、同じ実装を再調査できるようにするため。
 8. KIPのステータス、対象バージョン、該当コード・テスト・リリース情報を照合する。
 
+</details>
+
 ## 25.23 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 `rusty-kaspa` を読むうえで重要なのは、個々の関数を暗記することではない。
 
@@ -574,9 +617,14 @@ A. ない。目的に沿った一つの経路を追い、周辺へ広げる方�
 - **状態遷移:** 成功・失敗時に何が変化するか。
 - **根拠:** コード、テスト、論文、KIPのどれに基づく結論か。
 
+</details>
+
 この5つを意識して、まずはブロック受信かトランザクション送信の経路を一つ追ってみよう。[次章](chapter-26.md)では、ここで学んだ読み方を使い、コンセンサス実装の構造にさらに踏み込む。
 
 ## 25.24 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 - [Kaspa公式 `rusty-kaspa` リポジトリ](https://github.com/kaspanet/rusty-kaspa)
 - [Kaspa Improvement Proposals（KIPs）](https://github.com/kaspanet/kips)
@@ -587,4 +635,20 @@ A. ない。目的に沿った一つの経路を追い、周辺へ広げる方�
 - [Tokio Tutorial](https://tokio.rs/tokio/tutorial)
 - [C4 model](https://c4model.com/)
 
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）](chapter-26.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-25)
+
 > **確認範囲:** 固定版のmetadata、主要な入口・エラー経路と独自教材を確認した。全呼び出し・全feature・全キュー・クラッシュ耐性・公式テスト全体を検証したものではない。記録は `experiments/chapter-25-review-2026-11-01.md`。
+
+
+</details>

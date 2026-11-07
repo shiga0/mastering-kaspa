@@ -1,20 +1,22 @@
 # Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）
 
-> **Mastering Kaspa — Part III: Transactions, Mining & Security**  
-> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要な受付・保留・伝播経路を照合。全規則・全経路の検証ではない。\
+<p class="chapter-part">Part III — Transactions, Mining &amp; Security（トランザクション・マイニング・セキュリティ）</p>
+
 > 本章の実験は教育用モデルであり、Kaspaメインネットのコンセンサス互換実装ではない。
 
-固定ソースの確認と教材の実行記録は `experiments/chapter-17-review-2026-11-01.md`。既存DevnetのMempool照会・競合拒否は `experiments/devnet-send-checks-2026-10-31.md`、応答喪失からの復旧は `experiments/devnet-send-retry-2026-10-31.md` を参照する。今回はノード・送金を再実行していない。
+既存のDevnet実測と教育用モデルの結果は区別する。
 
-## 学習目標
+<a id="学習目標"></a>
+
+## この章で学ぶこと
 
 本章を読み終えると、次を説明・検証できる。
 
-1. Mempoolが担う責務と、コンセンサス状態との違い。
-2. トランザクションの受信・検査・伝播・ブロック採用までの経路。
-3. UTXOの競合、依存トランザクション、孤立トランザクションを区別する方法。
-4. P2Pネットワークの遅延・重複・分断がノード間のMempool差異を生む理由。
-5. Rustで最小Mempoolを構築し、受理・拒否・重複・競合の不変条件をテストする方法。
+- Mempoolが担う責務と、コンセンサス状態との違い。
+- トランザクションの受信・検査・伝播・ブロック採用までの経路。
+- UTXOの競合、依存トランザクション、孤立トランザクションを区別する方法。
+- P2Pネットワークの遅延・重複・分断がノード間のMempool差異を生む理由。
+- Rustで最小Mempoolを構築し、受理・拒否・重複・競合の不変条件をテストする方法。
 
 ## 17.1 Mempoolとは何か
 
@@ -295,6 +297,9 @@ cd minimal-mempool
 
 標準ライブラリのみを使用する。以下を `src/lib.rs` に保存する。
 
+<details class="code-details">
+<summary>Mempoolモデルの実装とテストを見る</summary>
+
 ```rust
 use std::collections::{HashMap, HashSet};
 
@@ -528,7 +533,9 @@ mod tests {
 }
 ```
 
-実行方法:
+</details>
+
+**実行手順：**
 
 ```bash
 cargo test
@@ -703,40 +710,66 @@ grep -n -E 'InvTransactions|RequestTransactions|TransactionNotFound' protocol/fl
 
 ## 17.17 よくある誤解
 
-**Q1. Mempoolに入れば送金は確定する？**  
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+**1. Mempoolに入れば送金は確定する？**
+
 いいえ。Mempool受理はローカル候補としての保持を意味する。
 
-**Q2. 全ノードのMempoolは同じ？**  
+**2. 全ノードのMempoolは同じ？**
+
 いいえ。伝播遅延、受信順序、ポリシー、同期状態などで異なる。
 
-**Q3. BlockDAGなら二重支払いを両方処理できる？**  
+**3. BlockDAGなら二重支払いを両方処理できる？**
+
 いいえ。並行ブロックを保持することと、競合するUTXO消費を両方受理することは別である。
 
-**Q4. 署名が正しければ必ずMempoolに入る？**  
+**4. 署名が正しければ必ずMempoolに入る？**
+
 いいえ。UTXO競合、金額、サイズ、ローカルポリシーなど別の条件がある。
 
-**Q5. Mempoolのトランザクションが消えたらブロックに入った？**\
+**5. Mempoolのトランザクションが消えたらブロックに入った？**
+
 必ずしもそうではない。削除理由を調べる必要がある。
+
+</details>
 
 ## 17.18 実践課題
 
-### 課題A: 依存トランザクション
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
+
+<a id="課題a-依存トランザクション"></a>
+
+### 課題A：依存トランザクション
 
 17.11の教材を拡張し、入力の参照Outpointを、コンセンサスUTXO集合とMempool内の親トランザクションの出力から解決する設計を考える。教材の `Transaction` には出力情報がないため、まず必要な出力データと照会インターフェースを定義する。親がMempoolになくても、参照出力がコンセンサスUTXO集合にあれば、その入力は解決できる。どちらからも解決できない場合は `Deferred` として保留し、不足データの到着後に再検査する流れを示す。入力の解決だけで署名・金額・競合の検査まで成功したとは扱わない。
 
-### 課題B: 容量制限
+<a id="課題b-容量制限"></a>
+
+### 課題B：容量制限
 
 Mempoolの最大件数を設け、上限到達時の動作をテストする。どのトランザクションを優先するかは明示的なポリシーとして分離する。
 
-### 課題C: 状態再評価
+<a id="課題c-状態再評価"></a>
+
+### 課題C：状態再評価
 
 `ConsensusChanged` イベントを追加し、現在のコンセンサスUTXO集合に対してMempool内の入力を再検査する処理を設計する。
 
-### 課題D: 伝播実験
+<a id="課題d-伝播実験"></a>
+
+### 課題D：伝播実験
 
 3〜5ノードの簡易シミュレーターを作成し、メッセージ遅延・重複・分断を注入する。ノード間のMempool件数の差を観測する。
 
+</details>
+
 ## 17.19 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. Mempool受理とコンセンサス受理は何が違うか。
 2. 同じトランザクションが複数ピアから届くのはなぜか。
@@ -749,7 +782,25 @@ Mempoolの最大件数を設け、上限到達時の動作をテストする。�
 9. Rustの `admit` で全入力を確認してから状態を変更する理由は何か。
 10. 送信したトランザクションが見つからない場合、どの順番で調査するか。
 
+**解答例**
+
+1. Mempool受理はノードの候補受付、コンセンサス受理は合意文脈の順序と検証を経た取引の扱いである。候補であることは最終反映を保証しない。
+2. P2Pの複数経路や再送により同じ取引が届くため。識別子で重複を扱い、同じ内容を二重に適用しない。
+3. 他ノードやブロックに別の候補が存在し、ローカルMempoolだけでは合意状態の競合を決められないから。
+4. 参照出力がまだ分からず、直ちに検証できない場合がある。実装の方針に応じて不足データ・親取引を取得し、待機や再検査を行う。必ず全ノードが保存するとは限らない。
+5. 並行ブロックはDAGへ残り得ても、その中の競合取引すべてがUTXO状態へ適用されるわけではないから。
+6. メモリ・CPU・帯域等を無制限に消費しないようにし、過剰な候補や攻撃への保持・破棄方針を設けるため。
+7. 入力の消費、利用可能出力、合意上の受理結果等が変わるため、以前有効だった候補が使えなくなる場合がある。
+8. ローカルポリシーは中継・保持・採掘候補の方針、コンセンサス規則は有効性・受理結果を決める共通規則である。前者の拒否だけでブロック内でも無効とは限らない。
+9. 後の入力で失敗した際に、先の入力だけが予約される部分更新を防ぐため。失敗時に元の状態を保つ。
+10. まずNetworkId・接続先・同期・応答の鮮度を確認し、送信結果とTX IDを記録する。Mempool観測、合意上の受理、索引・通知・アプリ保存を分けて調べ、成否不明で別取引を作り直さない。
+
+</details>
+
 ## 17.20 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 - Mempoolは**未確定トランザクションのローカルな候補集合**であり、合意済み台帳ではない。
 - P2P伝播は非同期であり、各ノードのMempoolは常に一致するとは限らない。
@@ -757,15 +808,35 @@ Mempoolの最大件数を設け、上限到達時の動作をテストする。�
 - BlockDAG上でブロックを保持することと、そのトランザクションをVirtual Stateへ適用することは別である。
 - Rustで設計する際は、**原子性・重複排除・競合検出・状態再評価・資源制限**を不変条件として明示する。
 
+</details>
+
 [次章](chapter-18.md)では、Mempoolの候補からマイナーがブロックテンプレートを構築する流れを扱う。
 
 ## 参考資料
 
-1. [Kaspa公式サイト](https://kaspa.org/)
-2. [Kaspa Wiki](https://wiki.kaspa.org/en/home)
-3. [rusty-kaspa（公式Rust実装）](https://github.com/kaspanet/rusty-kaspa)
-4. [Kaspa Improvement Proposals](https://github.com/kaspanet/kips)
-5. [Bitcoin Developer Reference](https://developer.bitcoin.org/reference/)
-6. [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Kaspa公式サイト](https://kaspa.org/)
+- [Kaspa Wiki](https://wiki.kaspa.org/en/home)
+- [rusty-kaspa（公式Rust実装）](https://github.com/kaspanet/rusty-kaspa)
+- [Kaspa Improvement Proposals](https://github.com/kaspanet/kips)
+- [Bitcoin Developer Reference](https://developer.bitcoin.org/reference/)
+- [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
 
 今回の照合は基準版の主要なRPC/P2P受付、競合/孤児管理、ブロック後処理の範囲である。全RBF条件・孤児上限・期限・mass/手数料・全再編成時の再投入や、公式関数との実行時差分は未検証。本文確認・教材8テスト・ソース識別情報は `experiments/chapter-17-review-2026-11-01.md` に記録した。
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 18 — Mining & Block Template Construction（マイニングとブロックテンプレート構築）](chapter-18.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-17)
+
+</details>

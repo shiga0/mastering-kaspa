@@ -1,6 +1,6 @@
 # 技術レビューの進捗
 
-更新日：2026年11月3日。本書の[対象バージョン](baseline.md)を基準に、ページの確認と個別の検証結果を記録します。
+更新日：2026年11月7日（編集上の整理。技術検証結果の更新ではありません）。本書の[対象バージョン](baseline.md)を基準に、ページの確認と個別の検証結果を記録します。
 
 11月3日の横断レビュー・再実行結果は[今回の記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/repository-review-2026-11-03.md)を参照してください。以下の個別レビュー記録は各実施時点の履歴として維持し、今回の確認を全主張・全環境の検証完了へ広げません。
 
@@ -203,3 +203,556 @@ FinalityのVirtualProcessor/Pruning検査経路、実ノード/IndexerによるH
 2026年11月2日：gen1 HD復旧受取鍵で1 KASを送り、さらに新しいプロセスで復旧した変更鍵で第一TXのお釣りから1 KASを送金。2件とも署名/未署名項目照合、Mempool・virtual受理・入力消費・宛先/変更UTXOと手数料を確認しました。未知index/履歴探索・暗号化バックアップ復旧は残ります。
 
 2026年11月2日：公式Wallet.accountsDiscoveryの固定RPC14ケースで、両枝の範囲・account継続条件・戻り値0の曖昧さ・現在UTXOだけでは支出済み履歴を拾えない条件を確認。別のgap教材は12,288比較で一致しました。実ノード/Indexerの履歴復元や暗号化バックアップは未検証です。
+
+## 各ページから集約したレビュー記録
+
+章の冒頭にあったレビュー日・作業経緯をここへ移しました。以下は元の記録であり、2026年11月7日に再検証した結果ではありません。対象版の共通条件は[本書の対象バージョン](baseline.md)、章固有の確認範囲は各ページ末尾の「検証状況を見る」に記載しています。
+
+<a id="review-appendix-a"></a>
+
+<details class="verification-details">
+<summary>Appendix A — Rust環境・Docker環境の構築のレビュー記録</summary>
+
+[本文と検証状況](appendices/appendix-a.md)
+
+> **目次順の本文レビュー**：2026-11-01。独自Rust教材・Compose設定・環境の読取検査と既存実測記録を照合。全OSの新規導入/Devnet再実行ではない。
+
+対象版の一覧は[本書の対象バージョン](baseline.md)、この回の結果は `experiments/appendix-a-review-2026-11-01.md` を参照。既存のDevnet実測と、今回新しく確認した事項を分けて記録する。
+
+</details>
+
+<a id="review-appendix-b"></a>
+
+<details class="verification-details">
+<summary>Appendix B — Kaspa用語集のレビュー記録</summary>
+
+[本文と検証状況](appendices/appendix-b.md)
+
+> 目次順の本文レビュー：2026-11-01。主要用語を既存章と基準版ソースに照合。全用語・全機能の検証ではない。\
+
+> **編集メモ**：本付録の定義は学習用に簡潔化している。特に数理的に厳密な定義が必要な場合は、該当章と論文・実装を優先する。出版前に用語の表記揺れ、KIPの状態、実装の変更点を再確認すること。
+
+</details>
+
+<a id="review-appendix-c"></a>
+
+<details class="verification-details">
+<summary>Appendix C — 数学・確率・暗号技術の補足のレビュー記録</summary>
+
+[本文と検証状況](appendices/appendix-c.md)
+
+> 目次順の本文レビュー：2026-11-01。数式の前提・独自Rust教材を確認。暗号方式の安全性証明や公式合意の再検証ではない。\
+
+対象版は[本書の対象バージョン](baseline.md)、今回の確認結果は `experiments/appendix-c-review-2026-11-01.md` を参照。
+
+</details>
+
+<a id="review-appendix-d"></a>
+
+<details class="verification-details">
+<summary>Appendix D — RPC・CLIリファレンスのレビュー記録</summary>
+
+[本文と検証状況](appendices/appendix-d.md)
+
+> 目次順の本文レビュー：2026-11-01。主要RPC/通知・CLIの入口・独自Rust教材を確認。\
+
+対象版は[本書の対象バージョン](baseline.md)、今回の確認結果は `experiments/appendix-d-review-2026-11-01.md` を参照。以下の基準版はrusty-kaspa v1.0.1。
+
+</details>
+
+<a id="review-appendix-e"></a>
+
+<details class="verification-details">
+<summary>Appendix E — プロトコルパラメータ一覧のレビュー記録</summary>
+
+[本文と検証状況](appendices/appendix-e.md)
+
+> 目次順の本文レビュー：2026-11-01。基準版の主要定義/利用箇所と単位教材を確認。\
+
+対象版は[本書の対象バージョン](baseline.md)、この回の結果は `experiments/appendix-e-review-2026-11-01.md` を参照。旧稿の別版master由来のフィールド/値を基準版へ整理した。
+
+</details>
+
+<a id="review-appendix-f"></a>
+
+<details class="verification-details">
+<summary>Appendix F — 論文・KIP・実装対応表のレビュー記録</summary>
+
+[本文と検証状況](appendices/appendix-f.md)
+
+> 目次順の本文レビュー：2026-11-01。固定KIPの主要metadata/参照先・記録教材を確認。\
+
+確認結果は `experiments/appendix-f-review-2026-11-01.md`。今回全KIP本文・論文の証明・実装・ネットワークを全面照合したものではない。
+
+</details>
+
+<a id="review-appendix-g"></a>
+
+<details class="verification-details">
+<summary>Appendix G — 実験結果・テストベクトルのレビュー記録</summary>
+
+[本文と検証状況](appendices/appendix-g.md)
+
+> 目次順の本文レビュー：2026-11-01。実験索引/記録・独自UTXO教材・SHA/DAG例を確認。\
+
+対象版は[本書の対象バージョン](baseline.md)、今回の結果は `experiments/appendix-g-review-2026-11-01.md` を参照。実ノードの起動・採掘・送金は今回再実行していない。
+
+</details>
+
+<a id="review-appendix-h"></a>
+
+<details class="verification-details">
+<summary>Appendix H — 参考文献・変更履歴のレビュー記録</summary>
+
+[本文と検証状況](appendices/appendix-h.md)
+
+> 目次順の本文レビュー：2026-11-01。主要書誌・参照版・Git履歴/検証索引を確認。\
+
+基準版は[本書の対象バージョン](baseline.md)、ページごとの範囲は[技術レビューの進捗](review-status.md)、今回の記録は `experiments/appendix-h-review-2026-11-01.md` を参照。目次順の通読と、全主張・全実装の検証完了は区別する。
+
+</details>
+
+<a id="review-chapter-01"></a>
+
+<details class="verification-details">
+<summary>Chapter 01 — Introduction to Kaspa（Kaspa入門）のレビュー記録</summary>
+
+[本文と検証状況](part-01-foundations/chapter-01.md)
+
+> 入門概説・基準版との対応を確認：2026-10-31。対象は[本書の基準版](baseline.md)を参照。
+
+</details>
+
+<a id="review-chapter-02"></a>
+
+<details class="verification-details">
+<summary>Chapter 02 — Foundations of Digital Money（デジタルマネーの基礎）のレビュー記録</summary>
+
+[本文と検証状況](part-01-foundations/chapter-02.md)
+
+> 基礎概説・教材の説明を確認：2026-10-31。対象は[本書の基準版](baseline.md)を参照。
+
+</details>
+
+<a id="review-chapter-03"></a>
+
+<details class="verification-details">
+<summary>Chapter 03 — Cryptographic Foundations（暗号技術の基礎）のレビュー記録</summary>
+
+[本文と検証状況](part-01-foundations/chapter-03.md)
+
+> 基礎概説・SHA-256教材を確認：2026-10-31。対象は[本書の基準版](baseline.md)を参照。
+
+</details>
+
+<a id="review-chapter-04"></a>
+
+<details class="verification-details">
+<summary>Chapter 04 — Distributed Systems & P2P（分散システムとP2Pネットワーク）のレビュー記録</summary>
+
+[本文と検証状況](part-01-foundations/chapter-04.md)
+
+> 基礎概説・伝播教材を確認：2026-10-31。対象は[本書の基準版](baseline.md)を参照。
+
+</details>
+
+<a id="review-chapter-05"></a>
+
+<details class="verification-details">
+<summary>Chapter 05 — Bitcoin Architecture（Bitcoinのアーキテクチャ）のレビュー記録</summary>
+
+[本文と検証状況](part-01-foundations/chapter-05.md)
+
+> 基礎概説・UTXO教材を確認：2026-10-31。Kaspa側は[本書の基準版](baseline.md)を参照。
+
+</details>
+
+<a id="review-chapter-06"></a>
+
+<details class="verification-details">
+<summary>Chapter 06 — Blockchain Limitations（ブロックチェーンの限界）のレビュー記録</summary>
+
+[本文と検証状況](part-01-foundations/chapter-06.md)
+
+> 基礎概説・確率計算教材を確認：2026-10-31。Kaspa側は[本書の基準版](baseline.md)を参照。
+
+</details>
+
+<a id="review-chapter-07"></a>
+
+<details class="verification-details">
+<summary>Chapter 07 — Introduction to BlockDAG（BlockDAG入門）のレビュー記録</summary>
+
+[本文と検証状況](part-01-foundations/chapter-07.md)
+
+> 基礎概説・DAG教材を確認：2026-10-31。対象は[本書の基準版](baseline.md)を参照。
+
+</details>
+
+<a id="review-chapter-08"></a>
+
+<details class="verification-details">
+<summary>Chapter 08 — From Blockchain to Kaspa（ブロックチェーンからKaspaへ）のレビュー記録</summary>
+
+[本文と検証状況](part-01-foundations/chapter-08.md)
+
+> 基礎概説・後続章への対応を確認：2026-10-31。対象は[本書の基準版](baseline.md)を参照。
+
+</details>
+
+<a id="review-chapter-09"></a>
+
+<details class="verification-details">
+<summary>Chapter 09 — Kaspa Architecture（Kaspaのアーキテクチャ）のレビュー記録</summary>
+
+[本文と検証状況](part-02-consensus/chapter-09.md)
+
+> 構造・基準版との対応を確認：2026-10-31。参照版は[本書の基準版](baseline.md)のv1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。
+
+</details>
+
+<a id="review-chapter-10"></a>
+
+<details class="verification-details">
+<summary>Chapter 10 — Kaspa Node & P2P Network（KaspaノードとP2Pネットワーク）のレビュー記録</summary>
+
+[本文と検証状況](part-02-consensus/chapter-10.md)
+
+> 概説・基準版の主要経路を確認：2026-11-01。参照版は[本書の基準版](baseline.md)のv1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。
+
+</details>
+
+<a id="review-chapter-11"></a>
+
+<details class="verification-details">
+<summary>Chapter 11 — Block Processing & Validation（ブロック処理と検証）のレビュー記録</summary>
+
+[本文と検証状況](part-02-consensus/chapter-11.md)
+
+> 目次順の本文レビュー：2026-11-01。主要経路は[基準版](baseline.md)v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` と照合。全規則・全経路の検証完了を意味しない。
+
+</details>
+
+<a id="review-chapter-12"></a>
+
+<details class="verification-details">
+<summary>Chapter 12 — GHOSTDAG Internals（GHOSTDAGの内部構造）のレビュー記録</summary>
+
+[本文と検証状況](part-02-consensus/chapter-12.md)
+
+> 目次順の本文レビュー：2026-11-01。主要規則は基準版と照合済み。ページの通読と全経路の検証は区別する。
+
+> 主要なGHOSTDAG経路を[本書の基準版](baseline.md)v1.0.1で再照合した。小規模DAGの24ケースで公式実装との実行時差分を比較した。本文を目次順に確認し、説明と教材を修正した。全DAG・全規則を検証したものではない。
+
+</details>
+
+<a id="review-chapter-13"></a>
+
+<details class="verification-details">
+<summary>Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）のレビュー記録</summary>
+
+[本文と検証状況](part-02-consensus/chapter-13.md)
+
+> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要経路と照合。全規則・全経路の検証完了を意味しない。\
+
+</details>
+
+<a id="review-chapter-14"></a>
+
+<details class="verification-details">
+<summary>Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）のレビュー記録</summary>
+
+[本文と検証状況](part-02-consensus/chapter-14.md)
+
+> 目次順の本文レビュー：2026-11-01。主要経路は基準版と照合。ページの確認と全規則・全経路の検証は区別する。\
+
+</details>
+
+<a id="review-chapter-15"></a>
+
+<details class="verification-details">
+<summary>Chapter 15 — UTXO Model & Transaction Processing（UTXOモデルとトランザクション処理）のレビュー記録</summary>
+
+[本文と検証状況](part-03-transactions/chapter-15.md)
+
+> 目次順の本文レビュー：2026-11-01。主要経路は基準版と照合。ページの確認と全規則・全経路の検証は区別する。\
+
+</details>
+
+<a id="review-chapter-16"></a>
+
+<details class="verification-details">
+<summary>Chapter 16 — Kaspa Script & Transaction Signing（Kaspa Scriptとトランザクション署名）のレビュー記録</summary>
+
+[本文と検証状況](part-03-transactions/chapter-16.md)
+
+> 目次順の本文レビュー：2026-11-01。主要経路は基準版と照合。ページの確認と全規則・全経路の検証は区別する。\
+
+</details>
+
+<a id="review-chapter-17"></a>
+
+<details class="verification-details">
+<summary>Chapter 17 — Mempool & Transaction Propagation（Mempoolとトランザクション伝播）のレビュー記録</summary>
+
+[本文と検証状況](part-03-transactions/chapter-17.md)
+
+> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要な受付・保留・伝播経路を照合。全規則・全経路の検証ではない。\
+
+固定ソースの確認と教材の実行記録は `experiments/chapter-17-review-2026-11-01.md`。既存DevnetのMempool照会・競合拒否は `experiments/devnet-send-checks-2026-10-31.md`、応答喪失からの復旧は `experiments/devnet-send-retry-2026-10-31.md` を参照する。今回はノード・送金を再実行していない。
+
+</details>
+
+<a id="review-chapter-18"></a>
+
+<details class="verification-details">
+<summary>Chapter 18 — Mining & Block Template Construction（マイニングとブロックテンプレート構築）のレビュー記録</summary>
+
+[本文と検証状況](part-03-transactions/chapter-18.md)
+
+> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要なテンプレート生成経路と照合。全規則・全経路の検証ではない。\
+
+固定ソースの照合と教材の記録は `experiments/chapter-18-review-2026-11-01.md`。既存のDevnet実験とは分け、今回はノード起動・採掘・送金を実行していない。
+
+</details>
+
+<a id="review-chapter-19"></a>
+
+<details class="verification-details">
+<summary>Chapter 19 — Mining Economics & Network Security（マイニング経済とネットワークセキュリティ）のレビュー記録</summary>
+
+[本文と検証状況](part-03-transactions/chapter-19.md)
+
+> 目次順の本文レビュー：2026-11-01。報酬の主要処理は基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` と照合。経済モデルは仮定値による教材で、全規則・全市場データの検証ではない。\
+
+確認範囲・教材の実行記録は `experiments/chapter-19-review-2026-11-01.md`。価格・機器・電力契約・現行Mainnetの報酬やハッシュレートを今回の実測値として扱わない。
+
+</details>
+
+<a id="review-chapter-20"></a>
+
+<details class="verification-details">
+<summary>Chapter 20 — Kaspa Network Security & Finality（Kaspaのネットワークセキュリティとファイナリティ）のレビュー記録</summary>
+
+[本文と検証状況](part-03-transactions/chapter-20.md)
+
+> 目次順の本文レビュー：2026-11-01。Finalityの主要経路は基準版と照合。ページの確認と全規則・全経路の検証は区別する。\
+
+</details>
+
+<a id="review-chapter-21"></a>
+
+<details class="verification-details">
+<summary>Chapter 21 — Pruning, Storage & Node Synchronization（Pruning・ストレージ・ノード同期）のレビュー記録</summary>
+
+[本文と検証状況](part-04-development/chapter-21.md)
+
+> 目次順の本文レビュー：2026-11-01。主要経路は基準版と照合。本文の確認と実Pruning・Pruning後同期の検証は区別する。\
+
+</details>
+
+<a id="review-chapter-22"></a>
+
+<details class="verification-details">
+<summary>Chapter 22 — Kaspa RPC, wRPC & Application Integration（Kaspa RPC・wRPCとアプリケーション統合）のレビュー記録</summary>
+
+[本文と検証状況](part-04-development/chapter-22.md)
+
+> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要APIと照合。全API・全障害系の検証ではない。\
+
+本文と教材の確認記録は `experiments/chapter-22-review-2026-11-01.md`。既存のDevnet実測と今回のモック教材の実行を分けて扱う。
+
+</details>
+
+<a id="review-chapter-23"></a>
+
+<details class="verification-details">
+<summary>Chapter 23 — Rust SDK & WASM（Rust SDKとWASM）のレビュー記録</summary>
+
+[本文と検証状況](part-04-development/chapter-23.md)
+
+> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。主要バインディングの照合と教材の確認であり、SDK全体の検証ではない。
+
+確認記録は `experiments/chapter-23-review-2026-11-01.md`。公式配布SDKを使った過去のDevnet実測と、本章の独自教材の実行を区別する。
+
+</details>
+
+<a id="review-chapter-24"></a>
+
+<details class="verification-details">
+<summary>Chapter 24 — Wallet Architecture & Key Management（ウォレットアーキテクチャと鍵管理）のレビュー記録</summary>
+
+[本文と検証状況](part-04-development/chapter-24.md)
+
+> 目次順の本文レビュー：2026-11-01。主要経路を基準版と再照合し、入力予約教材を実行。全ウォレット・鍵保護の監査ではない。\
+
+</details>
+
+<a id="review-chapter-25"></a>
+
+<details class="verification-details">
+<summary>Chapter 25 — Exploring the rusty-kaspa Codebase（rusty-kaspaのコードベースを読む）のレビュー記録</summary>
+
+[本文と検証状況](part-04-development/chapter-25.md)
+
+> **目次順の本文レビュー:** 2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。主要入口・metadata・教材の確認。\
+
+確認記録は `experiments/chapter-25-review-2026-11-01.md`。全ソース・全テストの検証ではなく、既存の公式関数の実行記録とも分けて読む。
+
+</details>
+
+<a id="review-chapter-26"></a>
+
+<details class="verification-details">
+<summary>Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）のレビュー記録</summary>
+
+[本文と検証状況](part-04-development/chapter-26.md)
+
+> **目次順の本文レビュー:** 2026-11-01。主要経路・保存境界・教材の確認。全コンセンサスの検証ではない。\
+
+> 主要なGHOSTDAG経路を[本書の基準版](baseline.md)v1.0.1で再照合した。小規模DAGの24ケースで公式実装との実行時差分を比較した。今回、本文全体を目次順で確認し、ヘッダー保存とVirtual更新の境界を補足した。過去の公式差分比較を今回再実行した意味ではない。記録は `experiments/chapter-26-review-2026-11-01.md`。
+
+</details>
+
+<a id="review-chapter-27"></a>
+
+<details class="verification-details">
+<summary>Chapter 27 — Building a Minimal Kaspa-like Node in Rust（Rustによる最小Kaspa型ノードの構築）のレビュー記録</summary>
+
+[本文と検証状況](part-04-development/chapter-27.md)
+
+> **目次順の本文レビュー:** 2026-11-01。教材のID検査・状態保持・ノード間の関数呼び出しを確認。Kaspa互換性の検証ではない。\
+
+今回の記録は `experiments/chapter-27-review-2026-11-01.md`。2026-10-31の6テストの記録と、今回の改訂後16テストを区別する。
+
+</details>
+
+<a id="review-chapter-28"></a>
+
+<details class="verification-details">
+<summary>Chapter 28 — Devnet & Integration Testing（Devnetと統合テスト）のレビュー記録</summary>
+
+[本文と検証状況](part-04-development/chapter-28.md)
+
+> 目次順の本文レビュー：2026-11-01。設定・手順・既存実測と独自教材を確認。全実ノード試験の再実行ではない。\
+
+今回の記録は `experiments/chapter-28-review-2026-11-01.md`。過去の実ノード実測、今回の設定検査・単体テスト、未実施の障害注入を分ける。
+
+</details>
+
+<a id="review-argent"></a>
+
+<details class="verification-details">
+<summary>Argent — KaspaのActorベース・アプリケーション言語のレビュー記録</summary>
+
+[本文と検証状況](part-05-advanced/argent.md)
+
+Part Vに置く独立した解説ページ。Argentは `2796809f167144902f04a4b3333a4c144f91fdaf`、Playgroundは `86d5453ee525e7aa743d0b3bb21d1bb8d96c3558` を取得して確認した。本書の基準ノードv1.0.1および第32章のSilverScript v1.0.0とは別の参照軸である。確認記録は `experiments/argent-review-2026-11-01.md`。
+
+</details>
+
+<a id="review-chapter-29"></a>
+
+<details class="verification-details">
+<summary>Chapter 29 — GHOSTDAG Security & DAGKnight（GHOSTDAGのセキュリティとDAGKnight）のレビュー記録</summary>
+
+[本文と検証状況](part-05-advanced/chapter-29.md)
+
+> **目次順の本文レビュー：2026-11-01。公開要旨・書誌、固定版の主要規則、確率教材を確認。安全性証明の全面照合ではない。**\
+
+確認記録は `experiments/chapter-29-review-2026-11-01.md`。研究上の主張、基準版v1.0.1の実装、現行ネットワークでの有効化を分ける。
+
+</details>
+
+<a id="review-chapter-30"></a>
+
+<details class="verification-details">
+<summary>Chapter 30 — Kaspa Improvement Proposals（Kaspa改善提案・KIP）のレビュー記録</summary>
+
+[本文と検証状況](part-05-advanced/chapter-30.md)
+
+> **目次順の本文レビュー：2026-11-01。固定KIP文書・主要出典と規則選択教材を確認。全実装/本番有効化の照合ではない。**
+
+確認記録は `experiments/chapter-30-review-2026-11-01.md`。文書上のStatusと、対応実装・リリース・ネットワーク有効化の証拠を分ける。
+
+</details>
+
+<a id="review-chapter-31"></a>
+
+<details class="verification-details">
+<summary>Chapter 31 — Covenants & Advanced Scripting（Covenantsと高度なスクリプティング）のレビュー記録</summary>
+
+[本文と検証状況](part-05-advanced/chapter-31.md)
+
+> **目次順の本文レビュー：2026-11-01。主要な固定KIP/基準版ソースと独自教材を確認。全仕様・本番有効化の検証ではない。**
+
+基準版はv1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`、KIP文書は第30章と同じ `e4ae2332117b5cb68bd6188e065ef885b6d17939`。両者は同時点の仕様集合ではない。確認記録は `experiments/chapter-31-review-2026-11-01.md`。
+
+</details>
+
+<a id="review-chapter-32"></a>
+
+<details class="verification-details">
+<summary>Chapter 32 — Silverscript & Smart Contract Design（Silverscriptとスマートコントラクト設計）のレビュー記録</summary>
+
+[本文と検証状況](part-05-advanced/chapter-32.md)
+
+> **目次順の本文レビュー：2026-11-01。固定Silverscript文書/CLIの主要箇所と独自Rust教材を確認。CLIコンパイルも確認。追加検証2026-11-02：2-of-2のローカルVM評価5件・ABI拒否1件を確認。本番利用は未検証。**
+
+2026-11-03の追加確認では、32.15.2の返金・状態・系列制約まで検査した。既存2-of-2を含む30ケースの結果・識別値と、ネットワーク未検証の境界は[追加検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/programmability-review-2026-11-03.md)を参照する。
+
+Silverscriptの参照版はv1.0.0 / `3ed973335b59269293564805cc2c58a14595ec03`。本書のノード基準版v1.0.1とは別の資料である。確認記録は `experiments/chapter-32-review-2026-11-01.md`。追加のVM検査は `experiments/silverscript-vm-review-2026-11-02.md`。
+
+</details>
+
+<a id="review-chapter-33"></a>
+
+<details class="verification-details">
+<summary>Chapter 33 — Layer 2, Bridges & Zero-Knowledge Proofsのレビュー記録</summary>
+
+[本文と検証状況](part-05-advanced/chapter-33.md)
+
+> 目次順の本文レビュー：2026-11-01。主要一次資料と独自状態遷移教材を確認。実ブリッジ・証明系・本番有効化の検証ではない。
+
+KaspaのKIP参照版は第30〜32章と同じ `e4ae2332117b5cb68bd6188e065ef885b6d17939`、ノードの基準版はv1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。両者は同時点の機能集合ではない。確認記録は `experiments/chapter-33-review-2026-11-01.md`。
+
+</details>
+
+<a id="review-chapter-34"></a>
+
+<details class="verification-details">
+<summary>Chapter 34 — vProgs & Programmability（vProgsとKaspaのプログラマビリティ）のレビュー記録</summary>
+
+[本文と検証状況](part-05-advanced/chapter-34.md)
+
+> **目次順の本文レビュー：2026-11-01。主要な公開設計・固定プロトタイプと独自Rust教材を確認。Full vProgsや本番動作の検証ではない。**
+
+公開vprogsは `f9b84a863a7c7c20586a9cf947550475e894f72e` へ固定した。本書の基準ノードv1.0.1、固定KIP、Silverscriptと同一時点の機能集合ではない。確認記録は `experiments/chapter-34-review-2026-11-01.md`。
+
+</details>
+
+<a id="review-chapter-35"></a>
+
+<details class="verification-details">
+<summary>Chapter 35 — Designing and Partially Implementing a Kaspa Application（Kaspaアプリケーションの設計と部分実装）のレビュー記録</summary>
+
+[本文と検証状況](part-06-contributing/chapter-35.md)
+
+> **目次順の本文レビュー：2026-11-01。基準版の主要RPC入口・独自集計教材・SQLite制約を確認。完成アプリ/E2E・会計台帳の検証ではない。**
+
+ノード参照版はv1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。現行ドキュメントとAPIが異なる場合はこの固定版のソースを優先する。確認記録は `experiments/chapter-35-review-2026-11-01.md`。
+
+</details>
+
+<a id="review-chapter-36"></a>
+
+<details class="verification-details">
+<summary>Chapter 36 — Contributing to Kaspa（Kaspaへのコントリビュート）のレビュー記録</summary>
+
+[本文と検証状況](part-06-contributing/chapter-36.md)
+
+> **目次順の本文レビュー：2026-11-01。基準版の開発用入口・公開手順と独自Rust教材を確認。公式CI全体や実PR提出の検証ではない。**
+
+ソース照合は本書の基準版v1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。実際の上流への貢献では、その時点の指定base・開発ルールを別に確認する。確認記録は `experiments/chapter-36-review-2026-11-01.md`。
+
+</details>

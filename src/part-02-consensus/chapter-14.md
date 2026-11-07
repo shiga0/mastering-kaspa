@@ -1,7 +1,7 @@
 # Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）
 
-> **Mastering Kaspa / Part II — Kaspa Consensus & Architecture**  
-> 目次順の本文レビュー：2026-11-01。主要経路は基準版と照合。ページの確認と全規則・全経路の検証は区別する。\
+<p class="chapter-part">Part II — Kaspa Consensus &amp; Architecture（コンセンサスとアーキテクチャ）</p>
+
 > 本章はKaspaの設計概念を解説する。Rustのサンプルは**教育用の状態遷移モデル**であり、`rusty-kaspa` のコンセンサス互換実装ではない。プロトコル上の厳密な順序、受理規則、例外処理は対象バージョンの実装・仕様で確認すること。
 
 ## 照合した実装
@@ -14,12 +14,12 @@
 
 読み終えたら、次の問いに答えられるようになる。
 
-1. ブロックの親子関係と、トランザクションの実行順序はなぜ別なのか。
-2. GHOSTDAGの結果はどのように合意上の順序へ結び付くのか。
-3. Virtual BlockとVirtual Stateは何を表すのか。
-4. 並行ブロックに二重支払いが含まれた場合、何が起こるのか。
-5. DAGの先端が変化すると、どの状態を再評価する必要があるのか。
-6. `rusty-kaspa` のコードでどの責務を追えばよいのか。
+- ブロックの親子関係と、トランザクションの実行順序はなぜ別なのか。
+- GHOSTDAGの結果はどのように合意上の順序へ結び付くのか。
+- Virtual BlockとVirtual Stateは何を表すのか。
+- 並行ブロックに二重支払いが含まれた場合、何が起こるのか。
+- DAGの先端が変化すると、どの状態を再評価する必要があるのか。
+- `rusty-kaspa` のコードでどの責務を追えばよいのか。
 
 ---
 
@@ -201,7 +201,7 @@ Kaspaの**Virtual Block**は、この目的で用いる概念的な仮想ブロ�
 
 Virtual BlockはDAGの先端を評価する抽象化である。ただし、基準版は全tipsを無条件に親へ採用するわけではない。[pick_virtual_parents](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/pipeline/virtual_processor/processor.rs)が親数やpruning等の制約を適用し、選ばれた親からvirtualのGHOSTDAGデータを計算する。
 
-**重要：Virtual Blockは、実在するブロックのようにPoWを解いて発行されるものではない。** また、図は概念図であり、仮想ブロックの内部表現を厳密に再現したものではない。
+> **重要：** **Virtual Blockは、実在するブロックのようにPoWを解いて発行されるものではない。** また、図は概念図であり、仮想ブロックの内部表現を厳密に再現したものではない。
 
 ### 14.6.1 なぜ必要なのか
 
@@ -396,6 +396,9 @@ cd consensus-state-lab
 ```
 
 以下を `src/main.rs` に保存する。外部クレートは不要で、Rust 1.90.0で確認した。
+
+<details class="code-details">
+<summary>コンセンサス順序・状態モデルの実装とテストを見る</summary>
 
 ```rust
 use std::collections::{HashMap, HashSet};
@@ -760,7 +763,9 @@ mod tests {
 }
 ```
 
-実行方法：
+</details>
+
+**実行手順：**
 
 ```bash
 cargo run
@@ -957,27 +962,41 @@ grep -n -E 'consensus_ordered_mergeset|ascending_mergeset' consensus/src/model/s
 
 ## 14.20 よくある誤解
 
-**Q1. BlockDAGならトランザクション順序は不要？**\
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+**1. BlockDAGならトランザクション順序は不要？**
+
 いいえ。並行ブロックを保存できることと、二重支払いを矛盾なく処理できることは別である。
 
-**Q2. blueブロックのトランザクションはすべて受理される？**\
+**2. blueブロックのトランザクションはすべて受理される？**
+
 いいえ。blue/redはGHOSTDAGのブロック分類であり、個々のトランザクションの受理判定ではない。
 
-**Q3. Virtual Blockは誰かがマイニングする？**  
+**3. Virtual Blockは誰かがマイニングする？**
+
 いいえ。Virtual Blockはノードが現在のDAG先端に対する合意状態を評価するための概念である。
 
-**Q4. すべてのノードは同じ時刻に同じVirtual Stateを持つ？**  
+**4. すべてのノードは同じ時刻に同じVirtual Stateを持つ？**
+
 いいえ。ネットワーク遅延により、各ノードが観測しているブロック集合は一時的に異なり得る。同じ入力と規則から整合した結果を計算できることが重要である。
 
-**Q5. UTXOの二重支払いを拒否するだけでコンセンサスは完成する？**  
+**5. UTXOの二重支払いを拒否するだけでコンセンサスは完成する？**
+
 いいえ。ノード間でトランザクションの処理順序が一致しなければ、どちらの競合トランザクションが受理されるかも一致しない。
 
-**Q6. 本章のRustコードはKaspa互換？**  
+**6. 本章のRustコードはKaspa互換？**
+
 いいえ。順序が与えられた後のUTXO状態遷移だけを説明する教育用モデルである。
+
+</details>
 
 ---
 
 ## 14.21 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 ### 基礎
 
@@ -995,6 +1014,19 @@ grep -n -E 'consensus_ordered_mergeset|ascending_mergeset' consensus/src/model/s
 9. 「受信順にトランザクションを適用する」設計の問題点を、2ノードの例で説明せよ。
 10. `rusty-kaspa` の対象コミットを固定し、Virtual State更新に関係するテストを1つ見つけ、その入力・期待結果を記録せよ。
 
+**解答例**
+
+1. DAGの部分順序は祖先・子孫の制約で、並行ブロック間の順序はそれだけでは決まらない。コンセンサス順序は追加規則によって取引の評価等に使う順序を定める。
+2. 通常の親は直接参照する親集合の要素で、Selected Parentはその中からGHOSTDAGの比較規則で選ぶ基準の親である。他の親の情報も捨てない。
+3. 複数tipを持つ現在のDAGを評価し、親選択や現在状態を計算するための仮想的な文脈が必要だから。採掘・配信する実ブロックではない。
+4. ウォレットは所有するアドレス、成熟・予約、同期・索引の追従、業務上の確認条件等で表示額を絞るため。全UTXO状態そのものとは異なる。
+5. blue/redはブロックの分類、取引受理は順序に沿って支出条件・UTXO等を検査した結果であり、色だけで取引の受理可否は決まらない。
+6. 一例として「初期UTXO U → 合意順序でTx-Aを検証しUを消費 → 同じUを使うTx-Bは使用可能な入力を失う」と図示できる。どちらが先かは合意規則で決まり、受信順ではない。
+7. Virtualの親・Selected Parent、合意順序、取引の受理結果、UTXO差分、Mempool候補等が再評価の対象になり得る。再計算範囲は実装に依存する。
+8. UTXO消費・出力追加・関連メタデータの整合性を維持し、再起動後に半適用や二重適用が残らないこと。対象実装に応じた原子的更新・回復手順を設ける。
+9. ノード1がTx-A→Tx-B、ノード2がTx-B→Tx-Aの順に競合支出を受信すると、受信順適用では異なる勝者を選び得る。同じDAGから合意規則に従う順序を導く必要がある。
+10. 調査課題なので一意のテスト名はない。固定コミットでVirtual更新を対象とする実在テストを探し、パス・関数名・初期状態・入力・期待UTXOや受理結果を記録する。実行した場合だけコマンドと件数を添え、未実行ならその旨を明記する。
+
 ### 発展課題
 
 - **課題A**：RustのUTXOモデルにトランザクションの依存関係を追加し、正しい順序でのみ受理されることをテストする。
@@ -1002,7 +1034,12 @@ grep -n -E 'consensus_ordered_mergeset|ascending_mergeset' consensus/src/model/s
 - **課題C**：小さなDAGを作り、トポロジカルソートの結果が一意でないことを示す。そのうえで、GHOSTDAGの規則が追加で必要になる理由を説明する。
 - **課題D**：ブロック受理・トランザクション受理・Virtual State更新を別のコンポーネントとして設計し、各APIの入力と不変条件を書く。
 
+</details>
+
 ## 14.22 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 本章の中心となる考え方は、次の一文に集約される。
 
@@ -1010,16 +1047,21 @@ grep -n -E 'consensus_ordered_mergeset|ascending_mergeset' consensus/src/model/s
 
 特に重要なのは、以下の4点である。
 
-1. **DAG構造とトランザクションの実行順序は別**：並行ブロックの存在だけでは二重支払いの処理結果は決まらない。
-2. **ブロック分類とトランザクション受理は別**：blue/redを有効・無効と読み替えてはいけない。
-3. **Virtual Blockは概念上の先端**：複数tipを含む観測済みDAGの合意状態を考えるために使う。
-4. **Virtual Stateは変化し得る**：新しいブロックによって合意結果が再評価される場合があり、確定性と状態更新の設計が重要になる。
+- **DAG構造とトランザクションの実行順序は別**：並行ブロックの存在だけでは二重支払いの処理結果は決まらない。
+- **ブロック分類とトランザクション受理は別**：blue/redを有効・無効と読み替えてはいけない。
+- **Virtual Blockは概念上の先端**：複数tipを含む観測済みDAGの合意状態を考えるために使う。
+- **Virtual Stateは変化し得る**：新しいブロックによって合意結果が再評価される場合があり、確定性と状態更新の設計が重要になる。
+
+</details>
 
 ここまでの **Part II — Kaspa Consensus & Architecture（第9〜14章）** で、ノードの構造からコンセンサス状態の更新までを扱った。次のPart IIIの[第15章](../part-03-transactions/chapter-15.md)では、UTXOとトランザクションの具体的な処理をさらに深く学ぶ。
 
 ---
 
 ## 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 ### 公式実装・ドキュメント
 
@@ -1045,4 +1087,21 @@ grep -n -E 'consensus_ordered_mergeset|ascending_mergeset' consensus/src/model/s
 - [Chapter 21 — Pruning, Storage & Node Synchronization](../part-04-development/chapter-21.md)
 - [Chapter 25 — Exploring the rusty-kaspa Codebase](../part-04-development/chapter-25.md)
 
+
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 15 — UTXO Model & Transaction Processing（UTXOモデルとトランザクション処理）](../part-03-transactions/chapter-15.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-14)
+
 目次順の本文レビューと改訂教材7テストは `experiments/chapter-14-review-2026-11-01.md`。既存の主要経路と旧教材3テストは `experiments/consensus-state-review-2026-10-31.md` を参照する。公式関数との実行時差分、クラッシュ耐久性、報酬生成・署名・全例外規則、現在のMainnetとの一致は今回検証していない。
+
+</details>

@@ -1,9 +1,8 @@
 # Chapter 04 — Distributed Systems & P2P（分散システムとP2Pネットワーク）
 
-> **Mastering Kaspa** / Part I — Foundations（基礎編）  
-> 基礎概説・伝播教材を確認：2026-10-31。対象は[本書の基準版](../baseline.md)を参照。
->
-> 本章の位置づけ：KaspaのBlockDAGとコンセンサスを理解する前提として、分散システム、ネットワーク遅延、P2P通信、障害と整合性の基本を学ぶ。
+<p class="chapter-part">Part I — Foundations（基礎編）</p>
+
+> **位置づけ：** KaspaのBlockDAGとコンセンサスを理解する前提として、分散システム、ネットワーク遅延、P2P通信、障害と整合性の基本を学ぶ。
 
 ## 1. はじめに
 
@@ -19,15 +18,15 @@ Kaspaは、こうした**分散システムの制約を前提として設計さ�
 
 本章を読み終えると、次の内容を説明できるようになる。
 
-1. 集中型システムと分散型システムの違い
-2. ノード、ピア、メッセージ、ネットワークトポロジーの意味
-3. ネットワーク遅延がブロックの並行生成に与える影響
-4. P2Pネットワークにおけるピア発見と情報伝播
-5. 整合性、可用性、ネットワーク分断の関係
-6. 故障、ビザンチン行動、Sybil攻撃の違い
-7. PoWとコンセンサスがP2P上で担う役割
-8. KaspaのBlockDAGが通信遅延とどのように関係するか
-9. 小規模なP2Pシミュレーションの設計方法
+- 集中型システムと分散型システムの違い
+- ノード、ピア、メッセージ、ネットワークトポロジーの意味
+- ネットワーク遅延がブロックの並行生成に与える影響
+- P2Pネットワークにおけるピア発見と情報伝播
+- 整合性、可用性、ネットワーク分断の関係
+- 故障、ビザンチン行動、Sybil攻撃の違い
+- PoWとコンセンサスがP2P上で担う役割
+- KaspaのBlockDAGが通信遅延とどのように関係するか
+- 小規模なP2Pシミュレーションの設計方法
 
 ---
 
@@ -215,7 +214,7 @@ User → Node A → Node B → Node D
                    通信が分断
 ```
 
-**注意：CAP定理を「ブロックチェーンはCかAのどちらか」と単純に分類するために使ってはいけない。** CAPが扱う整合性・可用性の定義と、PoWの確率的なコンセンサス・ファイナリティは異なる問題である。
+> **注意：** **CAP定理を「ブロックチェーンはCかAのどちらか」と単純に分類するために使ってはいけない。** CAPが扱う整合性・可用性の定義と、PoWの確率的なコンセンサス・ファイナリティは異なる問題である。
 
 ## 7. 故障モデルと信頼
 
@@ -362,6 +361,9 @@ Kaspaでは、BlockDAGとPruningを前提とした同期方式が重要になる
 
 以下は標準ライブラリだけで動作する**離散イベント型の教育用シミュレーション**である。本書とは別の作業用ディレクトリに `propagation.rs` として保存する。実際のソケット通信、P2Pハンドシェイク、Kaspaのメッセージ仕様は実装していない。
 
+<details class="code-details">
+<summary>メッセージ伝播シミュレーションの実装を見る</summary>
+
 ```rust
 use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashSet};
@@ -397,14 +399,16 @@ fn main() {
 }
 ```
 
-実行例：
+</details>
+
+**実行手順：**
 
 ```bash
 rustc --edition 2021 propagation.rs
 ./propagation
 ```
 
-期待される出力：
+**期待結果：**
 
 ```text
 A received at 0 ms
@@ -420,6 +424,9 @@ AからCへの直接経路は80msだが、A→B→D→Cの経路では60msで届
 
 ### 12.3 発展課題
 
+<details class="exercise-details">
+<summary>発展課題を見る</summary>
+
 1. A–B間の遅延を両方向とも20msから100msに変更する。
 2. B–D間の接続を両方向のリストから削除する。
 3. ノードを10個に増やす。
@@ -429,6 +436,8 @@ AからCへの直接経路は80msだが、A→B→D→Cの経路では60msで届
 単一メッセージなので受信済み集合のキーはノードIDだけでよい。複数ブロックへ拡張する課題では、イベントにメッセージIDを持たせ、重複判定も `(ノードID, メッセージID)` に変更する必要がある。
 
 この実験は、BlockDAGを学ぶ背景を直感的に理解するためのものだ。Kaspaのコンセンサス安全性を検証するテストではない。
+
+</details>
 
 ## 13. 実際のKaspaノードを観察する
 
@@ -444,65 +453,82 @@ AからCへの直接経路は80msだが、A→B→D→Cの経路では60msで届
 | RPC errors            | 通信・同期の問題が発生していないか     |
 | Logs                  | ピア接続・切断・再接続が発生しているか |
 
-**注意**：RPCの具体的なメソッド名、返却フィールド、ポート番号、Dockerオプションはネットワーク種別と実装バージョンによって異なる場合がある。本書の固定版の手順は[第22章](../part-04-development/chapter-22.md)・[第28章](../part-04-development/chapter-28.md)を参照する。
+> **注意：** RPCの具体的なメソッド名、返却フィールド、ポート番号、Dockerオプションはネットワーク種別と実装バージョンによって異なる場合がある。本書の固定版の手順は[第22章](../part-04-development/chapter-22.md)・[第28章](../part-04-development/chapter-28.md)を参照する。
 
 既存の隔離Devnet実験では、両ノードのRPCが応答していてもP2P分断中は異なるDAGを持ち、再接続後に観測したsink・tips・指定報酬先UTXOが一致した。記録はリポジトリの `experiments/devnet-partition-2026-10-31.md` にある。全UTXO集合や任意の分断への耐性、不可逆な確定を確認した結果ではない。
 
 ## 14. よくある誤解
 
-### 誤解1：分散型なら通信障害に影響されない
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+<a id="誤解1分散型なら通信障害に影響されない"></a>
+
+**1. 分散型なら通信障害に影響されない**
 
 誤り。分散型システムでもネットワーク遅延や分断は起きる。設計によって影響を抑えたり回復したりする。
 
-### 誤解2：すべてのノードは常に同じ最新ブロックを知っている
+<a id="誤解2すべてのノードは常に同じ最新ブロックを知っている"></a>
+
+**2. すべてのノードは常に同じ最新ブロックを知っている**
 
 誤り。ノードが観測する情報には伝播遅延がある。
 
-### 誤解3：ノード数が多いほどPoWコンセンサスの投票力が増える
+<a id="誤解3ノード数が多いほどpowコンセンサスの投票力が増える"></a>
+
+**3. ノード数が多いほどPoWコンセンサスの投票力が増える**
 
 誤り。PoWのコンセンサスを単純なノード数の多数決として理解してはいけない。
 
-### 誤解4：P2Pで情報が広まれば、その情報は正しい
+<a id="誤解4p2pで情報が広まればその情報は正しい"></a>
+
+**4. P2Pで情報が広まれば、その情報は正しい**
 
 誤り。受信したブロックやトランザクションは、各ノードがルールに従って検証する。
 
-### 誤解5：BlockDAGはネットワーク遅延をなくす
+<a id="誤解5blockdagはネットワーク遅延をなくす"></a>
+
+**5. BlockDAGはネットワーク遅延をなくす**
 
 誤り。BlockDAGは、遅延によって並行生成されるブロックを扱うためのデータ構造である。
 
-### 誤解6：CAP定理だけでKaspaの安全性を説明できる
+<a id="誤解6cap定理だけでkaspaの安全性を説明できる"></a>
+
+**6. CAP定理だけでKaspaの安全性を説明できる**
 
 誤り。CAP定理とPoWの確率的コンセンサスは、前提も保証の定義も異なる。
+
+</details>
 
 ---
 
 ## 15. 理解度チェック
 
-**Q1. P2Pネットワークで、すべてのノードが同時に同じブロックを受信できないのはなぜか。**
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
-A. ネットワークには伝播遅延があり、接続経路や通信状況も異なるため。
+1. P2Pネットワークで、すべてのノードが同時に同じブロックを受信できないのはなぜか。
+2. ピアから受信したトランザクションを、そのまま有効と判断してよいか。
+3. Sybil攻撃とPoWの関係は何か。
+4. 高頻度のブロック生成とネットワーク遅延の関係は何か。
+5. P2Pネットワークとコンセンサスの責任はどう異なるか。
+6. 新しいノードがピアに接続できたら、すぐに同期済みと判断してよいか。
 
-**Q2. ピアから受信したトランザクションを、そのまま有効と判断してよいか。**
+**解答例**
 
-A. いけない。ノード自身がプロトコルの規則に従って検証する必要がある。
+1. ネットワークには伝播遅延があり、接続経路や通信状況も異なるため。
+2. いけない。ノード自身がプロトコルの規則に従って検証する必要がある。
+3. 多数の偽ノードを作ることは可能でも、それだけで同等のPoW計算能力を得られるわけではない。ただしネットワーク接続の妨害には注意が必要である。
+4. 伝播が完了する前に別のブロックが生成される可能性が高まり、並行ブロックが増えやすくなる。
+5. P2Pは情報の交換・伝播を担い、コンセンサスは共有ルールに基づく履歴や状態の決定を担う。
+6. いけない。必要なデータの取得・検証を経て同期状態を確認する必要がある。
 
-**Q3. Sybil攻撃とPoWの関係は何か。**
-
-A. 多数の偽ノードを作ることは可能でも、それだけで同等のPoW計算能力を得られるわけではない。ただしネットワーク接続の妨害には注意が必要である。
-
-**Q4. 高頻度のブロック生成とネットワーク遅延の関係は何か。**
-
-A. 伝播が完了する前に別のブロックが生成される可能性が高まり、並行ブロックが増えやすくなる。
-
-**Q5. P2Pネットワークとコンセンサスの責任はどう異なるか。**
-
-A. P2Pは情報の交換・伝播を担い、コンセンサスは共有ルールに基づく履歴や状態の決定を担う。
-
-**Q6. 新しいノードがピアに接続できたら、すぐに同期済みと判断してよいか。**
-
-A. いけない。必要なデータの取得・検証を経て同期状態を確認する必要がある。
+</details>
 
 ## 16. まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 本章では、Kaspaを支える分散システムとP2Pネットワークの基礎を学んだ。
 
@@ -515,18 +541,39 @@ A. いけない。必要なデータの取得・検証を経て同期状態を�
 
 **KaspaのBlockDAGとGHOSTDAGを理解する第一歩は、ネットワークが完全には同期しないことを理解することである。**
 
+</details>
+
 [次章](chapter-05.md)では、Bitcoinのアーキテクチャを取り上げ、PoW、ブロックチェーン、UTXO、P2Pがどのように組み合わされているかを学ぶ。
 
 ---
 
 ## 参考資料
 
-1. [Kaspa公式ドキュメント](https://docs.kaspa.org/)
-2. [rusty-kaspa（公式Rust実装）](https://github.com/kaspanet/rusty-kaspa)
-3. [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
-4. [PHANTOM and GHOSTDAG — IACR ePrint 2018/104](https://eprint.iacr.org/2018/104)
-5. [Leslie Lamport — Time, Clocks, and the Ordering of Events in a Distributed System](https://lamport.azurewebsites.net/pubs/time-clocks.pdf)
-6. [Eric Brewer — CAP Twelve Years Later: How the “Rules” Have Changed](https://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed/)
-7. [RFC 9293 — Transmission Control Protocol (TCP)](https://www.rfc-editor.org/rfc/rfc9293)
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Kaspa公式ドキュメント](https://docs.kaspa.org/)
+- [rusty-kaspa（公式Rust実装）](https://github.com/kaspanet/rusty-kaspa)
+- [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
+- [PHANTOM and GHOSTDAG — IACR ePrint 2018/104](https://eprint.iacr.org/2018/104)
+- [Leslie Lamport — Time, Clocks, and the Ordering of Events in a Distributed System](https://lamport.azurewebsites.net/pubs/time-clocks.pdf)
+- [Eric Brewer — CAP Twelve Years Later: How the “Rules” Have Changed](https://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed/)
+- [RFC 9293 — Transmission Control Protocol (TCP)](https://www.rfc-editor.org/rfc/rfc9293)
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 05 — Bitcoin Architecture（Bitcoinのアーキテクチャ）](chapter-05.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-04)
 
 > **確認範囲（2026-10-31）：** 基礎概説、CAPの定義、基準版の接続管理・アドレス交換を資料と照合し、伝播教材の実行を確認した。教材はKaspaのP2Pや合意を再現するものではない。記録はリポジトリの `experiments/chapter-04-review-2026-10-31.md` を参照。
+
+
+</details>

@@ -1,7 +1,8 @@
 # Chapter 07 — Introduction to BlockDAG（BlockDAG入門）
 
-> **Mastering Kaspa — Part I: Foundations**  
-> 基礎概説・DAG教材を確認：2026-10-31。対象は[本書の基準版](../baseline.md)を参照。
+<p class="chapter-part">Part I — Foundations（基礎編）</p>
+
+
 
 ## 1. はじめに
 
@@ -9,16 +10,18 @@ Bitcoinのブロックチェーンは、Genesis以外の各ブロックが一つ
 
 **BlockDAG（Block Directed Acyclic Graph）**は、ブロック間の参照関係を有向非巡回グラフとして保持する構造である。Kaspaでは複数の親を参照するブロックを許容し、並行して生成されたブロックをDAGに取り込む。これをコンセンサスとして利用するには、GHOSTDAGなどの順序付け規則が別途必要になる。
 
-## 2. 学習目標
+<a id="2-学習目標"></a>
+
+## 2. この章で学ぶこと
 
 この章を終えると、次を説明できるようになる。
 
-1. グラフ・有向辺・非巡回性の意味
-2. BlockchainとBlockDAGの構造上の違い
-3. 親・祖先・子孫・過去・未来・Anticone（比較不能なブロックの集合）の意味
-4. 並行ブロックが発生する理由
-5. DAG構造とコンセンサスアルゴリズムの役割の違い
-6. Rustで簡単なDAGを構築・検証する方法
+- グラフ・有向辺・非巡回性の意味
+- BlockchainとBlockDAGの構造上の違い
+- 親・祖先・子孫・過去・未来・Anticone（比較不能なブロックの集合）の意味
+- 並行ブロックが発生する理由
+- DAG構造とコンセンサスアルゴリズムの役割の違い
+- Rustで簡単なDAGを構築・検証する方法
 
 ## 3. DAGの基礎
 
@@ -130,7 +133,7 @@ DAGは**データの関係を表す構造**であり、トランザクション�
 
 Kaspaでは、この問題に取り組むために**GHOSTDAG**を使用する。GHOSTDAGは選択親（selected parent）を基準とした構造や、blue/redの分類などを利用してブロックの順序を導く。詳細は[第12章](../part-02-consensus/chapter-12.md)で扱う。
 
-> **注意:** blueは「常に正しい」、redは「不正」という意味ではない。また、GHOSTDAGの順序とトランザクションの有効性は同一概念ではない。
+> **注意：** blueは「常に正しい」、redは「不正」という意味ではない。また、GHOSTDAGの順序とトランザクションの有効性は同一概念ではない。
 
 ## 7. KaspaのBlockDAGを理解するための用語
 
@@ -160,6 +163,9 @@ cd minimal-blockdag
 ```
 
 ### 8.2 `src/main.rs`
+
+<details class="code-details">
+<summary>最小BlockDAGの実装とテストを見る</summary>
 
 ```rust
 use std::collections::{HashMap, HashSet};
@@ -350,14 +356,18 @@ mod tests {
 }
 ```
 
-### 8.3 実行
+</details>
+
+<a id="83-実行"></a>
+
+### 8.3 実行手順
 
 ```bash
 cargo run
 cargo test
 ```
 
-期待する標準出力：
+**期待結果：**
 
 ```text
 D's past: ["A", "B", "C", "G"]
@@ -383,22 +393,29 @@ BlockDAGでは、並行ブロックを保持できる一方、次の課題が生
 
 ## 10. 理解度チェック
 
-**Q1. DAGが「非巡回」であるとはどういう意味か。**  
-A. 有向辺をたどって出発点へ戻る閉路が存在しないこと。
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
-**Q2. BとCが互いのanticoneにあるとはどういう意味か。**  
-A. BとCが異なるブロックで、BがCの祖先でも、CがBの祖先でもないこと。
+1. DAGが「非巡回」であるとはどういう意味か。
+2. BとCが互いのanticoneにあるとはどういう意味か。
+3. BlockDAGにブロックが記録されれば、その中の全トランザクションが有効になるか。
+4. 並行ブロックはなぜ発生するか。
+5. KaspaでGHOSTDAGが必要なのはなぜか。
 
-**Q3. BlockDAGにブロックが記録されれば、その中の全トランザクションが有効になるか。**\
-A. ならない。コンセンサスの順序とトランザクション検証が必要。
+**解答例**
 
-**Q4. 並行ブロックはなぜ発生するか。**  
-A. ブロック生成とP2Pネットワークの情報伝播に時間差があるため。
+1. 有向辺をたどって出発点へ戻る閉路が存在しないこと。
+2. BとCが異なるブロックで、BがCの祖先でも、CがBの祖先でもないこと。
+3. ならない。コンセンサスの順序とトランザクション検証が必要。
+4. ブロック生成とP2Pネットワークの情報伝播に時間差があるため。
+5. DAGに存在するブロックの分類と順序付けを行い、一貫したコンセンサス処理につなげるため。
 
-**Q5. KaspaでGHOSTDAGが必要なのはなぜか。**  
-A. DAGに存在するブロックの分類と順序付けを行い、一貫したコンセンサス処理につなげるため。
+</details>
 
 ## 11. まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 - Blockchainは主として一本のチェーンを形成するが、BlockDAGはブロックの並行関係をグラフとして保持する。
 - DAGの「過去」「未来」「anticone」は、ブロック間の因果的な参照関係を理解する鍵である。
@@ -406,16 +423,34 @@ A. DAGに存在するブロックの分類と順序付けを行い、一貫し�
 - KaspaではGHOSTDAGがブロックの分類・順序付けを担う。
 - 高頻度ブロック生成には、コンセンサスだけでなく通信・検証・ストレージ面の制約もある。
 
-**次章:** [Chapter 08 — From Blockchain to Kaspa（ブロックチェーンからKaspaへ）](chapter-08.md)
+</details>
+
 
 ## 参考資料
 
-1. [Kaspa公式サイト](https://kaspa.org/)
-2. [Kaspa公式ドキュメント](https://docs.kaspa.org/)
-3. [rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
-4. [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104)
-5. [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
----
+- [Kaspa公式サイト](https://kaspa.org/)
+- [Kaspa公式ドキュメント](https://docs.kaspa.org/)
+- [rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
+- [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104)
+- [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 08 — From Blockchain to Kaspa（ブロックチェーンからKaspaへ）](chapter-08.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-07)
 
 **確認範囲（2026-10-31）:** 集合の定義・図・基準版APIの祖先判定規約を確認し、本文DAG教材の実行と5テストを確認した。Kaspaのブロック検証やGHOSTDAGの実行比較ではない。記録はリポジトリの `experiments/chapter-07-review-2026-10-31.md` を参照。
+
+
+</details>

@@ -1,11 +1,10 @@
 # Chapter 32 — Silverscript & Smart Contract Design（Silverscriptとスマートコントラクト設計）
 
-> **目次順の本文レビュー：2026-11-01。固定Silverscript文書/CLIの主要箇所と独自Rust教材を確認。CLIコンパイルも確認。追加検証2026-11-02：2-of-2のローカルVM評価5件・ABI拒否1件を確認。本番利用は未検証。**
+<p class="chapter-part">Part V — Advanced Kaspa（Kaspaの高度な技術）</p>
+
 > 本章は設計の考え方と検証方法を中心に扱う。Silverscriptの文法、対応オペコード、コンパイラの仕様、Kaspaメインネットでの利用可能性は、使用する実装のバージョンと有効化状況を必ず確認する。第32.10節は固定CLIでのコンパイル確認例であり、他の概念図や独自Rustモデルと検証範囲を分ける。
 
-Silverscriptの参照版はv1.0.0 / `3ed973335b59269293564805cc2c58a14595ec03`。本書のノード基準版v1.0.1とは別の資料である。確認記録は `experiments/chapter-32-review-2026-11-01.md`。追加のVM検査は `experiments/silverscript-vm-review-2026-11-02.md`。
-
-2026-11-03の追加確認では、32.15.2の返金・状態・系列制約まで検査した。既存2-of-2を含む30ケースの結果・識別値と、ネットワーク未検証の境界は[追加検証記録](https://github.com/shiga0/mastering-kaspa/blob/main/experiments/programmability-review-2026-11-03.md)を参照する。
+Silverscriptの参照版はv1.0.0 / `3ed973335b59269293564805cc2c58a14595ec03`。本書のノード基準版v1.0.1とは別の資料である。
 
 ## 32.1 この章で学ぶこと
 
@@ -13,11 +12,11 @@ Silverscriptの参照版はv1.0.0 / `3ed973335b59269293564805cc2c58a14595ec03`�
 
 学習目標は次のとおり。
 
-1. スクリプト言語、コントラクト言語、実行環境を区別する。
-2. Silverscriptを使う場合の設計・コンパイル・検証の流れを説明する。
-3. UTXOベースのコントラクトを状態遷移と不変条件で設計する。
-4. オンチェーンの強制条件とオフチェーンのアプリケーション処理を分離する。
-5. Rustによる参照モデルとテストから、仕様の曖昧さを発見する。
+- スクリプト言語、コントラクト言語、実行環境を区別する。
+- Silverscriptを使う場合の設計・コンパイル・検証の流れを説明する。
+- UTXOベースのコントラクトを状態遷移と不変条件で設計する。
+- オンチェーンの強制条件とオフチェーンのアプリケーション処理を分離する。
+- Rustによる参照モデルとテストから、仕様の曖昧さを発見する。
 
 ---
 
@@ -56,7 +55,7 @@ Silverscriptは、CashScriptに着想を得た、Kaspa Scriptを生成する言�
 | デプロイ | 実際にどのネットワークで利用可能か |
 | ツール群 | テスト、デバッグ、監査、アドレス生成への対応 |
 
-**重要：** Silverscriptを利用したサンプルが存在することは、Kaspaメインネットで任意のCovenantが利用可能であることの証明にはならない。
+> **重要：** Silverscriptを利用したサンプルが存在することは、Kaspaメインネットで任意のCovenantが利用可能であることの証明にはならない。
 
 ### 32.3.1 実装状況を調べる手順
 
@@ -309,6 +308,9 @@ ABIやconstructor引数、エントリー選択・引数のエンコードも支
 
 ここからは、**実際の署名検証を行わない教育用モデル**を作る。目的は、仕様をコードとテストに落とし込むことである。
 
+<details class="code-details" open>
+<summary>支出ポリシー参照モデルの実装を見る</summary>
+
 ```rust
 use std::collections::HashSet;
 
@@ -368,11 +370,16 @@ impl VaultPolicy {
 }
 ```
 
+</details>
+
 owners/thresholdを非公開にし、new以外から不正な設定を作れないようにする。入力はVecで受け、HashSetへ変換する前に重複を拒否する。最初から集合へ変換すると、重複した設定を黙って捨ててしまう。
 
 **このモデルはコンセンサス互換でも、Kaspa Scriptの実装でもない。** `String`で表した承認者IDは公開鍵ではなく、暗号署名の検証は省略している。同じ取引・SIGHASH/規則・鍵への結合と、IDから鍵への一意な対応を呼出し側へ仮定する。この関数だけではその前提の真偽を検査できない。閾値成立後も未知/重複IDを拒否する独自の厳格な方針であり、VMのcheckMultiSigと同じ受理条件だとは主張しない。
 
 ### 32.14.1 テスト
+
+<details class="code-details">
+<summary>支出ポリシー参照モデルのテストを見る</summary>
 
 ```rust
 #[cfg(test)]
@@ -487,6 +494,8 @@ mod tests {
 }
 ```
 
+</details>
+
 本書外の調査用ディレクトリで `cargo new vault-policy --lib --edition 2021` を作り、src/lib.rsへ上記2断片を続けて配置する。Rust/Cargo 1.90.0、外部依存なしで検査した独自教材であり、Silverscriptの要求版とは別である。
 
 ```bash
@@ -517,7 +526,9 @@ Rustの参照モデルだけで終わらず、32.10の`TwoOfTwoVault`を実際�
 
 この実習は公式コンパイラー・ABI・Kaspaの`TxScriptEngine`を使う。固定版はSilverscript v1.0.0 / `3ed973335b59269293564805cc2c58a14595ec03`と、その依存先Kaspa `a41a333b08848f41bf737b72592e463a6011b8ac`である。本書の基準ノードv1.0.1とは別の版なので、生成物を既存Devnetへ送る手順とは分ける。
 
-#### 実行する
+<a id="実行する"></a>
+
+#### 実行手順
 
 Rust 1.94.0 / edition 2024、Python 3.11、C/C++ビルド環境を使う。Rustの既定は変更せず、`+1.94.0`で指定する。まず本書の外へ公式ソースを取得する。
 
@@ -745,6 +756,9 @@ Rustでは`proptest`などを利用できるが、生成データの意味と前
 
 ## 32.24 実践演習：小さなコントラクトを設計する
 
+<details class="exercise-details">
+<summary>演習を見る</summary>
+
 ### 演習A：2-of-2 Vault
 
 1. 32.10のソースから、承認者の条件・必要な署名・署名対象を整理する。署名対象は32.15.1のハーネスが使う `SIG_HASH_ALL` と対応付ける。
@@ -763,7 +777,12 @@ Devnetへ進む場合は別の統合課題とし、対象ノード版・必要�
 
 次の支出先を固定する要件について、基盤のScript VMに必要なトランザクション内省機能があるか調査する。なければ**実現できない制約を無理に実装したことにしない**。
 
+</details>
+
 ## 32.25 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. Silverscriptのような高水準言語とScript VMの役割はどう違うか。
 2. なぜコンパイラの存在だけではCovenantの実行可能性を証明できないのか。
@@ -776,7 +795,25 @@ Devnetへ進む場合は別の統合課題とし、対象ノード版・必要�
 9. Mempoolへの受理とコンセンサス上の確定はどう違うか。
 10. メインネットで利用可能と主張するにはどの証拠が必要か。
 
+**解答例**
+
+1. 高水準言語とコンパイラーは意図した条件を低水準のプログラムへ変換し、Script VMは取引の実行文脈でそのプログラムを検証・実行する。ソースが書けることと対象VMで実行できることは別である。
+2. 生成された命令・ABI・取引形式が対象ノードと対応し、そのネットワークで有効か確認する必要があるから。コンパイル成功だけでは送信・受理を示さない。
+3. 状態を表すUTXOを消費し、次の状態と制約を持つ後継UTXOを生成すること。出力の対応・承認・系列の継承等を検証する必要がある。
+4. 攻撃者が別のUIや独自取引を使っても守らせたい支出・状態制約はオンチェーンで強制する。表示・操作補助はUIで扱えるが、セキュリティ条件の代わりにはならない。
+5. 同じ承認を二度数えると、独立した二者の承認という条件を満たさずに閾値へ達し得るため。参照モデルのID検査とVMの実署名規則は区別して確認する。
+6. 署名対象の取引・入力・SIGHASH規則等への結合が不適切なら危険がある。有効署名というだけで任意の別取引への再利用を防げるとは限らず、実際に何を署名・検証するか確認する。
+7. モデル・コンパイラー・VM・ABIの版と同じ試験条件を固定し、正常系と拒否系の結果を比較する。モデルで省略した暗号署名・実取引文脈・リソース制約等を明記する。
+8. コンパイラーと依存VMのコミット、ABI、生成物・ハッシュ、ネットワーク規則、入力と期待結果を記録し、正常系・拒否系・境界値の差を確認する。
+9. Mempoolはローカルな候補受付であり、合意状態での受理や後続の確定判断を保証しない。業務上の確認ポリシーとも分ける。
+10. 対応コード・リリース、Mainnetの有効化条件、利用する命令・形式・ツールの対応を一次資料で確認する。ローカルVM成功、Devnet実測、Mainnet実測を混ぜない。
+
+</details>
+
 ## 32.26 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 本章の中心は、特定の言語構文を覚えることではない。**資金の移動を制約するルールを、仕様・実装・検証可能な証拠へと分解すること**である。
 
@@ -798,9 +835,14 @@ Script VM・コンセンサスでの検証
 
 Silverscriptは、その過程の「高水準の記述とコンパイル」を考えるうえで重要な題材となる。しかし、最終的な安全性は**ネットワークで実際に強制される条件**によって決まる。
 
+</details>
+
 次の補足ページ[Argent — Actorベースのアプリケーション言語](argent.md)では、SilverScriptを基盤に複数Actorの状態遷移を記述する仕組みを学ぶ。続く[第33章](chapter-33.md)では、L2・ブリッジ・ゼロ知識証明を扱う。
 
 ## 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 - [Silverscript v1.0.0 — README](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/README.md)
 - [Silverscript v1.0.0 — Tutorial](https://github.com/kaspanet/silverscript/blob/3ed973335b59269293564805cc2c58a14595ec03/docs/TUTORIAL.md)
@@ -812,4 +854,20 @@ Silverscriptは、その過程の「高水準の記述とコンパイル」を�
 - [Bitcoin Developer Guide — Transactions](https://developer.bitcoin.org/devguide/transactions.html)
 - [Rust公式ドキュメント](https://doc.rust-lang.org/book/)
 
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次のページ：Argent — KaspaのActorベース・アプリケーション言語](argent.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-32)
+
 **確認範囲：** 固定公式文書・CLIの主要箇所と独自Rust教材。公式CLIのビルド・2-of-2教材コンパイル・生成JSONの再実行一致と拒否ケースまで確認。2026-11-02には同じ2-of-2ソースで、ローカルVM評価5件とABI拒否1件も確認した。Devnet/本番利用・暗号方式の全面照合は未実施。記録は `experiments/chapter-32-review-2026-11-01.md` と `experiments/silverscript-vm-review-2026-11-02.md`。
+
+
+</details>

@@ -1,9 +1,8 @@
 # Chapter 03 — Cryptographic Foundations（暗号技術の基礎）
 
-> **Mastering Kaspa** / Part I — Foundations（基礎編）  
-> 基礎概説・SHA-256教材を確認：2026-10-31。対象は[本書の基準版](../baseline.md)を参照。
->
-> 本章の位置づけ：Kaspaのブロック、トランザクション、ウォレット、PoWを支える暗号技術の基本を理解する。
+<p class="chapter-part">Part I — Foundations（基礎編）</p>
+
+> **位置づけ：** Kaspaのブロック、トランザクション、ウォレット、PoWを支える暗号技術の基本を理解する。
 
 ## 1. はじめに
 
@@ -26,15 +25,15 @@
 
 本章を読み終えると、次の内容を説明できるようになる。
 
-1. 暗号学的ハッシュ関数に必要な性質
-2. ハッシュ、エンコード、暗号化の違い
-3. 秘密鍵・公開鍵・アドレスの役割
-4. デジタル署名の作成と検証
-5. UTXOと署名検証の関係
-6. ハッシュとPoWの関係
-7. Merkle Treeとコミットメントの考え方
-8. 暗号技術が保証すること・保証しないこと
-9. Rustで安全にハッシュを扱う際の基本姿勢
+- 暗号学的ハッシュ関数に必要な性質
+- ハッシュ、エンコード、暗号化の違い
+- 秘密鍵・公開鍵・アドレスの役割
+- デジタル署名の作成と検証
+- UTXOと署名検証の関係
+- ハッシュとPoWの関係
+- Merkle Treeとコミットメントの考え方
+- 暗号技術が保証すること・保証しないこと
+- Rustで安全にハッシュを扱う際の基本姿勢
 
 ---
 
@@ -447,11 +446,14 @@ same? false
 
 これは各32バイトのダイジェストを64文字の16進数として表示したものである。
 
-> **注意**：これはSHA-256の学習用コードであり、KaspaのブロックハッシュやトランザクションIDを計算する実装ではない。2026-10-31に本文から抽出したコードのビルド・実行・テストを確認した。
+> **注意：** これはSHA-256の学習用コードであり、KaspaのブロックハッシュやトランザクションIDを計算する実装ではない。2026-10-31に本文から抽出したコードのビルド・実行・テストを確認した。
 
 ### 12.3 テストを追加する
 
 `src/main.rs`の末尾に追加する。
+
+<details class="code-details">
+<summary>ハッシュ計算の単体テストを見る</summary>
 
 ```rust
 #[cfg(test)]
@@ -484,6 +486,8 @@ mod tests {
 }
 ```
 
+</details>
+
 ```bash
 cargo +1.90.0 test --locked
 ```
@@ -492,11 +496,16 @@ cargo +1.90.0 test --locked
 
 ### 12.4 発展課題
 
+<details class="exercise-details">
+<summary>発展課題を見る</summary>
+
 1. 入力の1文字だけを変更し、出力の違いを比較する。
 2. バイナリデータをハッシュする。
 3. 同じ入力を複数回処理し、決定性を確認する。
 4. ハッシュ関数を置き換えた場合、出力長とAPIがどう変わるか調べる。
 5. `rusty-kaspa`でハッシュ関連の型・実装・テストを探し、用途ごとの違いを整理する。
+
+</details>
 
 ---
 
@@ -528,55 +537,78 @@ grep -n -E 'calculate_pow|check_pow|pow <=' consensus/pow/src/lib.rs
 
 ## 14. よくある誤解
 
-### 誤解1：ハッシュ値から元のデータを復号できる
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+<a id="誤解1ハッシュ値から元のデータを復号できる"></a>
+
+**1. ハッシュ値から元のデータを復号できる**
 
 ハッシュは暗号化ではない。暗号学的ハッシュ関数の出力から元の入力を一般的に復元することは困難である。
 
-### 誤解2：異なる入力は必ず異なるハッシュ値になる
+<a id="誤解2異なる入力は必ず異なるハッシュ値になる"></a>
+
+**2. 異なる入力は必ず異なるハッシュ値になる**
 
 同じハッシュ関数・設定では、同じ入力から同じハッシュ値が得られるので、**ハッシュ値が異なれば入力も異なる**。一方、入力が異なってもハッシュ値が同じになる衝突は理論上存在する。
 
-### 誤解3：署名が正しければ送金は必ず成立する
+<a id="誤解3署名が正しければ送金は必ず成立する"></a>
+
+**3. 署名が正しければ送金は必ず成立する**
 
 署名以外にも、UTXOの存在、二重支払い、手数料、コンセンサスルールなどの検証が必要である。
 
-### 誤解4：公開鍵とアドレスは常に同一である
+<a id="誤解4公開鍵とアドレスは常に同一である"></a>
+
+**4. 公開鍵とアドレスは常に同一である**
 
 アドレスはネットワークや使用条件を表すためのエンコード形式であり、公開鍵そのものとは限らない。
 
-### 誤解5：PoWのハッシュ関数を知ればコンセンサスを理解できる
+<a id="誤解5powのハッシュ関数を知ればコンセンサスを理解できる"></a>
+
+**5. PoWのハッシュ関数を知ればコンセンサスを理解できる**
 
 PoWはブロック生成の条件に関わるが、Kaspaの順序付けにはBlockDAGとGHOSTDAGの理解が必要である。
 
-### 誤解6：独自の暗号実装でもテストが通れば安全である
+<a id="誤解6独自の暗号実装でもテストが通れば安全である"></a>
+
+**6. 独自の暗号実装でもテストが通れば安全である**
 
 暗号実装では、サイドチャネル、nonce管理、鍵漏えい、仕様の誤解など、通常の機能テストだけでは検出できない問題がある。原則として、十分に検証されたライブラリを利用する。
+
+</details>
 
 ---
 
 ## 15. 理解度チェック
 
-**Q1. 暗号学的ハッシュ関数の衝突計算困難性とは何か。**  
-A. 同じハッシュ値を持つ異なる2つの入力を見つけることが計算上困難であるという性質。
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
-**Q2. ハッシュと暗号化の違いは何か。**  
-A. 暗号化は適切な鍵による復号を前提とするが、ハッシュは一般に元の入力への逆変換を目的としない。
+1. 暗号学的ハッシュ関数の衝突計算困難性とは何か。
+2. ハッシュと暗号化の違いは何か。
+3. 秘密鍵を公開せずに送金の承認を検証できるのはなぜか。
+4. 正しい署名を持つトランザクションが拒否される例を挙げよ。
+5. Merkle Proofだけでブロックの正当性を証明できるか。
+6. KaspaのPoWとGHOSTDAGは同じ役割か。
 
-**Q3. 秘密鍵を公開せずに送金の承認を検証できるのはなぜか。**  
-A. 秘密鍵で生成した署名を、対応する公開鍵で検証できるため。
+**解答例**
 
-**Q4. 正しい署名を持つトランザクションが拒否される例を挙げよ。**  
-A. 既に使用されたUTXOを参照している場合など。
+1. 同じハッシュ値を持つ異なる2つの入力を見つけることが計算上困難であるという性質。
+2. 暗号化は適切な鍵による復号を前提とするが、ハッシュは一般に元の入力への逆変換を目的としない。
+3. 秘密鍵で生成した署名を、対応する公開鍵で検証できるため。
+4. 既に使用されたUTXOを参照している場合など。
+5. できない。指定ルートへの包含関係を検証できても、そのルートが正しいコンセンサス状態に属するかは別問題である。
+6. 異なる。PoWはブロック生成に計算作業を要求し、GHOSTDAGはBlockDAG内のブロック分類・順序付けに関わる。
 
-**Q5. Merkle Proofだけでブロックの正当性を証明できるか。**  
-A. できない。指定ルートへの包含関係を検証できても、そのルートが正しいコンセンサス状態に属するかは別問題である。
-
-**Q6. KaspaのPoWとGHOSTDAGは同じ役割か。**  
-A. 異なる。PoWはブロック生成に計算作業を要求し、GHOSTDAGはBlockDAG内のブロック分類・順序付けに関わる。
+</details>
 
 ---
 
 ## 16. まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 本章では、Kaspaを理解するための暗号技術の基礎を学んだ。
 
@@ -591,18 +623,39 @@ A. 異なる。PoWはブロック生成に計算作業を要求し、GHOSTDAGは
 
 **ハッシュはデータを識別し、署名は承認を検証し、コンセンサスはネットワークが共有する履歴と状態を決定する。**
 
+</details>
+
 [次章](chapter-04.md)では、これらの暗号技術が実際に動作する環境として、分散システムとP2Pネットワークを学ぶ。
 
 ---
 
 ## 参考資料
 
-1. [Kaspa公式ドキュメント](https://docs.kaspa.org/)
-2. [rusty-kaspa（公式Rust実装）](https://github.com/kaspanet/rusty-kaspa)
-3. [Kaspa Improvement Proposals（KIPs）](https://github.com/kaspanet/kips)
-4. [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
-5. [RFC 7693 — The BLAKE2 Cryptographic Hash and Message Authentication Code (MAC)](https://www.rfc-editor.org/rfc/rfc7693)
-6. [FIPS 180-4 — Secure Hash Standard](https://csrc.nist.gov/pubs/fips/180-4/upd1/final)
-7. [BIP 340 — Schnorr Signatures for secp256k1](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki)（Schnorr署名の参考資料。Kaspaの署名仕様そのものを定義するものではない）
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Kaspa公式ドキュメント](https://docs.kaspa.org/)
+- [rusty-kaspa（公式Rust実装）](https://github.com/kaspanet/rusty-kaspa)
+- [Kaspa Improvement Proposals（KIPs）](https://github.com/kaspanet/kips)
+- [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
+- [RFC 7693 — The BLAKE2 Cryptographic Hash and Message Authentication Code (MAC)](https://www.rfc-editor.org/rfc/rfc7693)
+- [FIPS 180-4 — Secure Hash Standard](https://csrc.nist.gov/pubs/fips/180-4/upd1/final)
+- [BIP 340 — Schnorr Signatures for secp256k1](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki)（Schnorr署名の参考資料。Kaspaの署名仕様そのものを定義するものではない）
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 04 — Distributed Systems & P2P（分散システムとP2Pネットワーク）](chapter-04.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-03)
 
 > **確認範囲（2026-10-31）：** 基礎概説と基準版のハッシュ・PoW・アドレス型の該当箇所を照合し、SHA-256教材の実行と2テストを確認した。教材はKaspaのハッシュ・署名実装ではなく、暗号方式の安全性証明や鍵管理の監査は対象外。記録はリポジトリの `experiments/chapter-03-review-2026-10-31.md` を参照。
+
+
+</details>

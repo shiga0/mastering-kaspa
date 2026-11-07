@@ -1,24 +1,23 @@
 # Chapter 26 — Consensus Implementation in Rust（Rustによるコンセンサス実装）
 
-> **目次順の本文レビュー:** 2026-11-01。主要経路・保存境界・教材の確認。全コンセンサスの検証ではない。\
-> **対象:** 『Mastering Kaspa』Part IV — Kaspa Development & Implementation  
-> **前提:** 第7章（BlockDAG）、第12章（GHOSTDAG）、第14章（Virtual State）、第25章（コードベース調査）
+<p class="chapter-part">Part IV — Kaspa Development &amp; Implementation（Kaspaの開発と実装）</p>
 
+> **前提知識：** 第7章（BlockDAG）、第12章（GHOSTDAG）、第14章（Virtual State）、第25章（コードベース調査）
 
-> 主要なGHOSTDAG経路を[本書の基準版](../baseline.md)v1.0.1で再照合した。小規模DAGの24ケースで公式実装との実行時差分を比較した。今回、本文全体を目次順で確認し、ヘッダー保存とVirtual更新の境界を補足した。過去の公式差分比較を今回再実行した意味ではない。記録は `experiments/chapter-26-review-2026-11-01.md`。
+<a id="261-この章の目的"></a>
 
-## 26.1 この章の目的
+## 26.1 この章で学ぶこと
 
 KaspaのコンセンサスをRustで理解するには、アルゴリズムだけでなく、**データの表現・検証順序・永続化・状態更新・並行処理**を一体として捉える必要がある。本章では、実装を読むための責務分解を示し、固定した公式実装で親選択からメタデータ算出までを追う。自作モデルの実装は第27章で扱う。
 
 本章を終えたら、次の問いに答えられることを目指す。
 
-1. BlockDAGを保持する処理とGHOSTDAGの順序付けは何が違うか。
-2. ブロックの構造的な妥当性とトランザクションの受理をなぜ分離するのか。
-3. Virtual Stateの再計算とストレージ更新にどんな不変条件が必要か。
-4. `rusty-kaspa`のどこから読み始め、どのように実装の根拠を残すか。
+- BlockDAGを保持する処理とGHOSTDAGの順序付けは何が違うか。
+- ブロックの構造的な妥当性とトランザクションの受理をなぜ分離するのか。
+- Virtual Stateの再計算とストレージ更新にどんな不変条件が必要か。
+- `rusty-kaspa`のどこから読み始め、どのように実装の根拠を残すか。
 
-> **対象範囲:** 26.7と26.10の固定ソースへの参照は主要経路の読み取り記録である。その他の型・図は責務を説明する概念モデルであり、公式実装との一対一の対応やノード全体の検証を意味しない。
+> **対象範囲：** 26.7と26.10の固定ソースへの参照は主要経路の読み取り記録である。その他の型・図は責務を説明する概念モデルであり、公式実装との一対一の対応やノード全体の検証を意味しない。
 
 ## 26.2 コンセンサスの責務を分ける
 
@@ -379,6 +378,9 @@ grep -n -E 'commit_virtual_state|pick_virtual_parents' consensus/src/pipeline/vi
 
 ## 26.15 実践課題
 
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
+
 ### 課題A：DAGの問い合わせを実装する
 
 第12章の `examples/dag-relations/` にある `Dag` を題材に、次のメソッドを確認・追加する。
@@ -403,23 +405,37 @@ grep -n -E 'commit_virtual_state|pick_virtual_parents' consensus/src/pipeline/vi
 4. 代表的なエラー
 5. 対応するテスト
 
-**合格条件:** 読者が同じコミットをcheckoutし、同じ場所を確認できること。
+**完了条件：** 読者が同じコミットをcheckoutし、同じ場所を確認できること。
+
+</details>
 
 ## 26.16 よくある誤解
 
-**Q. Rustで書けばコンセンサスのバグはなくなる？**  
-A. ならない。Rustはメモリ安全性やデータ競合の防止に役立つが、合意規則の論理的な誤りは別問題だ。
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
 
-**Q. トポロジカルソートができればGHOSTDAGを実装したことになる？**  
-A. ならない。GHOSTDAGにはSelected parent、blue/red分類、blue workなどの規則がある。
+**1. Rustで書けばコンセンサスのバグはなくなる？**
 
-**Q. ブロックが有効なら中の全トランザクションも受理される？**\
-A. 必ずしもそうではない。ブロックの妥当性と、コンセンサス順序に基づくトランザクションの受理は分けて考える必要がある。
+ならない。Rustはメモリ安全性やデータ競合の防止に役立つが、合意規則の論理的な誤りは別問題だ。
 
-**Q. テストが全部通ればメインネット互換？**  
-A. ならない。網羅性、仕様との一致、敵対的条件、参照実装との比較などが必要だ。
+**2. トポロジカルソートができればGHOSTDAGを実装したことになる？**
+
+ならない。GHOSTDAGにはSelected parent、blue/red分類、blue workなどの規則がある。
+
+**3. ブロックが有効なら中の全トランザクションも受理される？**
+
+必ずしもそうではない。ブロックの妥当性と、コンセンサス順序に基づくトランザクションの受理は分けて考える必要がある。
+
+**4. テストが全部通ればメインネット互換？**
+
+ならない。網羅性、仕様との一致、敵対的条件、参照実装との比較などが必要だ。
+
+</details>
 
 ## 26.17 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. DAGストレージとGHOSTDAG計算の責務をそれぞれ説明せよ。
 2. 「親ブロック未到着」と「無効なPoW」を同じエラーにすべきでない理由は何か。
@@ -430,15 +446,36 @@ A. ならない。網羅性、仕様との一致、敵対的条件、参照実�
 7. `rusty-kaspa`の実装調査でコミットハッシュを記録する理由は何か。
 8. 第27章の教育用モデルに不足しているKaspa固有の要素を五つ挙げよ。
 
+**解答例**
+
+1. DAGストレージはブロック・親子関係等を保存・提供し、GHOSTDAG計算はその関係と合意規則から分類・スコア等を求める。保存しただけで合意状態への適用が完了するわけではない。
+2. 不足親は取得・再投入で解消し得るが、無効PoWは規則違反だから。原因を混ぜると再試行・隔離・ピア評価を誤る。
+3. redの取引を一律に捨てたり、blue内の不正・競合取引を無条件に適用したりする誤りにつながる。取引は合意順序とUTXO等の検証で判断する。
+4. 一例として入力を消費した後で出力追加に失敗すると資金が消えた状態になるため。検証と変更を分け、対象状態の整合性を保つ単位で更新する。
+5. 一例は、競合UTXOを二重消費しないこと、新しい合意文脈に整合するUTXO・メタデータへ戻ること、同じ変更を再適用して二重計上しないことである。
+6. 所有権はメモリの寿命や不正な共有・借用等の問題を防ぐ助けになるが、誤った署名規則、金額計算、合意順序、業務ポリシー等の論理誤りまでは証明しない。
+7. 規則・型・呼び出し経路とテストが変更され得るため。同じ版で追跡・再現できる根拠を残す。
+8. 一例は正式なPoW・ハッシュ、署名とScript検証、GHOSTDAG、Virtual State、難易度調整である。複数親を持つ教材のDAGだけでKaspa互換にはならない。
+
+</details>
+
 ## 26.18 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Kaspaのコンセンサス実装を理解するには、**BlockDAG・GHOSTDAG・順序付け・UTXO評価・Virtual State・永続化**を分離し、それぞれの入力、出力、不変条件を明確にする必要がある。
 
 Rustはこうした境界を型で表現しやすい一方、正しいコンセンサス規則そのものを保証するわけではない。学習用の小さな実装で基本を理解した後は、参照実装のリビジョンを固定し、関数・テスト・仕様を突き合わせて検証する。
 
+</details>
+
 [次章](chapter-27.md)では、この考え方を踏まえて、**最小Kaspa型ノード**を組み立てる。
 
 ## 26.19 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 - [Kaspa公式リポジトリ：rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
 - [Kaspa公式ドキュメント](https://docs.kaspa.org/)
@@ -447,4 +484,20 @@ Rustはこうした境界を型で表現しやすい一方、正しいコンセ�
 - [Rust公式ドキュメント](https://doc.rust-lang.org/book/)
 - [Cargo Book](https://doc.rust-lang.org/cargo/)
 
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 27 — Building a Minimal Kaspa-like Node in Rust（Rustによる最小Kaspa型ノードの構築）](chapter-27.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-26)
+
 > **確認範囲:** 固定版のGHOSTDAG主要経路、ヘッダー保存とVirtual更新、既存DAG教材と型断片を確認した。全規則・全キャッシュ・公式Reachability・永続化の障害注入・原論文の証明を検証した結果ではない。今回の記録は `experiments/chapter-26-review-2026-11-01.md`。
+
+
+</details>

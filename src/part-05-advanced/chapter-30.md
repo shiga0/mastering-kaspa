@@ -1,20 +1,23 @@
 # Chapter 30 — Kaspa Improvement Proposals（Kaspa改善提案・KIP）
 
-> **目次順の本文レビュー：2026-11-01。固定KIP文書・主要出典と規則選択教材を確認。全実装/本番有効化の照合ではない。**
+<p class="chapter-part">Part V — Advanced Kaspa（Kaspaの高度な技術）</p>
+
 > 本章のKIP文書はコミット `e4ae2332117b5cb68bd6188e065ef885b6d17939`（2026-07-15）を2026-11-01に取得して確認した。ノードの基準版v1.0.1のSHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` とは別の参照軸である。KIPの状態、実装、ネットワークへの有効化状況は変化する。必ず参照時点の一次資料・リリース・実ノードで再確認する。
 
-確認記録は `experiments/chapter-30-review-2026-11-01.md`。文書上のStatusと、対応実装・リリース・ネットワーク有効化の証拠を分ける。
+文書上のStatusと、対応実装・リリース・ネットワーク有効化の証拠は別に確認する。
 
-## 30.1 本章の目的
+<a id="301-本章の目的"></a>
+
+## 30.1 この章で学ぶこと
 
 Kaspa Improvement Proposal（**KIP**）は、Kaspaのプロトコル、ネットワーク更新、ノードやAPIなどに関する技術提案を文書化する仕組みである。KIPを読むことは、機能を暗記することではない。**なぜ変更が必要で、どの不変条件が変わり、どのソフトウェアに影響するのか**を追跡する作業だ。
 
 本章を終えたら、次を説明できることを目指す。
 
-1. 提案・仕様・実装・有効化を区別する。
-2. コンセンサス変更とAPI変更の互換性リスクを評価する。
-3. KIPからRustのコード、テスト、ネットワークでの挙動まで追跡する。
-4. 小さなKIP相当の提案書と検証計画を作る。
+- 提案・仕様・実装・有効化を区別する。
+- コンセンサス変更とAPI変更の互換性リスクを評価する。
+- KIPからRustのコード、テスト、ネットワークでの挙動まで追跡する。
+- 小さなKIP相当の提案書と検証計画を作る。
 
 ## 30.2 KIPが必要な理由
 
@@ -105,7 +108,7 @@ KIPは変更対象によって検証方法が異なる。
 
 論点は、事前の遅延想定に基づく `k` を用いるGHOSTDAGに対して、DAGKnightがネットワークの実際の状況に応じた確認ポリシーを目指すこと。KIP本文は研究、効率的実装、ウォレット向け確認ポリシーAPIなどを課題に挙げている。
 
-**重要：KIPが存在することはDAGKnightがメインネットに導入済みである証拠ではない。**
+> **重要：** **KIPが存在することはDAGKnightがメインネットに導入済みである証拠ではない。**
 
 基準版GHOSTDAGのkはネットワーク更新で切り替わり得るため、「全リリースで一定の値」とも解釈しない。KIP-2はウォレット側の確認条件に加え、difficulty・発行・Pruning等のためのグローバル遅延上限への適応も研究課題に挙げる。parameterlessを全用途で遅延仮定不要という意味にはしない。
 
@@ -343,6 +346,9 @@ Operational
 
 次のコードは**アップグレード時の規則選択を学ぶための教育用モデル**であり、Kaspaの有効化規則を再現するものではない。
 
+<details class="code-details">
+<summary>規則の有効化境界モデルの実装とテストを見る</summary>
+
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RuleSet {
@@ -407,6 +413,8 @@ mod tests {
 }
 ```
 
+</details>
+
 本書の外で `cargo new --lib --edition 2021 activation-boundary-lab` を作り、src/lib.rsへ配置する。Rust/Cargo 1.90.0、外部依存なしで4テスト・書式・Clippyを確認した。
 
 context_scoreは教材独自の文脈値であり、単純なブロック高でも実ノードの現在値でもない。Never/Alwaysのenum表現を含め、公式ForkActivationの内部表現・番兵値・全ネットワークの設定を再現したコードではない。文脈を取り直して過去の規則を選べることと、実ノードの移行・データ互換性の検証を分ける。
@@ -435,6 +443,9 @@ context_scoreは教材独自の文脈値であり、単純なブロック高で�
 - 再編成の前後で観測されるRPCイベント。
 
 ## 30.23 KIPを提案するための最小テンプレート
+
+<details class="code-details">
+<summary>KIP提案の学習用テンプレートを見る</summary>
 
 ```markdown
 # Proposal: <短いタイトル>
@@ -467,9 +478,14 @@ Consensus / P2P / RPC / Storageへの影響
 未決定事項
 ```
 
+</details>
+
 これは**学習用テンプレート**。正式な提出時は公式リポジトリの既存KIPと投稿ルールに合わせる。
 
 ## 30.24 実践演習A：KIP-9の影響を整理する
+
+<details class="exercise-details">
+<summary>演習を見る</summary>
 
 1. KIP-9を読み、問題設定を100〜200字でまとめる。
 2. 「計算コスト」と「長期ストレージコスト」を分けて図示する。
@@ -479,7 +495,12 @@ Consensus / P2P / RPC / Storageへの影響
 
 **成果物：** KIP-9の調査ノート。調査中のメモは本書リポジトリの外へ保存する。公開可能な内容に整理し、出典・コミット・確認範囲を添えた記録を本書へ収録する場合の配置例は `experiments/kip-reviews/kip-0009.md` とする。
 
+</details>
+
 ## 30.25 実践演習B：KIP-2とKIP-14を比較する
+
+<details class="exercise-details">
+<summary>演習を見る</summary>
 
 比較する軸は、**変更対象、研究段階、実装状況、ネットワークへの影響、検証方法**。
 
@@ -492,7 +513,12 @@ Consensus / P2P / RPC / Storageへの影響
 
 ここでの表は**学習用の入口**であり、最新の導入状況を確定するものではない。
 
+</details>
+
 ## 30.26 実践演習C：架空のKIPを設計する
+
+<details class="exercise-details">
+<summary>演習を見る</summary>
 
 課題：**RPCでトランザクション検証失敗の理由を、より構造化して返す**改善案を考える。
 
@@ -507,24 +533,39 @@ Consensus / P2P / RPC / Storageへの影響
 
 重要なのは、最初から大きなコンセンサス変更を提案することではなく、**変更範囲を限定し、検証可能な改善を記述すること**。
 
+</details>
+
 ## 30.27 よくある誤解
 
-**誤解1：KIP番号があるなら採用済み。**  
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+**1. KIP番号があるなら採用済み。**
+
 番号付きの未マージPRもある。公式一覧・PR・実装を区別する。
 
-**誤解2：`Active`ならメインネットで有効。**  
+**2. `Active`ならメインネットで有効。**
+
 文書の状態とネットワークの状態は別に確認する。
 
-**誤解3：Rustに実装されていれば安全。**  
+**3. Rustに実装されていれば安全。**
+
 実装の存在と正しさは別。仕様適合テストと運用検証が必要。
 
-**誤解4：新機能はすべてコンセンサス変更。**  
+**4. 新機能はすべてコンセンサス変更。**
+
 RPC・ウォレット規約・ノード内部改善など、合意規則を変えない変更もある。
 
-**誤解5：ハードフォークは単一機能の切り替え。**  
+**5. ハードフォークは単一機能の切り替え。**
+
 実際には複数コンポーネントと外部サービスへの影響を調整する必要がある。
 
+</details>
+
 ## 30.28 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. KIPとGitHub PRは何が違うか。
 2. 提案・実装・有効化を分ける理由は何か。
@@ -537,7 +578,25 @@ RPC・ウォレット規約・ノード内部改善など、合意規則を変�
 9. 30.14節の観測時点でOpenだったKIP-22のPRを技術書でどう扱うべきか。
 10. 一つのKIPを実装まで追うとき、どんな証拠を残すべきか。
 
+**解答例**
+
+1. KIPは変更の目的・仕様・互換性・有効化等を議論する提案文書、PRはコードや文書の具体的な差分を取り込む単位である。両者は関連するが同一ではない。
+2. 提案があってもコードがない、コードがあっても対象ネットワークで未有効という場合があるため。読者が利用可能性を誤解しないよう区別する。
+3. コンセンサス規則はブロック・取引の合意上の受理、Mempoolポリシーはローカルな候補受付・中継・保持等を定める。
+4. 本章のKIP-1はフルノードをRustで再構築し、保守性・拡張性・性能の改善を目指す。構造や性能基盤の変更も含み、言語名の置換ではない。
+5. 本章の固定資料では移行提案として扱われ、文書の存在だけでは実装・リリース・Mainnet有効化を証明できないから。確認時点と根拠を明記する。
+6. KIP-9は永続的なUTXO等のストレージ負担を考慮するmass、KIP-13はPruningまでの本体保持等も含む一時的なデータ量の制約を扱う。同じ尺度・上限だと決めつけない。
+7. 本章のKIP-15は受理取引の順序とそのコミットメントを扱い、外部の利用者が何の順序を検証できるかを明確にするため。ブロック順や任意のL2状態証明と混同しない。
+8. 型・単位・シリアライズ、欠落時や旧クライアントとの互換性、NetworkId・同期状態、境界値・エラー・通知等への影響を、変更対象に応じて検査する。
+9. 「30.14節の観測時点ではOpenだった」と時点・PR参照を付け、提案内容と実装・有効化を分けて説明する。現在もOpenか、採用済みかを未確認のまま更新しない。
+10. 固定したKIP版・状態、関連PR・コミット、実装パス、対象ネットワーク・有効化条件、テストと実行の有無・結果、確認日を対応づけて残す。
+
+</details>
+
 ## 30.29 本章のまとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 KIPを読む目的は、Kaspaの新機能を列挙することではない。**問題から仕様へ、仕様から実装へ、実装からネットワーク上の検証へ**と、変更の根拠を追跡することにある。
 
@@ -547,26 +606,45 @@ KIPを読む目的は、Kaspaの新機能を列挙することではない。**�
 - APIやアプリケーションの改善も、責務境界と互換性が重要である。
 - 良い提案には、問題・仕様・トレードオフ・検証計画がある。
 
+</details>
+
 [次章](chapter-31.md)では、これらの改善提案と関係する **Covenants & Advanced Scripting** を学ぶ。
 
 ## 30.30 参考資料
 
-1. [Kaspa Improvement Proposals — 固定版一覧](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/README.md)
-2. [KIP Pull Requests](https://github.com/kaspanet/kips/pulls)
-3. [KIP-1: Rust Rewrite](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0001.md)
-4. [KIP-2: DAGKnight](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0002.md)
-5. [KIP-4: Sparse Difficulty Windows](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0004.md)
-6. [KIP-9: Extended Mass](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0009.md)
-7. [KIP-10: Script Opcodes](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0010.md)
-8. [KIP-13: Transient Storage](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0013.md)
-9. [KIP-14: Crescendo](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0014.md)
-10. [KIP-15: Canonical Transaction Ordering and SelectedParent Accepted Transactions Commitment](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0015.md)
-11. [KIP-16: New Transaction Opcodes for Verifiable Computation](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0016.md)
-12. [KIP-17: Covenants](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0017.md)
-13. [KIP-20: Covenant IDs](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0020.md)
-14. [KIP-21: Partitioned Sequencing Commitment with O(activity) Proving](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0021.md)
-15. [rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
----
+- [Kaspa Improvement Proposals — 固定版一覧](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/README.md)
+- [KIP Pull Requests](https://github.com/kaspanet/kips/pulls)
+- [KIP-1: Rust Rewrite](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0001.md)
+- [KIP-2: DAGKnight](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0002.md)
+- [KIP-4: Sparse Difficulty Windows](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0004.md)
+- [KIP-9: Extended Mass](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0009.md)
+- [KIP-10: Script Opcodes](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0010.md)
+- [KIP-13: Transient Storage](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0013.md)
+- [KIP-14: Crescendo](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0014.md)
+- [KIP-15: Canonical Transaction Ordering and SelectedParent Accepted Transactions Commitment](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0015.md)
+- [KIP-16: New Transaction Opcodes for Verifiable Computation](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0016.md)
+- [KIP-17: Covenants](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0017.md)
+- [KIP-20: Covenant IDs](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0020.md)
+- [KIP-21: Partitioned Sequencing Commitment with O(activity) Proving](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0021.md)
+- [rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 31 — Covenants & Advanced Scripting（Covenantsと高度なスクリプティング）](chapter-31.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-30)
 
 **確認範囲：** 固定KIPの主要説明・Title/Status、PRの区別、基準版の規則選択と独自教材を確認した。全KIPの仕様・暗号/証明・実装PR・全ネットワークでの有効化を照合した結果ではない。記録は `experiments/chapter-30-review-2026-11-01.md`。
+
+
+</details>

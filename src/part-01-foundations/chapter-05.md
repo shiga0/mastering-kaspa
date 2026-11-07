@@ -1,9 +1,8 @@
 # Chapter 05 — Bitcoin Architecture（Bitcoinのアーキテクチャ）
 
-> **Mastering Kaspa** / Part I — Foundations（基礎編）  
-> 基礎概説・UTXO教材を確認：2026-10-31。Kaspa側は[本書の基準版](../baseline.md)を参照。
->
-> 本章の位置づけ：KaspaのBlockDAGを学ぶ前に、Bitcoinの構成要素と、それぞれがどのように連携して分散台帳を維持するかを理解する。
+<p class="chapter-part">Part I — Foundations（基礎編）</p>
+
+> **位置づけ：** KaspaのBlockDAGを学ぶ前に、Bitcoinの構成要素と、それぞれがどのように連携して分散台帳を維持するかを理解する。
 
 ## 1. はじめに
 
@@ -17,15 +16,15 @@ KaspaはBitcoinと同様にProof of Work（PoW）とUTXOモデルを採用する
 
 本章を読み終えると、次のことを説明できるようになる。
 
-1. Bitcoinのノード、ウォレット、マイナーの役割の違い
-2. トランザクションが生成され、伝播し、ブロックに含まれるまでの流れ
-3. UTXOモデルと署名・スクリプトによる支出条件
-4. Mempoolとブロックチェーンの役割の違い
-5. ブロックヘッダー、Merkle root、PoWの関係
-6. フォークと累積チェーンワークによるチェーン選択
-7. Bitcoinの主要なセキュリティ上の不変条件
-8. BitcoinとKaspaで共通する構造と異なる構造
-9. 小さなUTXO検証器をRustで実装する考え方
+- Bitcoinのノード、ウォレット、マイナーの役割の違い
+- トランザクションが生成され、伝播し、ブロックに含まれるまでの流れ
+- UTXOモデルと署名・スクリプトによる支出条件
+- Mempoolとブロックチェーンの役割の違い
+- ブロックヘッダー、Merkle root、PoWの関係
+- フォークと累積チェーンワークによるチェーン選択
+- Bitcoinの主要なセキュリティ上の不変条件
+- BitcoinとKaspaで共通する構造と異なる構造
+- 小さなUTXO検証器をRustで実装する考え方
 
 ---
 
@@ -360,11 +359,14 @@ Bitcoin CoreはBitcoinの代表的なフルノード実装であり、主にC++�
 
 Bitcoinの構造を理解するために、UTXOの消費と生成だけを再現する教育用モデルを作る。
 
-**注意：以下はBitcoin互換の実装ではない。署名、スクリプト、Coinbase、手数料ポリシー、ブロック検証などを省略している。**
+> **注意：** **以下はBitcoin互換の実装ではない。署名、スクリプト、Coinbase、手数料ポリシー、ブロック検証などを省略している。**
 
 ### 13.1 最小モデル
 
 以下は関数と型の定義で、`main`関数は含まない。Cargoでは`src/lib.rs`へ配置して`cargo check`で確認できる。PlaygroundではEditionを2021にし、「Test」でコンパイルを確認できる。ただし、このコードにテスト関数はないため実行件数は0になる。送金結果を表示するには、別途呼び出し用の`main`関数が必要になる。
+
+<details class="code-details">
+<summary>UTXO最小モデルの実装を見る</summary>
 
 ```rust
 use std::collections::{HashMap, HashSet};
@@ -457,6 +459,8 @@ fn apply_transaction(
 }
 ```
 
+</details>
+
 このモデルでは`txid`を便宜上の数値とし、呼び出し側が新しいトランザクションへ一意に割り当てる前提を置く。過去に完全消費されたtxidの再利用を検出する履歴管理や、実際のハッシュ計算は実装していない。Bitcoinの金額上限・支出不能出力の扱い・署名等の規則も省略しており、**本番の台帳処理に流用してはならない**。
 
 ### 13.2 テストで状態変化を確かめる
@@ -490,12 +494,17 @@ python3 scripts/check-utxo-example.py
 
 ### 13.3 発展課題
 
+<details class="exercise-details">
+<summary>発展課題を見る</summary>
+
 1. 所有者を表す公開鍵情報を出力に追加する
 2. 署名検証を抽象化した`ScriptVerifier`を導入する
 3. ブロック内の複数トランザクションを順序どおり適用する
 4. ブロック適用を巻き戻すUndoデータを設計する
 5. Mempoolの競合トランザクションを別の状態として扱う
 6. 最後に、一本のチェーンをBlockDAGへ置き換えると何が変わるかを考える
+
+</details>
 
 ---
 
@@ -526,22 +535,35 @@ Kaspaは、並行ブロックをDAGとして保持・参照し、コンセンサ
 
 ## 15. よくある誤解
 
-**誤解1：ウォレットがコインを保管している。**  
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+**1. ウォレットがコインを保管している。**
+
 ウォレットが主に管理するのは鍵や支払い情報である。価値の状態は、台帳上のUTXOとして表現される。
 
-**誤解2：マイナーが正しい履歴を自由に決められる。**  
+**2. マイナーが正しい履歴を自由に決められる。**
+
 マイナーはブロックを提案するが、フルノードはコンセンサス規則に従って独立に検証する。
 
-**誤解3：Mempoolに入ったら送金は確定する。**  
+**3. Mempoolに入ったら送金は確定する。**
+
 Mempoolへの受理は未承認トランザクションとしてのローカルな取り扱いであり、ブロックへの取り込みとは異なる。
 
-**誤解4：最長チェーンとはブロック数が最多のチェーンである。**  
+**4. 最長チェーンとはブロック数が最多のチェーンである。**
+
 Bitcoinの選択基準は累積チェーンワークである。
 
-**誤解5：署名さえ正しければ支払いは有効である。**  
+**5. 署名さえ正しければ支払いは有効である。**
+
 UTXOの存在、支出条件、金額、ブロック規則など複数の条件を満たす必要がある。
 
+</details>
+
 ## 16. 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. ウォレット、フルノード、マイナーはそれぞれ何を担当するか。
 2. UTXOを識別するOutpointは、何の組み合わせか。
@@ -550,8 +572,7 @@ UTXOの存在、支出条件、金額、ブロック規則など複数の条件�
 5. Merkle rootとPoWターゲットは、それぞれ何を保証・検証するために使われるか。
 6. Bitcoinの構造のうち、Kaspaへ引き継がれるものと再設計されるものを挙げよ。
 
-<details>
-<summary>解答例を見る</summary>
+**解答例**
 
 1. ウォレットは鍵・支払いを管理し、フルノードは規則を検証し、マイナーはブロック候補を生成してPoWを計算する。
 2. トランザクションIDと出力インデックス。
@@ -564,6 +585,9 @@ UTXOの存在、支出条件、金額、ブロック規則など複数の条件�
 
 ## 17. まとめ
 
+<details class="summary-details">
+<summary>まとめを見る</summary>
+
 Bitcoinのアーキテクチャは、署名、UTXO、スクリプト、Mempool、P2P、PoW、ブロック検証、チェーン選択といった構成要素の連携によって成り立つ。
 
 重要なのは、各要素の責務を分けることである。ウォレットはトランザクションを作り、フルノードは検証し、マイナーはブロックを提案する。UTXO集合は台帳の現在状態を表し、ブロックチェーンはその状態へ至る履歴を記録する。
@@ -572,20 +596,39 @@ Kaspaを学ぶ際にも、この役割分担は土台となる。ただし、Kas
 
 > **本章の核心：Bitcoinの構成要素を理解することは、Kaspaで「変わらない部分」と「根本から変わる部分」を見分けるための準備である。**
 
-**次章：[Chapter 06 — Blockchain Limitations（ブロックチェーンの限界）](chapter-06.md)**
+</details>
+
 
 ---
 
 ## 参考資料
 
-1. Satoshi Nakamoto, _Bitcoin: A Peer-to-Peer Electronic Cash System_ — <https://bitcoin.org/bitcoin.pdf>
-2. Bitcoin Core 公式リポジトリ — <https://github.com/bitcoin/bitcoin>
-3. Bitcoin Developer Reference — <https://developer.bitcoin.org/reference/>
-4. Bitcoin Developer Guide — <https://developer.bitcoin.org/devguide/>
-5. Andreas M. Antonopoulos, David A. Harding, _Mastering Bitcoin_ — <https://github.com/bitcoinbook/bitcoinbook>
-6. Kaspa 公式ドキュメント — <https://docs.kaspa.org/>
-7. rusty-kaspa — <https://github.com/kaspanet/rusty-kaspa>
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Satoshi Nakamoto, _Bitcoin: A Peer-to-Peer Electronic Cash System_](https://bitcoin.org/bitcoin.pdf)
+- [Bitcoin Core 公式リポジトリ](https://github.com/bitcoin/bitcoin)
+- [Bitcoin Developer Reference](https://developer.bitcoin.org/reference/)
+- [Bitcoin Developer Guide](https://developer.bitcoin.org/devguide/)
+- [Andreas M. Antonopoulos, David A. Harding, _Mastering Bitcoin_](https://github.com/bitcoinbook/bitcoinbook)
+- [Kaspa 公式ドキュメント](https://docs.kaspa.org/)
+- [rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 06 — Blockchain Limitations（ブロックチェーンの限界）](chapter-06.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-05)
 
 ### 確認範囲（2026-10-31）
 
 Bitcoin Core v28.0の該当ソースと一次資料で、入出力検査・PoW/chainwork・Coinbase・Merkleの説明を照合した。UTXO教材はRust 1.90.0で実行確認した。Bitcoin Coreのビルド・ノード実行・全規則の監査を行った記録ではない。詳細はリポジトリの `experiments/chapter-05-review-2026-10-31.md` を参照する。
+
+</details>

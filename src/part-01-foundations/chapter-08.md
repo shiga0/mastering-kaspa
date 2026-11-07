@@ -1,8 +1,7 @@
 # Chapter 08 — From Blockchain to Kaspa（ブロックチェーンからKaspaへ）
 
-> **Mastering Kaspa — Part I: Foundations（基礎編）**  
-> 基礎概説・後続章への対応を確認：2026-10-31。対象は[本書の基準版](../baseline.md)を参照。
->
+<p class="chapter-part">Part I — Foundations（基礎編）</p>
+
 > この章はPart Iの総まとめであり、Part II「Kaspa Consensus & Architecture」への橋渡しとなる。
 
 ## 1. はじめに
@@ -17,18 +16,20 @@ Kaspaは、Proof of Work（PoW）を維持しながら、ブロック同士の�
 
 本章では、これまで学んだ要素を一つのアーキテクチャとして接続する。
 
-## 2. 学習目標
+<a id="2-学習目標"></a>
+
+## 2. この章で学ぶこと
 
 この章を読み終えると、次を説明できるようになる。
 
-1. Bitcoinのチェーン構造とKaspaのBlockDAG構造の違い
-2. ネットワーク遅延がブロック生成と競合に与える影響
-3. 複数の親ブロックを参照する意義
-4. BlockDAGとGHOSTDAGの責務の違い
-5. DAGの順序付けとUTXOの状態遷移の関係
-6. Kaspaノードの主要コンポーネントと依存関係
-7. ブロック生成頻度、スループット、確定性の違い
-8. 実装・研究・運用を調べるときの検証手順
+- Bitcoinのチェーン構造とKaspaのBlockDAG構造の違い
+- ネットワーク遅延がブロック生成と競合に与える影響
+- 複数の親ブロックを参照する意義
+- BlockDAGとGHOSTDAGの責務の違い
+- DAGの順序付けとUTXOの状態遷移の関係
+- Kaspaノードの主要コンポーネントと依存関係
+- ブロック生成頻度、スループット、確定性の違い
+- 実装・研究・運用を調べるときの検証手順
 
 ## 3. Bitcoinから出発する
 
@@ -397,47 +398,68 @@ Kaspaの技術を学ぶ際は、次の三つを分けて扱う。
 
 ## 13. よくある誤解
 
-### 誤解1：BlockDAGを使えば二重支払いがなくなる
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+<a id="誤解1blockdagを使えば二重支払いがなくなる"></a>
+
+**1. BlockDAGを使えば二重支払いがなくなる**
 
 BlockDAGはブロックの関係を記録する構造であり、トランザクションの競合をそれ自体で解決するわけではない。コンセンサス順序とUTXO検証が必要である。
 
-### 誤解2：GHOSTDAGはブロックを単純に時刻順へ並べる
+<a id="誤解2ghostdagはブロックを単純に時刻順へ並べる"></a>
+
+**2. GHOSTDAGはブロックを単純に時刻順へ並べる**
 
 GHOSTDAGは、DAGの参照関係とプロトコルの規則を用いる。ローカル時計による単純な時刻順ではない。
 
-### 誤解3：blueは有効、redは無効
+<a id="誤解3blueは有効redは無効"></a>
+
+**3. blueは有効、redは無効**
 
 blueとredはGHOSTDAGにおける分類である。ブロックの構造的・暗号学的な有効性とは区別する。
 
-### 誤解4：ブロックが速く生成されれば、トランザクションは必ず即時確定する
+<a id="誤解4ブロックが速く生成されればトランザクションは必ず即時確定する"></a>
+
+**4. ブロックが速く生成されれば、トランザクションは必ず即時確定する**
 
 ブロック生成頻度、トランザクション受理、確定性、安全性は異なる概念である。
 
-### 誤解5：KaspaはBitcoinの全要素を置き換えた
+<a id="誤解5kaspaはbitcoinの全要素を置き換えた"></a>
+
+**5. KaspaはBitcoinの全要素を置き換えた**
 
 KaspaはPoW、UTXO、署名、P2P通信など、Bitcoinと共通する基礎を持つ。大きく変わるのは、並行ブロックを扱う台帳構造とコンセンサス設計である。
 
+</details>
+
 ## 14. 理解度チェック
 
-**Q1. Bitcoin型チェーンでブロック生成頻度を極端に高めると、どのような問題が増えやすいか。**  
-A. ネットワーク伝播が完了する前に競合ブロックが生成される機会が増える。
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
-**Q2. BlockDAGとGHOSTDAGは何が違うか。**  
-A. BlockDAGはブロック間の参照関係を表すデータ構造であり、GHOSTDAGはその上でブロックを分類・順序付けするコンセンサスアルゴリズムである。
+1. Bitcoin型チェーンでブロック生成頻度を極端に高めると、どのような問題が増えやすいか。
+2. BlockDAGとGHOSTDAGは何が違うか。
+3. 並行する2ブロックが同じUTXOを使うトランザクションを含んでいた場合、両方のトランザクションが有効になるか。
+4. Block RateとFinalityは同じ意味か。
+5. 論文に記載された機能が現在のMainnetで利用できると断言できるか。
+6. 第12章を読む前に理解しておきたいBlockDAGの用語は何か。
 
-**Q3. 並行する2ブロックが同じUTXOを使うトランザクションを含んでいた場合、両方のトランザクションが有効になるか。**\
-A. ならない。コンセンサス順序とトランザクション検証によって二重支払いを防ぐ必要がある。
+**解答例**
 
-**Q4. Block RateとFinalityは同じ意味か。**  
-A. 異なる。Block Rateはブロック生成頻度、Finalityは履歴の不可逆性に関する安全性の概念である。
+1. ネットワーク伝播が完了する前に競合ブロックが生成される機会が増える。
+2. BlockDAGはブロック間の参照関係を表すデータ構造であり、GHOSTDAGはその上でブロックを分類・順序付けするコンセンサスアルゴリズムである。
+3. ならない。コンセンサス順序とトランザクション検証によって二重支払いを防ぐ必要がある。
+4. 異なる。Block Rateはブロック生成頻度、Finalityは履歴の不可逆性に関する安全性の概念である。
+5. できない。KIPの状態、実装、ネットワークでの有効化状況を別々に確認する必要がある。
+6. 親、祖先、子孫、Past、Future、Anticone、Selected Parentなど。
 
-**Q5. 論文に記載された機能が現在のMainnetで利用できると断言できるか。**  
-A. できない。KIPの状態、実装、ネットワークでの有効化状況を別々に確認する必要がある。
-
-**Q6. 第12章を読む前に理解しておきたいBlockDAGの用語は何か。**  
-A. 親、祖先、子孫、Past、Future、Anticone、Selected Parentなど。
+</details>
 
 ## 15. Part Iの総まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Part Iでは、次の順番でKaspaの基礎を学んだ。
 
@@ -458,9 +480,10 @@ Kaspaを理解するための中心的な問いは、次の一文に集約でき
 
 その答えを具体的に理解するために、Part IIではノード構造、P2P、ブロック検証、GHOSTDAG、難易度調整、Virtual Stateを順番に学ぶ。
 
+</details>
+
 ## 16. 次章への橋渡し
 
-**次章：[Chapter 09 — Kaspa Architecture（Kaspaのアーキテクチャ）](../part-02-consensus/chapter-09.md)**
 
 次章からは、概念だけでなく、実際のKaspaノードがどのような責務を持ち、どのコンポーネントがどの情報を管理するのかを調べる。
 
@@ -472,13 +495,30 @@ Kaspaを理解するための中心的な問いは、次の一文に集約でき
 
 ## 参考資料
 
-1. [Kaspa公式サイト](https://kaspa.org/)
-2. [Kaspa公式ドキュメント](https://docs.kaspa.org/)
-3. [rusty-kaspa（GitHub）](https://github.com/kaspanet/rusty-kaspa)
-4. [Kaspa Improvement Proposals（KIPs）](https://github.com/kaspanet/kips)
-5. [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104)
-6. [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
----
+- [Kaspa公式サイト](https://kaspa.org/)
+- [Kaspa公式ドキュメント](https://docs.kaspa.org/)
+- [rusty-kaspa（GitHub）](https://github.com/kaspanet/rusty-kaspa)
+- [Kaspa Improvement Proposals（KIPs）](https://github.com/kaspanet/kips)
+- [PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104)
+- [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 09 — Kaspa Architecture（Kaspaのアーキテクチャ）](../part-02-consensus/chapter-09.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-08)
 
 **確認範囲（2026-10-31）：** 概説・図・用語・基準版の処理経路を確認した。第6章の教材と既存の検証記録を参照し、本章独自のノード実験や安全性証明の検証は行っていない。詳細はリポジトリの `experiments/chapter-08-review-2026-10-31.md` を参照。
+
+
+</details>

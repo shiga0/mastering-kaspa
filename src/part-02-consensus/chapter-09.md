@@ -1,7 +1,7 @@
 # Chapter 09 — Kaspa Architecture（Kaspaのアーキテクチャ）
 
-> **Part II — Kaspa Consensus & Architecture**  
-> 構造・基準版との対応を確認：2026-10-31。参照版は[本書の基準版](../baseline.md)のv1.0.1、コミット `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。
+<p class="chapter-part">Part II — Kaspa Consensus &amp; Architecture（コンセンサスとアーキテクチャ）</p>
+
 > 本章は責務と処理経路の入口を扱う。全規則・全モジュールの検証ではない。
 
 ## 9.1 この章で学ぶこと
@@ -10,11 +10,11 @@
 
 学習目標は次のとおり。
 
-1. Kaspaのネットワーク・コンセンサス・状態管理・外部APIを区別できる。
-2. 「ブロックをDAGに格納すること」と「トランザクションを有効な状態に反映すること」の違いを説明できる。
-3. GHOSTDAG、選択された親、仮想ブロック、仮想状態の関係を理解する。
-4. `rusty-kaspa` のディレクトリから主要な責務を追跡できる。
-5. ノードの正常性を同期・P2P・DAG・UTXO・Mempoolに分けて診断できる。
+- Kaspaのネットワーク・コンセンサス・状態管理・外部APIを区別できる。
+- 「ブロックをDAGに格納すること」と「トランザクションを有効な状態に反映すること」の違いを説明できる。
+- GHOSTDAG、選択された親、仮想ブロック、仮想状態の関係を理解する。
+- `rusty-kaspa` のディレクトリから主要な責務を追跡できる。
+- ノードの正常性を同期・P2P・DAG・UTXO・Mempoolに分けて診断できる。
 
 本章は**全体設計**を扱う。GHOSTDAGの具体的な計算は第12章、仮想状態と順序付けは第14章、Rust実装の精読は第25〜27章で掘り下げる。
 
@@ -468,22 +468,35 @@ feature activation: <対象ネットワークの有効化状態>
 
 ## 9.20 よくある誤解
 
-**Q. DAGに入ったブロックはすべて同じ扱いで有効？**  
-A. いいえ。ブロックの存在、ヘッダーの妥当性、GHOSTDAG上の分類、トランザクションの状態への反映は別の問題である。
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
 
-**Q. GHOSTDAGがトランザクションを署名検証する？**  
-A. GHOSTDAGは主にDAGのコンセンサス上の選択・分類・順序に関係する。署名やUTXOの検証には別の処理が必要である。
+**1. DAGに入ったブロックはすべて同じ扱いで有効？**
 
-**Q. Virtual Blockは実際にマイニングされる？**  
-A. いいえ。現在のDAGを評価するための概念的なブロックである。
+いいえ。ブロックの存在、ヘッダーの妥当性、GHOSTDAG上の分類、トランザクションの状態への反映は別の問題である。
 
-**Q. RPCが成功したら送金完了？**  
-A. いいえ。提出成功、Mempool受理、ブロックへの包含、状態への反映は区別する。
+**2. GHOSTDAGがトランザクションを署名検証する？**
 
-**Q. NodeのDBを読めばウォレット履歴を簡単に作れる？**  
-A. 内部DB形式は実装依存であり、ウォレット向け履歴検索には別のインデックスが必要になることがある。公開APIやIndexerの利用を検討する。
+GHOSTDAGは主にDAGのコンセンサス上の選択・分類・順序に関係する。署名やUTXOの検証には別の処理が必要である。
+
+**3. Virtual Blockは実際にマイニングされる？**
+
+いいえ。現在のDAGを評価するための概念的なブロックである。
+
+**4. RPCが成功したら送金完了？**
+
+いいえ。提出成功、Mempool受理、ブロックへの包含、状態への反映は区別する。
+
+**5. NodeのDBを読めばウォレット履歴を簡単に作れる？**
+
+内部DB形式は実装依存であり、ウォレット向け履歴検索には別のインデックスが必要になることがある。公開APIやIndexerの利用を検討する。
+
+</details>
 
 ## 9.21 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. KaspaのPoW、BlockDAG、GHOSTDAGはそれぞれ何を担うか。
 2. DAGに登録されたブロックと、Virtual UTXOに反映されたトランザクションはなぜ区別されるのか。
@@ -494,13 +507,29 @@ A. 内部DB形式は実装依存であり、ウォレット向け履歴検索に
 7. なぜ`git commit`を固定しない実装解説は再現性が低いのか。
 8. 第7章のRust教材に親ブロックの遅延到着を追加する場合、どの状態を導入し、取得・再投入をどの責務に分けるか。
 
+**解答例**
+
+1. PoWは計算作業を要求し、BlockDAGはブロックの参照関係を保持し、GHOSTDAGはそのDAGに対する分類と順序付けを担う。
+2. DAGへの登録はブロックの存在・関係の記録であり、その中の取引がUTXO検証を経て現在状態へ反映されたこととは別だから。
+3. 複数tipを持つ現在のDAGを一つの評価文脈へまとめ、次のブロックを待たずに親選択や現在状態を計算するため。
+4. Mempoolポリシーは各ノードの候補受付・保持方針、コンセンサス規則はブロックや取引を合意状態でどう検証・受理するかの共通規則である。
+5. 接続先NetworkId・同期状態を確認し、RPC応答、UTXO indexやIndexerの追従、購読・再照会、ウォレットのアドレス導出と表示処理を順に切り分ける。
+6. 対象コミットを固定し、RPCの要求型・サービス実装・コンセンサス参照APIをたどる。応答への変換、参照する状態、呼び出し元とテストを記録する。
+7. 同じパスでも後の改訂で型・規則・呼び出し経路が変わり、他の読者が同じ実装を再調査できなくなるから。
+8. 一例として、不足親を持つブロックをPendingへ置き、P2P・同期側が親を取得する。依存関係が揃ってから検証へ再投入し、無効入力や待機上限とは別に管理する。
+
 ### 確認の観点
 
 - 「データ構造」「コンセンサス規則」「アプリケーションAPI」を分離できているか。
 - 「検証」「保存」「順序」「状態更新」を同じ動詞で済ませていないか。
 - 入力の信頼境界と、変更時の影響範囲を説明できているか。
 
+</details>
+
 ## 9.22 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Kaspaの全体像は、次のように整理できる。
 
@@ -520,20 +549,41 @@ P2Pでブロックと取引を受け取る
 
 実装はこれほど直線的ではないが、**どの層が何に責任を持つか**を理解するための出発点になる。
 
+</details>
+
 [第10章](chapter-10.md)では、P2Pネットワークとノード間同期に焦点を当て、ネットワークから届くデータをどう扱うかを詳しく見る。
 
 ---
 
 ## 参考資料
 
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
 基準版を確認した出典と、更新される背景資料を分けて読む。実装の説明は本章冒頭の固定SHAを基準とする。
 
-1. [Kaspa公式 `rusty-kaspa` リポジトリ](https://github.com/kaspanet/rusty-kaspa) — Rustフルノード、ディレクトリ構成、ビルド、RPC、シミュレータ。
-2. [`rusty-kaspa` Releases](https://github.com/kaspanet/rusty-kaspa/releases) — プロトコルや実装の変更履歴。
-3. [Kaspa Improvement Proposals（KIPs）](https://github.com/kaspanet/kips) — 提案の状態、設計背景、プロトコル仕様。
-4. [Kaspa RPC Protocol Definition](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/grpc/core/proto/rpc.proto) — ノードAPIのメッセージ定義。
-5. [基準版の取引検証](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/transaction_validator/tx_validation_in_utxo_context.rs) — コンセンサス規則とMempoolの手数料率検査の区別。
-6. [Kaspa公式ドキュメント](https://docs.kaspa.org/) — ノード・開発・プロトコル資料。
-7. [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf) — Bitcoinとの設計比較の原点。
+- [Kaspa公式 `rusty-kaspa` リポジトリ](https://github.com/kaspanet/rusty-kaspa) — Rustフルノード、ディレクトリ構成、ビルド、RPC、シミュレータ。
+- [`rusty-kaspa` Releases](https://github.com/kaspanet/rusty-kaspa/releases) — プロトコルや実装の変更履歴。
+- [Kaspa Improvement Proposals（KIPs）](https://github.com/kaspanet/kips) — 提案の状態、設計背景、プロトコル仕様。
+- [Kaspa RPC Protocol Definition](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/rpc/grpc/core/proto/rpc.proto) — ノードAPIのメッセージ定義。
+- [基準版の取引検証](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/src/processes/transaction_validator/tx_validation_in_utxo_context.rs) — コンセンサス規則とMempoolの手数料率検査の区別。
+- [Kaspa公式ドキュメント](https://docs.kaspa.org/) — ノード・開発・プロトコル資料。
+- [Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf) — Bitcoinとの設計比較の原点。
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 10 — Kaspa Node & P2P Network（KaspaノードとP2Pネットワーク）](chapter-10.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-09)
 
 > **確認範囲（2026-10-31）**：基準版の起動・Mempool・RPC・主要検証経路の入口と説明を照合し、DAG教材3テストを確認した。ノード全体の実行試験、現行Mainnetの仕様、Pruning後IBD、全規則の監査は対象外。記録はリポジトリの `experiments/chapter-09-review-2026-10-31.md` を参照。
+
+
+</details>

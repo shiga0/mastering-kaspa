@@ -1,10 +1,9 @@
 # Appendix E — プロトコルパラメータ一覧
 
 > **Mastering Kaspa / 付録E**  
-> 目次順の本文レビュー：2026-11-01。基準版の主要定義/利用箇所と単位教材を確認。\
 > 確認基準：rusty-kaspa v1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。ソース定義の照合であり、現行Mainnetの実測ではない。
 
-対象版は[本書の対象バージョン](../baseline.md)、この回の結果は `experiments/appendix-e-review-2026-11-01.md` を参照。旧稿の別版master由来のフィールド/値を基準版へ整理した。
+対象版は[本書の対象バージョン](../baseline.md)を参照してください。
 
 ## E.1 この付録の目的
 
@@ -346,6 +345,9 @@ rg 'deflationary_phase_daa_score|base_subsidy' consensus/
 
 以下はKaspaのコードではなく、**単位変換の教育用プログラム**。
 
+<details class="code-details">
+<summary>単位変換モデルの実装とテストを見る</summary>
+
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BlockRate {
@@ -394,6 +396,8 @@ mod tests {
     }
 }
 ```
+
+</details>
 
 本書の外の作業ディレクトリで、Rust 1.90.0を用意して次の手順で実行する。
 
@@ -512,25 +516,39 @@ Application
 
 ## E.26 よくある誤解
 
-**Q. Kaspaは常に10ブロック/秒を出す？**  
-A. 10 BPSは目標値であり、短時間の実測値とは異なる。
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
 
-**Q. GHOSTDAGの `k` は親ブロック数の上限？**  
-A. 違う。`ghostdag_k` と `max_block_parents` は別フィールド。
+**1. Kaspaは常に10ブロック/秒を出す？**
 
-**Q. Pruningすると過去のトランザクションが無効になる？**\
-A. 違う。Pruningはデータ保持と検証の仕組みに関わる。トランザクションの有効性を消す操作ではない。
+10 BPSは目標値であり、短時間の実測値とは異なる。
 
-**Q. Finalityが12時間なら決済も12時間待つ？**  
-A. 同義ではない。プロトコル内部のFinalityと決済アプリケーションのリスク管理を分ける。
+**2. GHOSTDAGの `k` は親ブロック数の上限？**
 
-**Q. Testnetで動けばMainnetでも動く？**  
-A. 断定できない。ネットワーク・フォーク・Mass・利用可能機能を確認する。
+違う。`ghostdag_k` と `max_block_parents` は別フィールド。
 
-**Q. `master` の値が現行Mainnetの値？**  
-A. 必ずしもそうではない。実行中ノードのリリースとフォーク状態を確認する。
+**3. Pruningすると過去のトランザクションが無効になる？**
+
+違う。Pruningはデータ保持と検証の仕組みに関わる。トランザクションの有効性を消す操作ではない。
+
+**4. Finalityが12時間なら決済も12時間待つ？**
+
+同義ではない。プロトコル内部のFinalityと決済アプリケーションのリスク管理を分ける。
+
+**5. Testnetで動けばMainnetでも動く？**
+
+断定できない。ネットワーク・フォーク・Mass・利用可能機能を確認する。
+
+**6. `master` の値が現行Mainnetの値？**
+
+必ずしもそうではない。実行中ノードのリリースとフォーク状態を確認する。
+
+</details>
 
 ## E.27 演習
+
+<details class="exercise-details">
+<summary>演習を見る</summary>
 
 ### 演習1：値の出典を追う
 
@@ -559,6 +577,8 @@ Crescendo有効化前後のBPS履歴と報酬計算の関係をコードで確�
 
 `max_tx_outputs` が変更されたと仮定し、Wallet、Indexer、RPCクライアント、テストにどのような変更が必要か列挙する。
 
+</details>
+
 ## E.28 検証を広げる際のチェックリスト
 
 今回確認した主要定義/算術/教材と、全境界値・実ノードの実行は分ける。以下をすべて完了したという意味ではない。
@@ -577,6 +597,9 @@ Crescendo有効化前後のBPS履歴と報酬計算の関係をコードで確�
 - [ ] ノードのRPC出力と整合性を確認した。
 
 ## E.29 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Kaspaのプロトコルパラメータを扱ううえで重要なのは、**数字そのものより、その数字が適用される条件を理解すること**である。
 
@@ -601,7 +624,12 @@ Kaspaのプロトコルパラメータを扱ううえで重要なのは、**数�
 
 数値を見つけたら、**「どのネットワークの、どの実装の、いつ有効な、何を制限する値か」**を必ず問う。この習慣は、Kaspaへのコントリビュートだけでなく、ブロックチェーン以外の分散システム開発にも役立つ。
 
+</details>
+
 ## E.30 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 - [kaspanet/rusty-kaspa — Consensus Parameters](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/params.rs)
 - [kaspanet/rusty-kaspa — Consensus Constants](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/consensus/core/src/config/constants.rs)
@@ -611,6 +639,15 @@ Kaspaのプロトコルパラメータを扱ううえで重要なのは、**数�
 - [kaspanet/rusty-kaspa — Releases](https://github.com/kaspanet/rusty-kaspa/releases)
 - [Kaspa Wiki](https://wiki.kaspa.org/)
 
+</details>
+
 ---
 
 **次の付録：** [Appendix F — 論文・KIP・実装対応表](appendix-f.md)
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-appendix-e)
+
+</details>

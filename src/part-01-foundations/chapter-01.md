@@ -1,7 +1,8 @@
 # Chapter 01 — Introduction to Kaspa（Kaspa入門）
 
-> **Mastering Kaspa** / Part I — Foundations（基礎編）  
-> 入門概説・基準版との対応を確認：2026-10-31。対象は[本書の基準版](../baseline.md)を参照。
+<p class="chapter-part">Part I — Foundations（基礎編）</p>
+
+
 
 ## 1. はじめに
 
@@ -268,39 +269,56 @@ cat Cargo.toml
 
 ## 13. よくある誤解
 
-**誤解1：KaspaはBitcoinより単純に高速なだけ。**  
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+**1. KaspaはBitcoinより単純に高速なだけ。**
+
 ブロック生成頻度だけでなく、BlockDAGとGHOSTDAGを採用している点が本質的に異なる。
 
-**誤解2：BlockDAGならブロックの競合が発生しない。**  
+**2. BlockDAGならブロックの競合が発生しない。**
+
 並行ブロックは発生する。Kaspaはそれらを前提に設計されている。
 
-**誤解3：blue blockは正しく、red blockは不正である。**\
+**3. blue blockは正しく、red blockは不正である。**
+
 blueとredはGHOSTDAGによる分類であり、有効・無効と同義ではない。
 
-**誤解4：PoWなら必ず安全である。**  
+**4. PoWなら必ず安全である。**
+
 安全性はハッシュパワーの分布、ネットワーク条件、攻撃者の能力、コンセンサスルールなどに依存する。
 
-**誤解5：高頻度のブロック生成は即時の不可逆性を意味する。**  
+**5. 高頻度のブロック生成は即時の不可逆性を意味する。**
+
 ブロック生成頻度と、トランザクションの確定に対する安全性は別の問題である。
+
+</details>
 
 ## 14. 理解度チェック
 
-**Q1. KaspaとBitcoinの最も重要な構造上の違いは何か。**  
-A. BitcoinはBlockchain、KaspaはBlockDAGを採用する。
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
-**Q2. Kaspaで複数の親ブロックを参照できる理由は何か。**  
-A. 並行して生成されたブロックの関係をDAGとして扱うため。
+1. KaspaとBitcoinの最も重要な構造上の違いは何か。
+2. Kaspaで複数の親ブロックを参照できる理由は何か。
+3. GHOSTDAGの主な役割は何か。
+4. Kaspaが採用するコンセンサスの基盤は何か。
+5. BlockDAGを採用すると、すべてのセキュリティ問題が解決するか。
 
-**Q3. GHOSTDAGの主な役割は何か。**  
-A. BlockDAG内のブロックを分類し、コンセンサスに利用する順序を導くこと。
+**解答例**
 
-**Q4. Kaspaが採用するコンセンサスの基盤は何か。**  
-A. Proof of Work。
+1. BitcoinはBlockchain、KaspaはBlockDAGを採用する。
+2. 並行して生成されたブロックの関係をDAGとして扱うため。
+3. BlockDAG内のブロックを分類し、コンセンサスに利用する順序を導くこと。
+4. Proof of Work。
+5. 解決しない。順序付け、ネットワーク遅延、攻撃耐性などを引き続き考慮する必要がある。
 
-**Q5. BlockDAGを採用すると、すべてのセキュリティ問題が解決するか。**  
-A. 解決しない。順序付け、ネットワーク遅延、攻撃耐性などを引き続き考慮する必要がある。
+</details>
 
 ## 15. まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Kaspaは、Proof of Workを採用しながら、BlockDAGによって複数のブロックを並行して扱う暗号資産ネットワークである。
 
@@ -308,9 +326,14 @@ Kaspaは、Proof of Workを採用しながら、BlockDAGによって複数のブ
 
 本書では、技術を個別に暗記するのではなく、**データ構造・アルゴリズム・システムの依存関係を理解する**ことを重視する。
 
+</details>
+
 [次章](chapter-02.md)では、Kaspaの前提となるデジタルマネーの基礎を学ぶ。
 
 ## 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 - [Kaspa公式サイト](https://kaspa.org/)
 - [Kaspa公式ドキュメント](https://docs.kaspa.org/)
@@ -318,6 +341,20 @@ Kaspaは、Proof of Workを採用しながら、BlockDAGによって複数のブ
 - [PHANTOM and GHOSTDAG 論文](https://eprint.iacr.org/2018/104)
 - [Bitcoin Whitepaper](https://bitcoin.org/bitcoin.pdf)
 
----
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 02 — Foundations of Digital Money（デジタルマネーの基礎）](chapter-02.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-01)
 
 > **確認範囲（2026-10-31）：** 入門概説、図の読み方、基準版のGHOSTDAG・ワークスペースとの対応を確認した。論文の全証明、最新Mainnetの性能・有効化、取得手順の新規環境での実行は未検証。記録はリポジトリの `experiments/chapter-01-review-2026-10-31.md` を参照。
+
+
+</details>

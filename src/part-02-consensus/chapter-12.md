@@ -1,10 +1,8 @@
 # Chapter 12 — GHOSTDAG Internals（GHOSTDAGの内部構造）
 
-> **Part II — Kaspa Consensus & Architecture**  
-> 目次順の本文レビュー：2026-11-01。主要規則は基準版と照合済み。ページの通読と全経路の検証は区別する。
+<p class="chapter-part">Part II — Kaspa Consensus &amp; Architecture（コンセンサスとアーキテクチャ）</p>
 
 
-> 主要なGHOSTDAG経路を[本書の基準版](../baseline.md)v1.0.1で再照合した。小規模DAGの24ケースで公式実装との実行時差分を比較した。本文を目次順に確認し、説明と教材を修正した。全DAG・全規則を検証したものではない。
 
 ## 照合した実装
 
@@ -21,14 +19,14 @@
 
 本章の到達目標は次のとおり。
 
-1. BlockDAGの構造とGHOSTDAGのアルゴリズムを区別する。
-2. selected parent、blue/red、blue score、blue work、anticone、merge setを説明できる。
-3. パラメータ `k` が表す制約と、その設計上の意味を理解する。
-4. 選択された過去と並行ブロックを使って、決定的な順序を構成する考え方を説明できる。
-5. GHOSTDAGの結果とUTXOの受理・拒否が異なるレイヤーに属することを理解する。
-6. 小さなDAGを使ってPast・Anticone・k-cluster条件と、追加順による結果の不変性をRustで検証できる。
+- BlockDAGの構造とGHOSTDAGのアルゴリズムを区別する。
+- selected parent、blue/red、blue score、blue work、anticone、merge setを説明できる。
+- パラメータ `k` が表す制約と、その設計上の意味を理解する。
+- 選択された過去と並行ブロックを使って、決定的な順序を構成する考え方を説明できる。
+- GHOSTDAGの結果とUTXOの受理・拒否が異なるレイヤーに属することを理解する。
+- 小さなDAGを使ってPast・Anticone・k-cluster条件と、追加順による結果の不変性をRustで検証できる。
 
-> **対象範囲:** 本章はGHOSTDAGの概念・データ構造・主要な不変条件を説明する。後半のRustコードは**教育用のDAG解析器**であり、GHOSTDAGそのものの実装ではない。照合した規則とソースは冒頭に示し、残る未確認事項は章末にまとめる。
+> **対象範囲：** 本章はGHOSTDAGの概念・データ構造・主要な不変条件を説明する。後半のRustコードは**教育用のDAG解析器**であり、GHOSTDAGそのものの実装ではない。照合した規則とソースは冒頭に示し、残る未確認事項は章末にまとめる。
 
 ---
 
@@ -94,7 +92,7 @@ GHOSTDAGはPHANTOMの考え方に基づく**貪欲（greedy）な近似手法**�
 | PHANTOM | BlockDAG | `k`-clusterという集合の性質 |
 | GHOSTDAG | BlockDAG | 効率的な貪欲分類・順序構築 |
 
-> **注意:** 名前が似ていても、GHOSTとGHOSTDAGを同じアルゴリズムとして扱わない。DAGKnightも別の研究・設計として第29章で扱う。
+> **注意：** 名前が似ていても、GHOSTとGHOSTDAGを同じアルゴリズムとして扱わない。DAGKnightも別の研究・設計として第29章で扱う。
 
 ---
 
@@ -485,6 +483,9 @@ cd dag-relations
 
 <!-- example:dag-relations:start -->
 
+<details class="code-details">
+<summary>DAG解析器の実装とテストを見る</summary>
+
 ```rust
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -670,9 +671,11 @@ mod tests {
 }
 ```
 
+</details>
+
 <!-- example:dag-relations:end -->
 
-実行:
+**実行手順：**
 
 ```bash
 cargo test
@@ -745,6 +748,9 @@ grep -n -E 'cmp|blue_work' consensus/src/processes/ghostdag/ordering.rs
 
 ### 12.15.2 コードリーディングの記録テンプレート
 
+<details class="code-details">
+<summary>コードリーディングの記録テンプレートを見る</summary>
+
 ```markdown
 ## 調査対象
 - Repository: kaspanet/rusty-kaspa
@@ -772,6 +778,8 @@ grep -n -E 'cmp|blue_work' consensus/src/processes/ghostdag/ordering.rs
 - Fact:
 - Hypothesis:
 ```
+
+</details>
 
 **実装にない概念を、論文の記述だけから実装済みと断定しない。**
 
@@ -810,30 +818,45 @@ UTXOの適用やvirtualの更新経路は[第14章](chapter-14.md)で扱う。�
 
 ## 12.18 よくある誤解
 
-**Q1. BlockDAGならGHOSTDAGは不要？**  
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+**1. BlockDAGならGHOSTDAGは不要？**
+
 いいえ。DAGはブロック間の関係を表すデータ構造であり、どの順序を合意するかは別途決める必要がある。
 
-**Q2. blueブロックは「有効」、redブロックは「無効」？**\
+**2. blueブロックは「有効」、redブロックは「無効」？**
+
 いいえ。blue/redはGHOSTDAGによる分類であり、ブロックの形式・PoW・トランザクションの有効性とは異なる。
 
-**Q3. Selected parent以外の親は無視される？**  
+**3. Selected parent以外の親は無視される？**
+
 いいえ。selected parentは評価の基準だが、他の親が導入するブロックもmerge-setの処理などに関係する。
 
-**Q4. blue scoreが高ければ、必ずトランザクション数も多い？**\
+**4. blue scoreが高ければ、必ずトランザクション数も多い？**
+
 いいえ。blue scoreはトランザクション数ではない。
 
-**Q5. `k`を大きくすればセキュリティと性能が両方上がる？**  
+**5. `k`を大きくすればセキュリティと性能が両方上がる？**
+
 いいえ。安全性の前提とネットワーク条件を含む設計パラメータである。
 
-**Q6. GHOSTDAGが二重支払いを直接すべて解決する？**  
+**6. GHOSTDAGが二重支払いを直接すべて解決する？**
+
 GHOSTDAGは合意順序を導く重要な構成要素だが、UTXOの適用可能性の判定も必要になる。
 
-**Q7. 本章のRustコードはKaspaのGHOSTDAG実装？**  
+**7. 本章のRustコードはKaspaのGHOSTDAG実装？**
+
 いいえ。Past・Anticone・`k`-clusterという基礎概念の実験器である。
+
+</details>
 
 ---
 
 ## 12.19 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. BlockDAGとGHOSTDAGの役割の違いを説明せよ。
 2. `Past(B)`、`Future(B)`、`Anticone(B)`をそれぞれ定義せよ。
@@ -846,6 +869,19 @@ GHOSTDAGは合意順序を導く重要な構成要素だが、UTXOの適用可�
 9. 同じDAGを異なる順番で受信しても結果が変わらないことを、どうテストするか。
 10. 原論文と`rusty-kaspa`を対応づけるとき、コミットハッシュを記録する理由は何か。
 
+**解答例**
+
+1. BlockDAGはブロックの参照関係というデータ構造、GHOSTDAGはそれに対するコンセンサス上の分類・順序付けのアルゴリズムである。
+2. Past(B)はBの祖先、Future(B)はBの子孫、Anticone(B)はB自身を除き祖先でも子孫でもないブロックの集合である。
+3. Selected Parentは比較・継承の基準だが、他の親も並行ブロックやmergesetの情報を持ち、DAG全体の関係を評価するために必要だから。
+4. 分類はkに基づく並行性の扱いであり、支出条件やUTXO等の検証結果ではない。また評価文脈が変われば分類も変わり得る。
+5. 集合Cがk-clusterである条件は、すべてのB∈Cについて |Anticone(B)∩C|≤k となること。これは集合の条件であり、教材で条件を判定するだけではGHOSTDAG全体にならない。
+6. blue scoreはblue数に基づく指標、blue workは難易度に応じたPoWの累積指標である。個数と作業量は同じではない。
+7. 部分順序を満たす並べ方が複数あり、同順位の扱いが未定義ならノードごとに違う結果を選べるから。決定的な追加規則が必要になる。
+8. 合意順序を踏まえた取引・UTXO状態の検証と適用の層で判断する。ブロックのblue/red分類だけでは決めない。
+9. 同一DAG・初期状態・ネットワーク規則を固定し、依存関係を守る複数の投入順で最終結果を比較する。不足親の待機も試験するなら取得・再投入条件を明示する。これは試験案であり、全順序で検証済みという意味ではない。
+10. 参照したコードとテストを同じ版で再現し、論文のモデルとその実装の差を説明できるようにするため。
+
 ### 発展課題
 
 - 小規模DAGの全ての部分集合を列挙し、`k`-cluster条件を満たす集合を探す。**これはPHANTOM/GHOSTDAGの実装ではない**ことを明記する。
@@ -853,18 +889,25 @@ GHOSTDAGは合意順序を導く重要な構成要素だが、UTXOの適用可�
 - GHOSTDAGメタデータとVirtual Stateの依存関係をC4コンポーネント図で表す。
 - 遅延・分断・並行生成のシナリオを作り、合意結果の変化を記録する。
 
+</details>
+
 ---
 
 ## 12.20 まとめ
 
+<details class="summary-details">
+<summary>まとめを見る</summary>
+
 本章の核心は、**DAGを保持することと、DAGに合意可能な意味を与えることは別**だという点である。
 
-1. Kaspaは複数の親を持つBlockDAGを使用する。
-2. GHOSTDAGはselected parentを基準に、並行ブロックをblue/redとして評価する。
-3. `k`-clusterは並行性の制約を考える基礎概念である。
-4. blue scoreとblue workは異なる指標である。
-5. 決定的な順序が得られても、トランザクションの適用可能性は別に検証する。
-6. 実装を読む際は、DAG・Reachability・GHOSTDAG・Ordering・Virtual Stateの責務を分ける。
+- Kaspaは複数の親を持つBlockDAGを使用する。
+- GHOSTDAGはselected parentを基準に、並行ブロックをblue/redとして評価する。
+- `k`-clusterは並行性の制約を考える基礎概念である。
+- blue scoreとblue workは異なる指標である。
+- 決定的な順序が得られても、トランザクションの適用可能性は別に検証する。
+- 実装を読む際は、DAG・Reachability・GHOSTDAG・Ordering・Virtual Stateの責務を分ける。
+
+</details>
 
 次章では **[Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）](chapter-13.md)** に進み、PoW難易度がどのようにネットワークのブロック生成状況に適応するかを学ぶ。
 
@@ -872,17 +915,36 @@ GHOSTDAGは合意順序を導く重要な構成要素だが、UTXOの適用可�
 
 ## 参考資料
 
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
 ### 原論文・研究
 
-1. Yonatan Sompolinsky, Aviv Zohar, **[Secure High-Rate Transaction Processing in Bitcoin](https://eprint.iacr.org/2013/881)** — GHOSTの研究背景。
-2. Yonatan Sompolinsky, Yoad Lewenberg, Aviv Zohar, **[SPECTRE: A Fast and Scalable Cryptocurrency Protocol](https://eprint.iacr.org/2016/1159)** — BlockDAG系の関連研究。
-3. Yonatan Sompolinsky, Shai Wyborski, Aviv Zohar, **[PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104)** — PHANTOM/GHOSTDAGの原論文。
-4. Satoshi Nakamoto, **[Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)** — 比較対象となるNakamoto consensus。
+- Yonatan Sompolinsky, Aviv Zohar, **[Secure High-Rate Transaction Processing in Bitcoin](https://eprint.iacr.org/2013/881)** — GHOSTの研究背景。
+- Yonatan Sompolinsky, Yoad Lewenberg, Aviv Zohar, **[SPECTRE: A Fast and Scalable Cryptocurrency Protocol](https://eprint.iacr.org/2016/1159)** — BlockDAG系の関連研究。
+- Yonatan Sompolinsky, Shai Wyborski, Aviv Zohar, **[PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus](https://eprint.iacr.org/2018/104)** — PHANTOM/GHOSTDAGの原論文。
+- Satoshi Nakamoto, **[Bitcoin: A Peer-to-Peer Electronic Cash System](https://bitcoin.org/bitcoin.pdf)** — 比較対象となるNakamoto consensus。
 
 ### 実装・公式資料
 
-5. [Kaspa — rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) — Rustノード実装。
-6. [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — プロトコル変更・提案の調査。
-7. [Kaspa Wiki](https://wiki.kaspa.org/en/home) — 技術用語と関連資料の入口。
+- [Kaspa — rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) — Rustノード実装。
+- [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — プロトコル変更・提案の調査。
+- [Kaspa Wiki](https://wiki.kaspa.org/en/home) — 技術用語と関連資料の入口。
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）](chapter-13.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-12)
 
 > **未確認事項:** 原論文の証明との完全照合、今回の24ケース以外の分類結果、メインネットの稼働バージョン・パラメータ、Virtual Stateで使われる最終的な取引処理順序は継続レビューの対象とする。本章の候補列挙順を、そのまま取引の最終処理順と同一視しない。
+
+
+</details>

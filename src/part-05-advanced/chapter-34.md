@@ -1,21 +1,24 @@
 # Chapter 34 — vProgs & Programmability（vProgsとKaspaのプログラマビリティ）
 
-> **目次順の本文レビュー：2026-11-01。主要な公開設計・固定プロトタイプと独自Rust教材を確認。Full vProgsや本番動作の検証ではない。**
+<p class="chapter-part">Part V — Advanced Kaspa（Kaspaの高度な技術）</p>
+
 > 本章は研究構想・実装中の機能・メインネットで利用可能な機能を区別する。vProgsのAPIやプロトコルは変更され得る。
 
-公開vprogsは `f9b84a863a7c7c20586a9cf947550475e894f72e` へ固定した。本書の基準ノードv1.0.1、固定KIP、Silverscriptと同一時点の機能集合ではない。確認記録は `experiments/chapter-34-review-2026-11-01.md`。
+公開vprogsは `f9b84a863a7c7c20586a9cf947550475e894f72e` へ固定した。本書の基準ノードv1.0.1、固定KIP、Silverscriptと同一時点の機能集合ではない。
 
-## 34.1 本章の目的
+<a id="341-本章の目的"></a>
+
+## 34.1 この章で学ぶこと
 
 Kaspaのプログラマビリティを「EVMのような汎用VMがL1ですべてを実行する」という先入観から切り離し、**順序付け（sequencing）・実行（execution）・検証（verification）・状態保存（state storage）**を別々の責務として理解する。
 
 学習目標：
 
-1. Covenants、Based Apps、Inline ZK、Full vProgsの違いを説明できる。
-2. 「証明できる計算」と「誰でも状態を再現できること」の違いを説明できる。
-3. 複数アプリを横断する同期的・原子的な合成が難しい理由を説明できる。
-4. Rustで状態遷移と不変条件を実装し、テストできる。
-5. 研究仕様と実装・稼働状況を一次資料で追跡できる。
+- Covenants、Based Apps、Inline ZK、Full vProgsの違いを説明できる。
+- 「証明できる計算」と「誰でも状態を再現できること」の違いを説明できる。
+- 複数アプリを横断する同期的・原子的な合成が難しい理由を説明できる。
+- Rustで状態遷移と不変条件を実装し、テストできる。
+- 研究仕様と実装・稼働状況を一次資料で追跡できる。
 
 ## 34.2 2026-11-01に確認した公式案内の位置付け
 
@@ -269,7 +272,7 @@ Constraint:
 
 検証側もold_rootが現在受理している状態と一致すること、sequence_refが正しい履歴/順序に属すること、正しいプログラム/検証鍵であることを照合する。公開入力に名前を並べるだけでは、回路がその値を拘束したことにはならない。
 
-**注意**：これは証明システム設計の一般的な擬似仕様であり、Kaspa vProgsの正式な回路仕様ではない。
+> **注意：** これは証明システム設計の一般的な擬似仕様であり、Kaspa vProgsの正式な回路仕様ではない。
 
 ## 34.15 ステートマシンと原子性
 
@@ -411,22 +414,30 @@ Account App                 Order App
 
 ## 34.20 実践課題
 
-**課題A：ドメインモデル**  
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
+
+### 課題A：ドメインモデル
 2つのアプリが持つ状態、書き込み権限、不変条件を表にする。
 
-**課題B：Rust実装**  
+### 課題B：Rust実装
 34.13で再利用する第33章の `apply_transfer` を、複数操作のバッチへ拡張する。候補状態に順に適用し、途中で1件失敗した場合はバッチ全体を拒否する。先行操作が成功した後に失敗する例も用意し、公開する残高集合が全体として維持されることを確認する。これは単一プロセスのメモリ内モデルであり、複数アプリ・永続DB・外部作用の原子性を実装したものではない。
 
-**課題C：再編成**  
+### 課題C：再編成
 順序が `T1 → T2` から `T2 → T1` に変わった場合、どの状態を巻き戻し、何を再実行するかを設計する。
 
-**課題D：証明境界**  
+### 課題D：証明境界
 `StateTransition`, `Prover`, `Verifier`, `StateStore`, `Sequencer` のtraitを設計する。実装ではなく責務と依存関係を先に定義する。
 
-**課題E：一次資料調査**  
+### 課題E：一次資料調査
 `vprogs` のコミットハッシュを固定し、READMEの各レイヤーに対応するRustコードとテストを1つずつ特定する。
 
+</details>
+
 ## 34.21 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. BlockDAGとComputation DAGは何が違うか。
 2. 順序付けが共通でも、なぜ複数アプリの原子性は自動的に保証されないか。
@@ -436,7 +447,22 @@ Account App                 Order App
 6. 状態ルートを公開入力に含める理由は何か。
 7. `Rollback` が必要になる障害シナリオを3つ挙げられるか。
 
+**解答例**
+
+1. BlockDAGはブロックの参照関係、Computation DAGはアプリの操作・状態参照等の計算依存関係を表す。対象と辺の意味が異なる。
+2. 共通順序は実行・コミット・失敗時の扱いを自動的に揃えないため。複数アプリ間の依存・承認・状態遷移・原子的な成功/失敗を扱う規則が別途必要になる。
+3. 証明の検証は所定の計算関係の成立を確かめ、データ可用性は入力・状態復元等に必要な情報を取得できることを扱う。片方で他方を代替できない。
+4. UTXO支出・後継状態の制約で表す設計はCovenants、共有状態アプリの実行モデルが必要ならBased Appsを検討する。対象環境・ツールの対応と利用可能性を別途確認する。
+5. 本章が扱う研究・開発段階のFull vProgsを完成した基盤として前提にせず、API変更や未確定の安全性・運用条件を考慮する。利用可能な機能で成立する範囲と将来構想を分ける。
+6. 証明を特定の入力・出力状態へ結び付け、別の状態で作った証明の流用や、遷移の取り違えを防ぐため。ルート自体が正しい合意文脈のものかも検証する。
+7. 一例はL1の再編成で依存する順序が変わる場合、依存先アプリの遷移が失敗・無効と判明する場合、障害後に未完了の処理を整合する状態へ回復する場合である。Rollbackの可能範囲・確定境界は設計で明示する。
+
+</details>
+
 ## 34.22 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Kaspaのプログラマビリティは、L1のCovenantsやZK検証などの**既存の基盤**と、Based AppsやFull vProgsなどの**発展中の実行モデル**を分けて考えると理解しやすい。
 
@@ -444,7 +470,12 @@ vProgs研究の中心課題は、アプリの独立性を保ちながら、共�
 
 Rustで学ぶ際は、**決定的な状態遷移 → 不変条件のテスト → バッチ原子性 → 順序・巻き戻し → 証明境界**の順に実装すると、概念と実践を結び付けやすい。
 
+</details>
+
 ## 34.23 参考資料・一次資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 - [Kaspa公式：Programmability Overview](https://docs.kaspa.org/programmability)
 - [Kaspa公式：Build / 開発者向け案内](https://kaspa.org/build)
@@ -456,8 +487,24 @@ Rustで学ぶ際は、**決定的な状態遷移 → 不変条件のテスト �
 - [KIP-16：New Transaction Opcodes for Verifiable Computation](https://github.com/kaspanet/kips/blob/e4ae2332117b5cb68bd6188e065ef885b6d17939/kip-0016.md)
 - [Kaspa KIPs一覧](https://github.com/kaspanet/kips)
 
+</details>
+
 ---
 
 次は[第35章 — Kaspaアプリケーションの設計と部分実装](../part-06-contributing/chapter-35.md)。
 
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 35 — Designing and Partially Implementing a Kaspa Application（Kaspaアプリケーションの設計と部分実装）](../part-06-contributing/chapter-35.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-34)
+
 **確認範囲：** 公開案内/研究投稿・固定プロトタイプの主要箇所・独自状態遷移教材。全論文/証明、公式テスト全体、実アプリ間原子性・DA/退出・現行Mainnet動作は未検証。記録は `experiments/chapter-34-review-2026-11-01.md`。
+
+
+</details>

@@ -1,7 +1,7 @@
 # Chapter 13 — Difficulty Adjustment Algorithm（難易度調整アルゴリズム）
 
-> **Mastering Kaspa / Part II — Kaspa Consensus & Architecture**  
-> 目次順の本文レビュー：2026-11-01。基準版v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` の主要経路と照合。全規則・全経路の検証完了を意味しない。\
+<p class="chapter-part">Part II — Kaspa Consensus &amp; Architecture（コンセンサスとアーキテクチャ）</p>
+
 > 確率モデルとRust教材は原理を理解するための簡略化を含む。13.6の固定ソースに基づく計算説明とは区別する。現在のMainnetの仕様との一致は未確認。
 
 ## この章で学ぶこと
@@ -10,11 +10,11 @@
 
 読み終えたとき、次の問いに説明できるようになる。
 
-1. Target、Difficulty、Hashrateはどう関係するか。
-2. なぜ「直近のブロック間隔の平均」をそのまま信じるだけでは危険なのか。
-3. BlockDAGの並行ブロックをどう考慮する必要があるか。
-4. タイムスタンプ操作・ネットワーク遅延・ハッシュレート急変にどんなリスクがあるか。
-5. `rusty-kaspa` で実際のDAAルールをどこから追うべきか。
+- Target、Difficulty、Hashrateはどう関係するか。
+- なぜ「直近のブロック間隔の平均」をそのまま信じるだけでは危険なのか。
+- BlockDAGの並行ブロックをどう考慮する必要があるか。
+- タイムスタンプ操作・ネットワーク遅延・ハッシュレート急変にどんなリスクがあるか。
+- `rusty-kaspa` で実際のDAAルールをどこから追うべきか。
 
 ---
 
@@ -179,7 +179,7 @@ A ──────┤             ├── F
 | DAA Score | 難易度調整上の進行度を表すコンセンサス上の指標 | blue scoreと同義と決めつけない |
 | Block timestamp | ブロックヘッダーが持つ時刻情報 | 正確な実世界の生成時刻と同一ではない |
 
-> **重要**：これらの定義はプロトコルの詳細に依存する。本章では概念を整理し、実際のDAA windowの構築や例外条件を単純化している。
+> **重要：** これらの定義はプロトコルの詳細に依存する。本章では概念を整理し、実際のDAA windowの構築や例外条件を単純化している。
 
 ---
 
@@ -345,6 +345,9 @@ cargo new --bin --edition 2021 daa-lab
 cd daa-lab
 ```
 
+<details class="code-details">
+<summary>難易度調整モデルの実装とテストを見る</summary>
+
 ```rust
 const TARGET_INTERVAL_SECS: f64 = 10.0;
 
@@ -442,6 +445,8 @@ mod tests {
     }
 }
 ```
+
+</details>
 
 実行コマンド：
 
@@ -643,27 +648,41 @@ FurtherHeaderChecks → HeaderOnly → Body / Virtual processing
 
 ## 13.15 よくある誤解
 
-**Q1. 難易度が高いほどブロック生成が速い？**  
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+**1. 難易度が高いほどブロック生成が速い？**
+
 いいえ。同じハッシュレートなら、難易度が高いほど平均発見時間は長くなる。
 
-**Q2. ハッシュレートをノードが直接測定して難易度を決める？**  
+**2. ハッシュレートをノードが直接測定して難易度を決める？**
+
 通常はブロック履歴などから間接的に推定する。各マイナーの実際の試行回数を全ノードが直接観測できるわけではない。
 
-**Q3. KaspaはBlockDAGだから難易度調整が不要？**  
+**3. KaspaはBlockDAGだから難易度調整が不要？**
+
 いいえ。PoWの生成ペースを維持するために難易度調整は必要である。
 
-**Q4. blue scoreとDAA Scoreは同じ？**\
+**4. blue scoreとDAA Scoreは同じ？**
+
 同義として扱ってはいけない。どちらもコンセンサスに関わる指標だが、用途と計算規則を実装で区別する。
 
-**Q5. Targetを満たすハッシュならブロックは必ず有効？**  
+**5. Targetを満たすハッシュならブロックは必ず有効？**
+
 いいえ。難易度が正しいことに加え、親・ヘッダー・トランザクションなど、他のコンセンサス条件も満たす必要がある。
 
-**Q6. 簡易RustモデルをそのままKaspaノードに使える？**  
+**6. 簡易RustモデルをそのままKaspaノードに使える？**
+
 いいえ。教育用モデルであり、BlockDAG固有の履歴選択や整数計算などを省略している。
+
+</details>
 
 ---
 
 ## 13.16 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. Targetが半分になると、成功確率と期待発見時間はどう変化するか。ハッシュレート一定の条件で説明せよ。
 2. ブロック間隔が確率的にばらつくことは、DAA windowの設計にどう影響するか。
@@ -674,7 +693,9 @@ FurtherHeaderChecks → HeaderOnly → Body / Virtual processing
 7. DAAをP2P受信時刻に依存させると、どの不変条件を破る可能性があるか。
 8. `rusty-kaspa` のDAA実装を調べる際、最低限どの情報を固定して記録すべきか。
 
-### 解答の方向性
+<a id="解答の方向性"></a>
+
+**解答例**
 
 1. 成功確率は概ね半分、期待発見時間は概ね2倍。
 2. 単発のノイズを平均化する必要がある一方、窓が大きすぎると変化への追従が遅れる。
@@ -685,9 +706,14 @@ FurtherHeaderChecks → HeaderOnly → Body / Virtual processing
 7. 同じ履歴に対してノード間で同じ難易度を計算するという決定性。
 8. コミット／タグ、ネットワーク、DAA windowの規則、bitsの変換、境界条件、テスト。
 
+</details>
+
 ---
 
 ## 13.17 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 本章の中心は、**難易度調整を「採掘速度を自動制御する仕組み」として理解しつつ、コンセンサスの決定性を守る処理として捉えること**である。
 
@@ -698,21 +724,43 @@ FurtherHeaderChecks → HeaderOnly → Body / Virtual processing
 - DAAの計算は、すべての正しいノードで一致する**決定的なコンセンサス処理**でなければならない。
 - Rustの簡略モデルは直感の理解に役立つが、実際のKaspaの仕様を置き換えるものではない。
 
+</details>
+
 次章 **[Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）](chapter-14.md)** では、DAG上のブロックに決定的な順序を与え、UTXO状態を評価する仕組みを扱う。
 
 ---
 
 ## 13.18 参考資料・一次情報
 
-1. [Bitcoin: A Peer-to-Peer Electronic Cash System — Satoshi Nakamoto](https://bitcoin.org/bitcoin.pdf) — PoWと難易度調整の原点。
-2. [Bitcoin Developer Reference — Block Headers](https://developer.bitcoin.org/reference/block_chain.html#block-headers) — `nBits` とターゲットの理解。
-3. [Bitcoin Core — GitHub](https://github.com/bitcoin/bitcoin) — Bitcoinの実装・テスト。
-4. [Kaspa — rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) — Kaspaコンセンサス実装の一次資料。
-5. [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — コンセンサス変更の提案と議論。提案と採用済み仕様は区別する。
-6. [Kaspa Research Papers](https://kaspa.org/research/) — GHOSTDAGおよびBlockDAGに関する研究資料への入口。
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Bitcoin: A Peer-to-Peer Electronic Cash System — Satoshi Nakamoto](https://bitcoin.org/bitcoin.pdf) — PoWと難易度調整の原点。
+- [Bitcoin Developer Reference — Block Headers](https://developer.bitcoin.org/reference/block_chain.html#block-headers) — `nBits` とターゲットの理解。
+- [Bitcoin Core — GitHub](https://github.com/bitcoin/bitcoin) — Bitcoinの実装・テスト。
+- [Kaspa — rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) — Kaspaコンセンサス実装の一次資料。
+- [Kaspa Improvement Proposals](https://github.com/kaspanet/kips) — コンセンサス変更の提案と議論。提案と採用済み仕様は区別する。
+- [Kaspa Research Papers](https://kaspa.org/research/) — GHOSTDAGおよびBlockDAGに関する研究資料への入口。
 
 > **残る確認**：既存の算術27ケース、Full窓120ケース、Sampled/Dual288ケースは有限の合成入力に対する比較である。全ネットワーク、未収録のsample rateや境界、中央値時刻窓、Pruning後IBD、攻撃耐性、関連KIP・論文の証明は追加検証の対象とする。
 
-基準版の主要経路と旧教材5テストの記録は `experiments/core-validation-review-2026-10-31.md`。目次順の本文レビューと改訂教材7テストは `experiments/chapter-13-review-2026-11-01.md` に記録した。
+
 
 Full窓のORIGIN境界を関数単位で検査したことを、実際のPruning後同期と同一視しない。今回の通読・教材実行を、既存の公式関数比較や全経路の検証と一括りにしない。
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 14 — Consensus Ordering & Virtual State（コンセンサス順序と仮想状態）](chapter-14.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-13)
+
+基準版の主要経路と旧教材5テストの記録は `experiments/core-validation-review-2026-10-31.md`。目次順の本文レビューと改訂教材7テストは `experiments/chapter-13-review-2026-11-01.md` に記録した。
+
+</details>

@@ -1,9 +1,10 @@
 # Chapter 36 — Contributing to Kaspa（Kaspaへのコントリビュート）
 
-> **目次順の本文レビュー：2026-11-01。基準版の開発用入口・公開手順と独自Rust教材を確認。公式CI全体や実PR提出の検証ではない。**
+<p class="chapter-part">Part VI — Building &amp; Contributing（アプリケーション開発と貢献）</p>
+
 > この章は、Kaspaのオープンソース開発に参加するための実践ガイドである。リポジトリ構成、開発手順、CI、メンテナーの方針は変化するため、作業時点の一次資料を確認すること。
 
-ソース照合は本書の基準版v1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。実際の上流への貢献では、その時点の指定base・開発ルールを別に確認する。確認記録は `experiments/chapter-36-review-2026-11-01.md`。
+ソース照合は本書の基準版v1.0.1 / `fcd9c28f9b211b9872a0c90a8c94f79466ffb063`。実際の上流への貢献では、その時点の指定base・開発ルールを別に確認する。
 
 ## この章で学ぶこと
 
@@ -28,7 +29,7 @@
 | 性能調査 | 同期処理のボトルネックを測る | ベンチマーク・レポート |
 | 研究・仕様 | コンセンサス変更の妥当性を議論する | 論文レビュー・KIPへのフィードバック |
 
-**重要：** 価値は変更行数では決まらない。小さくても、検証可能で、保守しやすい変更は大きな貢献になり得る。
+> **重要：** 価値は変更行数では決まらない。小さくても、検証可能で、保守しやすい変更は大きな貢献になり得る。
 
 ## 36.2 Kaspaの開発に参加する前に
 
@@ -53,7 +54,7 @@
 - [Rust公式ドキュメント](https://doc.rust-lang.org/book/) — Rust言語の基礎
 - [Cargo Book](https://doc.rust-lang.org/cargo/) — ビルド・テスト・ワークスペース
 
-**注意：** リポジトリに`CONTRIBUTING.md`やIssueテンプレートが存在するか、どのブランチを基準にするか、必要なツールチェーンは何かを、実際の作業時点で確認する。基準版[README](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/README.md)は開発の既定をmaster、安定版の入口をstableと説明するが、現在のPRのbaseを保証しない。基準版のroot/.githubにはCONTRIBUTING.md、rootにはSECURITY.mdとrust-toolchain.tomlがなかった。存在するという前提でコマンドや報告先を創作しない。
+> **注意：** リポジトリに`CONTRIBUTING.md`やIssueテンプレートが存在するか、どのブランチを基準にするか、必要なツールチェーンは何かを、実際の作業時点で確認する。基準版[README](https://github.com/kaspanet/rusty-kaspa/blob/fcd9c28f9b211b9872a0c90a8c94f79466ffb063/README.md)は開発の既定をmaster、安定版の入口をstableと説明するが、現在のPRのbaseを保証しない。基準版のroot/.githubにはCONTRIBUTING.md、rootにはSECURITY.mdとrust-toolchain.tomlがなかった。存在するという前提でコマンドや報告先を創作しない。
 
 ## 36.4 開発環境の準備
 
@@ -212,6 +213,9 @@ Applied
 
 ## 36.11 Issueを書くためのテンプレート
 
+<details class="code-details">
+<summary>Issueのテンプレートを見る</summary>
+
 ```markdown
 ## 概要
 何が起きたかを一文で説明する。
@@ -240,6 +244,8 @@ Applied
 ## 補足
 関連するIssue、KIP、テスト。
 ```
+
+</details>
 
 「壊れている」よりも「どの条件で何が起き、何を期待したか」が重要である。
 
@@ -490,6 +496,9 @@ experiments/
 
 ## 36.25 実践演習A：ドキュメントの改善
 
+<details class="exercise-details">
+<summary>演習を見る</summary>
+
 1. READMEまたは開発者向け文書を一つ選ぶ。
 2. 手順を最初から実行する。
 3. 再現できなかった箇所を記録する。
@@ -498,7 +507,12 @@ experiments/
 
 **完了条件：** 別の開発者が、修正した手順を使って同じ結果を再現できる。
 
+</details>
+
 ## 36.26 実践演習B：回帰テスト
+
+<details class="exercise-details">
+<summary>演習を見る</summary>
 
 1. 再現可能なIssueを一つ選ぶ。
 2. 現状の振る舞いを記録する。
@@ -508,7 +522,12 @@ experiments/
 
 **完了条件：** 問題が再発したときにテストが検出できる。
 
+</details>
+
 ## 36.27 実践演習C：アーキテクチャ調査
+
+<details class="exercise-details">
+<summary>演習を見る</summary>
 
 題材：「受信ブロックがコンセンサス処理へ渡るまで」。
 
@@ -522,6 +541,8 @@ experiments/
 - 対応するテストの一覧
 
 **完了条件：** 他の開発者が、同じコミットから同じ処理経路を追跡できる。
+
+</details>
 
 ## 36.28 よくある失敗
 
@@ -565,6 +586,9 @@ PR提出前に確認する。
 
 ## 36.31 理解度チェック
 
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
+
 1. コードを書かない貢献には何があるか。
 2. BlockDAGとGHOSTDAGを区別する理由は何か。
 3. コンセンサス実装で非決定性が問題になるのはなぜか。
@@ -576,7 +600,25 @@ PR提出前に確認する。
 9. 性能実験でコミットIDを記録する理由は何か。
 10. 技術書を継続的なコントリビュートにするには何が必要か。
 
+**解答例**
+
+1. 文書の訂正、Issueの再現手順・証拠の補足、テスト観点の提案、用語・設計説明の改善、レビュー等がある。
+2. BlockDAGは参照関係、GHOSTDAGは分類・順序付けの規則であり、構造の保存と合意計算の変更では責務・影響範囲が異なるから。
+3. 同じ初期状態・入力・規則でもノードごとに異なる合意結果を出す可能性があり、状態の収束を損なうため。受信途中の観測差とは区別する。
+4. 守るべき性質と失敗時の契約を先に明確にでき、変更の影響・テスト・レビューの基準を揃えられる。
+5. 入力・環境・版が分からなければ、原因や期待結果を再現・検証できず、修正の妥当性も判断しにくいから。
+6. 変更目的・原因・影響範囲を追いやすくし、必要なテストや問題箇所を絞りやすくする。無関係な変更を混ぜない。
+7. 提案文書の存在はコードの存在や特定ネットワークの有効化を保証しないため。それぞれ対応する証拠と確認日を示す。
+8. 関数・パスの実在、仕様との整合、境界値・失敗時状態、必要なテストの実行結果を確認し、変更理由を説明できること。対象プロジェクトのAI利用方針も確認する。
+9. 実装・依存・規則が変われば性能も変わるため。同じ対象で再測定し、改訂による差と環境差を切り分けられるようにする。
+10. 一次資料と固定版を対応づけ、再現可能な検証、確認範囲・限界の明記、訂正・レビュー・更新の履歴を継続して保つことが必要である。
+
+</details>
+
 ## 36.32 本書のまとめ：理解から実装、そして貢献へ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 本書では、デジタルマネーと暗号技術の基礎から始め、BlockDAG、GHOSTDAG、UTXO、マイニング、P2P、Rust実装、Devnet、L2、プログラマビリティまでを扱ってきた。
 
@@ -606,19 +648,39 @@ Issue / PR / 技術文書
 
 Kaspaへのコントリビュートは、完成した専門家だけの活動ではない。**調べたことを正確に記録し、再現できる形で共有すること**から始められる。
 
+</details>
+
 ---
 
 ## 参考資料
 
-1. [Kaspa — rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
-2. [Kaspa — KIPs](https://github.com/kaspanet/kips)
-3. [Kaspa Wiki](https://wiki.kaspa.org/)
-4. [Kaspa公式サイト](https://kaspa.org/)
-5. [The Rust Programming Language](https://doc.rust-lang.org/book/)
-6. [The Cargo Book](https://doc.rust-lang.org/cargo/)
-7. [GitHub Docs — Contributing to projects](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project)
-8. [GitHub Docs — Creating a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Kaspa — rusty-kaspa](https://github.com/kaspanet/rusty-kaspa)
+- [Kaspa — KIPs](https://github.com/kaspanet/kips)
+- [Kaspa Wiki](https://wiki.kaspa.org/)
+- [Kaspa公式サイト](https://kaspa.org/)
+- [The Rust Programming Language](https://doc.rust-lang.org/book/)
+- [The Cargo Book](https://doc.rust-lang.org/cargo/)
+- [GitHub Docs — Contributing to projects](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project)
+- [GitHub Docs — Creating a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)
+
+</details>
+
+次は[付録A — Rust環境・Docker環境の構築](../appendices/appendix-a.md)。
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次のページ：Appendix A — Rust環境・Docker環境の構築](../appendices/appendix-a.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-36)
 
 **確認範囲：** 基準版の開発用入口・公開手順の既存確認。36.15は第33章の教材を使うテスト追加・PR説明の演習であり、追加テストを本章で実装・実行済みとするものではない。公式スクリプト/CI全体、実PR提出や脆弱性報告の実行、コンセンサスの全面検証ではない。記録は `experiments/chapter-36-review-2026-11-01.md`。
 
-次は[付録A — Rust環境・Docker環境の構築](../appendices/appendix-a.md)。
+</details>

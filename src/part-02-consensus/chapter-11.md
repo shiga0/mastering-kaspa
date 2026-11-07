@@ -1,7 +1,8 @@
 # Chapter 11 — Block Processing & Validation（ブロック処理と検証）
 
-> **Part II — Kaspa Consensus & Architecture**  
-> 目次順の本文レビュー：2026-11-01。主要経路は[基準版](../baseline.md)v1.0.1、SHA `fcd9c28f9b211b9872a0c90a8c94f79466ffb063` と照合。全規則・全経路の検証完了を意味しない。
+<p class="chapter-part">Part II — Kaspa Consensus &amp; Architecture（コンセンサスとアーキテクチャ）</p>
+
+
 
 ## この章で学ぶこと
 
@@ -9,11 +10,11 @@
 
 本章の到達目標は次のとおり。
 
-1. ブロックの「受信」「形式検査」「コンセンサス検証」「状態反映」を区別できる。
-2. ブロックヘッダーとトランザクション本体の検証目的を説明できる。
-3. 親ブロックの不足、重複受信、無効ブロックを別々の状態として扱える。
-4. BlockDAGの登録とVirtual Stateの更新を混同せず説明できる。
-5. Rustで簡易検証パイプラインを実装し、不変条件をテストできる。
+- ブロックの「受信」「形式検査」「コンセンサス検証」「状態反映」を区別できる。
+- ブロックヘッダーとトランザクション本体の検証目的を説明できる。
+- 親ブロックの不足、重複受信、無効ブロックを別々の状態として扱える。
+- BlockDAGの登録とVirtual Stateの更新を混同せず説明できる。
+- Rustで簡易検証パイプラインを実装し、不変条件をテストできる。
 
 > **照合範囲:** 通常ブロックの主要検証経路を[基準版](../baseline.md)v1.0.1で照合した。11.11のRustコードと11.12の状態図は教育用モデル。公式本体検証テスト2件の成功は、ネットワーク受信から全コンセンサス規則までの網羅を意味しない。
 
@@ -76,7 +77,7 @@ Kaspaのブロックは大きく**ヘッダー**と**トランザクション群
 | Pruning point | ヘッダーが申告するPruningの基準点 | 履歴から得た期待値との一致 |
 | Transactions | コインベース等を含むトランザクション群 | 構造、証明、手数料、状態依存の検証 |
 
-> **注意:** この表は概念整理であり、フィールドの完全なシリアライズ仕様ではない。正確なフィールド、型、ハッシュ計算、各フィールドの検証段階は使用する `rusty-kaspa` のバージョンを確認すること。
+> **注意：** この表は概念整理であり、フィールドの完全なシリアライズ仕様ではない。正確なフィールド、型、ハッシュ計算、各フィールドの検証段階は使用する `rusty-kaspa` のバージョンを確認すること。
 
 ### 11.2.1 Bitcoinとの違い
 
@@ -180,7 +181,7 @@ PoW(header) <= target
 - そのブロックに要求される難易度と整合しているか。
 - 対象ネットワークの規則に従っているか。
 
-**注意:** KaspaのPoWアルゴリズムとヘッダーハッシュを、単純なSHA-256一回やBitcoinのダブルSHA-256と同一視してはいけない。アルゴリズムの詳細は対象のネットワーク・バージョンの実装を参照する。
+> **注意：** KaspaのPoWアルゴリズムとヘッダーハッシュを、単純なSHA-256一回やBitcoinのダブルSHA-256と同一視してはいけない。アルゴリズムの詳細は対象のネットワーク・バージョンの実装を参照する。
 
 ### 11.5.2 基準版での検証順
 
@@ -392,6 +393,9 @@ cd block-validation-lab
 
 `src/lib.rs` を次のようにする。
 
+<details class="code-details">
+<summary>ブロック検証モデルの実装とテストを見る</summary>
+
 ```rust
 use std::collections::{HashMap, HashSet};
 
@@ -588,7 +592,9 @@ mod tests {
 }
 ```
 
-実行例:
+</details>
+
+**実行手順：**
 
 ```bash
 cargo test
@@ -802,31 +808,51 @@ grep -n -E 'is_valid|has_block_body' consensus/core/src/blockstatus.rs
 
 ## 11.17 よくある誤解
 
-### Q1. PoWが正しければ、そのブロックは有効か？
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+<a id="q1-powが正しければそのブロックは有効か"></a>
+
+**1. PoWが正しければ、そのブロックは有効か？**
 
 いいえ。PoWは検証条件の一つにすぎない。親参照、コンセンサス規則、ブロック本体なども確認する。
 
-### Q2. 親が未到着のブロックは不正か？
+<a id="q2-親が未到着のブロックは不正か"></a>
+
+**2. 親が未到着のブロックは不正か？**
 
 必ずしも不正ではない。単にネットワーク上の到着順が前後した可能性がある。
 
-### Q3. DAGに登録されたブロックのトランザクションはすべて受理されるか？
+<a id="q3-dagに登録されたブロックのトランザクションはすべて受理されるか"></a>
+
+**3. DAGに登録されたブロックのトランザクションはすべて受理されるか？**
 
 いいえ。トランザクションの受理にはコンセンサス順序とUTXO状態の評価が必要である。
 
-### Q4. redブロックは無効ブロックか？
+<a id="q4-redブロックは無効ブロックか"></a>
+
+**4. redブロックは無効ブロックか？**
 
 いいえ。GHOSTDAGの分類とプロトコルの妥当性判定は異なる概念である。
 
-### Q5. ブロック検証は一回だけ行われるか？
+<a id="q5-ブロック検証は一回だけ行われるか"></a>
+
+**5. ブロック検証は一回だけ行われるか？**
 
 単純な一回の判定として理解すべきではない。形式検査、依存関係、コンセンサス状態に依存する評価など、異なる責務が存在する。
+
+</details>
 
 ---
 
 ## 11.18 実践課題
 
-### 課題A: 親不足キューを実装する
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
+
+<a id="課題a-親不足キューを実装する"></a>
+
+### 課題A：親不足キューを実装する
 
 第11.11節の `BlockStore` に保留キューを追加する。
 
@@ -835,9 +861,11 @@ grep -n -E 'is_valid|has_block_body' consensus/core/src/blockstatus.rs
 3. 複数の親がすべて揃うまで登録しない。
 4. キューの最大件数を設ける。
 
-**合格条件:** Aを根、B/Cの親をA、Dの親をBとCとする。到着順が `D, C, B, A` でも、親が揃えばA、B/C、Dの依存順で登録できる。BとCの登録順は問わない。
+**完了条件：** Aを根、B/Cの親をA、Dの親をBとCとする。到着順が `D, C, B, A` でも、親が揃えばA、B/C、Dの依存順で登録できる。BとCの登録順は問わない。
 
-### 課題B: エラー分類を設計する
+<a id="課題b-エラー分類を設計する"></a>
+
+### 課題B：エラー分類を設計する
 
 次のエラーを、`Retryable` / `Invalid` / `LocalFailure` / `NoOp` などに分類する。
 
@@ -849,7 +877,9 @@ grep -n -E 'is_valid|has_block_body' consensus/core/src/blockstatus.rs
 
 返されたエラー、そのデータの再取得可否、ヘッダー識別子への `StatusInvalid` の保存、ピアへの評価を別々に考える。特に本体の `BadMerkleRoot` とヘッダー全体の恒久的な無効化を同一視しない。
 
-### 課題C: `rusty-kaspa` の実装と対応付ける
+<a id="課題c-rusty-kaspa-の実装と対応付ける"></a>
+
+### 課題C：`rusty-kaspa` の実装と対応付ける
 
 実際のソースコードから、以下を確認する。
 
@@ -862,9 +892,14 @@ grep -n -E 'is_valid|has_block_body' consensus/core/src/blockstatus.rs
 
 調査結果を**コミットハッシュ・ファイルパス・関数名・テスト名**付きで記録する。
 
+</details>
+
 ---
 
 ## 11.19 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. ブロックの「受信」と「受理」は何が違うか。
 2. なぜ親ブロックの未到着を即座に不正と判定してはいけないのか。
@@ -877,9 +912,27 @@ grep -n -E 'is_valid|has_block_body' consensus/core/src/blockstatus.rs
 9. コンセンサス検証とP2P入力検査の責務を分ける利点は何か。
 10. 本章のRustモデルに不足している実プロトコルの要素を五つ挙げよ。
 
+**解答例**
+
+1. 受信はデータが届くこと、受理は必要な検証を通過し、対象段階の状態へ取り込まれること。ヘッダー・本体・取引の受理段階も区別する。
+2. ネットワークの到着順で子が先に届く場合があり、親を取得しなければ文脈を評価できないから。不足と不正を分ける。
+3. 一例はMerkle root等の本体整合性、親・難易度等のヘッダー文脈、取引の支出条件・UTXO検証である。必要な検査は処理段階に応じて行う。
+4. 計算対象の取引群とルートの整合性を確認する。一致だけでは取引の署名・UTXOの有効性、ルートを含む履歴の正当性までは保証しない。
+5. blue/redはGHOSTDAGの評価文脈における分類、Valid/Invalidは規則適合性であり、分類だけでブロックや取引の正当性は決まらない。
+6. コンセンサスの順序と、その順序に沿ったUTXO・支出条件等の検証で適用可否を決める。ローカル受信順では決めない。
+7. 保存したDAG全体と、その時点で選択・評価した現在の取引受理状態を分け、再評価や状態更新の責務を明確にするため。
+8. 一例として同じ有効ブロックを二度投入し、二度目が既知として扱われ、UTXO・履歴・関連カウンターに二重適用がないことを確かめる。対象実装の保存契約に合わせる。
+9. 未信頼データのサイズ・形式等の検査と合意規則の検証を分けることで、責務・エラー・再試行の条件を追いやすくし、個別にテストできる。
+10. 一例は実PoW、暗号学的署名、正式なハッシュ・シリアライズ、GHOSTDAGによる合意順序、Virtual State更新である。教材の集合・ラベル検査を実ノード互換と扱わない。
+
+</details>
+
 ---
 
 ## 11.20 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Kaspaのブロック処理は、**受信したデータを一回チェックして終わる処理ではない**。
 
@@ -890,18 +943,36 @@ Kaspaのブロック処理は、**受信したデータを一回チェックし�
 - GHOSTDAGは並行ブロックを扱うコンセンサスの重要な構成要素である。
 - Virtual Stateは、コンセンサスに基づいてUTXO状態を評価するために重要である。
 
+</details>
+
 **[次章「Chapter 12 — GHOSTDAG Internals」](chapter-12.md)では、BlockDAGからコンセンサス順序を導く仕組みを詳しく学ぶ。**
 
 ---
 
 ## 参考資料
 
-1. [Kaspa — Official Website](https://kaspa.org/)
-2. [Kaspa Wiki](https://wiki.kaspa.org/en/home)
-3. [rusty-kaspa — Official Rust Implementation](https://github.com/kaspanet/rusty-kaspa)
-4. [Kaspa Improvement Proposals (KIPs)](https://github.com/kaspanet/kips)
-5. [Satoshi Nakamoto, *Bitcoin: A Peer-to-Peer Electronic Cash System*](https://bitcoin.org/bitcoin.pdf)
-6. [Kaspa Research Papers](https://kaspa.org/research/)
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Kaspa — Official Website](https://kaspa.org/)
+- [Kaspa Wiki](https://wiki.kaspa.org/en/home)
+- [rusty-kaspa — Official Rust Implementation](https://github.com/kaspanet/rusty-kaspa)
+- [Kaspa Improvement Proposals (KIPs)](https://github.com/kaspanet/kips)
+- [Satoshi Nakamoto, *Bitcoin: A Peer-to-Peer Electronic Cash System*](https://bitcoin.org/bitcoin.pdf)
+- [Kaspa Research Papers](https://kaspa.org/research/)
+
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 12 — GHOSTDAG Internals（GHOSTDAGの内部構造）](chapter-12.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-11)
 
 ### 技術レビュー時の確認事項
 
@@ -916,3 +987,5 @@ Kaspaのブロック処理は、**受信したデータを一回チェックし�
 主要経路の照合と公式テスト2件の実行記録は `experiments/core-validation-review-2026-10-31.md`。上の未チェック項目には全条件・全経路の確認も含むため、部分的な照合だけで完了にしない。
 
 目次順の本文レビューと教材の修正・7テストは `experiments/chapter-11-review-2026-11-01.md` に記録した。公式テスト2件は以前の記録を参照し、今回新規に実行した結果としては扱わない。
+
+</details>

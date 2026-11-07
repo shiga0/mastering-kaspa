@@ -1,12 +1,11 @@
 # Appendix G — 実験結果・テストベクトル
 
 > **Mastering Kaspa / 付録G**  
-> 目次順の本文レビュー：2026-11-01。実験索引/記録・独自UTXO教材・SHA/DAG例を確認。\
 > 対象：Rustによる教育用実装、Kaspa Devnet、コンセンサス関連の再現実験
 
 本付録では、Kaspaの仕様を「理解したつもり」で終わらせず、**入力・期待値・実測値・実行環境を第三者が追跡できる形で残す**ための方法を示す。本付録は実行済みの記録と今後の計画を併記する。既存記録の照合を今回の再実行として扱わない。実際に実行していない試験を「成功」と記録してはならない。
 
-対象版は[本書の対象バージョン](../baseline.md)、今回の結果は `experiments/appendix-g-review-2026-11-01.md` を参照。実ノードの起動・採掘・送金は今回再実行していない。
+対象版は[本書の対象バージョン](../baseline.md)を参照してください。
 
 ## G.1 目的と適用範囲
 
@@ -121,6 +120,9 @@ edition = "2021"
 ```
 
 そのプロジェクトの `src/lib.rs`：
+
+<details class="code-details">
+<summary>UTXOモデルの実装とテストを見る</summary>
 
 ```rust
 use std::collections::{HashMap, HashSet};
@@ -315,6 +317,8 @@ mod tests {
 }
 ```
 
+</details>
+
 実行コマンド：
 
 ```bash
@@ -503,6 +507,9 @@ G-010のリンク先は通常再起動と前提検査の手順であり、Prunin
 
 本書には追加しない保存形式の例（生ログの公開を必須にしない）：
 
+<details class="code-details">
+<summary>実験メタデータのYAMLテンプレートを見る</summary>
+
 ```yaml
 experiment_id: G-001
 run_id: G-001-YYYYMMDD-001
@@ -537,9 +544,14 @@ conclusion: null
 limitations: []
 ```
 
+</details>
+
 `NOT_RUN`を`PASS`に変えるには、実測値と証拠を添える。
 
 ## G.17 結果レポートのテンプレート
+
+<details class="code-details">
+<summary>結果レポートのテンプレートを見る</summary>
 
 ```markdown
 # G-XXX 実験名
@@ -569,6 +581,8 @@ limitations: []
 
 ## 添付ログ・ハッシュ
 ```
+
+</details>
 
 ## G.18 実験結果の信頼度
 
@@ -634,6 +648,9 @@ Issue / PR / 文書修正
 
 `.github/workflows/experiments.yml`：
 
+<details class="code-details">
+<summary>CI設定の例を見る</summary>
+
 ```yaml
 name: Experiments
 permissions:
@@ -658,6 +675,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.90.0
       - run: cargo test --locked
 ```
+
+</details>
 
 `cargo test --locked`には`Cargo.lock`が必要である。依存関係の固定とActionのSHAピン留めは、公開時のセキュリティレビューで検討する。
 
@@ -711,14 +730,39 @@ jobs:
 
 ## G.27 実践課題
 
-**課題1：** G-001を実行し、SHA-256の既知値を保存する。  
-**課題2：** G-002〜003のRustコードを実行し、`cargo test`ログを保存する。  
-**課題3：** G-004のDAGをRustで表現し、祖先集合を求める。  
-**課題4：** `rusty-kaspa`のコミットを固定し、G-005の参照テストを一つ特定する。  
-**課題5：** Devnetの起動構成を検証し、G-007の未確認範囲・完了基準を定義する。\
-**課題6：** 失敗ケースを一つ作り、最小反例と回帰テストを記録する。
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
+
+### 課題1
+
+G-001を実行し、SHA-256の既知値を保存する。
+
+### 課題2
+
+G-002〜003のRustコードを実行し、`cargo test`ログを保存する。
+
+### 課題3
+
+G-004のDAGをRustで表現し、祖先集合を求める。
+
+### 課題4
+
+`rusty-kaspa`のコミットを固定し、G-005の参照テストを一つ特定する。
+
+### 課題5
+
+Devnetの起動構成を検証し、G-007の未確認範囲・完了基準を定義する。
+
+### 課題6
+
+失敗ケースを一つ作り、最小反例と回帰テストを記録する。
+
+</details>
 
 ## G.28 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. テストベクトルと実験結果はどう違うか。
 2. なぜGitのブランチ名ではなくコミットSHAを記録するのか。
@@ -728,11 +772,31 @@ jobs:
 6. 性能測定で入力データの分布を固定する理由は何か。
 7. 「未実行」と「PASS」を混同すると何が問題になるか。
 
+**解答例**
+
+1. テストベクトルは入力と期待結果、実験結果は実際に実行して観測した値・成否である。期待値を書いただけで実行済みとは扱わない。
+2. ブランチは後の更新で参照先が変わるため。固定SHAと環境・設定を残すことで、同じ対象を再調査できる。
+3. 一致は比較した入力・条件での結果であり、参照実装自身の無誤り、任意入力での同値性、Mainnetでの安全性や性能までは保証しない。
+4. 不正入力や途中の失敗で部分適用・二重適用・資金状態の破壊が起きないことを確認するため。実装が定める更新・保存の契約に合わせて検査する。
+5. 通知は特定ノードでの観測であり、合意上の受理や業務上の確認ポリシーの充足とは別である。欠落・重複・再編成も考慮する。
+6. 入力数・形状・偏り等で負荷が変わるため。分布や乱数シードを記録し、実装差と入力差を切り分けて比較する。
+7. 未検証の内容を成功の根拠として利用してしまい、再現性と判断の信頼性を失う。実行の有無、期待値、実測値、確認範囲を分けて記録する。
+
+</details>
+
 ## G.29 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 Kaspaの研究論文、KIP、Rust実装、Devnetを結びつけるのは、**再現可能な証拠**である。本付録の表は実行済み記録の索引と未実施部分の計画を分けて示す。今後、実験を一つずつ実行してログ・ベクトル・コミットを固定することで、『Mastering Kaspa』の各章を検証可能な技術文書に近づけられる。
 
+</details>
+
 ## G.30 一次資料・関連資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 - [Kaspa公式サイト](https://kaspa.org/)
 - [rusty-kaspa（公式Rust実装）](https://github.com/kaspanet/rusty-kaspa)
@@ -742,6 +806,13 @@ Kaspaの研究論文、KIP、Rust実装、Devnetを結びつけるのは、**再
 - [Cargoのテスト機能](https://doc.rust-lang.org/cargo/commands/cargo-test.html)
 - [GitHub Actions公式ドキュメント](https://docs.github.com/en/actions)
 
-
+</details>
 
 次は[付録H — 参考文献・変更履歴](appendix-h.md)。
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-appendix-g)
+
+</details>

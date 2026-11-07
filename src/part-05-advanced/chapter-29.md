@@ -1,21 +1,24 @@
 # Chapter 29 — GHOSTDAG Security & DAGKnight（GHOSTDAGのセキュリティとDAGKnight）
 
-> **目次順の本文レビュー：2026-11-01。公開要旨・書誌、固定版の主要規則、確率教材を確認。安全性証明の全面照合ではない。**\
+<p class="chapter-part">Part V — Advanced Kaspa（Kaspaの高度な技術）</p>
+
 > 本章は研究・実装理解のための解説であり、特定の攻撃に対する無条件の安全性や、DAGKnightの本番導入状況を保証するものではない。プロトコルの採用状況とパラメータは、参照時点のKIP・公式実装・リリース情報で確認する。
 
-確認記録は `experiments/chapter-29-review-2026-11-01.md`。研究上の主張、基準版v1.0.1の実装、現行ネットワークでの有効化を分ける。
+研究上の主張、基準版の実装、ネットワークでの有効化は別に確認する。
 
-## 29.1 本章の目的
+<a id="291-本章の目的"></a>
+
+## 29.1 この章で学ぶこと
 
 これまでにBlockDAG、GHOSTDAG、コンセンサス順序、Virtual State、Rust実装を学んだ。本章では、それらが**敵対的なネットワーク環境でなぜ、どの条件で安全と考えられるのか**を検討する。
 
 学習目標は次のとおり。
 
-1. 安全性（Safety）と活性（Liveness）を区別する。
-2. ネットワーク遅延、攻撃者のハッシュレート、ブロック生成率が与える影響を説明する。
-3. GHOSTDAGの`k`が表す役割と、固定パラメータのトレードオフを理解する。
-4. DAGKnightが目指す改善を、既存GHOSTDAGとの関係で整理する。
-5. 確率モデルを評価し、シミュレーションへの拡張と検証範囲の限界を説明できる。
+- 安全性（Safety）と活性（Liveness）を区別する。
+- ネットワーク遅延、攻撃者のハッシュレート、ブロック生成率が与える影響を説明する。
+- GHOSTDAGの`k`が表す役割と、固定パラメータのトレードオフを理解する。
+- DAGKnightが目指す改善を、既存GHOSTDAGとの関係で整理する。
+- 確率モデルを評価し、シミュレーションへの拡張と検証範囲の限界を説明できる。
 
 > **重要：** BlockDAGはブロック間の参照関係を表すデータ構造であり、GHOSTDAGとDAGKnightは、そのDAGから合意に必要な順序・選択を導くためのプロトコルである。
 
@@ -219,7 +222,7 @@ DAGKnightは、PHANTOM系のBlockDAG研究を発展させ、**ネットワーク
 | 実装上の課題 | 選択・順序・状態更新の決定性 | 追加の判定ロジック、証明と実装の整合性 |
 | 導入状況 | 対象ネットワークとバージョンを確認 | **提案・研究と本番稼働を区別して確認** |
 
-**注意：** この表は理解のための概念比較であり、論文の定理・実装仕様を完全に再現したものではない。
+> **注意：** この表は理解のための概念比較であり、論文の定理・実装仕様を完全に再現したものではない。
 
 ## 29.12 DAGKnightの安全性を読むときの質問
 
@@ -391,7 +394,7 @@ GHOSTDAGを忠実に再現するには、選択親、merge set、blue/red判定�
 | Devnet統合テスト | 複数ノードの再接続・同期 | 実装間の動作確認 |
 | 形式的検証・論文 | 定理と仮定に基づく議論 | 定義したモデル内の保証 |
 
-**重要：** テストが全て成功しても、未知の攻撃に対する安全性の証明にはならない。逆に、論文上の定理があっても、実装バグや運用ミスは別途検証する必要がある。
+> **重要：** テストが全て成功しても、未知の攻撃に対する安全性の証明にはならない。逆に、論文上の定理があっても、実装バグや運用ミスは別途検証する必要がある。
 
 ## 29.18 C4・DDD・状態遷移で整理する
 
@@ -447,7 +450,7 @@ grep -n -E 'commit_virtual_state|pick_virtual_parents' consensus/src/pipeline/vi
 5. 再編成時の処理とテスト。
 6. ネットワーク別パラメータの定義と有効化条件。
 
-**成果物**：コミットハッシュ、読んだファイル、関数名、関連テスト、未解決の疑問をMarkdownで記録する。
+**成果物：** コミットハッシュ、読んだファイル、関数名、関連テスト、未解決の疑問をMarkdownで記録する。
 
 ## 29.20 DAGKnightの現状確認チェックリスト
 
@@ -480,17 +483,43 @@ grep -n -E 'commit_virtual_state|pick_virtual_parents' consensus/src/pipeline/vi
 
 ## 29.22 よくある誤解
 
-| 誤解 | 正しい理解 |
-|---|---|
-| BlockDAGだから攻撃されない | データ構造だけで安全性は決まらない |
-| blueは有効、redは無効 | blue/redはコンセンサス上の分類 |
-| 高速なブロック生成は常に安全 | 遅延・攻撃者・パラメータに依存する |
-| `k`は単なる同時ブロック数の上限 | GHOSTDAGの選択規則に関係するパラメータ |
-| DAGKnightが提案された＝本番稼働済み | 論文・KIP・実装・有効化は別段階 |
-| Devnetで成功した＝安全性が証明された | 統合テストは限定された証拠 |
-| トランザクションが見えた＝不可逆に確定 | 観測・合意受理・アプリ承認は異なる |
+<details class="misconception-details">
+<summary>よくある誤解を見る</summary>
+
+**1. BlockDAGだから攻撃されない**
+
+データ構造だけで安全性は決まらない
+
+**2. blueは有効、redは無効**
+
+blue/redはコンセンサス上の分類
+
+**3. 高速なブロック生成は常に安全**
+
+遅延・攻撃者・パラメータに依存する
+
+**4. `k`は単なる同時ブロック数の上限**
+
+GHOSTDAGの選択規則に関係するパラメータ
+
+**5. DAGKnightが提案された＝本番稼働済み**
+
+論文・KIP・実装・有効化は別段階
+
+**6. Devnetで成功した＝安全性が証明された**
+
+統合テストは限定された証拠
+
+**7. トランザクションが見えた＝不可逆に確定**
+
+観測・合意受理・アプリ承認は異なる
+
+</details>
 
 ## 29.23 実践課題
+
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
 
 ### 課題A：論文の前提を抽出する
 
@@ -512,7 +541,12 @@ Chapter 22のRPC連携を前提に、`submitted`から`accepted_by_policy`まで
 
 DAGKnightについて「論文の主張」「KIPの要件」「実装済み」「ネットワークで有効」を別列にし、出典を添えて整理する。
 
+</details>
+
 ## 29.24 理解度チェック
+
+<details class="quiz-answers">
+<summary>理解度チェックを見る</summary>
 
 1. SafetyとLivenessはどう違うか。
 2. ブロック生成率を上げると、なぜ並行ブロックが増えやすいのか。
@@ -525,7 +559,25 @@ DAGKnightについて「論文の主張」「KIPの要件」「実装済み」�
 9. ノードが同期していないと、アプリの確認判定にどんな問題があるか。
 10. 提案がメインネットで有効化されたと判断するには、どんな証拠が必要か。
 
+**解答例**
+
+1. Safetyは矛盾した合意結果を防ぐ性質、Livenessは所定の条件で処理が進む性質である。片方だけでは十分でない。
+2. 伝播が終わる前に別のマイナーが発見する機会が増え、互いをまだ参照しないブロックが生じやすくなるため。
+3. あるブロック自身を除き、その祖先でも子孫でもないブロックの集合である。ネットワーク上の観測時刻ではなくDAGの関係で定義する。
+4. blue/redはkに関する分類で、ブロックの規則適合性や各取引の支出可能性の検証結果ではないから。
+5. kは選んだ集合内で各ブロックが持つanticone数の条件に関わる。DAG全体のブロック数や、同時生成数の単純な固定上限ではない。
+6. 固定した遅延想定に基づく設定だけに依存せず、ネットワークの実際の遅延・並行性に応じた確認をどう行うかという問題意識である。研究の主張と本番導入は分けて読む。
+7. 攻撃者の資源比率・能力、通信遅延・同期モデル、確率・パラメータ、対象のSafety/Livenessと成立条件を確認する。異なる前提へ結論をそのまま移さない。
+8. テストは選んだ入力の実装結果、シミュレーションは設定したモデルの挙動を調べる。形式的証明は明示したモデル・仮定の下で性質を示す。どれも対象外の条件を自動的には保証しない。
+9. 観測が古い・不完全なため、存在や受理状況、UTXO、確認の進捗を誤認し得る。未同期を業務上の確定根拠にしない。
+10. 提案の記載だけでなく、対応する実装・リリース、ネットワークの有効化条件、公式の運用情報等を照合する。文書上の案内と自分の実測も区別する。
+
+</details>
+
 ## 29.25 まとめ
+
+<details class="summary-details">
+<summary>まとめを見る</summary>
 
 本章の要点は次のとおり。
 
@@ -536,15 +588,36 @@ DAGKnightについて「論文の主張」「KIPの要件」「実装済み」�
 - **論文、KIP、実装、ネットワーク有効化を混同しない。**
 - **Rust実装では不変条件・決定性・再編成・障害復旧を検証する。**
 
+</details>
+
 [次章 Chapter 30 — Kaspa Improvement Proposals（Kaspa改善提案・KIP）](chapter-30.md) では、研究成果や変更案がどのように仕様・実装・ネットワーク運用へ結びつくかを扱う。
 
 ## 29.26 参考資料・一次資料
 
-- Kaspa公式Wiki：<https://wiki.kaspa.org/>
-- `rusty-kaspa`公式リポジトリ：<https://github.com/kaspanet/rusty-kaspa>
-- Kaspa Improvement Proposals：<https://github.com/kaspanet/kips>
-- Yonatan Sompolinsky, Yoad Lewenberg, Aviv Zohar, **SPECTRE: A Fast and Scalable Cryptocurrency Protocol**：<https://eprint.iacr.org/2016/1159>
-- Yonatan Sompolinsky, Shai Wyborski, Aviv Zohar, **PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus**：<https://eprint.iacr.org/2018/104>
+<details class="reference-details">
+<summary>参考資料を見る</summary>
+
+- [Kaspa公式Wiki](https://wiki.kaspa.org/)
+- [`rusty-kaspa`公式リポジトリ](https://github.com/kaspanet/rusty-kaspa)
+- [Kaspa Improvement Proposals](https://github.com/kaspanet/kips)
+- [Yonatan Sompolinsky, Yoad Lewenberg, Aviv Zohar, **SPECTRE: A Fast and Scalable Cryptocurrency Protocol**](https://eprint.iacr.org/2016/1159)
+- [Yonatan Sompolinsky, Shai Wyborski, Aviv Zohar, **PHANTOM and GHOSTDAG: A Scalable Generalization of Nakamoto Consensus**](https://eprint.iacr.org/2018/104)
 - Yonatan Sompolinsky, Michael Sutton, [**The DAG KNIGHT Protocol: A Parameterless Generalization of Nakamoto Consensus**](https://eprint.iacr.org/2022/1494)。公開ページの最終改訂は2023-02-24。
 
+</details>
+
+<nav class="chapter-next" aria-label="次のページ">
+
+[次章：Chapter 30 — Kaspa Improvement Proposals（Kaspa改善提案・KIP）](chapter-30.md)
+
+</nav>
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-chapter-29)
+
 > **確認範囲：** 公開要旨・書誌・固定版の主要規則と数値教材を確認した。定理・証明の全面照合、DAGKnight実装/本番有効化、攻撃シミュレーター、実攻撃・安全性の実証は行っていない。記録は `experiments/chapter-29-review-2026-11-01.md`。
+
+
+</details>

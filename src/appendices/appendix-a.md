@@ -1,10 +1,9 @@
 # Appendix A — Rust環境・Docker環境の構築
 
 > **対象**：『Mastering Kaspa』のRustサンプル、教育用BlockDAGノード、Kaspa Devnet実験を再現する読者。  
-> **目次順の本文レビュー**：2026-11-01。独自Rust教材・Compose設定・環境の読取検査と既存実測記録を照合。全OSの新規導入/Devnet再実行ではない。
 > **原則**：コマンドは原則macOS（Apple Silicon）とLinuxを想定する。Windows/WSL2を含む他環境は未検証で、ここでの動作保証には含めない。CLIのフラグやポートはバージョンで変わるため、実行時の`--help`を優先する。
 
-対象版の一覧は[本書の対象バージョン](../baseline.md)、この回の結果は `experiments/appendix-a-review-2026-11-01.md` を参照。既存のDevnet実測と、今回新しく確認した事項を分けて記録する。
+対象版は[本書の対象バージョン](../baseline.md)を参照してください。
 
 ## A.1 この付録の目的
 
@@ -451,30 +450,35 @@ mastering-kaspa/
 
 ## A.19 最初の実践課題
 
-**課題1：Rust環境の検証**
+<details class="exercise-details">
+<summary>実践課題を見る</summary>
+
+### 課題1：Rust環境の検証
 
 - `cargo new`でプロジェクトを作る。
 - `cargo test`で正常系と異常系を1件ずつ実行する。
 - `cargo fmt --check`と`cargo clippy`を通す。
 
-**課題2：Docker環境の検証**
+### 課題2：Docker環境の検証
 
 - `hello-world`を実行する。
 - Dockerのバージョンを記録する。
 - 使用するKaspaイメージのタグとdigestを記録する。
 
-**課題3：`rusty-kaspa`の調査**
+### 課題3：`rusty-kaspa`の調査
 
 - リポジトリをcloneする。
 - コミットハッシュを記録する。
 - `Cargo.toml`から主要なクレートを分類する。
 
-**課題4：Devnetの統合テスト**
+### 課題4：Devnetの統合テスト
 
 - 固定したバージョンでDevnetノードを起動する。
 - ログからネットワークと起動状態を確認する。
 - RPCの応答と同期状態を記録する。
 - 停止・再起動でデータが維持されるか確認する。
+
+</details>
 
 ## A.20 完了チェックリスト
 
@@ -490,11 +494,19 @@ mastering-kaspa/
 
 ## A.21 まとめ
 
+<details class="summary-details">
+<summary>まとめを見る</summary>
+
 開発環境の構築は、単にコマンドが動けば完了ではない。**何を、どのバージョンで、どの設定で実行し、どの結果を観測したか**を記録して初めて、第三者が再現できる実験になる。
 
 Rustの単体テストで確認するのは、**自分が定義したモデルの性質**。Devnetで確認するのは、**実際のKaspaノードとの接続やネットワーク動作**。両者を分離して記録することが、本書の実装・検証パートの基本となる。
 
+</details>
+
 ## A.22 参考資料
+
+<details class="reference-details">
+<summary>参考資料を見る</summary>
 
 - [The Rust Programming Language](https://doc.rust-lang.org/book/)
 - [Rust Install](https://www.rust-lang.org/tools/install)
@@ -506,8 +518,17 @@ Rustの単体テストで確認するのは、**自分が定義したモデル�
 - [Kaspa Wiki](https://wiki.kaspa.org/)
 - [mdBook Documentation](https://rust-lang.github.io/mdBook/)
 
+</details>
+
 ---
+
+次は[付録B — Kaspa用語集](appendix-b.md)。
+
+<details class="verification-details">
+<summary>検証状況を見る</summary>
+
+[対象バージョン](../baseline.md)・[このページのレビュー記録](../review-status.md#review-appendix-a)
 
 **確認範囲：** Rust最小例・Compose設定・Dockerの版/ローカルイメージ読取と既存記録の照合。rustup/Docker等の新規導入、hello-worldコンテナ、Devnet起動/採掘/送金・他OS/CPU・Pruningは今回実行していない。記録は `experiments/appendix-a-review-2026-11-01.md`。
 
-次は[付録B — Kaspa用語集](appendix-b.md)。
+</details>
